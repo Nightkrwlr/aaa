@@ -1,0 +1,88 @@
+{
+ "kind": "shop",
+ "items": [
+  {
+   "id": "shp.hesk",
+   "npc": "npc.hesk",
+   "gear": {
+    "count": 6,
+    "slots": [
+     "weapon",
+     "chest",
+     "head",
+     "hands",
+     "feet",
+     "offhand"
+    ],
+    "bias": 0.22
+   },
+   "materials": [
+    {
+     "id": "mat.brass_scrap",
+     "amount": 4,
+     "unit": 0.5
+    },
+    {
+     "id": "mat.resonant_dust",
+     "amount": 4,
+     "unit": 0.6
+    },
+    {
+     "id": "mat.tuning_shard",
+     "amount": 1,
+     "unit": 3.2
+    }
+   ],
+   "discounts": [
+    {
+     "flag": "hesk_discount",
+     "pct": 0.12
+    },
+    {
+     "flag": "tarn_rescued",
+     "pct": 0.05
+    }
+   ]
+  },
+  {
+   "id": "shp.maeve",
+   "npc": "npc.maeve",
+   "potions": true,
+   "consumables": [
+    {
+     "id": "con.potion_trickle"
+    },
+    {
+     "id": "con.potion_ward"
+    },
+    {
+     "id": "con.potion_resist"
+    },
+    {
+     "id": "con.potion_haste"
+    },
+    {
+     "id": "con.antidote"
+    },
+    {
+     "id": "con.infusion_listen"
+    },
+    {
+     "id": "con.salve_focus"
+    }
+   ],
+   "materials": [
+    {
+     "id": "mat.wind_lichen",
+     "amount": 4,
+     "unit": 0.4
+    },
+    {
+     "id": "mat.bellflower",
+     "amount": 2,
+     "unit": 0.9
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,300 @@
+{
+ "kind": "ability",
+ "items": [
+  {
+   "id": "abl.tarn.echo_volley",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "projectile",
+    "sonic"
+   ],
+   "aim": "direction",
+   "range": 18,
+   "cooldown": 3,
+   "cast": {
+    "windup": 0.7,
+    "recover": 0.5,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "projectile",
+     "count": 3,
+     "spread": 30,
+     "speed": 15,
+     "radius": 0.4,
+     "range": 18,
+     "model": "note",
+     "color": "#9fe8ff",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.07
+      },
+      {
+       "op": "status",
+       "id": "st.dissonance",
+       "chance": 0.25
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "note",
+    "anim": "cast"
+   },
+   "telegraph": {
+    "shape": "arc",
+    "radius": 18,
+    "angle": 30
+   }
+  },
+  {
+   "id": "abl.tarn.mirror_step",
+   "slotType": "enemy",
+   "tags": [
+    "attack"
+   ],
+   "aim": "ground",
+   "range": 14,
+   "cooldown": 8,
+   "cast": {
+    "windup": 0.9,
+    "recover": 0.5,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "blink",
+     "distance": 10,
+     "toTarget": true,
+     "onArrive": [
+      {
+       "op": "area",
+       "shape": "circle",
+       "radius": 2.8,
+       "origin": "self",
+       "hit": [
+        {
+         "op": "damage",
+         "type": "sonic",
+         "scaling": "pct",
+         "pct": 0.09
+        },
+        {
+         "op": "knockback",
+         "force": 1.6
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "note",
+    "anim": "cast"
+   },
+   "telegraph": {
+    "shape": "circle",
+    "radius": 2.8,
+    "at": "aim"
+   }
+  },
+  {
+   "id": "abl.tarn.hush_chord",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "zone",
+    "silence"
+   ],
+   "aim": "ground",
+   "range": 16,
+   "cooldown": 14,
+   "cast": {
+    "windup": 1.0,
+    "recover": 0.6,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 4.0,
+     "origin": "aim",
+     "duration": 8,
+     "tick": 0.5,
+     "kind": "hush",
+     "color": "hush",
+     "auraStatus": "st.hush",
+     "scatter": {
+      "count": 2,
+      "r": 7,
+      "minR": 2
+     },
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.012
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "note",
+    "anim": "cast"
+   }
+  },
+  {
+   "id": "abl.tarn.refrain",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "area",
+    "sonic"
+   ],
+   "aim": "self",
+   "range": 10,
+   "cooldown": 9,
+   "cast": {
+    "windup": 1.1,
+    "recover": 0.6,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 0.5,
+     "radius": 4.5,
+     "angle": 300,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.1
+      },
+      {
+       "op": "knockback",
+       "force": 1.6
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 3.5,
+     "radius": 9,
+     "angle": 300,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "delay": 0.4,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.1
+      },
+      {
+       "op": "knockback",
+       "force": 1.6
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "note",
+    "anim": "cast"
+   },
+   "telegraph": {
+    "shape": "ringarc",
+    "radius": 9,
+    "inner": 0.5,
+    "angle": 300
+   }
+  },
+  {
+   "id": "abl.tarn.call_echoes",
+   "slotType": "enemy",
+   "tags": [
+    "summon"
+   ],
+   "aim": "self",
+   "range": 12,
+   "cooldown": 0,
+   "cast": {
+    "windup": 1.0,
+    "recover": 0.5,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "summon",
+     "enemy": "enm.keening_wisp",
+     "count": 2,
+     "max": 4,
+     "radius": 5,
+     "tier": "standard",
+     "ring": true
+    }
+   ],
+   "fx": {
+    "sfx": "note",
+    "anim": "cast"
+   }
+  },
+  {
+   "id": "abl.enm.node_pulse",
+   "slotType": "enemyBasic",
+   "tags": [
+    "attack",
+    "area",
+    "sonic"
+   ],
+   "aim": "self",
+   "range": 6,
+   "cooldown": 3.6,
+   "cast": {
+    "windup": 1.0,
+    "recover": 0.4
+   },
+   "telegraph": {
+    "shape": "circle",
+    "radius": 5.2
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 5.2,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.07
+      },
+      {
+       "op": "knockback",
+       "force": 1.2
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "ring_big",
+    "anim": "toll"
+   }
+  }
+ ]
+}

@@ -1,0 +1,51 @@
+{
+ "kind": "npc",
+ "items": [
+  {
+   "id": "npc.orrel",
+   "model": "mdl.npc_orrel",
+   "role": "warden",
+   "faction": "vigilia"
+  },
+  {
+   "id": "npc.hesk",
+   "model": "mdl.npc_hesk",
+   "role": "merchant",
+   "faction": "afinadores",
+   "services": [
+    "shop",
+    "craft"
+   ]
+  },
+  {
+   "id": "npc.sil",
+   "model": "mdl.npc_sil",
+   "role": "retuner",
+   "faction": "taciturnos",
+   "services": [
+    "respec"
+   ]
+  },
+  {
+   "id": "npc.maeve",
+   "model": "mdl.npc_maeve",
+   "role": "cook",
+   "faction": "escalon",
+   "services": [
+    "shop"
+   ]
+  },
+  {
+   "id": "npc.tarn",
+   "model": "mdl.npc_tarn",
+   "role": "apprentice",
+   "faction": "afinadores"
+  },
+  {
+   "id": "npc.scout",
+   "model": "mdl.npc_scout",
+   "role": "scout",
+   "faction": "none"
+  }
+ ]
+}

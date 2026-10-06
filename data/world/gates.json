@@ -1,0 +1,91 @@
+{
+ "kind": "gate",
+ "items": [
+  {
+   "id": "gate.choir_door",
+   "region": "rgn.calvarre",
+   "requirements": [
+    {
+     "id": "r1",
+     "cond": {
+      "killed": "boss.brannoch"
+     },
+     "textKey": "gate.choir_door.r1"
+    },
+    {
+     "id": "r2",
+     "cond": {
+      "item": "key.resonant_core"
+     },
+     "textKey": "gate.choir_door.r2"
+    },
+    {
+     "id": "r3",
+     "cond": {
+      "discovered": "cdx.choir_lament"
+     },
+     "textKey": "gate.choir_door.r3",
+     "optional": true
+    }
+   ]
+  },
+  {
+   "id": "gate.pass_lost_echo",
+   "region": "rgn.calvarre",
+   "designed": true,
+   "requirements": [
+    {
+     "id": "r1",
+     "cond": {
+      "killed": "boss.ildra"
+     },
+     "textKey": "gate.pass_lost_echo.r1"
+    },
+    {
+     "id": "r2",
+     "cond": {
+      "quest": "qst.empty_choir",
+      "state": "done"
+     },
+     "textKey": "gate.pass_lost_echo.r2"
+    },
+    {
+     "id": "r3",
+     "cond": {
+      "secret": "wpz.glyph_door"
+     },
+     "textKey": "gate.pass_lost_echo.r3",
+     "optional": true
+    }
+   ]
+  },
+  {
+   "id": "gate.mechanism_vesper",
+   "region": "rgn.lost_echoes",
+   "designed": true,
+   "requirements": [
+    {
+     "id": "r1",
+     "cond": {
+      "flag": "vesper_testimony_1"
+     },
+     "textKey": "gate.mechanism_vesper.r1"
+    },
+    {
+     "id": "r2",
+     "cond": {
+      "flag": "vesper_testimony_2"
+     },
+     "textKey": "gate.mechanism_vesper.r2"
+    },
+    {
+     "id": "r3",
+     "cond": {
+      "flag": "vesper_testimony_3"
+     },
+     "textKey": "gate.mechanism_vesper.r3"
+    }
+   ]
+  }
+ ]
+}

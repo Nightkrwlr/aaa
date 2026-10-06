@@ -966,6 +966,17 @@
       -35
      ],
      "yaw": -1.2
+    },
+    {
+     "id": "npc.tarn",
+     "pos": [
+      -5,
+      -31
+     ],
+     "yaw": -0.8,
+     "cond": {
+      "flag": "tarn_rescued"
+     }
     }
    ],
    "spawns": [
@@ -1402,6 +1413,111 @@
       10
      ],
      "yaw": -1.5708
+    }
+   ],
+   "interactables": [
+    {
+     "id": "ia.mural_absent_note",
+     "kind": "lore",
+     "pos": [
+      -64,
+      44
+     ],
+     "discover": "cdx.mural_absent_note",
+     "labelKey": "ia.lore"
+    },
+    {
+     "id": "ia.tarn_camp",
+     "kind": "lore",
+     "pos": [
+      31,
+      -14
+     ],
+     "discover": "cdx.tarn_camp",
+     "labelKey": "ia.lore_inscription"
+    },
+    {
+     "id": "ia.choir_lament",
+     "kind": "lore",
+     "pos": [
+      43,
+      -54
+     ],
+     "discover": "cdx.choir_lament",
+     "labelKey": "ia.lore_cylinder"
+    },
+    {
+     "id": "ia.statue_quarry",
+     "kind": "lore",
+     "pos": [
+      20,
+      -6
+     ],
+     "discover": "cdx.statue_nomouth",
+     "labelKey": "ia.lore"
+    },
+    {
+     "id": "ia.desafine_portal",
+     "kind": "dungeon_portal",
+     "dungeon": "dgn.desafine_chamber",
+     "pos": [
+      -60,
+      -39
+     ],
+     "r": 3.2,
+     "cond": {
+      "secret": "wpz.glyph_door"
+     },
+     "labelKey": "ia.enter_desafine"
+    },
+    {
+     "id": "ia.chest_harps",
+     "kind": "chest",
+     "pos": [
+      -36,
+      -49
+     ],
+     "tier": 1,
+     "items": 1
+    },
+    {
+     "id": "ia.chest_overlook",
+     "kind": "chest",
+     "pos": [
+      48,
+      -61
+     ],
+     "tier": 1,
+     "items": 1,
+     "materials": [
+      "mat.limestone_dust"
+     ]
+    },
+    {
+     "id": "ia.chest_quarry",
+     "kind": "chest",
+     "pos": [
+      64,
+      21
+     ],
+     "tier": 2,
+     "items": 1
+    }
+   ],
+   "gates": [
+    {
+     "id": "gate.choir_door",
+     "ellipse": {
+      "c": [
+       5,
+       60
+      ],
+      "r": [
+       20,
+       14
+      ],
+      "thickness": 2.6
+     }
     }
    ]
   }

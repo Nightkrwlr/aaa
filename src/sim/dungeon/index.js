@@ -28,8 +28,8 @@ export function generateDungeon(registry, spec) {
       if (!placement) { allErrors.push(`a${attempt} lattice placement failed`); continue; }
       const ras = rasterize(graph, placement, family, rng.fork('raster'));
       if (!ras.ok) { allErrors.push(`a${attempt} raster: ${ras.error}`); continue; }
-      const content = placeContent(registry, family, graph, ras.map, ras.rooms, rng.fork('content'), { ilvl: spec.ilvl ?? 1, difficulty: spec.difficulty, modifiers });
-      const dungeon = { id: `dgn_${hashString(`${spec.seed}${family.id}${size}${objective}`).toString(36)}`, seed: spec.seed, code: seedToCode(hashString(String(spec.seed))), family: family.id, size, objective, modifiers, ilvl: spec.ilvl ?? 1, attempt, graph, map: ras.map, rooms: ras.rooms, content, placement: { W: placement.W, H: placement.H } };
+      const content = placeContent(registry, family, graph, ras.map, ras.rooms, rng.fork('content'), { ilvl: spec.ilvl ?? 1, difficulty: spec.difficulty, modifiers, boss: spec.boss, narrative: spec.narrative, storyNpc: spec.storyNpc });
+      const dungeon = { id: `dgn_${hashString(`${spec.seed}${family.id}${size}${objective}`).toString(36)}`, seed: spec.seed, code: seedToCode(hashString(String(spec.seed))), spec: spec.specId ?? null, family: family.id, size, objective, modifiers, ilvl: spec.ilvl ?? 1, attempt, graph, map: ras.map, rooms: ras.rooms, content, placement: { W: placement.W, H: placement.H } };
       const errs = validateDungeon(registry, dungeon);
       if (errs.length) { allErrors.push(...errs.map((e) => `a${attempt} validate: ${e}`)); continue; }
       return { ok: true, dungeon, errors: [], attempts: attempt + 1 };

@@ -1,0 +1,77 @@
+{
+ "kind": "worldPuzzle",
+ "items": [
+  {
+   "id": "wpz.silent_bells",
+   "zone": "zone.calvarre_lower",
+   "type": "tone_logic",
+   "seed": "silent-bells-v2",
+   "difficulty": 0.55,
+   "center": [
+    -8,
+    -14
+   ],
+   "radius": 3.6,
+   "clueSites": [
+    [
+     -4,
+     -36
+    ],
+    [
+     -52,
+     -34
+    ],
+    [
+     44,
+     -55
+    ]
+   ],
+   "chest": {
+    "unique": "unq.inverted_bell",
+    "pos": [
+     -8,
+     -14
+    ]
+   },
+   "onSolve": [
+    {
+     "op": "toast",
+     "key": "toast.bells_rang"
+    }
+   ]
+  },
+  {
+   "id": "wpz.glyph_door",
+   "zone": "zone.calvarre_lower",
+   "type": "glyph_lock",
+   "solution": [
+    1,
+    4,
+    7
+   ],
+   "center": [
+    -60,
+    -36
+   ],
+   "cond": {
+    "all": [
+     {
+      "flag": "glyph_1"
+     },
+     {
+      "flag": "glyph_2"
+     },
+     {
+      "flag": "glyph_3"
+     }
+    ]
+   },
+   "onSolve": [
+    {
+     "op": "toast",
+     "key": "toast.glyph_door_open"
+    }
+   ]
+  }
+ ]
+}

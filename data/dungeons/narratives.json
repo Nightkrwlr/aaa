@@ -1,15 +1,182 @@
 {
-  "kind": "narrative",
-  "items": [
-    { "id": "nar.lost_expedition", "families": ["dfm.serrane_crypt", "dfm.crystal_cavern", "dfm.broken_facility"],
-      "pieces": [{ "id": "camp", "kind": "inscription", "where": "early" }, { "id": "corpse", "kind": "corpse", "where": "mid" }, { "id": "journal", "kind": "cylinder", "where": "mid" }, { "id": "last", "kind": "cylinder", "where": "late" }] },
-    { "id": "nar.failed_facility", "families": ["dfm.broken_facility", "dfm.serrane_crypt"],
-      "pieces": [{ "id": "notice", "kind": "inscription", "where": "early" }, { "id": "log", "kind": "cylinder", "where": "mid" }, { "id": "wreck", "kind": "corpse", "where": "late" }] },
-    { "id": "nar.cult_of_rest", "families": ["dfm.serrane_crypt", "dfm.crystal_cavern"],
-      "pieces": [{ "id": "vow", "kind": "inscription", "where": "early" }, { "id": "offering", "kind": "corpse", "where": "mid" }, { "id": "litany", "kind": "cylinder", "where": "late" }] },
-    { "id": "nar.hunted_creature", "families": ["dfm.crystal_cavern", "dfm.broken_facility"],
-      "pieces": [{ "id": "tracks", "kind": "inscription", "where": "early" }, { "id": "nest", "kind": "corpse", "where": "mid" }, { "id": "cry", "kind": "cylinder", "where": "late" }] },
-    { "id": "nar.the_experiment", "families": ["dfm.broken_facility", "dfm.crystal_cavern"],
-      "pieces": [{ "id": "protocol", "kind": "inscription", "where": "early" }, { "id": "subject", "kind": "cylinder", "where": "mid" }, { "id": "result", "kind": "inscription", "where": "late" }] }
-  ]
+ "kind": "narrative",
+ "items": [
+  {
+   "id": "nar.lost_expedition",
+   "families": [
+    "dfm.serrane_crypt",
+    "dfm.crystal_cavern",
+    "dfm.broken_facility"
+   ],
+   "pieces": [
+    {
+     "id": "camp",
+     "kind": "inscription",
+     "where": "early"
+    },
+    {
+     "id": "corpse",
+     "kind": "corpse",
+     "where": "mid"
+    },
+    {
+     "id": "journal",
+     "kind": "cylinder",
+     "where": "mid"
+    },
+    {
+     "id": "last",
+     "kind": "cylinder",
+     "where": "late"
+    }
+   ]
+  },
+  {
+   "id": "nar.failed_facility",
+   "families": [
+    "dfm.broken_facility",
+    "dfm.serrane_crypt"
+   ],
+   "pieces": [
+    {
+     "id": "notice",
+     "kind": "inscription",
+     "where": "early"
+    },
+    {
+     "id": "log",
+     "kind": "cylinder",
+     "where": "mid"
+    },
+    {
+     "id": "wreck",
+     "kind": "corpse",
+     "where": "late"
+    }
+   ]
+  },
+  {
+   "id": "nar.cult_of_rest",
+   "families": [
+    "dfm.serrane_crypt",
+    "dfm.crystal_cavern"
+   ],
+   "pieces": [
+    {
+     "id": "vow",
+     "kind": "inscription",
+     "where": "early"
+    },
+    {
+     "id": "offering",
+     "kind": "corpse",
+     "where": "mid"
+    },
+    {
+     "id": "litany",
+     "kind": "cylinder",
+     "where": "late"
+    }
+   ]
+  },
+  {
+   "id": "nar.hunted_creature",
+   "families": [
+    "dfm.crystal_cavern",
+    "dfm.broken_facility"
+   ],
+   "pieces": [
+    {
+     "id": "tracks",
+     "kind": "inscription",
+     "where": "early"
+    },
+    {
+     "id": "nest",
+     "kind": "corpse",
+     "where": "mid"
+    },
+    {
+     "id": "cry",
+     "kind": "cylinder",
+     "where": "late"
+    }
+   ]
+  },
+  {
+   "id": "nar.the_experiment",
+   "families": [
+    "dfm.broken_facility",
+    "dfm.crystal_cavern"
+   ],
+   "pieces": [
+    {
+     "id": "protocol",
+     "kind": "inscription",
+     "where": "early"
+    },
+    {
+     "id": "subject",
+     "kind": "cylinder",
+     "where": "mid"
+    },
+    {
+     "id": "result",
+     "kind": "inscription",
+     "where": "late"
+    }
+   ]
+  },
+  {
+   "id": "nar.tarn_expedition",
+   "families": [
+    "dfm.serrane_crypt"
+   ],
+   "story": true,
+   "pieces": [
+    {
+     "id": "camp",
+     "kind": "inscription",
+     "where": "early",
+     "onRead": [
+      {
+       "op": "discover",
+       "id": "cdx.tarn_camp"
+      }
+     ]
+    },
+    {
+     "id": "corpse",
+     "kind": "corpse",
+     "where": "mid"
+    },
+    {
+     "id": "journal",
+     "kind": "cylinder",
+     "where": "mid",
+     "onRead": [
+      {
+       "op": "setFlag",
+       "flag": "tarn_clue_crypt"
+      }
+     ]
+    },
+    {
+     "id": "last",
+     "kind": "cylinder",
+     "where": "late",
+     "onRead": [
+      {
+       "op": "setFlag",
+       "flag": "found_censored_record"
+      },
+      {
+       "op": "discover",
+       "id": "cdx.censored_register"
+      }
+     ]
+    }
+   ]
+  }
+ ]
 }

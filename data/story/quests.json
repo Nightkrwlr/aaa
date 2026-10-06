@@ -1,0 +1,285 @@
+{
+ "kind": "quest",
+ "items": [
+  {
+   "id": "qst.first_echo",
+   "category": "main",
+   "region": "rgn.calvarre",
+   "stages": [
+    {
+     "id": "wake",
+     "objectives": [
+      {
+       "type": "discover",
+       "id": "cdx.cylinder_awakening"
+      }
+     ],
+     "onEnter": [
+      {
+       "op": "subtitle",
+       "key": "sub.first_wake"
+      },
+      {
+       "op": "unlockWaypoint",
+       "id": "wp.latency"
+      }
+     ]
+    },
+    {
+     "id": "path",
+     "objectives": [
+      {
+       "type": "reach",
+       "area": "area.orrel"
+      }
+     ]
+    },
+    {
+     "id": "meet",
+     "objectives": [
+      {
+       "type": "talk",
+       "npc": "npc.orrel"
+      }
+     ]
+    },
+    {
+     "id": "quarry",
+     "objectives": [
+      {
+       "type": "defeatBoss",
+       "boss": "boss.brannoch"
+      }
+     ]
+    },
+    {
+     "id": "report",
+     "objectives": [
+      {
+       "type": "talk",
+       "npc": "npc.orrel"
+      }
+     ],
+     "end": true
+    }
+   ],
+   "rewards": {
+    "xp": 220,
+    "chimes": 25,
+    "items": [
+     {
+      "rarity": "fine",
+      "slot": "weapon"
+     }
+    ]
+   },
+   "next": [
+    "qst.empty_choir"
+   ]
+  },
+  {
+   "id": "qst.empty_choir",
+   "category": "main",
+   "region": "rgn.calvarre",
+   "stages": [
+    {
+     "id": "crypt",
+     "objectives": [
+      {
+       "type": "completeDungeon",
+       "dungeon": "dgn.crypt_resonance"
+      }
+     ]
+    },
+    {
+     "id": "door",
+     "objectives": [
+      {
+       "type": "flag",
+       "flag": "open:gate.choir_door"
+      }
+     ]
+    },
+    {
+     "id": "ildra",
+     "objectives": [
+      {
+       "type": "defeatBoss",
+       "boss": "boss.ildra"
+      }
+     ],
+     "onComplete": [
+      {
+       "op": "subtitle",
+       "key": "sub.ildra_thanks",
+       "speaker": "boss.ildra"
+      },
+      {
+       "op": "setFlag",
+       "flag": "ildra_freed"
+      }
+     ]
+    },
+    {
+     "id": "end",
+     "objectives": [
+      {
+       "type": "talk",
+       "npc": "npc.orrel"
+      }
+     ],
+     "end": true
+    }
+   ],
+   "rewards": {
+    "xp": 600,
+    "chimes": 80,
+    "talentPoints": 1,
+    "items": [
+     {
+      "rarity": "attuned"
+     }
+    ],
+    "effects": [
+     {
+      "op": "setFlag",
+      "flag": "slice_complete"
+     },
+     {
+      "op": "discover",
+      "id": "cdx.choir_end"
+     }
+    ]
+   },
+   "requires": {
+    "quest": "qst.first_echo",
+    "state": "done"
+   }
+  },
+  {
+   "id": "qst.silent_bells",
+   "category": "side",
+   "region": "rgn.calvarre",
+   "stages": [
+    {
+     "id": "clues",
+     "objectives": [
+      {
+       "type": "flag",
+       "flag": "wpz.silent_bells:read"
+      }
+     ]
+    },
+    {
+     "id": "bells",
+     "objectives": [
+      {
+       "type": "solvePuzzle",
+       "id": "wpz.silent_bells"
+      }
+     ],
+     "end": true
+    }
+   ],
+   "rewards": {
+    "xp": 260,
+    "chimes": 30
+   }
+  },
+  {
+   "id": "qst.apprentice",
+   "category": "side",
+   "region": "rgn.calvarre",
+   "stages": [
+    {
+     "id": "search",
+     "objectives": [
+      {
+       "type": "discover",
+       "id": "cdx.tarn_camp"
+      }
+     ]
+    },
+    {
+     "id": "crypt",
+     "objectives": [
+      {
+       "type": "flag",
+       "flag": "tarn_found"
+      }
+     ]
+    },
+    {
+     "id": "decide",
+     "objectives": [
+      {
+       "type": "flag",
+       "flag": "tarn_decided"
+      }
+     ]
+    },
+    {
+     "id": "return",
+     "objectives": [
+      {
+       "type": "talk",
+       "npc": "npc.hesk"
+      }
+     ],
+     "end": true
+    }
+   ],
+   "rewards": {
+    "xp": 180
+   }
+  },
+  {
+   "id": "qst.footprints",
+   "category": "secret",
+   "region": "rgn.calvarre",
+   "stages": [
+    {
+     "id": "glyphs",
+     "objectives": [
+      {
+       "type": "flag",
+       "flag": "glyph_1"
+      },
+      {
+       "type": "flag",
+       "flag": "glyph_2"
+      },
+      {
+       "type": "flag",
+       "flag": "glyph_3"
+      }
+     ]
+    },
+    {
+     "id": "door",
+     "objectives": [
+      {
+       "type": "solvePuzzle",
+       "id": "wpz.glyph_door"
+      }
+     ]
+    },
+    {
+     "id": "chamber",
+     "objectives": [
+      {
+       "type": "completeDungeon",
+       "dungeon": "dgn.desafine_chamber"
+      }
+     ],
+     "end": true
+    }
+   ],
+   "rewards": {
+    "xp": 520,
+    "chimes": 100,
+    "talentPoints": 1
+   }
+  }
+ ]
+}

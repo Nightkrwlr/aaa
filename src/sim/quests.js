@@ -18,7 +18,7 @@ export class QuestSystem {
     ev.on('listen', (i) => this.#progress('listen', (o) => !o.near || (i.near ?? []).includes(o.near)));
     ev.on('discover', (i) => this.#progress('discover', (o) => o.id === i.id));
     ev.on('boss', (i) => this.#progress('defeatBoss', (o) => o.boss === i.boss));
-    ev.on('dungeonDone', (i) => this.#progress('completeDungeon', (o) => !o.family || o.family === i.family));
+    ev.on('dungeonDone', (i) => this.#progress('completeDungeon', (o) => (!o.family || o.family === i.family) && (!o.dungeon || o.dungeon === i.spec)));
     ev.on('puzzle', (i) => this.#progress('solvePuzzle', (o) => o.id === i.id));
     ev.on('collect', () => this.#recheck());
     ev.on('area', (i) => this.#progress('reach', (o) => o.area === i.area));
@@ -76,9 +76,19 @@ export class QuestSystem {
   }
 
   #done(o, q, i) {
-    if (o.type === 'flag') return checkCond(this.s, { flag: o.flag });
-    if (o.type === 'haveItem') return checkCond(this.s, { item: o.item });
-    if (o.type === 'collect') return (this.s.character.inv.materials[o.id] ?? 0) >= (o.count ?? 1);
+    const st = this.s.state;
+    switch (o.type) {
+      case 'flag': return !!st.flags[o.flag];
+      case 'haveItem': return checkCond(this.s, { item: o.item });
+      case 'collect': return (this.s.character.inv.materials[o.id] ?? 0) >= (o.count ?? 1);
+      // level-triggered objectives: already-true facts count, so the order the player does things in never blocks a quest
+      case 'reach': if (st.visitedAreas.has(o.area)) return true; break;
+      case 'discover': if (st.discovered.has(o.id)) return true; break;
+      case 'defeatBoss': if (st.bosses.has(o.boss)) return true; break;
+      case 'solvePuzzle': if (st.secrets[o.id] === 'solved') return true; break;
+      case 'completeDungeon': if (o.dungeon && st.dungeons.specs?.[o.dungeon]) return true; break;
+      default: break;
+    }
     return (q.progress[i] ?? 0) >= (o.count ?? 1);
   }
 
@@ -98,8 +108,17 @@ export class QuestSystem {
     this.#recheck();
   }
 
-  /** advance stages whose objectives are all complete */
+  /** re-entrancy-safe: effects fired while advancing (flags, rewards) may trigger another recheck, which is deferred */
+  #busy = false; #again = false;
   #recheck() {
+    if (this.#busy) { this.#again = true; return; }
+    this.#busy = true;
+    try { let n = 0; do { this.#again = false; this.#recheckOnce(); } while (this.#again && n++ < 20); }
+    finally { this.#busy = false; }
+  }
+
+  /** advance stages whose objectives are all complete */
+  #recheckOnce() {
     let changed = true, guard = 0;
     while (changed && guard++ < 8) {
       changed = false;

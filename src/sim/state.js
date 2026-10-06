@@ -9,14 +9,20 @@ export class GameState {
     this.kills = {};            // enemy id → count (bestiary)
     this.bosses = new Set();    // defeated bosses (first-kill rules)
     this.npcMemory = {};        // npc id → {met:true, ...}
-    this.dungeons = { done: 0, bySeed: {} };
+    this.dungeons = { done: 0, bySeed: {}, specs: {} };
     this.gates = {};            // gate id → 'open'
     this.rep = {};              // faction → number
     this.visitedAreas = new Set();
     this.clock = { seconds: 0, day: 0 };
     this.markers = [];          // custom map markers [{x,z,label}]
     this.hintsSeen = new Set(); // tutorial hints shown
-    this.stats = { deaths: 0, listens: 0, chords: 0, perfectDodges: 0, voicesCaptured: 0, secretsFound: 0 };
+    this.stats = { deaths: 0, listens: 0, chords: 0, perfectDodges: 0, voicesCaptured: 0, secretsFound: 0, dungeons: 0, quests: 0, kills: 0 };
+    this.cleared = new Set();   // spawn groups killed since the last rest (so reloading does not re-spawn them)
+    this.depleted = {};         // resource node id → clock.seconds when gathered
+    this.checkpoint = null;     // {zone, wp, x, z}
+    this.shop = {};             // shop id → {sold:[sid…]}
+    this.restCount = 0;
+    this.puzzlesRead = {};      // world puzzle id → [clue indexes read]
   }
   flag(k) { return this.flags[k]; }
   setFlag(k, v = true) { this.flags[k] = v; }
@@ -24,16 +30,17 @@ export class GameState {
 
   toJSON() {
     return { flags: this.flags, quests: this.quests, waypoints: [...this.waypoints], discovered: [...this.discovered], secrets: this.secrets, kills: this.kills, bosses: [...this.bosses],
-      npcMemory: this.npcMemory, dungeons: this.dungeons, gates: this.gates, rep: this.rep, visitedAreas: [...this.visitedAreas], clock: this.clock, markers: this.markers, hintsSeen: [...this.hintsSeen], stats: this.stats };
+      npcMemory: this.npcMemory, dungeons: this.dungeons, gates: this.gates, rep: this.rep, visitedAreas: [...this.visitedAreas], clock: this.clock, markers: this.markers, hintsSeen: [...this.hintsSeen], stats: this.stats, cleared: [...this.cleared], depleted: this.depleted, checkpoint: this.checkpoint, shop: this.shop, restCount: this.restCount, puzzlesRead: this.puzzlesRead };
   }
   static fromJSON(d) {
     const s = new GameState();
     if (!d) return s;
     Object.assign(s.flags, d.flags ?? {}); Object.assign(s.quests, d.quests ?? {});
     s.waypoints = new Set(d.waypoints ?? []); s.discovered = new Set(d.discovered ?? []); Object.assign(s.secrets, d.secrets ?? {}); Object.assign(s.kills, d.kills ?? {});
-    s.bosses = new Set(d.bosses ?? []); Object.assign(s.npcMemory, d.npcMemory ?? {}); s.dungeons = { done: 0, bySeed: {}, ...(d.dungeons ?? {}) }; Object.assign(s.gates, d.gates ?? {});
+    s.bosses = new Set(d.bosses ?? []); Object.assign(s.npcMemory, d.npcMemory ?? {}); s.dungeons = { done: 0, bySeed: {}, specs: {}, ...(d.dungeons ?? {}) }; Object.assign(s.gates, d.gates ?? {});
     Object.assign(s.rep, d.rep ?? {}); s.visitedAreas = new Set(d.visitedAreas ?? []); s.clock = { seconds: 0, day: 0, ...(d.clock ?? {}) }; s.markers = d.markers ?? []; s.hintsSeen = new Set(d.hintsSeen ?? []);
     s.stats = { ...s.stats, ...(d.stats ?? {}) };
+    s.cleared = new Set(d.cleared ?? []); s.depleted = { ...(d.depleted ?? {}) }; s.checkpoint = d.checkpoint ?? null; s.shop = { ...(d.shop ?? {}) }; s.restCount = d.restCount ?? 0; s.puzzlesRead = { ...(d.puzzlesRead ?? {}) };
     return s;
   }
 }
@@ -61,5 +68,9 @@ export function checkCond(session, c) {
   if (c.secret) return !!st.secrets[c.secret];
   if (c.rep) return (st.rep[c.rep.faction] ?? 0) >= c.rep.min;
   if (c.mode) return session.mode === c.mode;
+  if (c.met) return !!st.npcMemory[c.met]?.met;
+  if (c.notMet) return !st.npcMemory[c.notMet]?.met;
+  if (c.memory) return !!st.npcMemory[c.memory.npc]?.[c.memory.key];
+  if (c.weather) return session.weather?.current === c.weather;
   return true;
 }

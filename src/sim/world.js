@@ -334,7 +334,7 @@ export class World {
     e.dead = true; e.hp = 0; e.deathTime = this.time;
     e.intent = null; e.cast = null; e.dash = null;
     if (e.def?.deathAbility) this.abilities.castImmediate(e, e.def.deathAbility);
-    if (e.boss) this.events.emit('boss:defeated', { entity: e, killer });
+    if (e.boss || e.def?.boss) this.events.emit('boss:defeated', { entity: e, killer });
     this.events.emit('entity:died', { entity: e, killer, info });
     if (e.team === 'enemy') {
       this.metrics.kills++;

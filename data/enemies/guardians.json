@@ -1,0 +1,539 @@
+{
+ "kind": "enemy",
+ "items": [
+  {
+   "id": "boss.crypt_warden",
+   "family": "fam.serrane_construct",
+   "tier": "miniboss",
+   "role": [
+    "boss",
+    "bruiser"
+   ],
+   "model": "mdl.crypt_warden",
+   "radius": 1.2,
+   "height": 3.8,
+   "speed": 3.9,
+   "hpMult": 1.0,
+   "armor": 1.5,
+   "kbResist": 0.85,
+   "bossId": "boss.crypt_warden",
+   "ai": {
+    "brain": "boss",
+    "aggroRange": 24,
+    "noLeash": true
+   },
+   "abilities": [
+    "abl.warden.sweep",
+    "abl.warden.toll",
+    "abl.warden.fan",
+    "abl.warden.grave_bells",
+    "abl.warden.call"
+   ],
+   "boss": {
+    "style": "melee",
+    "arena": {
+     "r": 15
+    },
+    "reach": 4.0,
+    "phases": [
+     {
+      "id": "p1",
+      "at": 1.0,
+      "gap": [
+       0.9,
+       1.7
+      ],
+      "rotation": [
+       {
+        "ab": "abl.warden.sweep",
+        "w": 4,
+        "maxD": 5
+       },
+       {
+        "ab": "abl.warden.toll",
+        "w": 2,
+        "maxD": 6.4
+       },
+       {
+        "ab": "abl.warden.fan",
+        "w": 3,
+        "minD": 5
+       }
+      ]
+     },
+     {
+      "id": "p2",
+      "at": 0.5,
+      "gap": [
+       0.7,
+       1.3
+      ],
+      "enter": {
+       "say": "boss.crypt_warden.p2",
+       "abilities": [
+        "abl.warden.call"
+       ]
+      },
+      "rotation": [
+       {
+        "ab": "abl.warden.sweep",
+        "w": 3,
+        "maxD": 5
+       },
+       {
+        "ab": "abl.warden.toll",
+        "w": 3,
+        "maxD": 6.4
+       },
+       {
+        "ab": "abl.warden.fan",
+        "w": 2,
+        "minD": 5
+       },
+       {
+        "ab": "abl.warden.grave_bells",
+        "w": 3,
+        "minD": 2
+       }
+      ],
+      "summons": {
+       "every": 30,
+       "ab": "abl.warden.call"
+      }
+     }
+    ]
+   },
+   "drops": {
+    "materials": [
+     {
+      "id": "mat.brass_scrap",
+      "chance": 1.0,
+      "min": 3,
+      "max": 5
+     },
+     {
+      "id": "mat.hollow_resin",
+      "chance": 1.0,
+      "min": 2,
+      "max": 3
+     }
+    ]
+   },
+   "uniqueDrops": [
+    {
+     "id": "unq.brannoch_maul",
+     "chance": 0.08
+    }
+   ]
+  },
+  {
+   "id": "boss.cave_matriarch",
+   "family": "fam.discordant",
+   "tier": "miniboss",
+   "role": [
+    "boss",
+    "skirmisher"
+   ],
+   "model": "mdl.cave_matriarch",
+   "radius": 1.3,
+   "height": 2.0,
+   "speed": 5.4,
+   "hpMult": 0.95,
+   "armor": 0.6,
+   "kbResist": 0.8,
+   "bossId": "boss.cave_matriarch",
+   "ai": {
+    "brain": "boss",
+    "aggroRange": 24,
+    "noLeash": true
+   },
+   "abilities": [
+    "abl.matriarch.rend",
+    "abl.matriarch.pounce",
+    "abl.matriarch.spit",
+    "abl.matriarch.screech",
+    "abl.matriarch.brood"
+   ],
+   "boss": {
+    "style": "melee",
+    "arena": {
+     "r": 15
+    },
+    "reach": 3.4,
+    "phases": [
+     {
+      "id": "p1",
+      "at": 1.0,
+      "gap": [
+       0.8,
+       1.5
+      ],
+      "rotation": [
+       {
+        "ab": "abl.matriarch.rend",
+        "w": 4,
+        "maxD": 3.8
+       },
+       {
+        "ab": "abl.matriarch.pounce",
+        "w": 3,
+        "minD": 5
+       },
+       {
+        "ab": "abl.matriarch.spit",
+        "w": 2,
+        "minD": 5
+       }
+      ]
+     },
+     {
+      "id": "p2",
+      "at": 0.55,
+      "gap": [
+       0.65,
+       1.2
+      ],
+      "enter": {
+       "say": "boss.cave_matriarch.p2",
+       "abilities": [
+        "abl.matriarch.brood"
+       ]
+      },
+      "rotation": [
+       {
+        "ab": "abl.matriarch.rend",
+        "w": 3,
+        "maxD": 3.8
+       },
+       {
+        "ab": "abl.matriarch.pounce",
+        "w": 3,
+        "minD": 5
+       },
+       {
+        "ab": "abl.matriarch.spit",
+        "w": 2,
+        "minD": 5
+       },
+       {
+        "ab": "abl.matriarch.screech",
+        "w": 2,
+        "maxD": 7
+       }
+      ],
+      "summons": {
+       "every": 28,
+       "ab": "abl.matriarch.brood"
+      }
+     }
+    ]
+   },
+   "drops": {
+    "materials": [
+     {
+      "id": "mat.stalker_sinew",
+      "chance": 1.0,
+      "min": 3,
+      "max": 5
+     },
+     {
+      "id": "mat.echo_silk",
+      "chance": 1.0,
+      "min": 1,
+      "max": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "boss.facility_core",
+   "family": "fam.serrane_construct",
+   "tier": "miniboss",
+   "role": [
+    "boss",
+    "caster"
+   ],
+   "model": "mdl.facility_core",
+   "radius": 1.1,
+   "height": 2.8,
+   "speed": 3.6,
+   "hpMult": 1.0,
+   "armor": 1.2,
+   "kbResist": 1,
+   "bossId": "boss.facility_core",
+   "ai": {
+    "brain": "boss",
+    "aggroRange": 26,
+    "noLeash": true
+   },
+   "abilities": [
+    "abl.core.beam",
+    "abl.core.pulse",
+    "abl.core.arc_field",
+    "abl.core.deploy"
+   ],
+   "boss": {
+    "style": "hover",
+    "arena": {
+     "r": 15
+    },
+    "range": [
+     8,
+     12
+    ],
+    "phases": [
+     {
+      "id": "p1",
+      "at": 1.0,
+      "gap": [
+       1.0,
+       1.8
+      ],
+      "rotation": [
+       {
+        "ab": "abl.core.beam",
+        "w": 4
+       },
+       {
+        "ab": "abl.core.pulse",
+        "w": 2,
+        "minD": 3
+       },
+       {
+        "ab": "abl.core.arc_field",
+        "w": 1
+       }
+      ]
+     },
+     {
+      "id": "p2",
+      "at": 0.55,
+      "gap": [
+       0.8,
+       1.4
+      ],
+      "enter": {
+       "say": "boss.facility_core.p2",
+       "abilities": [
+        "abl.core.deploy"
+       ]
+      },
+      "rotation": [
+       {
+        "ab": "abl.core.beam",
+        "w": 3
+       },
+       {
+        "ab": "abl.core.pulse",
+        "w": 2
+       },
+       {
+        "ab": "abl.core.arc_field",
+        "w": 2
+       }
+      ],
+      "summons": {
+       "every": 26,
+       "ab": "abl.core.deploy"
+      }
+     }
+    ]
+   },
+   "drops": {
+    "materials": [
+     {
+      "id": "mat.serrane_filament",
+      "chance": 1.0,
+      "min": 2,
+      "max": 4
+     },
+     {
+      "id": "mat.sonic_quartz",
+      "chance": 1.0,
+      "min": 1,
+      "max": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "boss.tarn_echo",
+   "family": "fam.discordant",
+   "tier": "miniboss",
+   "role": [
+    "boss",
+    "caster"
+   ],
+   "model": "mdl.tarn_echo",
+   "radius": 0.8,
+   "height": 2.4,
+   "speed": 4.6,
+   "hpMult": 1.0,
+   "armor": 0.3,
+   "kbResist": 1,
+   "bossId": "boss.tarn_echo",
+   "ai": {
+    "brain": "boss",
+    "aggroRange": 26,
+    "noLeash": true
+   },
+   "abilities": [
+    "abl.tarn.echo_volley",
+    "abl.tarn.mirror_step",
+    "abl.tarn.hush_chord",
+    "abl.tarn.refrain",
+    "abl.tarn.call_echoes"
+   ],
+   "boss": {
+    "style": "hover",
+    "arena": {
+     "r": 15
+    },
+    "range": [
+     7,
+     11
+    ],
+    "phases": [
+     {
+      "id": "p1",
+      "at": 1.0,
+      "gap": [
+       0.9,
+       1.6
+      ],
+      "rotation": [
+       {
+        "ab": "abl.tarn.echo_volley",
+        "w": 4
+       },
+       {
+        "ab": "abl.tarn.mirror_step",
+        "w": 2,
+        "minD": 4
+       },
+       {
+        "ab": "abl.tarn.refrain",
+        "w": 2,
+        "maxD": 9
+       }
+      ]
+     },
+     {
+      "id": "p2",
+      "at": 0.5,
+      "gap": [
+       0.7,
+       1.3
+      ],
+      "enter": {
+       "say": "boss.tarn_echo.p2",
+       "abilities": [
+        "abl.tarn.call_echoes"
+       ]
+      },
+      "rotation": [
+       {
+        "ab": "abl.tarn.echo_volley",
+        "w": 3
+       },
+       {
+        "ab": "abl.tarn.mirror_step",
+        "w": 2,
+        "minD": 4
+       },
+       {
+        "ab": "abl.tarn.refrain",
+        "w": 2,
+        "maxD": 9
+       },
+       {
+        "ab": "abl.tarn.hush_chord",
+        "w": 2
+       }
+      ],
+      "summons": {
+       "every": 30,
+       "ab": "abl.tarn.call_echoes"
+      }
+     }
+    ]
+   },
+   "uniqueDrops": [
+    {
+     "id": "unq.rest_pendant",
+     "chance": 0.5,
+     "firstChance": 1.0
+    }
+   ],
+   "drops": {
+    "materials": [
+     {
+      "id": "mat.echo_core",
+      "chance": 1.0,
+      "min": 1,
+      "max": 2
+     },
+     {
+      "id": "mat.resonant_dust",
+      "chance": 1.0,
+      "min": 3,
+      "max": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "enm.resonance_node",
+   "family": "fam.serrane_construct",
+   "tier": "tough",
+   "role": [
+    "turret",
+    "stationary",
+    "objective"
+   ],
+   "model": "mdl.resonance_node",
+   "radius": 0.9,
+   "height": 2.2,
+   "speed": 0,
+   "hpMult": 1.3,
+   "armor": 0.8,
+   "kbResist": 1,
+   "ccImmune": [
+    "stunned",
+    "frozen",
+    "slowed",
+    "rooted"
+   ],
+   "ai": {
+    "brain": "turret",
+    "aggroRange": 14,
+    "turnRate": 2.0,
+    "noLeash": true,
+    "instantAggro": true
+   },
+   "abilities": [
+    "abl.enm.node_pulse"
+   ],
+   "noSeparate": true,
+   "bestiary": {
+    "weak": [
+     "sonic"
+    ],
+    "resist": [
+     "shock"
+    ],
+    "tip": "priority"
+   },
+   "drops": {
+    "materials": [
+     {
+      "id": "mat.sonic_quartz",
+      "chance": 0.8,
+      "min": 1,
+      "max": 2
+     }
+    ]
+   }
+  }
+ ]
+}

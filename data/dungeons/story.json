@@ -1,0 +1,51 @@
+{
+ "kind": "dungeonSpec",
+ "items": [
+  {
+   "id": "dgn.crypt_resonance",
+   "family": "dfm.serrane_crypt",
+   "seed": "story:crypt-resonance",
+   "size": "small",
+   "objective": "obj.retrieve_artifact",
+   "modifiers": [],
+   "ilvl": 5,
+   "narrative": "nar.tarn_expedition",
+   "storyNpc": {
+    "id": "npc.tarn"
+   },
+   "onComplete": [
+    {
+     "op": "giveKeyItem",
+     "id": "key.resonant_core"
+    },
+    {
+     "op": "setFlag",
+     "flag": "crypt_done"
+    }
+   ]
+  },
+  {
+   "id": "dgn.desafine_chamber",
+   "family": "dfm.crystal_cavern",
+   "seed": "story:desafine-chamber",
+   "size": "small",
+   "objective": "obj.slay_boss",
+   "modifiers": [
+    "mod.echoing"
+   ],
+   "ilvl": 6,
+   "boss": "boss.tarn_echo",
+   "narrative": "nar.cult_of_rest",
+   "onComplete": [
+    {
+     "op": "setFlag",
+     "flag": "desafine_done"
+    },
+    {
+     "op": "discover",
+     "id": "cdx.desafine"
+    }
+   ]
+  }
+ ]
+}

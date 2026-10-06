@@ -6,13 +6,14 @@ import { composeEncounter } from '../director/encounters.js';
  * Group formations face the zone start so the "front" line meets the player first.
  * returns [{id, area, enemies:[entity]}]
  */
-export function populateZone(world, zone, { seed, difficulty } = {}) {
+export function populateZone(world, zone, { seed, difficulty, skip } = {}) {
   const rng = new Rng(`${seed ?? zone.def.seed}:pop`);
   const groups = [];
   const startX = zone.spawnPoint.x, startZ = zone.spawnPoint.z;
   let gid = 1;
   for (const sp of zone.def.spawns ?? []) {
     const r = rng.fork(sp.id);
+    if (skip?.has(sp.id)) continue;
     if (sp.rare !== undefined && !r.chance(sp.rare)) continue;
     let list;
     if (sp.template) list = composeEncounter(world.registry, sp.template, r, { level: sp.level, difficulty: difficulty ?? world.difficulty });

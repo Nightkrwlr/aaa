@@ -7,7 +7,8 @@ import { World } from '../world.js';
 import { Rng } from '../../core/rng.js';
 import { T, TILE } from './tilemap.js';
 import { composeEncounter } from '../director/encounters.js';
-import { createPuzzleState, HintTimer } from '../puzzles/index.js';
+import { PuzzleHost } from '../puzzles/host.js';
+import { applyEffects } from '../effects.js';
 import { logger } from '../../core/logger.js';
 const log = logger('dungeon-rt');
 
@@ -18,7 +19,8 @@ export class DungeonRuntime {
     this.doors = [];        // {id, cells, type, needs, openFrom, a, b, open, revealed}
     this.explored = new Set();
     this.interactables = [];
-    this.puzzles = new Map(); // id → {inst, state, hints, solved}
+    this.puzzleHost = new PuzzleHost(session);
+    this.puzzles = this.puzzleHost.map; // id → {instance, state, hints, solved}
     this.openedChests = new Set();
     this.objective = { id: dungeon.objective, done: false, artifactTaken: false, collapseAt: null, wavesDone: 0, wave: 0, active: false };
     this.complete = false; this.startedAt = 0; this.checkpoint = null;
@@ -90,14 +92,14 @@ export class DungeonRuntime {
     add({ kind: 'dungeon_entrance', x: c.entrance.x, z: c.entrance.z, r: 2.4, labelKey: 'ia.leave_dungeon', room: c.entrance.room });
     add({ kind: 'dungeon_exit', x: c.exit.x, z: c.exit.z, r: 2.6, labelKey: 'ia.dungeon_exit', room: c.exit.room });
     for (const ch of c.chests) add({ kind: 'chest', x: ch.x, z: ch.z, r: 2.0, labelKey: 'ia.chest', tier: ch.tier, secret: ch.secret, sealed: ch.sealed, room: ch.room, openKey: `chest_${ch.room}_${Math.round(ch.x)}_${Math.round(ch.z)}` });
-    for (const l of c.lore) add({ kind: 'lore', x: l.x, z: l.z, r: 2.2, labelKey: `ia.lore_${l.kind}`, lore: l.textKey, loreKind: l.kind, room: l.room });
+    for (const l of c.lore) add({ kind: 'lore', x: l.x, z: l.z, r: 2.2, labelKey: `ia.lore_${l.kind}`, lore: l.textKey, loreKind: l.kind, room: l.room, effects: l.effects });
     for (const o of c.objects) {
       switch (o.kind) {
         case 'key_pedestal': add({ kind: 'key_pedestal', x: o.x, z: o.z, r: 2.2, labelKey: 'ia.take_key', key: o.key, room: o.room }); break;
         case 'mechanism': add({ kind: 'mechanism', x: o.x, z: o.z, r: 2.4, labelKey: 'ia.activate', key: o.key, room: o.room }); break;
         case 'survivor': add({ kind: 'survivor', x: o.x, z: o.z, r: 2.4, labelKey: 'ia.free_survivor', key: o.key, room: o.room }); break;
         case 'resonance_node': { const e = w.spawnEnemy('enm.resonance_node', o.x, o.z, { level: this.d.ilvl + 1 }); e.nodeKey = o.key; e.noXp = false; break; }
-        case 'event_stranded_scout': add({ kind: 'stranded_scout', x: o.x, z: o.z, r: 2.4, labelKey: 'ia.talk', room: o.room }); break;
+        case 'event_stranded_scout': add({ kind: 'stranded_scout', x: o.x, z: o.z, r: 2.4, labelKey: 'ia.talk', room: o.room, npc: o.npc }); break;
         default: break;
       }
     }
@@ -111,9 +113,7 @@ export class DungeonRuntime {
 
   #puzzleObjects(p, add) {
     const room = this.d.rooms.get(p.room);
-    const state = createPuzzleState(p.instance);
-    const entry = { id: p.id, def: p, state, hints: new HintTimer(p.instance, this.s.settings?.puzzleHints !== false), solved: false, startedAt: 0, room: p.room };
-    this.puzzles.set(p.id, entry);
+    const entry = this.puzzleHost.add({ id: p.id, type: p.type, instance: p.instance, room: p.room, def: p, onSolve: (pz) => this.#onPuzzleSolved(pz) });
     const r = 3.2;
     if (p.type === 'tone_logic') {
       const n = p.instance.n;
@@ -157,15 +157,8 @@ export class DungeonRuntime {
       if (door.open) continue;
       if (door.type === T.LOCK && door.needs.every((k) => this.keys.has(k)) && Math.hypot(p.x - door.x, p.z - door.z) < 3.4) this.openDoor(door.id);
     }
-    // puzzles: hints
-    for (const pz of this.puzzles.values()) {
-      if (pz.solved) continue;
-      const near = room?.id === pz.room;
-      if (!near) continue;
-      const before = pz.hints.level;
-      const lvl = pz.hints.tick(dt, false);
-      if (lvl !== before && lvl > 0) s.events.emit('puzzle:hint', { id: pz.id, level: lvl, hint: pz.state.hint(lvl) });
-    }
+    // puzzles: layered hints only while the player is in the puzzle's room
+    this.puzzleHost.update(dt, (pz) => room?.id === pz.room);
     this.#objectiveTick(dt);
     this.#waves(dt);
   }
@@ -200,7 +193,7 @@ export class DungeonRuntime {
       }
       case 'shrine': this.checkpoint = { x: obj.x, z: obj.z, room: obj.room }; s.character.refillPotions(); w.heal(s.player, s.player.hpMax, null, true); s.character.voices.charges = s.player.voices.max; s.player.voices.charges = s.player.voices.max; s.events.emit('dungeon:checkpoint', { room: obj.room }); return { ok: true, toast: 'toast.checkpoint' };
       case 'chest': return this.#openChest(obj);
-      case 'lore': s.events.emit('lore', { key: obj.lore, kind: obj.loreKind }); s.discover(obj.lore); return { ok: true };
+      case 'lore': s.events.emit('lore', { key: obj.lore, kind: obj.loreKind }); s.discover(obj.lore); applyEffects(s, obj.effects); return { ok: true };
       case 'tablet': return { ok: true, tablet: { puzzle: obj.puzzle, clue: obj.clue } };
       case 'tone_pillar': return this.strikePillar(obj);
       case 'mirror': return this.rotateMirror(obj);
@@ -211,23 +204,13 @@ export class DungeonRuntime {
     }
   }
 
-  strikePillar(obj) {
-    const pz = this.puzzles.get(obj.puzzle); if (!pz || pz.solved) return { ok: false };
-    const r = pz.state.strike(obj.index);
-    this.s.events.emit('puzzle:strike', { puzzle: pz.id, index: obj.index, correct: r.correct, done: r.done });
-    if (!r.correct) { this.world.status.apply(this.s.player, 'st.hush', { duration: 1.2 }); this.world.dealDirect(null, this.s.player, this.s.player.hpMax * 0.03, 'sonic', { reaction: true }); }
-    if (r.done) this.#solve(pz);
-    return { ok: true, ...r };
-  }
-  rotateMirror(obj) { const pz = this.puzzles.get(obj.puzzle); if (!pz || pz.solved) return { ok: false }; const r = pz.state.rotate(obj.index); this.s.events.emit('puzzle:mirror', { puzzle: pz.id, index: obj.index }); if (r.solved) this.#solve(pz); return { ok: true, ...r }; }
-  turnDial(obj) { const pz = this.puzzles.get(obj.puzzle); if (!pz || pz.solved) return { ok: false }; const r = pz.state.turn(obj.index, 1); this.s.events.emit('puzzle:dial', { puzzle: pz.id, index: obj.index }); if (r.solved) this.#solve(pz); return { ok: true, ...r, correct: pz.state.correct() }; }
+  strikePillar(obj) { return this.puzzleHost.strike(obj); }
+  rotateMirror(obj) { return this.puzzleHost.rotate(obj); }
+  turnDial(obj) { return this.puzzleHost.turn(obj); }
 
-  #solve(pz) {
-    pz.solved = true;
+  #onPuzzleSolved(pz) {
     if (pz.def.key) this.keys.add(pz.def.key);
     for (const o of this.interactables) if (o.kind === 'chest' && o.sealed === pz.id) o.sealed = null;
-    this.s.events.emit('puzzle', { id: pz.id, type: pz.def.type });
-    this.s.events.emit('toast', { key: 'toast.puzzle_solved' });
   }
 
   #openChest(obj) {

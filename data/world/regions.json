@@ -1,0 +1,46 @@
+{
+ "kind": "region",
+ "items": [
+  {
+   "id": "rgn.calvarre",
+   "status": "playable",
+   "order": 1,
+   "zones": [
+    "zone.calvarre_lower"
+   ],
+   "levelRange": [
+    1,
+    8
+   ],
+   "identity": "listen",
+   "gateOut": "gate.pass_lost_echo",
+   "music": "mus.explore"
+  },
+  {
+   "id": "rgn.lost_echoes",
+   "status": "designed",
+   "order": 2,
+   "zones": [],
+   "levelRange": [
+    8,
+    18
+   ],
+   "identity": "reverberation",
+   "gateOut": "gate.mechanism_vesper",
+   "music": "mus.echoes"
+  },
+  {
+   "id": "rgn.silence_fields",
+   "status": "designed",
+   "order": 3,
+   "zones": [],
+   "levelRange": [
+    18,
+    30
+   ],
+   "identity": "silence",
+   "gateOut": null,
+   "music": "mus.silence"
+  }
+ ]
+}

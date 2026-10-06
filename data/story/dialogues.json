@@ -1,0 +1,1036 @@
+{
+ "kind": "dialogue",
+ "items": [
+  {
+   "id": "dlg.orrel",
+   "npc": "npc.orrel",
+   "roots": [
+    {
+     "id": "end",
+     "cond": {
+      "quest": "qst.empty_choir",
+      "state": "done"
+     },
+     "priority": 100
+    },
+    {
+     "id": "final_forgiven",
+     "cond": {
+      "all": [
+       {
+        "quest": "qst.empty_choir",
+        "state": "stage:end"
+       },
+       {
+        "flag": "orrel_forgiven"
+       }
+      ]
+     },
+     "priority": 96
+    },
+    {
+     "id": "final_cold",
+     "cond": {
+      "all": [
+       {
+        "quest": "qst.empty_choir",
+        "state": "stage:end"
+       },
+       {
+        "flag": "orrel_cold"
+       }
+      ]
+     },
+     "priority": 96
+    },
+    {
+     "id": "final_1",
+     "cond": {
+      "quest": "qst.empty_choir",
+      "state": "stage:end"
+     },
+     "priority": 95
+    },
+    {
+     "id": "report_1",
+     "cond": {
+      "quest": "qst.first_echo",
+      "state": "stage:report"
+     },
+     "priority": 90
+    },
+    {
+     "id": "first_1",
+     "cond": {
+      "quest": "qst.first_echo",
+      "state": "stage:meet"
+     },
+     "priority": 88
+    },
+    {
+     "id": "quarry_1",
+     "cond": {
+      "quest": "qst.first_echo",
+      "state": "stage:quarry"
+     },
+     "priority": 80
+    },
+    {
+     "id": "crypt_1",
+     "cond": {
+      "quest": "qst.empty_choir",
+      "state": "stage:crypt"
+     },
+     "priority": 72
+    },
+    {
+     "id": "door_1",
+     "cond": {
+      "quest": "qst.empty_choir",
+      "state": "stage:door"
+     },
+     "priority": 72
+    },
+    {
+     "id": "ildra_1",
+     "cond": {
+      "quest": "qst.empty_choir",
+      "state": "stage:ildra"
+     },
+     "priority": 72
+    },
+    {
+     "id": "idle",
+     "priority": 1
+    }
+   ],
+   "nodes": {
+    "first_1": {
+     "textKey": "dlg.orrel.first_1",
+     "speaker": "npc.orrel",
+     "next": "hub"
+    },
+    "hub": {
+     "textKey": "dlg.orrel.hub",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.hub.c0",
+       "next": "place"
+      },
+      {
+       "textKey": "dlg.orrel.hub.c1",
+       "next": "hollow"
+      },
+      {
+       "textKey": "dlg.orrel.hub.c2",
+       "next": "mute"
+      },
+      {
+       "textKey": "dlg.orrel.hub.c3",
+       "next": "task"
+      },
+      {
+       "textKey": "dlg.orrel.hub.c4"
+      }
+     ]
+    },
+    "place": {
+     "textKey": "dlg.orrel.place",
+     "effects": [
+      {
+       "op": "discover",
+       "id": "cdx.coro"
+      }
+     ],
+     "next": "hub"
+    },
+    "hollow": {
+     "textKey": "dlg.orrel.hollow",
+     "effects": [
+      {
+       "op": "discover",
+       "id": "cdx.hollows"
+      }
+     ],
+     "next": "hub"
+    },
+    "mute": {
+     "textKey": "dlg.orrel.mute",
+     "next": "hub"
+    },
+    "task": {
+     "textKey": "dlg.orrel.task",
+     "effects": [
+      {
+       "op": "discover",
+       "id": "cdx.vigilia"
+      }
+     ],
+     "next": "hub"
+    },
+    "quarry_1": {
+     "textKey": "dlg.orrel.quarry_1",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.quarry_1.c0",
+       "next": "hub"
+      },
+      {
+       "textKey": "dlg.orrel.quarry_1.c1"
+      }
+     ]
+    },
+    "report_1": {
+     "textKey": "dlg.orrel.report_1",
+     "effects": [
+      {
+       "op": "discover",
+       "id": "cdx.silencio"
+      }
+     ],
+     "choices": [
+      {
+       "textKey": "dlg.orrel.report_1.c0",
+       "next": "report_secret"
+      },
+      {
+       "textKey": "dlg.orrel.report_1.c1"
+      }
+     ]
+    },
+    "report_secret": {
+     "textKey": "dlg.orrel.report_secret",
+     "effects": [
+      {
+       "op": "setFlag",
+       "flag": "asked_orrel_secret"
+      }
+     ],
+     "next": "hub"
+    },
+    "crypt_1": {
+     "textKey": "dlg.orrel.crypt_1",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.crypt_1.c0",
+       "next": "confront",
+       "cond": {
+        "all": [
+         {
+          "flag": "found_censored_record"
+         },
+         {
+          "noFlag": "orrel_truth"
+         }
+        ]
+       },
+       "hideIfDisabled": true
+      },
+      {
+       "textKey": "dlg.orrel.crypt_1.c1",
+       "next": "hub"
+      },
+      {
+       "textKey": "dlg.orrel.crypt_1.c2"
+      }
+     ]
+    },
+    "confront": {
+     "textKey": "dlg.orrel.confront",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.confront.c0",
+       "effects": [
+        {
+         "op": "setFlag",
+         "flag": "orrel_truth"
+        },
+        {
+         "op": "setFlag",
+         "flag": "orrel_forgiven"
+        },
+        {
+         "op": "rep",
+         "faction": "vigilia",
+         "amount": 1
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.orrel.confront.c1",
+       "effects": [
+        {
+         "op": "setFlag",
+         "flag": "orrel_truth"
+        },
+        {
+         "op": "setFlag",
+         "flag": "orrel_cold"
+        },
+        {
+         "op": "rep",
+         "faction": "vigilia",
+         "amount": -1
+        }
+       ]
+      }
+     ]
+    },
+    "door_1": {
+     "textKey": "dlg.orrel.door_1",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.door_1.c0",
+       "next": "confront",
+       "cond": {
+        "all": [
+         {
+          "flag": "found_censored_record"
+         },
+         {
+          "noFlag": "orrel_truth"
+         }
+        ]
+       },
+       "hideIfDisabled": true
+      },
+      {
+       "textKey": "dlg.orrel.door_1.c1",
+       "next": "hub"
+      },
+      {
+       "textKey": "dlg.orrel.door_1.c2"
+      }
+     ]
+    },
+    "ildra_1": {
+     "textKey": "dlg.orrel.ildra_1",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.ildra_1.c0",
+       "next": "confront",
+       "cond": {
+        "all": [
+         {
+          "flag": "found_censored_record"
+         },
+         {
+          "noFlag": "orrel_truth"
+         }
+        ]
+       },
+       "hideIfDisabled": true
+      },
+      {
+       "textKey": "dlg.orrel.ildra_1.c1"
+      }
+     ]
+    },
+    "final_forgiven": {
+     "textKey": "dlg.orrel.final_forgiven",
+     "next": "final_2"
+    },
+    "final_cold": {
+     "textKey": "dlg.orrel.final_cold",
+     "next": "final_2"
+    },
+    "final_1": {
+     "textKey": "dlg.orrel.final_1",
+     "next": "final_2"
+    },
+    "final_2": {
+     "textKey": "dlg.orrel.final_2",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.final_2.c0",
+       "next": "final_3"
+      },
+      {
+       "textKey": "dlg.orrel.final_2.c1",
+       "effects": [
+        {
+         "op": "openUi",
+         "panel": "epilogue"
+        }
+       ]
+      }
+     ]
+    },
+    "final_3": {
+     "textKey": "dlg.orrel.final_3",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.final_3.c0",
+       "effects": [
+        {
+         "op": "openUi",
+         "panel": "epilogue"
+        }
+       ]
+      }
+     ]
+    },
+    "end": {
+     "textKey": "dlg.orrel.end",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.end.c0",
+       "next": "vigilia"
+      },
+      {
+       "textKey": "dlg.orrel.end.c1",
+       "next": "town"
+      },
+      {
+       "textKey": "dlg.orrel.end.c2"
+      }
+     ]
+    },
+    "idle": {
+     "textKey": "dlg.orrel.idle",
+     "choices": [
+      {
+       "textKey": "dlg.orrel.idle.c0",
+       "next": "confront",
+       "cond": {
+        "all": [
+         {
+          "flag": "found_censored_record"
+         },
+         {
+          "noFlag": "orrel_truth"
+         }
+        ]
+       },
+       "hideIfDisabled": true
+      },
+      {
+       "textKey": "dlg.orrel.idle.c1",
+       "next": "vigilia"
+      },
+      {
+       "textKey": "dlg.orrel.idle.c2",
+       "next": "town"
+      },
+      {
+       "textKey": "dlg.orrel.idle.c3"
+      }
+     ]
+    },
+    "vigilia": {
+     "textKey": "dlg.orrel.vigilia",
+     "effects": [
+      {
+       "op": "discover",
+       "id": "cdx.vigilia"
+      }
+     ],
+     "next": "idle"
+    },
+    "town": {
+     "textKey": "dlg.orrel.town",
+     "next": "idle"
+    }
+   }
+  },
+  {
+   "id": "dlg.hesk",
+   "npc": "npc.hesk",
+   "roots": [
+    {
+     "id": "app_rescued",
+     "cond": {
+      "all": [
+       {
+        "quest": "qst.apprentice",
+        "state": "stage:return"
+       },
+       {
+        "flag": "tarn_rescued"
+       }
+      ]
+     },
+     "priority": 90
+    },
+    {
+     "id": "app_abandoned",
+     "cond": {
+      "all": [
+       {
+        "quest": "qst.apprentice",
+        "state": "stage:return"
+       },
+       {
+        "flag": "tarn_abandoned"
+       }
+      ]
+     },
+     "priority": 90
+    },
+    {
+     "id": "app_active",
+     "cond": {
+      "quest": "qst.apprentice",
+      "state": "active"
+     },
+     "priority": 60
+    },
+    {
+     "id": "first_1",
+     "cond": {
+      "notMet": "npc.hesk"
+     },
+     "priority": 50
+    },
+    {
+     "id": "hub",
+     "priority": 1
+    }
+   ],
+   "nodes": {
+    "first_1": {
+     "textKey": "dlg.hesk.first_1",
+     "next": "hub"
+    },
+    "hub": {
+     "textKey": "dlg.hesk.hub",
+     "choices": [
+      {
+       "textKey": "dlg.hesk.hub.c0",
+       "effects": [
+        {
+         "op": "openUi",
+         "panel": "shop",
+         "npc": "npc.hesk"
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.hesk.hub.c1",
+       "effects": [
+        {
+         "op": "openUi",
+         "panel": "craft",
+         "station": "forge"
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.hesk.hub.c2",
+       "next": "guild"
+      },
+      {
+       "textKey": "dlg.hesk.hub.c3",
+       "next": "app_offer",
+       "cond": {
+        "all": [
+         {
+          "quest": "qst.apprentice",
+          "state": "none"
+         }
+        ]
+       },
+       "hideIfDisabled": true
+      },
+      {
+       "textKey": "dlg.hesk.hub.c4"
+      }
+     ]
+    },
+    "guild": {
+     "textKey": "dlg.hesk.guild",
+     "effects": [
+      {
+       "op": "discover",
+       "id": "cdx.afinadores"
+      }
+     ],
+     "next": "hub"
+    },
+    "app_offer": {
+     "textKey": "dlg.hesk.app_offer",
+     "choices": [
+      {
+       "textKey": "dlg.hesk.app_offer.c0",
+       "effects": [
+        {
+         "op": "startQuest",
+         "id": "qst.apprentice"
+        },
+        {
+         "op": "giveKeyItem",
+         "id": "key.tarn_compass"
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.hesk.app_offer.c1",
+       "next": "hub"
+      }
+     ]
+    },
+    "app_active": {
+     "textKey": "dlg.hesk.app_active",
+     "next": "hub"
+    },
+    "app_rescued": {
+     "textKey": "dlg.hesk.app_rescued",
+     "effects": [
+      {
+       "op": "setFlag",
+       "flag": "hesk_discount"
+      },
+      {
+       "op": "rep",
+       "faction": "afinadores",
+       "amount": 2
+      },
+      {
+       "op": "giveItem",
+       "rarity": "attuned"
+      },
+      {
+       "op": "xp",
+       "amount": 160
+      }
+     ],
+     "next": "hub"
+    },
+    "app_abandoned": {
+     "textKey": "dlg.hesk.app_abandoned",
+     "effects": [
+      {
+       "op": "rep",
+       "faction": "afinadores",
+       "amount": -1
+      },
+      {
+       "op": "giveMaterial",
+       "id": "mat.tuning_shard",
+       "amount": 3
+      },
+      {
+       "op": "xp",
+       "amount": 90
+      },
+      {
+       "op": "takeKeyItem",
+       "id": "key.tarn_notes"
+      }
+     ],
+     "next": "hub"
+    }
+   }
+  },
+  {
+   "id": "dlg.sil",
+   "npc": "npc.sil",
+   "roots": [
+    {
+     "id": "glyph2",
+     "cond": {
+      "all": [
+       {
+        "flag": "glyph_2"
+       },
+       {
+        "noFlag": "sil_glyph2"
+       }
+      ]
+     },
+     "priority": 41
+    },
+    {
+     "id": "glyph1",
+     "cond": {
+      "all": [
+       {
+        "flag": "glyph_1"
+       },
+       {
+        "noFlag": "sil_glyph1"
+       }
+      ]
+     },
+     "priority": 40
+    },
+    {
+     "id": "first_1",
+     "cond": {
+      "notMet": "npc.sil"
+     },
+     "priority": 50
+    },
+    {
+     "id": "hub",
+     "priority": 1
+    }
+   ],
+   "nodes": {
+    "first_1": {
+     "textKey": "dlg.sil.first_1",
+     "choices": [
+      {
+       "textKey": "dlg.sil.first_1.c0",
+       "next": "first_2"
+      },
+      {
+       "textKey": "dlg.sil.first_1.c1",
+       "effects": [
+        {
+         "op": "openUi",
+         "panel": "respec"
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.sil.first_1.c2"
+      }
+     ]
+    },
+    "first_2": {
+     "textKey": "dlg.sil.first_2",
+     "effects": [
+      {
+       "op": "discover",
+       "id": "cdx.taciturnos"
+      }
+     ],
+     "next": "hub"
+    },
+    "hub": {
+     "textKey": "dlg.sil.hub",
+     "choices": [
+      {
+       "textKey": "dlg.sil.hub.c0",
+       "effects": [
+        {
+         "op": "openUi",
+         "panel": "respec"
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.sil.hub.c1",
+       "next": "who"
+      },
+      {
+       "textKey": "dlg.sil.hub.c2"
+      }
+     ]
+    },
+    "who": {
+     "textKey": "dlg.sil.who",
+     "next": "hub"
+    },
+    "glyph1": {
+     "textKey": "dlg.sil.glyph1",
+     "effects": [
+      {
+       "op": "setFlag",
+       "flag": "sil_glyph1"
+      }
+     ],
+     "next": "hub"
+    },
+    "glyph2": {
+     "textKey": "dlg.sil.glyph2",
+     "effects": [
+      {
+       "op": "setFlag",
+       "flag": "sil_glyph2"
+      }
+     ],
+     "next": "hub"
+    }
+   }
+  },
+  {
+   "id": "dlg.maeve",
+   "npc": "npc.maeve",
+   "roots": [
+    {
+     "id": "bells",
+     "cond": {
+      "all": [
+       {
+        "quest": "qst.silent_bells",
+        "state": "active"
+       }
+      ]
+     },
+     "priority": 60
+    },
+    {
+     "id": "first_1",
+     "cond": {
+      "notMet": "npc.maeve"
+     },
+     "priority": 50
+    },
+    {
+     "id": "hub",
+     "priority": 1
+    }
+   ],
+   "nodes": {
+    "first_1": {
+     "textKey": "dlg.maeve.first_1",
+     "next": "hub"
+    },
+    "hub": {
+     "textKey": "dlg.maeve.hub",
+     "choices": [
+      {
+       "textKey": "dlg.maeve.hub.c0",
+       "effects": [
+        {
+         "op": "openUi",
+         "panel": "shop",
+         "npc": "npc.maeve"
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.maeve.hub.c1",
+       "next": "rumor1"
+      },
+      {
+       "textKey": "dlg.maeve.hub.c2"
+      }
+     ]
+    },
+    "rumor1": {
+     "textKey": "dlg.maeve.rumor1",
+     "effects": [
+      {
+       "op": "startQuest",
+       "id": "qst.silent_bells"
+      }
+     ],
+     "choices": [
+      {
+       "textKey": "dlg.maeve.rumor1.c0",
+       "next": "rumor2"
+      },
+      {
+       "textKey": "dlg.maeve.rumor1.c1",
+       "next": "hub"
+      }
+     ]
+    },
+    "rumor2": {
+     "textKey": "dlg.maeve.rumor2",
+     "choices": [
+      {
+       "textKey": "dlg.maeve.rumor2.c0",
+       "next": "rumor3"
+      },
+      {
+       "textKey": "dlg.maeve.rumor2.c1",
+       "next": "hub"
+      }
+     ]
+    },
+    "rumor3": {
+     "textKey": "dlg.maeve.rumor3",
+     "choices": [
+      {
+       "textKey": "dlg.maeve.rumor3.c0",
+       "next": "rumor4"
+      },
+      {
+       "textKey": "dlg.maeve.rumor3.c1",
+       "next": "hub"
+      }
+     ]
+    },
+    "rumor4": {
+     "textKey": "dlg.maeve.rumor4",
+     "choices": [
+      {
+       "textKey": "dlg.maeve.rumor4.c0",
+       "next": "rumor5"
+      },
+      {
+       "textKey": "dlg.maeve.rumor4.c1",
+       "next": "hub"
+      }
+     ]
+    },
+    "rumor5": {
+     "textKey": "dlg.maeve.rumor5",
+     "choices": [
+      {
+       "textKey": "dlg.maeve.rumor5.c0",
+       "next": "rumor_end"
+      },
+      {
+       "textKey": "dlg.maeve.rumor5.c1",
+       "next": "hub"
+      }
+     ]
+    },
+    "rumor_end": {
+     "textKey": "dlg.maeve.rumor_end",
+     "next": "hub"
+    },
+    "bells": {
+     "textKey": "dlg.maeve.bells",
+     "next": "hub"
+    }
+   }
+  },
+  {
+   "id": "dlg.tarn",
+   "npc": "npc.tarn",
+   "roots": [
+    {
+     "id": "crypt_after",
+     "cond": {
+      "all": [
+       {
+        "mode": "dungeon"
+       },
+       {
+        "flag": "tarn_decided"
+       }
+      ]
+     },
+     "priority": 90
+    },
+    {
+     "id": "crypt_1",
+     "cond": {
+      "all": [
+       {
+        "mode": "dungeon"
+       }
+      ]
+     },
+     "priority": 80
+    },
+    {
+     "id": "town_1",
+     "cond": {
+      "all": [
+       {
+        "flag": "tarn_rescued"
+       },
+       {
+        "mode": "overworld"
+       }
+      ]
+     },
+     "priority": 50
+    }
+   ],
+   "nodes": {
+    "crypt_1": {
+     "textKey": "dlg.tarn.crypt_1",
+     "effects": [
+      {
+       "op": "setFlag",
+       "flag": "tarn_found"
+      },
+      {
+       "op": "discover",
+       "id": "cdx.tarn_camp"
+      }
+     ],
+     "choices": [
+      {
+       "textKey": "dlg.tarn.crypt_1.c0",
+       "next": "crypt_out",
+       "effects": [
+        {
+         "op": "setFlag",
+         "flag": "tarn_rescued"
+        },
+        {
+         "op": "setFlag",
+         "flag": "tarn_decided"
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.tarn.crypt_1.c1",
+       "next": "crypt_left",
+       "effects": [
+        {
+         "op": "setFlag",
+         "flag": "tarn_abandoned"
+        },
+        {
+         "op": "setFlag",
+         "flag": "tarn_decided"
+        },
+        {
+         "op": "giveKeyItem",
+         "id": "key.tarn_notes"
+        }
+       ]
+      },
+      {
+       "textKey": "dlg.tarn.crypt_1.c2"
+      }
+     ]
+    },
+    "crypt_out": {
+     "textKey": "dlg.tarn.crypt_out"
+    },
+    "crypt_left": {
+     "textKey": "dlg.tarn.crypt_left"
+    },
+    "crypt_after": {
+     "textKey": "dlg.tarn.crypt_after"
+    },
+    "town_1": {
+     "textKey": "dlg.tarn.town_1",
+     "effects": [
+      {
+       "op": "setFlag",
+       "flag": "tarn_hint_given"
+      }
+     ],
+     "choices": [
+      {
+       "textKey": "dlg.tarn.town_1.c0"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "dlg.scout",
+   "npc": "npc.scout",
+   "roots": [
+    {
+     "id": "r",
+     "priority": 1
+    }
+   ],
+   "nodes": {
+    "r": {
+     "textKey": "dlg.scout.r",
+     "effects": [
+      {
+       "op": "giveConsumable",
+       "id": "con.antidote",
+       "amount": 1
+      },
+      {
+       "op": "xp",
+       "amount": 40
+      }
+     ],
+     "choices": [
+      {
+       "textKey": "dlg.scout.r.c0"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

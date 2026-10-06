@@ -1,0 +1,73 @@
+{
+ "kind": "event",
+ "items": [
+  {
+   "id": "evt.stranded_scout",
+   "weight": 3,
+   "minLevel": 2,
+   "enemies": [
+    {
+     "id": "enm.cliff_stalker",
+     "count": 3,
+     "aggro": true
+    }
+   ],
+   "npc": "npc.scout",
+   "timeout": 120,
+   "reward": {
+    "xp": 60,
+    "chimes": 5
+   }
+  },
+  {
+   "id": "evt.hollow_procession",
+   "weight": 2,
+   "minLevel": 3,
+   "enemies": [
+    {
+     "id": "enm.hollow_chorister",
+     "count": 4,
+     "aggro": false
+    },
+    {
+     "id": "enm.mute_bellringer",
+     "count": 1,
+     "elite": true,
+     "eliteCount": 1
+    }
+   ],
+   "timeout": 150,
+   "reward": {
+    "xp": 90,
+    "chimes": 8,
+    "items": 1
+   }
+  },
+  {
+   "id": "evt.windstorm_surge",
+   "weight": 2,
+   "minLevel": 3,
+   "weather": "calm",
+   "forceWeather": "windstorm",
+   "duration": 110,
+   "enemies": [
+    {
+     "id": "enm.keening_wisp",
+     "count": 5,
+     "aggro": true
+    }
+   ],
+   "timeout": 140,
+   "reward": {
+    "xp": 70,
+    "chimes": 6,
+    "materials": [
+     {
+      "id": "mat.bellflower",
+      "n": 3
+     }
+    ]
+   }
+  }
+ ]
+}

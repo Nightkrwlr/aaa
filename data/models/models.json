@@ -430,6 +430,89 @@
     "hover": true,
     "legs": "#7fe3ff"
    }
+  },
+  {
+   "id": "mdl.crypt_warden",
+   "tpl": "biped",
+   "p": {
+    "scale": 2.0,
+    "bulk": 1.6,
+    "cloth": "#4a4a58",
+    "trim": "#d9a24a",
+    "shoulders": "#8a7a58",
+    "head": "helm",
+    "weaponR": "bell_hammer",
+    "skin": "#9a9484",
+    "legs": "#34343e",
+    "glow": "#7fe3ff",
+    "chestGlow": true,
+    "metal": "#8a7a58",
+    "hangBell": true
+   }
+  },
+  {
+   "id": "mdl.cave_matriarch",
+   "tpl": "quadruped",
+   "p": {
+    "scale": 1.9,
+    "color": "#5e5a6a",
+    "belly": "#a49fb4",
+    "horns": true,
+    "spikes": true,
+    "glow": "#b6ff4a",
+    "glowVeins": true
+   }
+  },
+  {
+   "id": "mdl.facility_core",
+   "tpl": "turret",
+   "p": {
+    "scale": 2.2,
+    "color": "#8a6428",
+    "glow": "#ffb050"
+   }
+  },
+  {
+   "id": "mdl.npc_scout",
+   "tpl": "biped",
+   "p": {
+    "scale": 0.98,
+    "bulk": 0.95,
+    "cloth": "#7a6a4e",
+    "trim": "#9fb0c0",
+    "head": "hood",
+    "skin": "#c9a688",
+    "legs": "#4a4338",
+    "glow": "#7fe3ff",
+    "weaponR": "none"
+   }
+  },
+  {
+   "id": "mdl.tarn_echo",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.25,
+    "bulk": 0.95,
+    "cloth": "#9fe8ff",
+    "trim": "#e6fbff",
+    "head": "hood",
+    "skin": "#cfeaf4",
+    "legs": "#6fb6cc",
+    "glow": "#7fe3ff",
+    "chestGlow": true,
+    "hover": true,
+    "orbit": 4,
+    "cloak": "#8fd4ea"
+   }
+  },
+  {
+   "id": "mdl.resonance_node",
+   "tpl": "turret",
+   "p": {
+    "scale": 1.3,
+    "color": "#6a7f98",
+    "glow": "#b79cff"
+   }
   }
  ]
 }

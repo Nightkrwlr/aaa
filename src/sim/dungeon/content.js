@@ -7,7 +7,7 @@ import { composeEncounter } from '../director/encounters.js';
 import { TILE, T } from './tilemap.js';
 import { generatePuzzle } from '../puzzles/index.js';
 
-export function placeContent(registry, family, graph, map, rooms, rng, { ilvl, difficulty = 'seeker', modifiers = [] }) {
+export function placeContent(registry, family, graph, map, rooms, rng, { ilvl, difficulty = 'seeker', modifiers = [], boss: bossOverride = null, narrative: narOverride = null, storyNpc = null }) {
   const content = { spawns: [], props: [], lights: [], chests: [], shrines: [], lore: [], puzzles: [], objects: [], hazards: [], ambushes: [], secretCaches: [] };
   const doorsByRoom = new Map();
   for (const d of map.doors) for (const id of [d.a, d.b]) { if (!doorsByRoom.has(id)) doorsByRoom.set(id, []); doorsByRoom.get(id).push(...d.cells); }
@@ -27,8 +27,8 @@ export function placeContent(registry, family, graph, map, rooms, rng, { ilvl, d
   const depthPool = (idx) => { const t = idx / Math.max(1, L - 1); return t < 0.35 ? pools.easy : t < 0.75 ? pools.mid : pools.hard; };
 
   // ── narrative microstory
-  const narPool = registry.all('narrative').filter((n) => n.families.includes(family.id));
-  const narrative = narPool.length ? rng.pick(narPool) : null;
+  const narPool = registry.all('narrative').filter((n) => n.families.includes(family.id) && !n.story);
+  const narrative = narOverride ? registry.require(narOverride, 'narrative') : narPool.length ? rng.pick(narPool) : null;
   const loreRooms = { early: [], mid: [], late: [] };
   graph.nodes.forEach((n) => {
     if (['entrance', 'exit'].includes(n.type)) return;
@@ -71,7 +71,7 @@ export function placeContent(registry, family, graph, map, rooms, rng, { ilvl, d
       case 'resonance_node': content.objects.push({ kind: 'resonance_node', room: node.id, x: cx, z: cz, key: node.tags.find((t) => t.startsWith('key:'))?.slice(4) }); break;
       case 'survivor': content.objects.push({ kind: 'survivor', room: node.id, x: cx, z: cz, key: node.tags.find((t) => t.startsWith('key:'))?.slice(4) }); break;
       case 'key': content.objects.push({ kind: 'key_pedestal', room: node.id, x: cx, z: cz, key: node.tags.find((t) => t.startsWith('key:'))?.slice(4) }); break;
-      case 'boss': content.boss = { room: node.id, x: cx, z: cz, boss: family.boss, artifact: node.tags.includes('artifact'), collapse: node.tags.includes('collapse') }; break;
+      case 'boss': content.boss = { room: node.id, x: cx, z: cz, boss: bossOverride ?? family.boss, artifact: node.tags.includes('artifact'), collapse: node.tags.includes('collapse') }; break;
       case 'wave_arena': content.waveArena = { room: node.id, x: cx, z: cz, waves: 4 + (graph.size === 'large' ? 2 : 0) }; break;
       case 'puzzle': {
         const type = r.pick(family.puzzles);
@@ -94,9 +94,19 @@ export function placeContent(registry, family, graph, map, rooms, rng, { ilvl, d
       const room = rooms.get(n.id);
       const fl = room.floor.filter(([x, y]) => map.isOpen(x + 1, y) && map.isOpen(x - 1, y));
       const [tx, ty] = rng.fork(`lore${piece.id}`).pick(fl.length ? fl : room.floor);
-      content.lore.push({ id: `${narrative.id}.${piece.id}`, kind: piece.kind, textKey: `${narrative.id}.${piece.id}`, room: n.id, x: map.wx(tx), z: map.wz(ty) });
+      content.lore.push({ id: `${narrative.id}.${piece.id}`, kind: piece.kind, effects: piece.onRead, textKey: `${narrative.id}.${piece.id}`, room: n.id, x: map.wx(tx), z: map.wz(ty) });
     }
     content.narrative = narrative.id;
+  }
+
+  // ── guaranteed story NPC (e.g. Tarn): a mid-path room that is not special
+  if (storyNpc) {
+    const cands = graph.critical.map((id) => byId.get(id)).filter((n) => !['entrance', 'exit', 'boss', 'shrine', 'wave_arena'].includes(n.type));
+    const n = cands.length ? cands[Math.min(cands.length - 1, Math.floor(cands.length * 0.55))] : graph.nodes.find((x) => x.type === 'combat');
+    const room = rooms.get(n.id);
+    const fl = roomTiles(room, { avoidDoors: 3 });
+    const [tx, ty] = rng.fork('storynpc').pick(fl.length ? fl : room.floor);
+    content.objects.push({ kind: 'event_stranded_scout', room: n.id, x: map.wx(tx), z: map.wz(ty), npc: storyNpc.id });
   }
 
   // ── environmental modifier hazards

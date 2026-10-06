@@ -1,0 +1,120 @@
+{
+ "kind": "codex",
+ "items": [
+  {
+   "id": "cdx.cylinder_awakening",
+   "category": "voices",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.mural_absent_note",
+   "category": "inscriptions",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.coro",
+   "category": "world",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.silencio",
+   "category": "world",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.hollows",
+   "category": "creatures",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.discordants",
+   "category": "creatures",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.constructs",
+   "category": "creatures",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.vigilia",
+   "category": "factions",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.afinadores",
+   "category": "factions",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.taciturnos",
+   "category": "factions",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.voices",
+   "category": "mysteries",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.listen",
+   "category": "mysteries",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.cadence",
+   "category": "mysteries",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.glyph_1",
+   "category": "glyphs",
+   "region": "rgn.calvarre",
+   "hintKey": "cdx.glyph_1.hint"
+  },
+  {
+   "id": "cdx.glyph_2",
+   "category": "glyphs",
+   "region": "rgn.calvarre",
+   "hintKey": "cdx.glyph_2.hint"
+  },
+  {
+   "id": "cdx.glyph_3",
+   "category": "glyphs",
+   "region": "rgn.calvarre",
+   "hintKey": "cdx.glyph_3.hint"
+  },
+  {
+   "id": "cdx.statue_nomouth",
+   "category": "mysteries",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.tarn_camp",
+   "category": "notes",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.choir_lament",
+   "category": "voices",
+   "region": "rgn.calvarre"
+  },
+  {
+   "id": "cdx.censored_register",
+   "category": "notes",
+   "region": "rgn.calvarre",
+   "hintKey": "cdx.censored_register.hint"
+  },
+  {
+   "id": "cdx.desafine",
+   "category": "places",
+   "region": "rgn.calvarre",
+   "hintKey": "cdx.desafine.hint"
+  },
+  {
+   "id": "cdx.choir_end",
+   "category": "mysteries",
+   "region": "rgn.calvarre"
+  }
+ ]
+}
