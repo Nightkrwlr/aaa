@@ -1,9 +1,4 @@
 import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { fadeUniforms, disposeTree } from './kit.js';
 import { buildDungeonMesh } from './dungeonMesh.js';
 import { buildTerrainMesh } from './terrainMesh.js';
@@ -11,72 +6,87 @@ import { buildInstancedProps } from './props.js';
 import { buildStructure, buildCanticle } from './structures.js';
 import { buildSky, buildBackdrop } from './sky.js';
 import { resolveQuality } from './quality.js';
+import { PostFx } from './post.js';
+import { installWorldFog, WorldFog, WORLD, resolveAtmosphere, PRESETS } from './atmosphere.js';
+import { WorldAssets } from './worldAssets.js';
+import { updateGlow } from './worldMaterials.js';
+import { logger } from '../../core/logger.js';
 
-const GRADE = {
-  uniforms: { tDiffuse: { value: null }, uVig: { value: 0.32 }, uListen: { value: 0 }, uTime: { value: 0 }, uFlash: { value: 0 }, uSat: { value: 1.05 }, uContrast: { value: 1.04 }, uCB: { value: 0 }, uHurt: { value: 0 } },
-  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-  fragmentShader: `varying vec2 vUv; uniform sampler2D tDiffuse; uniform float uVig,uListen,uTime,uFlash,uSat,uContrast,uCB,uHurt;
-    void main(){ vec4 c = texture2D(tDiffuse, vUv); vec2 q = vUv - 0.5;
-      float l = dot(c.rgb, vec3(0.299,0.587,0.114));
-      c.rgb = mix(vec3(l), c.rgb, uSat);
-      // listen: desaturate, cool tint, soft ripples
-      vec3 cool = vec3(l * 0.85, l * 1.05, l * 1.25);
-      c.rgb = mix(c.rgb, cool, uListen * 0.55);
-      c.rgb *= 1.0 - uListen * 0.12 * (0.5 + 0.5 * sin(length(q) * 28.0 - uTime * 3.0));
-      c.rgb = (c.rgb - 0.5) * uContrast + 0.5;
-      float v = smoothstep(0.85, 0.2, length(q) * (1.0 + uVig));
-      c.rgb *= mix(1.0 - uVig, 1.0, v);
-      c.rgb += vec3(uFlash * 0.35);
-      c.rgb = mix(c.rgb, c.rgb * vec3(1.25, 0.7, 0.7), uHurt * smoothstep(0.2, 0.9, length(q) * 1.6));
-      if (uCB > 0.5 && uCB < 1.5) { c.rgb = vec3(c.r * 0.567 + c.g * 0.433, c.r * 0.558 + c.g * 0.442, c.g * 0.242 + c.b * 0.758); }
-      else if (uCB > 1.5 && uCB < 2.5) { c.rgb = vec3(c.r * 0.625 + c.g * 0.375, c.r * 0.7 + c.g * 0.3, c.g * 0.3 + c.b * 0.7); }
-      else if (uCB > 2.5) { c.rgb = vec3(c.r * 0.95 + c.g * 0.05, c.g * 0.433 + c.b * 0.567, c.g * 0.475 + c.b * 0.525); }
-      gl_FragColor = c; }`,
-};
+const log = logger('scene3d');
+
+const CB = { none: 0, protanopia: 1, deuteranopia: 2, tritanopia: 3 };
 
 export class Scene3D {
   constructor(canvas, settings) {
+    installWorldFog();
     this.canvas = canvas;
     this.settings = settings;
     this.q = resolveQuality(settings.quality, settings.renderScale);
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', alpha: false, stencil: false });
     this.renderer.setClearColor('#b8c4cf');
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.NoToneMapping;
+    this.renderer.toneMapping = THREE.NoToneMapping; // tone mapping happens once, in the final post pass (see post.js)
+    this.renderer.info.autoReset = false;
     this.scene = new THREE.Scene();
     this.content = new THREE.Group(); this.content.name = 'content'; this.scene.add(this.content);
-    this.camera = new THREE.PerspectiveCamera(30, 1, 0.5, 700);
+    this.camera = new THREE.PerspectiveCamera(30, 1, 0.5, 900);
     this.updaters = [];
     this.emitters = [];
     this.lightPool = [];
     this.clock = 0;
+    this.variant = new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('tod') || 'dawn';
+    this.sunDir = new THREE.Vector3(-0.6, 0.5, 0.3).normalize();
+    this.baseSun = 3.3; this.baseHemi = 1;
     this.#setupLights();
-    this.#setupComposer();
+    // kit art (KayKit CC0): starts downloading now so it is ready by the time the title screen is dismissed
+    this.wa = new WorldAssets();
+    this.worldReady = { done: false };
+    this.wa.load().then(() => { if (this.zone?.props && this.content && !this.dungeonMesh) this.#buildWorldContent(true); }).catch((e) => log.warn('kit load failed', e));
+    this.post = new PostFx(this.renderer, this.scene, this.camera);
+    this.grade = { uniforms: this.post.u };
     this.applyQuality();
     this.resize();
   }
 
-  #setupLights() {
-    this.hemi = new THREE.HemisphereLight('#d8e8ff', '#8a7a62', 1.55);
-    this.sun = new THREE.DirectionalLight('#ffd9a0', 3.2);
-    this.sun.castShadow = true;
-    this.sun.shadow.bias = -0.0004; this.sun.shadow.normalBias = 0.05;
-    const sc = this.sun.shadow.camera; sc.left = -42; sc.right = 42; sc.top = 42; sc.bottom = -42; sc.near = 1; sc.far = 160;
-    this.scene.add(this.hemi, this.sun, this.sun.target);
+  /** optional: share the game's Assets instance (manifest/loader/cache) with the world builder */
+  useAssets(assets) {
+    if (!assets || this.wa.promise) return;
+    this.wa = new WorldAssets(assets);
+    this.wa.load().then(() => { if (this.zone?.props && !this.dungeonMesh) this.#buildWorldContent(true); });
   }
 
-  #setupComposer() {
-    const size = new THREE.Vector2(this.canvas.clientWidth || 800, this.canvas.clientHeight || 600);
-    const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
-    this.composer = new EffectComposer(this.renderer, rt);
-    this.renderPass = new RenderPass(this.scene, this.camera);
-    this.bloom = new UnrealBloomPass(size, 0.38, 0.65, 0.86);
-    this.grade = new ShaderPass(GRADE);
-    this.output = new OutputPass();
-    this.composer.addPass(this.renderPass);
-    this.composer.addPass(this.bloom);
-    this.composer.addPass(this.grade);
-    this.composer.addPass(this.output);
+  #setupLights() {
+    this.hemi = new THREE.HemisphereLight('#8fb0dd', '#6b5642', 1.05);
+    this.sun = new THREE.DirectionalLight('#ffd094', 3.3);
+    this.sun.castShadow = true;
+    this.sun.shadow.bias = -0.0003; this.sun.shadow.normalBias = 0.035; this.sun.shadow.radius = 2.2;
+    const sc = this.sun.shadow.camera; sc.left = -30; sc.right = 30; sc.top = 30; sc.bottom = -30; sc.near = 1; sc.far = 190;
+    this.rim = new THREE.DirectionalLight('#9fd8ff', 0.55); this.rim.castShadow = false;
+    this.scene.add(this.hemi, this.sun, this.sun.target, this.rim, this.rim.target);
+    this.shadowExtent = 30;
+  }
+
+  /** apply a full atmosphere (lights, fog, sky, grade) — `variant` is a PRESETS key or a ready resolveAtmosphere() object */
+  setAtmosphere(variant = this.variant, zoneAmbient = this.zone?.def?.ambient ?? null) {
+    const a = typeof variant === 'string' ? resolveAtmosphere(variant, zoneAmbient) : variant;
+    if (typeof variant === 'string') this.variant = variant;
+    this.atm = a;
+    this.hemi.color.copy(a.hemiSky); this.hemi.groundColor.copy(a.hemiGround); this.baseHemi = a.hemiIntensity; this.hemi.intensity = a.hemiIntensity;
+    this.sun.color.copy(a.sun); this.baseSun = a.sunIntensity; this.sun.intensity = a.sunIntensity; this.sunDir = a.sunDir.clone();
+    this.rim.color.copy(a.hemiSky).lerp(new THREE.Color('#9fe8ff'), 0.5);
+    this.scene.fog = new WorldFog(a.fog, a.density, a.falloff);
+    this.baseFog = { color: a.fog.clone(), density: a.density, falloff: a.falloff };
+    this.scene.background = a.fog.clone();
+    this.renderer.setClearColor(a.fog);
+    this.sky?.userData.apply?.(a);
+    const u = this.post.u, hc = this.settings.highContrast ? 1.16 : 1;
+    u.uExposure.value = a.exposure; u.uSat.value = a.sat; u.uContrast.value = a.contrast * hc; u.uVig.value = a.vignette; u.uLift.value = a.lift;
+    u.uShadowTint.value.copy(a.shadowTint); u.uHighTint.value.copy(a.highTint);
+    this.post.bloom.strength = a.bloom[0]; this.post.bloom.radius = a.bloom[1]; this.post.bloom.threshold = a.bloom[2];
+    WORLD.uCloud.value.set(0.16 + a.cloud * 0.5, 0.012, 0.007, 0.0075);
+    WORLD.uSunTint.value.copy(a.sun);
+    WORLD.uGlow.value = a.glow;
+    return a;
   }
 
   applyQuality() {
@@ -85,21 +95,22 @@ export class Scene3D {
     this.renderer.shadowMap.enabled = q.shadows > 0;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.sun.castShadow = q.shadows > 0;
-    if (q.shadows > 0) { this.sun.shadow.mapSize.set(q.shadows, q.shadows); this.sun.shadow.map?.dispose(); this.sun.shadow.map = null; }
-    this.bloom.enabled = q.bloom;
+    if (q.shadows > 0 && this.sun.shadow.mapSize.x !== q.shadows) { this.sun.shadow.mapSize.set(q.shadows, q.shadows); this.sun.shadow.map?.dispose(); this.sun.shadow.map = null; }
     this.renderer.setPixelRatio(q.pixelRatio);
-    this.composer.setPixelRatio(q.pixelRatio);
-    this.camera.far = Math.max(400, q.drawDist * 4);
+    this.post.configure({ samples: q.samples, bloom: q.bloom, ao: q.ao });
+    this.post.setSize(this.size?.w ?? (this.canvas.clientWidth || 800), this.size?.h ?? (this.canvas.clientHeight || 600));
+    this.camera.far = 900;
     this.camera.updateProjectionMatrix();
-    this.grade.uniforms.uCB.value = { none: 0, protanopia: 1, deuteranopia: 2, tritanopia: 3 }[this.settings.colorblind ?? 'none'];
-    this.grade.uniforms.uContrast.value = this.settings.highContrast ? 1.22 : 1.04;
+    this.post.u.uCB.value = CB[this.settings.colorblind ?? 'none'] ?? 0;
+    this.post.u.uGrain.value = q.name === 'low' ? 0.1 : 0.35;
+    if (this.atm) this.setAtmosphere(this.atm);
     this.#assignLights();
   }
 
   resize() {
     const w = this.canvas.clientWidth || window.innerWidth, h = this.canvas.clientHeight || window.innerHeight;
     this.renderer.setSize(w, h, false);
-    this.composer.setSize(w, h);
+    this.post.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.size = { w, h };
@@ -107,9 +118,12 @@ export class Scene3D {
 
   /** remove everything the current zone/dungeon added (kit-cached geometry is shared and survives) */
   clearContent() {
+    this.props?.field?.dispose();
     this.scene.remove(this.content); disposeTree(this.content);
+    this.terrain?.userData?.dispose?.();
     this.content = new THREE.Group(); this.content.name = 'content'; this.scene.add(this.content);
-    this.updaters = []; this.emitters = []; this.terrain = null; this.backdrop = null; this.canticle = null; this.dungeonMesh?.dispose?.(); this.dungeonMesh = null; this.windUniform = null; this.baseFog = null;
+    this.updaters = []; this.worldUpdaters = []; this.emitters = []; this.props = null; this.worldGroup = null; this.terrain = null; this.backdrop = null; this.canticle = null; this.dungeonMesh?.dispose?.(); this.dungeonMesh = null; this.windUniform = null; this.baseFog = null;
+    this.sky = null;
     this.playerLight?.removeFromParent(); this.playerLight = null;
   }
 
@@ -118,10 +132,13 @@ export class Scene3D {
     this.clearContent();
     const lt = family.light, mult = session.dungeon.d.content.lightMult ?? 1;
     this.zone = { heightAt: () => 0, def: { ambient: {} } };
-    this.scene.background = new THREE.Color(lt.fog); this.scene.fog = new THREE.FogExp2(lt.fog, lt.fogDensity * (mult < 1 ? 1.25 : 1));
-    this.renderer.setClearColor(lt.fog);
-    this.hemi.color.set(lt.ambient); this.hemi.groundColor.set('#10131a'); this.baseHemi = 1.2 * mult; this.hemi.intensity = this.baseHemi;
-    this.sun.color.set('#8aa0c8'); this.sunDir = new THREE.Vector3(-0.4, 1, -0.3).normalize(); this.baseSun = 0.55; this.sun.intensity = this.baseSun;
+    const a = resolveAtmosphere('night');
+    a.fog.set(lt.fog); a.density = lt.fogDensity * (mult < 1 ? 1.25 : 1); a.falloff = 0;
+    a.hemiSky.set(lt.ambient); a.hemiGround.set('#10131a'); a.hemiIntensity = 1.2 * mult;
+    a.sun.set('#8aa0c8'); a.sunIntensity = 0.55; a.sunDir.set(-0.4, 1, -0.3).normalize();
+    a.exposure = 1.0; a.sat = 1.12; a.contrast = 1.12; a.vignette = 0.5; a.stars = 0; a.glow = 1.3; a.bloom = [0.55, 0.75, 1.0];
+    this.setAtmosphere(a);
+    this.sky = null;
     this.dungeonMesh = buildDungeonMesh(session.dungeon.d, family, { session, addEmitter: (o, l, f) => this.addEmitter(o, l, f) });
     this.content.add(this.dungeonMesh.root);
     this.playerLight = new THREE.PointLight(lt.torch, 9 * mult, 15, 1.6); this.scene.add(this.playerLight);
@@ -137,41 +154,15 @@ export class Scene3D {
 
   loadZone(zone) {
     this.clearContent();
-    this.baseHemi = 1.55; this.baseSun = 3.2; this.hemi.intensity = 1.55; this.sun.intensity = 3.2;
     this.zone = zone;
-    const amb = zone.def.ambient;
-    this.scene.background = new THREE.Color(amb.sky[1]);
-    this.scene.fog = new THREE.FogExp2(amb.fog, amb.fogDensity);
-    this.renderer.setClearColor(amb.fog);
-    this.hemi.color.set(amb.hemi[0]); this.hemi.groundColor.set(amb.hemi[1]);
-    this.sun.color.set(amb.sun);
-    this.sunDir = new THREE.Vector3(...amb.sunDir).normalize();
-    this.content.add(buildSky(amb));
+    this.sky = buildSky(resolveAtmosphere(this.variant, zone.def.ambient));
+    this.content.add(this.sky);
+    this.setAtmosphere(this.variant, zone.def.ambient);
     this.backdrop = buildBackdrop(zone);
     this.content.add(this.backdrop);
-    this.terrain = buildTerrainMesh(zone, this.q.pixelRatio > 1.3 ? 2 : 2);
+    this.terrain = buildTerrainMesh(zone, { fine: this.q.fine, detail: this.q.detail });
     this.content.add(this.terrain);
-    const inst = buildInstancedProps(zone, this.q);
-    this.content.add(inst.group);
-    this.baseFog = { color: new THREE.Color(amb.fog), density: amb.fogDensity };
-    this.windUniform = inst.windUniform;
-    // structures
-    this.structures = [];
-    for (const p of zone.props) {
-      if (!p.structure) continue;
-      const obj = buildStructure(p.kind);
-      if (!obj) continue;
-      obj.position.set(p.x, p.y, p.z);
-      obj.rotation.y = p.rot;
-      obj.scale.setScalar(p.scale);
-      obj.userData.prop = p;
-      this.content.add(obj);
-      this.structures.push(obj);
-      if (obj.userData.update) this.updaters.push((t) => obj.userData.update(t, obj.userData.state));
-      const lights = [];
-      obj.traverse((o) => { if (o.isPointLight) lights.push(o); });
-      for (const o of lights) { const parent = o.parent; parent.remove(o); this.emitters.push({ light: o, obj: parent, local: o.position.clone(), base: o.intensity, root: obj, flicker: false }); }
-    }
+    this.#buildWorldContent(false);
     // landmark
     for (const lm of zone.def.landmarks ?? []) {
       const c = buildCanticle();
@@ -182,6 +173,41 @@ export class Scene3D {
     }
     this.updaters.push((t) => this.backdrop.userData.update(t));
     this.#assignLights();
+  }
+
+  /** props, vegetation and structures — rebuilt once when the kit finishes loading after the zone (procedural stand-ins before) */
+  #buildWorldContent(rebuild) {
+    const zone = this.zone; if (!zone?.props || !this.terrain) return;
+    if (rebuild && this.worldGroup) {
+      this.props?.field?.dispose(); this.worldGroup.removeFromParent(); disposeTree(this.worldGroup);
+      this.emitters = this.emitters.filter((e) => e.owner !== 'world'); this.worldUpdaters = [];
+      this.terrain.userData.resetAO?.();
+    }
+    const ctx = { wa: this.wa, q: this.q, terrain: this.terrain, zone, session: () => this.session };
+    const root = new THREE.Group(); root.name = 'world';
+    const inst = buildInstancedProps(zone, ctx);
+    root.add(inst.group);
+    this.props = inst;
+    for (const u of inst.updaters) this.worldUpdaters.push(u);
+    // authored structures
+    this.structures = [];
+    for (const p of zone.props) {
+      if (!p.structure) continue;
+      const obj = buildStructure(p.kind, { wa: this.wa, q: this.q, seed: `${p.x.toFixed(1)}:${p.z.toFixed(1)}`, prop: p, session: ctx.session });
+      if (!obj) continue;
+      obj.position.set(p.x, p.y, p.z);
+      obj.rotation.y = p.rot;
+      obj.scale.setScalar(p.scale);
+      obj.userData.prop = p;
+      root.add(obj);
+      this.structures.push(obj);
+      if (obj.userData.update) this.worldUpdaters.push((t, focus) => obj.userData.update(t, obj.userData.state, focus));
+      const lights = [];
+      obj.traverse((o) => { if (o.isPointLight) lights.push(o); });
+      for (const o of lights) { const parent = o.parent; parent.remove(o); this.emitters.push({ light: o, obj: parent, local: o.position.clone(), base: o.intensity, root: obj, flicker: !!o.userData.flicker, owner: 'world' }); }
+    }
+    this.worldGroup = root; this.content.add(root);
+    this.worldReady.done = !!(this.wa.ready || this.wa.failed);
   }
 
   #assignLights() {
@@ -208,24 +234,32 @@ export class Scene3D {
    */
   update(dt, t, focus, listenAmt = 0, hurt = 0, flash = 0) {
     this.clock = t;
+    WORLD.uTime.value = t;
     fadeUniforms.uCam.value.copy(this.camera.position);
     fadeUniforms.uTarget.value.set(focus.x, focus.y + 1.0, focus.z);
     fadeUniforms.uFadeOn.value = this.settings.occlusionFade === false ? 0 : 1;
     for (const u of this.updaters) u(t);
-    if (this.windUniform) this.windUniform.value = t;
-    // sun follows focus, snapped to shadow texels
-    const d = this.sunDir, tex = 84 / (this.q.shadows || 1024);
+    for (const u of this.worldUpdaters ?? []) u(t, focus);
+    this.props?.update(focus.x, focus.z);
+    updateGlow(WORLD.uGlow.value);
+    // the sun follows the focus on a texel grid (no shadow shimmer); its frustum hugs what the camera can see
+    const dist = this.camera.position.distanceTo(new THREE.Vector3(focus.x, focus.y, focus.z));
+    const ext = Math.max(22, Math.min(44, dist * 0.92)) * this.q.shadowExtent;
+    if (Math.abs(ext - this.shadowExtent) > 0.4) { const sc = this.sun.shadow.camera; sc.left = -ext; sc.right = ext; sc.top = ext; sc.bottom = -ext; sc.updateProjectionMatrix(); this.shadowExtent = ext; }
+    const d = this.sunDir, tex = (this.shadowExtent * 2) / (this.q.shadows || 1024);
     const sx = Math.round(focus.x / tex) * tex, sz = Math.round(focus.z / tex) * tex;
     this.sun.target.position.set(sx, focus.y, sz);
-    this.sun.position.set(sx + d.x * 70, focus.y + d.y * 70, sz + d.z * 70);
+    this.sun.position.set(sx + d.x * 80, focus.y + d.y * 80, sz + d.z * 80);
+    this.rim.target.position.set(focus.x, focus.y, focus.z);
+    this.rim.position.set(focus.x + 6, focus.y + 22, focus.z - 60);
     this.#updateLights(new THREE.Vector3(focus.x, focus.y, focus.z));
     if (this.playerLight) { this.playerLight.position.set(focus.x, focus.y + 2.6, focus.z); this.playerLight.intensity += ((9 + Math.sin(t * 9) * 0.5) * (this.dungeonMesh ? 1 : 0) - this.playerLight.intensity) * 0.2; }
     this.dungeonMesh?.update(t);
-    const u = this.grade.uniforms;
-    u.uTime.value = t; u.uListen.value += (listenAmt - u.uListen.value) * Math.min(1, dt * 6); u.uFlash.value = this.settings.reduceFlashes ? Math.min(flash, 0.12) : flash; u.uHurt.value = hurt;
+    const u = this.post.u;
+    u.uListen.value += (listenAmt - u.uListen.value) * Math.min(1, dt * 6); u.uFlash.value = this.settings.reduceFlashes ? Math.min(flash, 0.12) : flash; u.uHurt.value = hurt;
   }
 
-  render() { this.composer.render(); }
+  render() { this.post.render(this.clock); }
 
   /** world → screen px */
   project(x, y, z) {
