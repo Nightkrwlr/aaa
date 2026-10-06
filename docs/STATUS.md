@@ -36,7 +36,7 @@ Versión: 0.1.0 (vertical slice) · Rama de trabajo: `claude/affectionate-rubin-
 | Equilibrio: modelo central + simulador (mediana de 5 equipos, dispersión entre clases) + guardia | `npm run balance` → `BALANCE GUARD: OK` (ver BALANCE §5 y §7) |
 
 ## 3. Construido y verificado en navegador (E2E + capturas) 🖥
-Arranque, menú, nueva partida/continuar, HUD, combate con telégrafos y números de daño, clic para mover/atacar, WASD, interacción con E y por clic, diálogos, tienda, inventario, forja, alijo, talentos (lienzo con zoom/arrastre + lista accesible), habilidades/Voces, misiones, mapa con niebla de guerra, códice, ajustes (remapeo), pausa, Gráfico de Resonancia (mazmorras por código de semilla), portal ↔ mazmorra de las 3 familias, jefes con barra, audio con señal real. Las capturas se generan con `npm run e2e` (`artifacts/shots/`).
+Arranque, menú, nueva partida/continuar, HUD, combate con telégrafos y números de daño, clic para mover/atacar, WASD, interacción con E y por clic, diálogos, tienda, inventario, forja, alijo, talentos (lienzo con zoom/arrastre + lista accesible), habilidades/Voces, misiones, mapa con niebla de guerra, códice, ajustes (remapeo), pausa, Gráfico de Resonancia (mazmorras por código de semilla), portal ↔ mazmorra de las 3 familias, jefes con barra, audio con señal real. Resultado actual: `npm run e2e -- --suite play` → **20/20 comprobaciones** con entrada real (teclado + ratón) y `--suite panels` sin errores de página. Las capturas se generan con `npm run e2e` (`artifacts/shots/`).
 
 ## 4. Construido pero solo comprobado a ojo / con pruebas ligeras 👁
 - Calidad visual: los modelos son procedurales (legibles, con silueta propia por clase/familia), **no arte final**. Se sustituyen por glTF respetando el contrato de articulaciones.
@@ -59,6 +59,7 @@ Arranque, menú, nueva partida/continuar, HUD, combate con telégrafos y número
 | 4 | Profesiones: recolección + recetas + alquimia funcionan; **sin árbol de profesión propio** (solo `minProf`) | bajo | añadir progresión de profesión |
 | 5 | Telemetría: buffer local opt-in con descarga JSON desde Opciones; **solo vive durante la sesión** (no se persiste entre partidas) | bajo | persistir en `localStorage` con tope |
 | 6 | Sin multijugador/replays (la sim determinista lo permite) | n/a | fuera de alcance |
+| 6b | Lienzo de talentos: al abrir no encuadra todo el árbol (hay que arrastrar/zoom) y algunas etiquetas del anillo central se solapan | bajo | ajuste automático de encuadre y colisión de etiquetas |
 | 7 | Arte: procedural; animación por *rig* simple (balanceos, golpes) | alto en percepción | sustitución por glTF + animaciones |
 
 ## 7. Decisiones de diseño que se mantienen
