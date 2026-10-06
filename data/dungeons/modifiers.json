@@ -1,0 +1,11 @@
+{
+  "kind": "dungeonModifier",
+  "items": [
+    { "id": "mod.dim", "weight": 60, "effect": { "lightMult": 0.65 }, "reward": 0.1 },
+    { "id": "mod.echoing", "weight": 40, "effect": { "listenRange": 6 }, "reward": 0 },
+    { "id": "mod.hush_pockets", "weight": 35, "effect": { "hushZones": 3 }, "reward": 0.15 },
+    { "id": "mod.spore_clouds", "weight": 35, "effect": { "toxicZones": 4 }, "reward": 0.15 },
+    { "id": "mod.crystal_resonance", "weight": 30, "effect": { "sonicBoost": 0.15 }, "reward": 0.05 },
+    { "id": "mod.power_surges", "weight": 35, "effect": { "shockZones": 3 }, "reward": 0.15 }
+  ]
+}

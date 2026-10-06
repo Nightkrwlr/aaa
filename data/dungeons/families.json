@@ -1,0 +1,41 @@
+{
+  "kind": "dungeonFamily",
+  "items": [
+    {
+      "id": "dfm.serrane_crypt", "embedder": "grid", "theme": "crypt", "cell": 14,
+      "sizes": { "small": { "crit": 5, "branches": 2, "loops": 0, "secrets": 1, "locks": 0 }, "medium": { "crit": 7, "branches": 4, "loops": 1, "secrets": 1, "locks": 1 }, "large": { "crit": 9, "branches": 6, "loops": 2, "secrets": 2, "locks": 2 } },
+      "rules": { "corridorWidth": 2, "roomShapes": ["rect", "hall", "cross", "octagon"], "pillarChance": 0.5, "bigRoomChance": 0.3, "doorStyle": "arch" },
+      "beats": { "mid": ["combat", "combat", "ambush", "puzzle", "elite", "event", "combat"], "branch": ["treasure", "lore", "combat", "event", "puzzle", "ambush"] },
+      "pools": { "easy": ["enc.hollow_walkers", "enc.first_blood"], "mid": ["enc.whispers_in_wind", "enc.summoner_court", "enc.bell_and_blast", "enc.hollow_walkers"], "hard": ["enc.fortified_line", "enc.summoner_court", "enc.crypt_choir"] },
+      "puzzles": ["tone_logic", "beam_mirrors"],
+      "light": { "ambient": "#2a3350", "fog": "#141a2a", "fogDensity": 0.03, "torch": "#ffb050", "accent": "#7fe3ff" },
+      "palette": { "floor": "#8d8570", "wall": "#6d6658", "trim": "#d9a24a" },
+      "modifiers": ["mod.dim", "mod.echoing", "mod.hush_pockets"],
+      "boss": "boss.brannoch", "music": "mus.crypt"
+    },
+    {
+      "id": "dfm.crystal_cavern", "embedder": "cavern", "theme": "cavern", "cell": 14,
+      "sizes": { "small": { "crit": 5, "branches": 2, "loops": 1, "secrets": 1, "locks": 0 }, "medium": { "crit": 7, "branches": 4, "loops": 2, "secrets": 1, "locks": 0 }, "large": { "crit": 9, "branches": 6, "loops": 2, "secrets": 2, "locks": 1 } },
+      "rules": { "corridorWidth": 3, "roomShapes": ["blob"], "pillarChance": 0, "bigRoomChance": 0.4, "doorStyle": "none" },
+      "beats": { "mid": ["combat", "ambush", "combat", "event", "elite", "puzzle", "ambush"], "branch": ["treasure", "lore", "combat", "ambush", "event"] },
+      "pools": { "easy": ["enc.stalker_pack", "enc.first_blood"], "mid": ["enc.stalker_pack", "enc.cave_swarm", "enc.wisp_garden", "enc.bull_run"], "hard": ["enc.cave_swarm", "enc.ambush_burrowers", "enc.bull_run"] },
+      "puzzles": ["beam_mirrors", "tone_logic"],
+      "light": { "ambient": "#1a2a3a", "fog": "#0c1622", "fogDensity": 0.035, "torch": "#7fe3ff", "accent": "#b6ff4a" },
+      "palette": { "floor": "#6f7f88", "wall": "#4a5660", "trim": "#7fe3ff" },
+      "modifiers": ["mod.dim", "mod.spore_clouds", "mod.crystal_resonance"],
+      "boss": "boss.brannoch", "music": "mus.cavern"
+    },
+    {
+      "id": "dfm.broken_facility", "embedder": "grid", "theme": "facility", "cell": 14,
+      "sizes": { "small": { "crit": 5, "branches": 2, "loops": 1, "secrets": 1, "locks": 1 }, "medium": { "crit": 7, "branches": 4, "loops": 2, "secrets": 1, "locks": 1 }, "large": { "crit": 9, "branches": 6, "loops": 3, "secrets": 2, "locks": 2 } },
+      "rules": { "corridorWidth": 3, "roomShapes": ["rect", "hall", "rect", "cross"], "pillarChance": 0.25, "bigRoomChance": 0.35, "doorStyle": "bulkhead" },
+      "beats": { "mid": ["combat", "puzzle", "elite", "combat", "event", "ambush"], "branch": ["treasure", "lore", "combat", "puzzle", "event"] },
+      "pools": { "easy": ["enc.construct_guard", "enc.first_blood"], "mid": ["enc.construct_guard", "enc.facility_patrol", "enc.bell_and_blast"], "hard": ["enc.facility_patrol", "enc.construct_guard", "enc.fortified_line"] },
+      "puzzles": ["beam_mirrors", "tone_logic"],
+      "light": { "ambient": "#2a2f36", "fog": "#11151b", "fogDensity": 0.026, "torch": "#7fe3ff", "accent": "#ffb050" },
+      "palette": { "floor": "#7d7a72", "wall": "#58564f", "trim": "#b88a3e" },
+      "modifiers": ["mod.dim", "mod.power_surges", "mod.hush_pockets"],
+      "boss": "boss.brannoch", "music": "mus.facility"
+    }
+  ]
+}

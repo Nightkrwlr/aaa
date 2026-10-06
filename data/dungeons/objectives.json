@@ -1,0 +1,12 @@
+{
+  "kind": "dungeonObjective",
+  "items": [
+    { "id": "obj.slay_boss", "weight": 40, "finale": "boss", "keys": [], "extraNodes": [], "exitGate": null },
+    { "id": "obj.retrieve_artifact", "weight": 30, "finale": "boss", "tags": ["artifact"], "keys": [], "extraNodes": [], "exitGate": null },
+    { "id": "obj.activate_mechanisms", "weight": 25, "finale": "boss", "keys": ["mech1", "mech2", "mech3"], "extraNodes": [{ "type": "mechanism", "count": 3, "keyPrefix": "mech" }], "finaleLock": ["mech1", "mech2", "mech3"] },
+    { "id": "obj.destroy_nodes", "weight": 20, "finale": "boss", "keys": ["node1", "node2", "node3"], "extraNodes": [{ "type": "resonance_node", "count": 3, "keyPrefix": "node" }], "finaleLock": ["node1", "node2", "node3"] },
+    { "id": "obj.rescue_survivors", "weight": 20, "finale": "boss", "keys": ["surv1", "surv2"], "extraNodes": [{ "type": "survivor", "count": 2, "keyPrefix": "surv" }], "exitLock": ["surv1", "surv2"] },
+    { "id": "obj.survive_waves", "weight": 15, "finale": "wave_arena", "keys": [], "extraNodes": [], "exitGate": null },
+    { "id": "obj.escape", "weight": 12, "finale": "boss", "tags": ["artifact", "collapse"], "keys": [], "extraNodes": [], "exitGate": null, "timer": 170 }
+  ]
+}
