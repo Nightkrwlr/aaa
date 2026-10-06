@@ -70,6 +70,15 @@ const BUILD = {
     g.add(cyl(0.12, 0.12, 0.5, '#bde3f0', { pos: [0.6, 1.3, -0.1], opacity: 0.8 }));
     return g;
   },
+  chart_table() {
+    const g = group();
+    g.add(box(2.4, 0.15, 1.5, WOOD, { pos: [0, 0.95, 0] }));
+    for (const [x, z] of [[-1.0, -0.6], [1.0, -0.6], [-1.0, 0.6], [1.0, 0.6]]) g.add(box(0.14, 0.95, 0.14, WOOD_D, { pos: [x, 0.47, z] }));
+    g.add(box(2.0, 0.03, 1.2, '#e6d8b0', { pos: [0, 1.04, 0] }));
+    g.add(torus(0.35, 0.025, CYAN, { pos: [0, 1.08, 0], rot: [PI / 2, 0, 0], material: mat(CYAN, { emissive: CYAN, ei: 1.2, fade: false }) }));
+    g.add(cyl(0.12, 0.12, 0.35, '#d9a24a', { pos: [0.7, 1.25, 0.2], metal: 0.6 }));
+    return g;
+  },
   stash_chest() {
     const g = group();
     g.add(box(1.5, 0.8, 0.9, WOOD, { pos: [0, 0.4, 0] }));

@@ -4,7 +4,8 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { fadeUniforms } from './kit.js';
+import { fadeUniforms, disposeTree } from './kit.js';
+import { buildDungeonMesh } from './dungeonMesh.js';
 import { buildTerrainMesh } from './terrainMesh.js';
 import { buildInstancedProps } from './props.js';
 import { buildStructure, buildCanticle } from './structures.js';
@@ -43,6 +44,7 @@ export class Scene3D {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NoToneMapping;
     this.scene = new THREE.Scene();
+    this.content = new THREE.Group(); this.content.name = 'content'; this.scene.add(this.content);
     this.camera = new THREE.PerspectiveCamera(30, 1, 0.5, 700);
     this.updaters = [];
     this.emitters = [];
@@ -103,7 +105,39 @@ export class Scene3D {
     this.size = { w, h };
   }
 
+  /** remove everything the current zone/dungeon added (kit-cached geometry is shared and survives) */
+  clearContent() {
+    this.scene.remove(this.content); disposeTree(this.content);
+    this.content = new THREE.Group(); this.content.name = 'content'; this.scene.add(this.content);
+    this.updaters = []; this.emitters = []; this.terrain = null; this.backdrop = null; this.canticle = null; this.dungeonMesh?.dispose?.(); this.dungeonMesh = null; this.windUniform = null; this.baseFog = null;
+    this.playerLight?.removeFromParent(); this.playerLight = null;
+  }
+
+  /** light the scene like a dungeon: dark cool ambient, dense fog, a torch that follows the player */
+  loadDungeon(session, family) {
+    this.clearContent();
+    const lt = family.light, mult = session.dungeon.d.content.lightMult ?? 1;
+    this.zone = { heightAt: () => 0, def: { ambient: {} } };
+    this.scene.background = new THREE.Color(lt.fog); this.scene.fog = new THREE.FogExp2(lt.fog, lt.fogDensity * (mult < 1 ? 1.25 : 1));
+    this.renderer.setClearColor(lt.fog);
+    this.hemi.color.set(lt.ambient); this.hemi.groundColor.set('#10131a'); this.baseHemi = 1.2 * mult; this.hemi.intensity = this.baseHemi;
+    this.sun.color.set('#8aa0c8'); this.sunDir = new THREE.Vector3(-0.4, 1, -0.3).normalize(); this.baseSun = 0.55; this.sun.intensity = this.baseSun;
+    this.dungeonMesh = buildDungeonMesh(session.dungeon.d, family, { session, addEmitter: (o, l, f) => this.addEmitter(o, l, f) });
+    this.content.add(this.dungeonMesh.root);
+    this.playerLight = new THREE.PointLight(lt.torch, 9 * mult, 15, 1.6); this.scene.add(this.playerLight);
+    this.#assignLights();
+    return this.dungeonMesh;
+  }
+
+  /** register a point light that follows an object but only "really" lights while it is among the nearest N */
+  addEmitter(obj, light, flicker = false) {
+    if (light.parent) light.parent.remove(light);
+    this.emitters.push({ light, obj, local: light.position.clone(), base: light.intensity, root: obj, flicker });
+  }
+
   loadZone(zone) {
+    this.clearContent();
+    this.baseHemi = 1.55; this.baseSun = 3.2; this.hemi.intensity = 1.55; this.sun.intensity = 3.2;
     this.zone = zone;
     const amb = zone.def.ambient;
     this.scene.background = new THREE.Color(amb.sky[1]);
@@ -112,13 +146,14 @@ export class Scene3D {
     this.hemi.color.set(amb.hemi[0]); this.hemi.groundColor.set(amb.hemi[1]);
     this.sun.color.set(amb.sun);
     this.sunDir = new THREE.Vector3(...amb.sunDir).normalize();
-    this.scene.add(buildSky(amb));
+    this.content.add(buildSky(amb));
     this.backdrop = buildBackdrop(zone);
-    this.scene.add(this.backdrop);
+    this.content.add(this.backdrop);
     this.terrain = buildTerrainMesh(zone, this.q.pixelRatio > 1.3 ? 2 : 2);
-    this.scene.add(this.terrain);
+    this.content.add(this.terrain);
     const inst = buildInstancedProps(zone, this.q);
-    this.scene.add(inst.group);
+    this.content.add(inst.group);
+    this.baseFog = { color: new THREE.Color(amb.fog), density: amb.fogDensity };
     this.windUniform = inst.windUniform;
     // structures
     this.structures = [];
@@ -129,19 +164,19 @@ export class Scene3D {
       obj.position.set(p.x, p.y, p.z);
       obj.rotation.y = p.rot;
       obj.scale.setScalar(p.scale);
-      this.scene.add(obj);
       obj.userData.prop = p;
+      this.content.add(obj);
       this.structures.push(obj);
       if (obj.userData.update) this.updaters.push((t) => obj.userData.update(t, obj.userData.state));
       const lights = [];
       obj.traverse((o) => { if (o.isPointLight) lights.push(o); });
-      for (const o of lights) { const parent = o.parent; parent.remove(o); this.emitters.push({ light: o, obj: parent, local: o.position.clone(), base: o.intensity, root: obj }); }
+      for (const o of lights) { const parent = o.parent; parent.remove(o); this.emitters.push({ light: o, obj: parent, local: o.position.clone(), base: o.intensity, root: obj, flicker: false }); }
     }
     // landmark
     for (const lm of zone.def.landmarks ?? []) {
       const c = buildCanticle();
       c.position.set(lm.pos[0], -4, lm.pos[1]);
-      this.scene.add(c);
+      this.content.add(c);
       this.canticle = c;
       this.updaters.push((t) => c.userData.update(t));
     }
@@ -163,7 +198,8 @@ export class Scene3D {
       const e = list[i];
       if (!e || e.d > 55 * 55) { l.intensity += (0 - l.intensity) * 0.2; return; }
       l.position.copy(e.wp); l.color.copy(e.light.color); l.distance = e.light.distance;
-      l.intensity += (e.light.intensity - l.intensity) * 0.25;
+      const fl = e.flicker ? 0.86 + 0.14 * Math.sin(this.clock * 11 + e.wp.x * 3) * Math.sin(this.clock * 7.3 + e.wp.z) : 1;
+      l.intensity += (e.light.intensity * fl - l.intensity) * 0.25;
     });
   }
 
@@ -183,6 +219,8 @@ export class Scene3D {
     this.sun.target.position.set(sx, focus.y, sz);
     this.sun.position.set(sx + d.x * 70, focus.y + d.y * 70, sz + d.z * 70);
     this.#updateLights(new THREE.Vector3(focus.x, focus.y, focus.z));
+    if (this.playerLight) { this.playerLight.position.set(focus.x, focus.y + 2.6, focus.z); this.playerLight.intensity += ((9 + Math.sin(t * 9) * 0.5) * (this.dungeonMesh ? 1 : 0) - this.playerLight.intensity) * 0.2; }
+    this.dungeonMesh?.update(t);
     const u = this.grade.uniforms;
     u.uTime.value = t; u.uListen.value += (listenAmt - u.uListen.value) * Math.min(1, dt * 6); u.uFlash.value = this.settings.reduceFlashes ? Math.min(flash, 0.12) : flash; u.uHurt.value = hurt;
   }

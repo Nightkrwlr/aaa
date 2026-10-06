@@ -49,7 +49,19 @@ export class DungeonRuntime {
     }
     this.#spawnObjects();
     this.#spawnEnemies();
+    this.#spawnHazards();
     return world;
+  }
+
+  /** dungeon modifiers that change the player's own numbers (applied once the player entity exists) */
+  applyPlayerModifiers(player) {
+    const mods = [];
+    for (const id of this.d.modifiers) {
+      const e = this.s.registry.get(id)?.effect ?? {};
+      if (e.listenRange) mods.push({ stat: 'listenRange', op: 'flat', value: e.listenRange });
+      if (e.sonicBoost) mods.push({ stat: 'damage', op: 'inc', tags: ['sonic'], value: e.sonicBoost });
+    }
+    if (mods.length) player.stats.add('dungeon', mods);
   }
 
   roomAt(x, z) { const [tx, ty] = this.d.map.tileOf(x, z); const rg = this.d.map.region[this.d.map.idx(tx, ty)]; if (rg < 0) return null; return [...this.d.rooms.values()].find((r) => r.region === rg) ?? null; }
@@ -83,6 +95,17 @@ export class DungeonRuntime {
       if (sp.trigger === 'enter') { e.alerted = true; e.ai.target = this.s.player; e.ai.state = 'alert'; }
     });
     this.s.events.emit('dungeon:spawn', { id: sp.id });
+  }
+
+  /** modifier hazards become real persistent zones owned by an invisible environment object */
+  #spawnHazards() {
+    const w = this.world, HZ = { hush: 'abl.env.hush_zone', toxic: 'abl.env.toxic_cloud', shock: 'abl.env.shock_floor' };
+    for (const h of this.d.content.hazards ?? []) {
+      const ab = HZ[h.kind]; if (!ab) continue;
+      const src = w.makeObject({ id: `env.${h.kind}`, team: 'enemy', x: h.x, z: h.z, level: this.d.ilvl, untargetable: true, hp: 1 });
+      src.hitScale = w.balance.enemyHit(this.d.ilvl, 1, 1, w.difficulty); src.damageMult = 1; src.isHazard = true;
+      w.abilities.castImmediate(src, ab, h.x, h.z);
+    }
   }
 
   #spawnObjects() {

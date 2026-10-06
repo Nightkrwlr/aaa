@@ -1,5 +1,7 @@
 import { t } from '../../core/i18n.js';
 import { iconSVG } from './iconGen.js';
+import { itemName, RARITY_COLOR } from './itemText.js';
+import { T, TILE } from '../../sim/dungeon/tilemap.js';
 
 const SLOT_KEYS = { s1: '1', s2: '2', s3: '3', s4: '4', s5: 'Q', s6: 'RMB' };
 
@@ -20,7 +22,7 @@ export class Hud {
       <div class="breath"><i></i></div>
       <div class="xpbar"><i></i></div>
       <div class="hud-bottom">
-        <div class="orb life"><div class="fill"></div><div class="txt"></div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div class="potion" role="button" tabindex="0" title=""><span class="pk">Z</span><span class="pn"></span></div><div class="orb life"><div class="fill"></div><div class="txt"></div></div></div>
         <div style="display:flex;flex-direction:column;align-items:center">
           <div class="phrase"><i></i><i></i><i></i></div>
           <div class="skillbar"></div>
@@ -34,11 +36,21 @@ export class Hud {
     this.lastLoadout = '';
     this.statusKey = '';
     this.mini = this.q('.minimap canvas').getContext('2d');
+    this.q('.potion').addEventListener('click', () => game.session?.usePotion());
+    this.trackT = 0; this.trackKey = '';
   }
 
-  toast(text) {
-    const d = document.createElement('div'); d.className = 'toast'; d.textContent = text; this.el.appendChild(d);
-    setTimeout(() => d.remove(), 3500);
+  setSession(s) { this.s = s; this.lastLoadout = ''; this.trackKey = ''; this.statusKey = ''; }
+  reset() { this.s = null; this.q('.tracker').classList.add('hidden'); this.q('.bossbar').classList.add('hidden'); }
+  pulseTracker() { const el = this.q('.tracker'); el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+
+  toast(text, item) {
+    const d = document.createElement('div'); d.className = 'toast'; d.textContent = item ? `${text}: ${itemName(this.g.registry, item)}` : text;
+    if (item) d.style.color = RARITY_COLOR[item.rarity];
+    d.setAttribute('role', 'status');
+    this.el.appendChild(d);
+    while (this.el.querySelectorAll('.toast').length > 5) this.el.querySelector('.toast').remove();
+    setTimeout(() => d.remove(), 3600);
   }
   areaName(text) { const a = this.q('.area-name'); a.textContent = text; a.classList.remove('show'); void a.offsetWidth; a.classList.add('show'); }
   subtitle(text, ms = 3500) { const s = this.q('.subtitles'); if (!this.g.settings.subtitles) return; s.textContent = text; s.classList.remove('hidden'); clearTimeout(this._st); this._st = setTimeout(() => s.classList.add('hidden'), ms); }
@@ -103,8 +115,39 @@ export class Hud {
     const ch = this.g.character;
     if (ch) this.q('.xpbar i').style.width = `${Math.min(100, ch.xp / Math.max(1, world.balance.xpToNext(ch.level)) * 100)}%`;
     this.#statuses(p);
+    this.#potion();
+    this.#tracker(dt);
     this.#minimap(world, p);
     const fps = this.q('.fps'); fps.classList.toggle('hidden', !this.g.settings.showFps); if (this.g.settings.showFps) fps.textContent = `${this.g.fps.toFixed(0)} fps · ${world.entities.length} ent · ${this.g.scene3d.renderer.info.render.calls} dc`;
+  }
+
+  #potion() {
+    const ch = this.g.character; if (!ch) return;
+    const el = this.q('.potion');
+    el.querySelector('.pn').textContent = `${ch.potion.charges}/${ch.potion.max}`;
+    el.classList.toggle('empty', ch.potion.charges <= 0);
+    el.title = t('hud.potion');
+  }
+
+  #tracker(dt) {
+    this.trackT -= dt; if (this.trackT > 0) return; this.trackT = 0.25;
+    const el = this.q('.tracker'), s = this.g.session;
+    if (!s || !this.g.settings.hudTracker) { el.classList.add('hidden'); return; }
+    const tracked = s.state.flags.trackedQuest && s.state.quests[s.state.flags.trackedQuest]?.state === 'active' ? s.state.flags.trackedQuest : s.quests.active().find((id) => s.registry.get(id)?.category === 'main') ?? s.quests.active()[0];
+    let html = '';
+    if (s.mode === 'dungeon') {
+      const rt = s.dungeon, o = rt.objective;
+      html += `<div class="tq-title">${t(`${rt.d.objective}.name`)}</div><div class="tq-obj ${o.done ? 'done' : ''}">${t(`${rt.d.objective}.desc`)}</div>`;
+      if (rt.d.content.waveArena && o.active) html += `<div class="tq-obj">${t('hud.wave', { n: o.wave, total: rt.d.content.waveArena.waves })}</div>`;
+      if (o.collapseAt) html += `<div class="tq-obj warn">${t('hud.collapse', { s: Math.max(0, Math.ceil(o.collapseAt - rt.world.time)) })}</div>`;
+      if (rt.keys.size) html += `<div class="tq-obj">🗝 ${rt.keys.size}</div>`;
+    } else if (tracked) {
+      const q = s.state.quests[tracked];
+      html += `<div class="tq-title">${t(`${tracked}.name`)}</div><div class="tq-stage">${t(`${tracked}.${q.stage}.title`)}</div>`;
+      for (const o of s.quests.objectives(tracked)) html += `<div class="tq-obj ${o.done ? 'done' : ''}">${o.done ? '✔' : '◇'} ${t(`${tracked}.${q.stage}.o${o.index}`)}${o.need > 1 ? ` (${o.have}/${o.need})` : ''}</div>`;
+    }
+    if (html === this.trackKey) return;
+    this.trackKey = html; el.innerHTML = html; el.classList.toggle('hidden', !html);
   }
 
   #voiceSlot(s, p) {
@@ -128,7 +171,32 @@ export class Hud {
     }
   }
 
+  #dungeonMap(world, p) {
+    const rt = this.g.session.dungeon, map = rt.d.map, ctx = this.mini, S = 172, sc = 5;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#0a0d12'; ctx.fillRect(0, 0, S, S);
+    const yaw = this.g.rig.yaw, c = Math.cos(yaw), sn = Math.sin(yaw);
+    const px = p.x / TILE, pz = p.z / TILE, R = 22;
+    const roomBy = new Map(); for (const r of rt.d.rooms.values()) roomBy.set(r.region, r);
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+      const x = Math.floor(px) + dx, y = Math.floor(pz) + dy, tt = map.get(x, y);
+      if (tt === T.WALL) continue;
+      const rm = roomBy.get(map.region[map.idx(x, y)]);
+      const known = (rm && rt.explored.has(rm.id)) || Math.hypot(dx, dy) < 7 || (!rm && Math.hypot(dx, dy) < 12);
+      if (!known) continue;
+      const ddx = (x + 0.5 - px), ddy = (y + 0.5 - pz);
+      const mx = S / 2 + (ddx * c - ddy * sn) * sc, my = S / 2 + (ddx * sn + ddy * c) * sc;
+      if ((mx - S / 2) ** 2 + (my - S / 2) ** 2 > (S / 2) ** 2) continue;
+      ctx.fillStyle = tt === T.LOCK ? '#d9a24a' : tt === T.DOOR ? '#6a7a8a' : tt === T.SECRET ? '#26303d' : rm?.node?.type === 'boss' ? '#5a2a2a' : rm?.node?.type === 'shrine' ? '#2a5a6a' : '#3a4656';
+      ctx.fillRect(mx - sc / 2, my - sc / 2, sc + 0.6, sc + 0.6);
+    }
+    const dot = (x, z, col, r = 2.5) => { const dx = x / TILE - px, dy = z / TILE - pz; const mx = S / 2 + (dx * c - dy * sn) * sc, my = S / 2 + (dx * sn + dy * c) * sc; if ((mx - S / 2) ** 2 + (my - S / 2) ** 2 > (S / 2 - 3) ** 2) return; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(mx, my, r, 0, 7); ctx.fill(); };
+    for (const o of rt.interactables) { if (o.decor || !this.g.session.isActive(o)) continue; const rm = rt.d.rooms.get(o.room); if (rm && !rt.explored.has(rm.id)) continue; if (['shrine', 'dungeon_exit', 'key_pedestal', 'mechanism', 'artifact', 'chest'].includes(o.kind)) dot(o.x, o.z, o.kind === 'shrine' ? '#7fe3ff' : o.kind === 'dungeon_exit' ? '#6dff9a' : '#ffd27a', 3); }
+    for (const e of world.entities) if (e.team === 'enemy' && !e.dead && !e.hidden && !e.isHazard && Math.hypot(e.x - p.x, e.z - p.z) < 30) dot(e.x, e.z, '#ff4a3a', 2);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(S / 2, S / 2, 3.5, 0, 7); ctx.fill();
+  }
+
   #minimap(world, p) {
+    if (this.g.session?.mode === 'dungeon') return this.#dungeonMap(world, p);
     const ctx = this.mini; const zone = this.g.zone; if (!zone) return;
     const S = 172, scale = 1.35; // px per metre
     ctx.setTransform(1, 0, 0, 1, 0, 0);

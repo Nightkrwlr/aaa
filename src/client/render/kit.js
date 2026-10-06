@@ -6,7 +6,7 @@ const matCache = new Map();
 
 export function geo(key, make) {
   let g = geoCache.get(key);
-  if (!g) { g = make(); geoCache.set(key, g); }
+  if (!g) { g = make(); g.userData.shared = true; geoCache.set(key, g); }
   return g;
 }
 
@@ -21,6 +21,7 @@ export function mat(color, o = {}) {
       transparent: (o.opacity ?? 1) < 1, opacity: o.opacity ?? 1, side: o.side ?? THREE.FrontSide,
     });
     if (o.fade !== false) applyOcclusionFade(m);
+    m.userData.shared = true;
     matCache.set(key, m);
   }
   return m;
@@ -127,3 +128,12 @@ export function mergeVC(parts) {
   return out;
 }
 export const M4 = (px = 0, py = 0, pz = 0, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx) => new THREE.Matrix4().compose(new THREE.Vector3(px, py, pz), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz)), new THREE.Vector3(sx, sy, sz));
+
+/** dispose GPU resources of an object tree, except the shared kit caches */
+export function disposeTree(root) {
+  root.traverse((o) => {
+    if (o.geometry && !o.geometry.userData?.shared) o.geometry.dispose();
+    const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
+    for (const m of ms) if (!m.userData?.shared) { for (const k of ['map', 'emissiveMap']) m[k]?.dispose?.(); m.dispose(); }
+  });
+}

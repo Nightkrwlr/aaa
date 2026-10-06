@@ -15,6 +15,9 @@
    "services": [
     "shop",
     "craft"
+   ],
+   "offers": [
+    "qst.apprentice"
    ]
   },
   {
@@ -33,6 +36,9 @@
    "faction": "escalon",
    "services": [
     "shop"
+   ],
+   "offers": [
+    "qst.silent_bells"
    ]
   },
   {

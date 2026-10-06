@@ -272,6 +272,7 @@ export class GameSession {
     this.areaT -= dt;
     if (this.areaT > 0 || !this.player) return;
     this.areaT = 0.4;
+    this.state.explore(this.zone, this.player.x, this.player.z);
     const a = this.zone.areaAt(this.player.x, this.player.z);
     if ((a?.id ?? null) === this.areaId) return;
     this.areaId = a?.id ?? null;
@@ -281,6 +282,17 @@ export class GameSession {
     this.events.emit('area', { area: a.id, first });
     this.events.emit('music', { state: a.music });
     if (first) this.events.emit('toast', { key: 'toast.area_discovered', params: { name: a.id } });
+  }
+
+  /** puzzle entry for the active context (dungeon or overworld) */
+  puzzleEntry(id) { return (this.mode === 'dungeon' ? this.dungeon.puzzles : this.puzzleHost.map).get(id); }
+
+  /** floating marker above an NPC: 'objective' (an active quest wants you to talk to them), 'new' (offers a quest) or null */
+  npcMarker(npcId) {
+    for (const id of this.quests.active()) for (const o of this.quests.objectives(id)) if (o.type === 'talk' && o.npc === npcId && !o.done) return 'objective';
+    const def = this.registry.get(npcId);
+    for (const q of def?.offers ?? []) if (this.quests.available(q)) return 'new';
+    return null;
   }
 
   // ───────────────────────── interaction
@@ -345,6 +357,7 @@ export class GameSession {
       }
       case 'station': this.events.emit('ui:open', { panel: 'craft', station: obj.station }); return { ok: true, ui: 'craft' };
       case 'stash': this.events.emit('ui:open', { panel: 'stash' }); return { ok: true, ui: 'stash' };
+      case 'chart': this.events.emit('ui:open', { panel: 'chart' }); return { ok: true, ui: 'chart' };
       case 'lore': {
         this.discover(obj.discover); this.events.emit('lore', { key: obj.lore ?? obj.discover });
         applyEffects(this, obj.effects);
@@ -586,6 +599,7 @@ export class GameSession {
     world.session = this;
     const e = gen.dungeon.content.entrance;
     const player = this.#makePlayer(world, e.x, e.z);
+    rt.applyPlayerModifiers(player);
     // carry health & belt state across
     player.hp = Math.max(1, Math.round(player.hpMax * (over.player.hp / over.player.hpMax)));
     const loot = new LootSystem(world, this.factory, () => ({ character: this.character, settings: this.settings }));

@@ -26,6 +26,7 @@ export class EntityViews {
   }
 
   create(e) {
+    if (e.isHazard) return null;
     const mid = this.modelIdFor(e);
     const spec = this.specs.get(mid);
     if (!spec) { log.warn(`no model ${mid} for ${e.id}`); return null; }
@@ -62,7 +63,7 @@ export class EntityViews {
     for (const e of world.entities) {
       if (e.removed) continue;
       let v = this.views.get(e.uid);
-      if (!v) { v = this.create(e); if (!v) continue; }
+      if (!v) { if (e.isHazard) continue; v = this.create(e); if (!v) continue; }
       seen.add(e.uid);
       this.#sync(world, v, e, dt, t, hoverUid);
     }

@@ -26,6 +26,15 @@ export class Vfx {
     this.shakeBoost = 1;
   }
 
+  /** drop all per-world visuals (projectiles, zones, telegraphs) before binding a new world */
+  reset() {
+    for (const v of this.projViews.values()) { this.scene.remove(v.mesh); if (v.land) this.ground.release(v.land); }
+    for (const v of this.zoneViews.values()) { this.ground.release(v.fx); v.orbit?.forEach((b) => this.scene.remove(b)); }
+    for (const fx of this.telegraphFx.values()) this.ground.release(fx);
+    this.projViews.clear(); this.zoneViews.clear(); this.telegraphFx.clear();
+    this.numbers.length = 0; this.listenRings.length = 0; this.hitstop = 0; this.flash = 0;
+  }
+
   bind(world, zone) {
     this.world = world; this.zone = zone;
     const ev = world.events;
@@ -201,8 +210,8 @@ export class Vfx {
       if (!v) {
         const kind = z.shape === 'ring' ? 'ring' : z.shape;
         const hazardCol = z.trigger === 'timer' ? 'danger' : null;
-        const col = hazardCol ? hazardCol : z.kind === 'hush' ? 'hush' : z.kind === 'acid' ? 'toxic' : z.kind === 'snare' ? 'danger' : z.benign ? 'benign' : (z.team === 'player' ? elemOf(z.ab, 'sonic') : 'danger');
-        const fx = this.ground.spawn({ kind: kind === 'ring' ? 'ring' : kind, x: z.x, y, z: z.z, yaw: z.yaw, radius: z.radius, inner: z.inner, angle: z.angle ? z.angle * Math.PI / 180 : Math.PI * 2, width: z.width, length: z.length, color: col, life: 99, mode: 'zone', alpha: z.team === 'player' ? 0.55 : 0.8, pulse: z.kind === 'acid' || z.kind === 'hush' ? 1 : 0 });
+        const col = hazardCol ? hazardCol : z.kind === 'hush' ? 'hush' : z.kind === 'acid' || z.kind === 'toxic' ? 'toxic' : z.kind === 'shock' ? 'shock' : z.kind === 'snare' ? 'danger' : z.benign ? 'benign' : (z.team === 'player' ? elemOf(z.ab, 'sonic') : 'danger');
+        const fx = this.ground.spawn({ kind: kind === 'ring' ? 'ring' : kind, x: z.x, y, z: z.z, yaw: z.yaw, radius: z.radius, inner: z.inner, angle: z.angle ? z.angle * Math.PI / 180 : Math.PI * 2, width: z.width, length: z.length, color: col, life: 99, mode: 'zone', alpha: z.team === 'player' ? 0.55 : 0.8, pulse: z.kind === 'acid' || z.kind === 'hush' || z.kind === 'toxic' ? 1 : 0 });
         v = { fx, orbit: null };
         if (z.kind === 'orbit_bells') {
           const bells = [];
@@ -215,7 +224,9 @@ export class Vfx {
       this.ground.move(v.fx, { kind: z.shape === 'ring' ? 'ring' : z.shape, x: z.x, y, z: z.z, yaw: z.yaw, radius: z.radius, inner: z.inner, angle: z.angle ? z.angle * Math.PI / 180 : Math.PI * 2, width: z.width, length: z.length, color: v.fx.o.color, alpha: v.fx.o.alpha, pulse: v.fx.o.pulse });
       if (z.duration - z.t < 0.8) v.fx.m.uniforms.uAlpha.value = (v.fx.o.alpha ?? 1) * Math.max(0, (z.duration - z.t) / 0.8);
       if (v.orbit) v.orbit.forEach((b, i) => { const a = z.yaw + (i / v.orbit.length) * Math.PI * 2; const rr = (z.radius + (z.inner ?? 0)) / 2; b.position.set(z.x + Math.sin(a) * rr, y + 1.1 + Math.sin(t * 4 + i) * 0.12, z.z + Math.cos(a) * rr); b.rotation.z = Math.sin(t * 5 + i) * 0.5; });
-      if (z.kind === 'acid' && Math.random() < 0.3) this.particles.emit({ x: z.x + (Math.random() - 0.5) * z.radius, y: y + 0.2, z: z.z + (Math.random() - 0.5) * z.radius, count: 1, color: '#9ad13a', speed: 0.2, up: 1.2, life: 0.8, size: 0.2, gravity: -0.5 });
+      if (z.kind === 'shock' && z.tickT < 0.9) v.fx.m.uniforms.uProg.value = 1 - z.tickT / 0.9;
+      if (z.kind === 'shock' && z.tickT > z.tick - 0.15) this.particles.emit({ x: z.x, y: y + 0.4, z: z.z, count: 14, color: '#ffe34a', speed: z.radius * 1.5, up: 2, life: 0.35, size: 0.18 });
+      if ((z.kind === 'acid' || z.kind === 'toxic') && Math.random() < 0.3) this.particles.emit({ x: z.x + (Math.random() - 0.5) * z.radius, y: y + 0.2, z: z.z + (Math.random() - 0.5) * z.radius, count: 1, color: '#9ad13a', speed: 0.2, up: 1.2, life: 0.8, size: 0.2, gravity: -0.5 });
       if (z.kind === 'hush' && Math.random() < 0.3) this.particles.emit({ x: z.x + (Math.random() - 0.5) * z.radius * 1.6, y: y + 0.2, z: z.z + (Math.random() - 0.5) * z.radius * 1.6, count: 1, color: '#b79cff', speed: 0.2, up: 1.0, life: 1.0, size: 0.22, gravity: -0.2 });
     }
     for (const [uid, v] of this.zoneViews) if (!live.has(uid)) { this.ground.release(v.fx); v.orbit?.forEach((b) => this.scene.remove(b)); this.zoneViews.delete(uid); }

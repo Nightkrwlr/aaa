@@ -18,6 +18,7 @@ export function buildInteractables(session, zone) {
       case 'waypoint': add({ id: p.id, kind: 'waypoint', wp: p.id, x: p.x, z: p.z, r: 3.0, labelKey: 'ia.waypoint', nameKey: `${p.name ?? p.id}.name` }); break;
       case 'station': add({ id: p.id, kind: 'station', station: p.station, x: p.x, z: p.z, r: 3.0, labelKey: `ia.station_${p.station}` }); break;
       case 'stash': add({ id: p.id, kind: 'stash', x: p.x, z: p.z, r: 2.6, labelKey: 'ia.stash' }); break;
+      case 'chart': add({ id: p.id, kind: 'chart', x: p.x, z: p.z, r: 2.6, labelKey: 'ia.chart' }); break;
       case 'gate': add({ id: p.id, kind: 'gate', gate: p.gate, x: p.x, z: p.z, r: 3.6, labelKey: 'ia.gate' }); break;
       case 'dungeon': add({ id: p.id, kind: 'dungeon_portal', dungeon: p.dungeon, x: p.x - 3.2, z: p.z, r: 3.2, labelKey: 'ia.enter_dungeon', nameKey: `${p.dungeon}.name` }); break;
       case 'lore': add({ id: p.id, kind: 'lore', discover: p.discover ?? p.lore?.replace('lore.', 'cdx.'), lore: p.lore, x: p.x, z: p.z, r: 2.6, labelKey: 'ia.listen_cylinder' }); break;
