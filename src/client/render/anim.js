@@ -56,6 +56,7 @@ function attackPose(table, c) {
 }
 
 export function animate(m, st, dt) {
+  if (m.tick) { m.tick(st, dt); return; }       // rigged characters and new-style creatures animate themselves
   const f = RIGS[m.rig] ?? RIGS.biped;
   m.phase = (m.phase ?? Math.random() * 6) + dt * (4 + st.speed * 9);
   f(m, st, dt);

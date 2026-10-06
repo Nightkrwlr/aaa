@@ -21,6 +21,39 @@
     "weaponR": "bell_hammer",
     "hangBell": true,
     "skin": "#c9a688"
+   },
+   "glb": {
+    "char": "Barbarian",
+    "scale": 0.92,
+    "equip": [],
+    "style": "2h",
+    "walk": "Walking_A",
+    "run": "Running_A",
+    "props": [
+     {
+      "bone": "handslot.r",
+      "kind": "bell_hammer"
+     },
+     {
+      "bone": "hips",
+      "kind": "hip_bell",
+      "pos": [
+       0.27,
+       0.02,
+       0.1
+      ]
+     }
+    ],
+    "palette": {
+     "0,1": "#a8352e",
+     "2,1": "#f1e6cc"
+    },
+    "rim": {
+     "color": "#ffe6b0",
+     "k": 0.3,
+     "pow": 3.0
+    },
+    "ringColor": "#e8b25a"
    }
   },
   {
@@ -38,6 +71,31 @@
     "orbit": 3,
     "glow": "#7fe3ff",
     "skin": "#d9c3a8"
+   },
+   "glb": {
+    "char": "Mage",
+    "scale": 0.9,
+    "equip": [],
+    "style": "staff",
+    "walk": "Walking_A",
+    "run": "Running_A",
+    "props": [
+     {
+      "bone": "handslot.r",
+      "kind": "prism_staff"
+     }
+    ],
+    "palette": {
+     "0,1": "#2fa8b8",
+     "1,1": "#3cc2cc",
+     "7,1": "#1d5a6a"
+    },
+    "rim": {
+     "color": "#bff3ff",
+     "k": 0.35,
+     "pow": 3.0
+    },
+    "ringColor": "#7fe3ff"
    }
   },
   {
@@ -55,6 +113,26 @@
     "scarfTail": true,
     "legs": "#2a2e2a",
     "skin": "#c9a688"
+   },
+   "glb": {
+    "char": "Rogue",
+    "scale": 0.9,
+    "equip": [
+     "Knife",
+     "Knife_Offhand"
+    ],
+    "style": "dual",
+    "walk": "Walking_A",
+    "run": "Running_A",
+    "palette": {
+     "1,1": "#d9742e"
+    },
+    "rim": {
+     "color": "#ffd9a0",
+     "k": 0.3,
+     "pow": 3.0
+    },
+    "ringColor": "#e0803a"
    }
   },
   {
@@ -148,6 +226,34 @@
     "glow": "#b79cff",
     "chestGlow": true,
     "legs": "#5a5470"
+   },
+   "glb": {
+    "char": "Skeleton_Minion",
+    "scale": 0.86,
+    "style": "unarmed",
+    "skeleton": true,
+    "walk": "Walking_D_Skeletons",
+    "run": "Running_A",
+    "palette": {
+     "1,1": "#ddd5ec",
+     "2,2": "#5a3f96",
+     "3,0": "#9a95b8",
+     "4,0": "#6f6a8c",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d5278",
+     "5,0": "#5b3f9a"
+    },
+    "eyes": {
+     "color": "#b79cff",
+     "intensity": 2.6
+    },
+    "external": [
+     {
+      "bone": "handslot.l",
+      "group": "weapons",
+      "id": "spellbook_closed"
+     }
+    ]
    }
   },
   {
@@ -166,6 +272,39 @@
     "glow": "#b79cff",
     "chestGlow": true,
     "legs": "#4a4560"
+   },
+   "glb": {
+    "char": "Skeleton_Warrior",
+    "scale": 0.94,
+    "style": "1h",
+    "skeleton": true,
+    "walk": "Walking_D_Skeletons",
+    "run": "Running_A",
+    "external": [
+     {
+      "bone": "handslot.r",
+      "group": "weapons_skeleton",
+      "id": "Skeleton_Blade"
+     },
+     {
+      "bone": "handslot.l",
+      "group": "weapons_skeleton",
+      "id": "Skeleton_Shield_Large_A"
+     }
+    ],
+    "palette": {
+     "1,1": "#ddd5ec",
+     "2,2": "#5a3f96",
+     "3,0": "#9a95b8",
+     "4,0": "#6f6a8c",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d5278",
+     "5,0": "#5b3f9a"
+    },
+    "eyes": {
+     "color": "#b79cff",
+     "intensity": 2.6
+    }
    }
   },
   {
@@ -182,6 +321,35 @@
     "glow": "#d7c4ff",
     "chestGlow": true,
     "legs": "#6a6288"
+   },
+   "glb": {
+    "char": "Skeleton_Mage",
+    "scale": 0.86,
+    "style": "staff",
+    "skeleton": true,
+    "walk": "Walking_D_Skeletons",
+    "run": "Running_A",
+    "external": [
+     {
+      "bone": "handslot.r",
+      "group": "weapons_skeleton",
+      "id": "Skeleton_Staff"
+     }
+    ],
+    "palette": {
+     "1,1": "#ddd5ec",
+     "2,2": "#c9b27a",
+     "3,0": "#9a95b8",
+     "4,0": "#6f6a8c",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d5278",
+     "5,0": "#5b3f9a",
+     "3,2": "#b79cff"
+    },
+    "eyes": {
+     "color": "#d7c4ff",
+     "intensity": 2.8
+    }
    }
   },
   {
@@ -197,6 +365,41 @@
     "weaponR": "staff",
     "glow": "#6dff9a",
     "skin": "#c3bccd"
+   },
+   "glb": {
+    "char": "Skeleton_Rogue",
+    "scale": 0.88,
+    "style": "staff",
+    "skeleton": true,
+    "walk": "Walking_D_Skeletons",
+    "run": "Running_A",
+    "props": [
+     {
+      "bone": "handslot.l",
+      "kind": "lantern",
+      "color": "#6dff9a"
+     }
+    ],
+    "external": [
+     {
+      "bone": "handslot.r",
+      "group": "weapons_skeleton",
+      "id": "Skeleton_Staff"
+     }
+    ],
+    "palette": {
+     "1,1": "#e0e6d4",
+     "2,2": "#6f8f68",
+     "3,0": "#a9b4a0",
+     "4,0": "#6f6a8c",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d7a58",
+     "5,0": "#5b3f9a"
+    },
+    "eyes": {
+     "color": "#6dff9a",
+     "intensity": 2.8
+    }
    }
   },
   {
@@ -213,6 +416,29 @@
     "chestGlow": true,
     "hover": true,
     "legs": "#3a3052"
+   },
+   "glb": {
+    "char": "Skeleton_Mage",
+    "scale": 0.92,
+    "style": "staff",
+    "skeleton": true,
+    "hover": 0.32,
+    "walk": "Walking_D_Skeletons",
+    "run": "Running_A",
+    "palette": {
+     "1,1": "#ddd5ec",
+     "2,2": "#33236b",
+     "3,0": "#9a95b8",
+     "4,0": "#6f6a8c",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d5278",
+     "5,0": "#5b3f9a",
+     "3,2": "#6a4fd0"
+    },
+    "eyes": {
+     "color": "#8a6fd0",
+     "intensity": 3.0
+    }
    }
   },
   {
@@ -229,6 +455,41 @@
     "skin": "#c3bccd",
     "legs": "#3a3430",
     "metal": "#d9a24a"
+   },
+   "glb": {
+    "char": "Skeleton_Warrior",
+    "scale": 1.0,
+    "style": "1h",
+    "skeleton": true,
+    "walk": "Walking_D_Skeletons",
+    "run": "Running_A",
+    "hide": [
+     "Skeleton_Warrior_Helmet"
+    ],
+    "props": [
+     {
+      "bone": "head",
+      "kind": "bell_helm"
+     },
+     {
+      "bone": "handslot.r",
+      "kind": "handbell",
+      "scale": 1.9
+     }
+    ],
+    "palette": {
+     "1,1": "#ddd5ec",
+     "2,2": "#5a3f96",
+     "3,0": "#8a6a3a",
+     "4,0": "#5a4528",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d5278",
+     "5,0": "#5b3f9a"
+    },
+    "eyes": {
+     "color": "#b79cff",
+     "intensity": 2.0
+    }
    }
   },
   {
@@ -244,6 +505,53 @@
     "glow": "#ff7a2a",
     "chestGlow": true,
     "legs": "#3a2a26"
+   },
+   "glb": {
+    "char": "Skeleton_Minion",
+    "scale": 0.84,
+    "style": "unarmed",
+    "skeleton": true,
+    "walk": "Walking_D_Skeletons",
+    "run": "Running_A",
+    "palette": {
+     "1,1": "#e6d4c4",
+     "2,2": "#5a3f96",
+     "3,0": "#9a95b8",
+     "4,0": "#6f6a8c",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d5278",
+     "5,0": "#5a2a22"
+    },
+    "eyes": {
+     "color": "#ff9a3a",
+     "intensity": 3.2
+    },
+    "external": [
+     {
+      "bone": "chest",
+      "group": "dungeon",
+      "id": "keg",
+      "pos": [
+       0,
+       0.16,
+       0.34
+      ],
+      "scale": 0.5
+     }
+    ],
+    "props": [
+     {
+      "bone": "chest",
+      "kind": "fuse_spark",
+      "y": 0.5,
+      "z": 0.34
+     }
+    ],
+    "rim": {
+     "color": "#ff9a5a",
+     "k": 0.35,
+     "pow": 2.6
+    }
    }
   },
   {
@@ -260,6 +568,39 @@
     "glow": "#b79cff",
     "skin": "#c3bccd",
     "legs": "#1e1e2a"
+   },
+   "glb": {
+    "char": "Skeleton_Rogue",
+    "scale": 0.88,
+    "style": "dual",
+    "skeleton": true,
+    "walk": "Walking_D_Skeletons",
+    "run": "Running_A",
+    "external": [
+     {
+      "bone": "handslot.r",
+      "group": "weapons_skeleton",
+      "id": "Skeleton_Blade"
+     },
+     {
+      "bone": "handslot.l",
+      "group": "weapons_skeleton",
+      "id": "Skeleton_Blade"
+     }
+    ],
+    "palette": {
+     "1,1": "#ddd5ec",
+     "2,2": "#1c1630",
+     "3,0": "#9a95b8",
+     "4,0": "#6f6a8c",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d5278",
+     "5,0": "#5b3f9a"
+    },
+    "eyes": {
+     "color": "#b79cff",
+     "intensity": 3.0
+    }
    }
   },
   {
@@ -277,6 +618,45 @@
     "shoulders": "#d9a24a",
     "glow": "#7fe3ff",
     "metal": "#6d6458"
+   },
+   "glb": {
+    "char": "Knight",
+    "scale": 1.08,
+    "equip": [
+     "Rectangle_Shield"
+    ],
+    "style": "unarmed",
+    "walk": "Walking_A",
+    "run": "Running_A",
+    "hide": [
+     "Knight_Cape"
+    ],
+    "props": [
+     {
+      "bone": "head",
+      "kind": "eye_glow",
+      "y": 0.6,
+      "z": 0.5,
+      "x": 0.17,
+      "w": 0.14,
+      "h": 0.05
+     }
+    ],
+    "palette": {
+     "3,0": "#d3a050",
+     "4,0": "#8a5f26",
+     "7,0": "#b88a3e",
+     "6,0": "#a87a3a",
+     "0,1": "#7a4a1a",
+     "7,1": "#6a4a22",
+     "3,1": "#c9954a",
+     "2,1": "#d3a050"
+    },
+    "rim": {
+     "color": "#ffd9a0",
+     "k": 0.3,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -322,6 +702,35 @@
     "chestGlow": true,
     "metal": "#7c7468",
     "hangBell": true
+   },
+   "glb": {
+    "char": "Barbarian",
+    "scale": 1.62,
+    "equip": [],
+    "style": "2h",
+    "walk": "Walking_A",
+    "run": "Running_A",
+    "props": [
+     {
+      "bone": "handslot.r",
+      "kind": "bell_hammer",
+      "color": "#7b6a58",
+      "glow": "#b79cff"
+     }
+    ],
+    "palette": {
+     "0,0": "#c9c0d6",
+     "1,0": "#d6d2e0",
+     "0,1": "#4a3a7a",
+     "6,0": "#5d5070",
+     "7,0": "#7a7288",
+     "2,1": "#cfc6dc"
+    },
+    "rim": {
+     "color": "#b79cff",
+     "k": 0.3,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -341,6 +750,49 @@
     "hover": true,
     "orbit": 5,
     "legs": "#cfc8e0"
+   },
+   "glb": {
+    "char": "Skeleton_Mage",
+    "scale": 1.28,
+    "style": "staff",
+    "skeleton": true,
+    "hover": 0.5,
+    "hide": [
+     "Skeleton_Mage_Hat"
+    ],
+    "props": [
+     {
+      "bone": "head",
+      "kind": "halo_crown",
+      "y": 0.6
+     },
+     {
+      "bone": "chest",
+      "kind": "orbit_notes",
+      "count": 5,
+      "radius": 1.0,
+      "y": 0.2
+     }
+    ],
+    "palette": {
+     "1,1": "#f4f0fb",
+     "2,2": "#e4def2",
+     "3,0": "#c4bddb",
+     "4,0": "#6f6a8c",
+     "6,0": "#7a5aa8",
+     "7,0": "#5d5278",
+     "5,0": "#5b3f9a",
+     "3,2": "#b79cff"
+    },
+    "eyes": {
+     "color": "#e8dcff",
+     "intensity": 3.2
+    },
+    "rim": {
+     "color": "#d7c4ff",
+     "k": 0.4,
+     "pow": 2.6
+    }
    }
   },
   {
@@ -357,6 +809,27 @@
     "glow": "#d9a24a",
     "skin": "#c9a688",
     "legs": "#3a4250"
+   },
+   "glb": {
+    "char": "Knight",
+    "scale": 0.86,
+    "equip": [
+     "1H_Sword",
+     "Rectangle_Shield"
+    ],
+    "style": "1h",
+    "variants": [
+     "Idle_B"
+    ],
+    "palette": {
+     "0,1": "#2f7f8f",
+     "2,2": "#2f7f8f"
+    },
+    "rim": {
+     "color": "#fff0c8",
+     "k": 0.18,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -372,6 +845,42 @@
     "hangBell": true,
     "skin": "#b8906a",
     "legs": "#4a3a2a"
+   },
+   "glb": {
+    "char": "Rogue",
+    "scale": 0.84,
+    "equip": [],
+    "style": "unarmed",
+    "variants": [
+     "Interact",
+     "Use_Item",
+     "Idle_B"
+    ],
+    "props": [
+     {
+      "bone": "handslot.r",
+      "kind": "tuning_fork"
+     },
+     {
+      "bone": "hips",
+      "kind": "hip_bell",
+      "pos": [
+       0.27,
+       0.02,
+       0.1
+      ]
+     }
+    ],
+    "palette": {
+     "0,1": "#b8742a",
+     "1,1": "#2fb8c8",
+     "6,0": "#7a4a22"
+    },
+    "rim": {
+     "color": "#ffe6b0",
+     "k": 0.18,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -386,6 +895,27 @@
     "head": "hood",
     "skin": "#d9c3a8",
     "legs": "#cfcabd"
+   },
+   "glb": {
+    "char": "Rogue_Hooded",
+    "scale": 0.84,
+    "equip": [],
+    "style": "unarmed",
+    "variants": [
+     "Idle_B"
+    ],
+    "palette": {
+     "0,1": "#d4dbe6",
+     "1,1": "#eef2f7",
+     "1,2": "#aab6c6",
+     "2,2": "#c4cedb",
+     "0,3": "#c4cedb"
+    },
+    "rim": {
+     "color": "#cfe0ff",
+     "k": 0.2,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -400,6 +930,31 @@
     "scarf": "#e8dcc0",
     "skin": "#c9a688",
     "legs": "#5a3a2a"
+   },
+   "glb": {
+    "char": "Barbarian",
+    "scale": 0.82,
+    "equip": [
+     "Mug"
+    ],
+    "hide": [
+     "Barbarian_Hat"
+    ],
+    "style": "unarmed",
+    "variants": [
+     "Cheer",
+     "Use_Item",
+     "Idle_B"
+    ],
+    "palette": {
+     "0,1": "#b5533a",
+     "2,1": "#f4ead2"
+    },
+    "rim": {
+     "color": "#ffe6b0",
+     "k": 0.15,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -414,6 +969,32 @@
     "scarf": "#8aa070",
     "skin": "#c9a688",
     "legs": "#3a4a3a"
+   },
+   "glb": {
+    "char": "Mage",
+    "scale": 0.74,
+    "equip": [
+     "Spellbook"
+    ],
+    "hide": [
+     "Mage_Hat"
+    ],
+    "style": "unarmed",
+    "variants": [
+     "Interact",
+     "Use_Item",
+     "Cheer"
+    ],
+    "palette": {
+     "0,1": "#3f8a6a",
+     "1,1": "#4a9a78",
+     "7,1": "#1f4a3a"
+    },
+    "rim": {
+     "color": "#dffff0",
+     "k": 0.15,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -429,6 +1010,26 @@
     "glow": "#7fe3ff",
     "hover": true,
     "legs": "#7fe3ff"
+   },
+   "glb": {
+    "char": "Rogue_Hooded",
+    "scale": 0.9,
+    "equip": [],
+    "style": "unarmed",
+    "hover": 0.2,
+    "palette": {
+     "*": "#9fe8ff"
+    },
+    "ghost": {
+     "color": "#7fe3ff",
+     "opacity": 0.55,
+     "glow": 0.8
+    },
+    "rim": {
+     "color": "#e6fbff",
+     "k": 0.6,
+     "pow": 2.2
+    }
    }
   },
   {
@@ -448,6 +1049,46 @@
     "chestGlow": true,
     "metal": "#8a7a58",
     "hangBell": true
+   },
+   "glb": {
+    "char": "Knight",
+    "scale": 1.55,
+    "equip": [],
+    "style": "2h",
+    "walk": "Walking_A",
+    "run": "Running_A",
+    "hide": [
+     "Knight_Cape"
+    ],
+    "props": [
+     {
+      "bone": "handslot.r",
+      "kind": "bell_hammer"
+     },
+     {
+      "bone": "head",
+      "kind": "eye_glow",
+      "y": 0.6,
+      "z": 0.5,
+      "x": 0.17,
+      "w": 0.14,
+      "h": 0.05
+     }
+    ],
+    "palette": {
+     "3,0": "#8c8a86",
+     "4,0": "#5d5b58",
+     "7,0": "#7a7873",
+     "6,0": "#6a5a3a",
+     "0,1": "#7a5a2a",
+     "7,1": "#4a4a4c",
+     "2,1": "#9a9890"
+    },
+    "rim": {
+     "color": "#7fe3ff",
+     "k": 0.3,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -485,6 +1126,30 @@
     "legs": "#4a4338",
     "glow": "#7fe3ff",
     "weaponR": "none"
+   },
+   "glb": {
+    "char": "Rogue_Hooded",
+    "scale": 0.84,
+    "equip": [
+     "1H_Crossbow"
+    ],
+    "style": "unarmed",
+    "variants": [
+     "Cheer",
+     "Idle_B"
+    ],
+    "palette": {
+     "0,1": "#7a6a4e",
+     "1,1": "#9a8a5e",
+     "1,2": "#6a5a3e",
+     "2,2": "#8a7a4a",
+     "0,3": "#8a7a4a"
+    },
+    "rim": {
+     "color": "#ffe6b0",
+     "k": 0.15,
+     "pow": 3.0
+    }
    }
   },
   {
@@ -503,6 +1168,43 @@
     "hover": true,
     "orbit": 4,
     "cloak": "#8fd4ea"
+   },
+   "glb": {
+    "char": "Mage",
+    "scale": 1.12,
+    "equip": [],
+    "style": "staff",
+    "hover": 0.35,
+    "walk": "Walking_A",
+    "run": "Running_A",
+    "props": [
+     {
+      "bone": "handslot.r",
+      "kind": "prism_staff",
+      "color": "#9fe8ff"
+     },
+     {
+      "bone": "chest",
+      "kind": "orbit_notes",
+      "color": "#7fe3ff",
+      "count": 4,
+      "radius": 1.1,
+      "y": 0.1
+     }
+    ],
+    "palette": {
+     "*": "#9fe8ff"
+    },
+    "ghost": {
+     "color": "#7fe3ff",
+     "opacity": 0.62,
+     "glow": 0.7
+    },
+    "rim": {
+     "color": "#e6fbff",
+     "k": 0.6,
+     "pow": 2.2
+    }
    }
   },
   {
