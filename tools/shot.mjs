@@ -17,7 +17,7 @@ const script = opt('script', null);
 const server = await createServer({ server: { port: 0, host: '127.0.0.1' }, logLevel: 'error' });
 await server.listen();
 const port = server.httpServer.address().port;
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 const logs = [];
 page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) logs.push(`[${m.type()}] ${m.text()}`); });

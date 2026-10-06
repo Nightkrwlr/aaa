@@ -4,6 +4,6 @@ export default async function ({ page, wait, shot }) {
   for (const [name, x, z] of places) {
     await page.evaluate(([x, z]) => { const g = window.__game; g.player.x = x; g.player.z = z; g.player.invuln = 0; g.rig.setZoom(34); g.rig.initialised = false; g.player.stats.add('godmode', [{ stat: 'life', op: 'flat', value: 99999 }]); g.world.refreshLife(g.player, true); }, [x, z]);
     await wait(2500);
-    await shot(`/tmp/claude-0/-home-user-aaa/3b641f7c-91e0-5f65-bdba-08dc578ec535/scratchpad/shots/tour_${name}.png`);
+    await shot(`${process.env.SHOT_DIR ?? 'artifacts/shots'}/tour_${name}.png`);
   }
 }

@@ -83,3 +83,9 @@ body.dual .p-inventory .inv-cols { grid-template-columns: 1fr; } body.dual .p-in
 @media (prefers-reduced-motion: reduce) { .title-bg, .toast { animation: none; } }
 
 .panel.p-inventory { width: min(1240px, 97vw); } .panel.p-craft { width: min(1100px, 96vw); } .panel.p-codex, .panel.p-quests, .panel.p-skills { width: min(1000px, 96vw); }
+
+.panel.p-dev { left: auto; right: 10px; top: 60px; transform: none; width: 440px; max-height: 80vh; opacity: .96; } .dev-body > * { margin: 6px 0; } .dev-out { background: #07090d; border: 1px solid var(--line); padding: 6px; max-height: 240px; overflow: auto; font-size: 11px; white-space: pre-wrap; }
+
+/* colour-vision palettes: danger/benefit/rarity never rely on red-vs-green (Okabe–Ito based) */
+.cb-protanopia, .cb-deuteranopia { --danger: #ffb000; --good: #4aa8ff; --violet: #e07bff; --rar-fine: #56b4e9; --rar-attuned: #f0e442; --rar-relic: #cc79a7; --life: #c27a00; --life2: #ffb000; }
+.cb-tritanopia { --danger: #ff3a3a; --good: #e8fff0; --cyan: #00f0ff; --violet: #ff8ad0; --rar-fine: #00e5ff; --rar-attuned: #ffe066; --rar-relic: #ff5a4a; }

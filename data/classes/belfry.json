@@ -1,30 +1,84 @@
 {
-  "kind": "class",
-  "items": [
+ "kind": "class",
+ "items": [
+  {
+   "id": "cls.belfry",
+   "model": "mdl.belfry",
+   "color": "#d9a24a",
+   "resource": {
+    "id": "toll",
+    "max": 100,
+    "start": 0,
+    "decay": {
+     "delay": 5,
+     "rate": 4,
+     "outOfCombatOnly": true
+    },
+    "onHit": 3,
+    "onHurt": 6,
+    "onKill": 0,
+    "thresholds": [
+     {
+      "at": 80,
+      "status": "st.resonating"
+     }
+    ]
+   },
+   "profile": {
+    "life": 1.12,
+    "armor": 0.7,
+    "res": {
+     "sonic": 0.1
+    },
+    "moveSpeed": 5.5,
+    "weaponKinds": [
+     "melee",
+     "heavy"
+    ],
+    "unarmedMult": 0.6,
+    "dmg": 1.2
+   },
+   "loadout": {
+    "primary": "abl.belfry.clapper",
+    "s1": "abl.belfry.peal",
+    "dodge": "abl.belfry.shoulder_roll"
+   },
+   "unlocks": [
     {
-      "id": "cls.belfry",
-      "model": "mdl.belfry",
-      "color": "#d9a24a",
-      "resource": {
-        "id": "toll", "max": 100, "start": 0,
-        "decay": { "delay": 5, "rate": 4, "outOfCombatOnly": true },
-        "onHit": 3, "onHurt": 6, "onKill": 0,
-        "thresholds": [{ "at": 80, "status": "st.resonating" }]
-      },
-      "profile": { "life": 1.12, "armor": 0.7, "res": { "sonic": 0.1 }, "moveSpeed": 5.5, "weaponKinds": ["melee", "heavy"], "unarmedMult": 0.6 },
-      "loadout": { "primary": "abl.belfry.clapper", "s1": "abl.belfry.peal", "dodge": "abl.belfry.shoulder_roll" },
-      "unlocks": [
-        { "level": 1, "ability": "abl.belfry.peal" },
-        { "level": 2, "ability": "abl.belfry.chain_bell" },
-        { "level": 3, "ability": "abl.belfry.bronze_ward" },
-        { "level": 4, "ability": "abl.belfry.slow_toll" },
-        { "level": 5, "ability": "abl.belfry.iron_charge" },
-        { "level": 6, "ability": "abl.belfry.alarm" },
-        { "level": 8, "ability": "abl.belfry.dueling_bells" },
-        { "level": 10, "ability": "abl.belfry.knell" }
-      ],
-      "talentTree": "tree.belfry",
-      "startingWeapon": "itm.base.bell_hammer_worn"
+     "level": 1,
+     "ability": "abl.belfry.peal"
+    },
+    {
+     "level": 2,
+     "ability": "abl.belfry.chain_bell"
+    },
+    {
+     "level": 3,
+     "ability": "abl.belfry.bronze_ward"
+    },
+    {
+     "level": 4,
+     "ability": "abl.belfry.slow_toll"
+    },
+    {
+     "level": 5,
+     "ability": "abl.belfry.iron_charge"
+    },
+    {
+     "level": 6,
+     "ability": "abl.belfry.alarm"
+    },
+    {
+     "level": 8,
+     "ability": "abl.belfry.dueling_bells"
+    },
+    {
+     "level": 10,
+     "ability": "abl.belfry.knell"
     }
-  ]
+   ],
+   "talentTree": "tree.belfry",
+   "startingWeapon": "itm.base.bell_hammer_worn"
+  }
+ ]
 }

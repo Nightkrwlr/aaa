@@ -2,6 +2,14 @@
 import { t, i18n } from '../../core/i18n.js';
 
 export const RARITY_COLOR = { common: '#d8d4c8', fine: '#6fb3ff', attuned: '#ffd24a', relic: '#ff8a3a' };
+const RARITY_BASE = { ...RARITY_COLOR };
+const RARITY_CB = {
+  protanopia: { fine: '#56b4e9', attuned: '#f0e442', relic: '#cc79a7' },
+  deuteranopia: { fine: '#56b4e9', attuned: '#f0e442', relic: '#cc79a7' },
+  tritanopia: { fine: '#00e5ff', attuned: '#ffe066', relic: '#ff5a4a' },
+};
+/** colour-vision palette for rarities ('none' restores the default); names also carry a text label, never colour alone */
+export function setRarityPalette(mode) { Object.assign(RARITY_COLOR, RARITY_BASE, RARITY_CB[mode] ?? {}); }
 export const RARITY_LABEL = { common: 'rarity.common', fine: 'rarity.fine', attuned: 'rarity.attuned', relic: 'rarity.relic' };
 
 export function itemName(reg, item) {

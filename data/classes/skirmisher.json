@@ -32,7 +32,8 @@
       "group": "ritmo",
       "value": 0.03
      }
-    ]
+    ],
+    "maxStacks": 12
    },
    "profile": {
     "life": 0.95,
@@ -42,7 +43,8 @@
     "weaponKinds": [
      "light"
     ],
-    "unarmedMult": 0.6
+    "unarmedMult": 0.6,
+    "dmg": 0.58
    },
    "loadout": {
     "primary": "abl.skir.claw",

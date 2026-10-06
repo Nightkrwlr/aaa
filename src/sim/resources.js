@@ -79,7 +79,7 @@ export class ResourceSystem {
     }
     // stack-based speed (Ritmo)
     if (c.perStack) {
-      const n = Math.floor(r.value + 1e-6);
+      const n = Math.min(c.maxStacks ?? 99, Math.floor(r.value + 1e-6));
       if (n !== r.stackShown) {
         r.stackShown = n;
         e.stats.remove('res:stacks');

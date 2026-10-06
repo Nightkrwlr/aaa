@@ -1,5 +1,5 @@
 // Opens every UI panel on a populated session and screenshots it (visual QA). usage: node tools/shot.mjs x.png --script tools/e2e/panels.mjs --query "e2e=1&autostart=belfry&seed=panels"
-const OUT = process.env.SHOT_DIR ?? '/tmp/claude-0/-home-user-aaa/3b641f7c-91e0-5f65-bdba-08dc578ec535/scratchpad/shots';
+const OUT = process.env.SHOT_DIR ?? 'artifacts/shots';
 export default async function ({ page, wait, shot, logs }) {
   await page.evaluate(() => {
     const g = window.__game, s = g.session, c = s.character;

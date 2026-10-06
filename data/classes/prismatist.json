@@ -41,7 +41,8 @@
     "weaponKinds": [
      "caster"
     ],
-    "unarmedMult": 0.6
+    "unarmedMult": 0.6,
+    "dmg": 0.55
    },
    "loadout": {
     "primary": "abl.prism.shard",

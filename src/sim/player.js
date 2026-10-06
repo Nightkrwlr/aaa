@@ -31,5 +31,7 @@ export function classMods(world, cls, level) {
     { stat: 'moveSpeed', op: 'base', value: p.moveSpeed },
   ];
   for (const [t, v] of Object.entries(p.res ?? {})) mods.push({ stat: `res.${t}`, op: 'flat', value: v });
+  // class power factor: the central lever that keeps kit DPS bands equal across classes (see docs/BALANCE.md)
+  if (p.dmg && p.dmg !== 1) mods.push({ stat: 'damage', op: 'more', group: 'class', value: p.dmg - 1 });
   return mods;
 }

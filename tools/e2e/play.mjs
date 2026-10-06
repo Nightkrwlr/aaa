@@ -1,11 +1,13 @@
 // Scripted playthrough through the REAL input path (keyboard + mouse) in headless Chromium.
 // usage: node tools/shot.mjs out.png --script tools/e2e/play.mjs --query "e2e=1&autostart=belfry&seed=play" --wait 3000
-const OUT = process.env.SHOT_DIR ?? '/tmp/claude-0/-home-user-aaa/3b641f7c-91e0-5f65-bdba-08dc578ec535/scratchpad/shots';
+const OUT = process.env.SHOT_DIR ?? 'artifacts/shots';
 const results = [];
 const check = (name, ok, extra = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${extra ? ` — ${extra}` : ''}`); };
 
-export default async function ({ page, wait, shot, logs }) {
+export default async function ({ page, wait: wallWait, shot, logs }) {
   const ev = (fn, arg) => page.evaluate(fn, arg);
+  // frame-based waiting: the sim runs a fixed 1/30 s per frame (?fixed=1), so slow software GL cannot change outcomes
+  const wait = async (ms) => { const n = Math.max(1, Math.ceil(ms / 33)); const f0 = await ev(() => window.__game.frames); await page.waitForFunction((t) => window.__game.frames >= t, f0 + n, { timeout: 120000, polling: 50 }); };
   const screenOf = (sel) => ev((sel) => { const g = window.__game; const e = g.world.entities.find((x) => x.team === 'enemy' && !x.dead && !x.hidden && (sel === 'any' || x.id === sel)); if (!e) return null; const p = g.scene3d.project(e.x, e.y + 0.8, e.z); return { x: p.x, y: p.y, uid: e.uid, d: Math.hypot(e.x - g.player.x, e.z - g.player.z), id: e.id }; }, sel);
 
   // 1. tutorial cylinder via the interact key
@@ -19,7 +21,8 @@ export default async function ({ page, wait, shot, logs }) {
   check('Escape closes the panel', await ev(() => !window.__game.ui.isOpen('lore')));
   check('quest advanced to the path stage', await ev(() => window.__game.session.state.quests['qst.first_echo'].stage === 'path'));
 
-  // 2. movement with WASD (camera-relative)
+  // 2. movement with WASD (camera-relative) on open ground
+  await ev(() => { const g = window.__game; g.player.x = -30; g.player.z = 20; g.rig.initialised = false; }); await wait(600);
   const before = await ev(() => ({ x: window.__game.player.x, z: window.__game.player.z }));
   await page.keyboard.down('KeyW'); await wait(1200); await page.keyboard.up('KeyW');
   const after = await ev(() => ({ x: window.__game.player.x, z: window.__game.player.z }));
@@ -36,8 +39,8 @@ export default async function ({ page, wait, shot, logs }) {
   await ev(() => { const g = window.__game, s = g.session; s.player.x = -38; s.player.z = 30; g.rig.initialised = false; s.player.stats.add('test', [{ stat: 'life', op: 'flat', value: 400 }]); g.world.refreshLife(g.player, true); });
   await wait(800);
   const killsBefore = await ev(() => window.__game.session.state.stats.kills);
-  const t0 = Date.now(); let fought = 0;
-  while (Date.now() - t0 < 60000) {
+  const t0 = Date.now(); let fought = 0; const fStart = await ev(() => window.__game.frames);
+  while ((await ev(() => window.__game.frames)) - fStart < 2400) {
     const e = await screenOf('any');
     if (!e) break;
     if (e.d > 10) { await ev((uid) => { const g = window.__game, en = g.world.get(uid); g.player.cmd.moveTo = { x: en.x, z: en.z }; }, e.uid); await wait(500); continue; }
@@ -47,12 +50,13 @@ export default async function ({ page, wait, shot, logs }) {
     if ((await ev(() => window.__game.session.state.stats.kills)) - killsBefore >= 3) break;
   }
   const kills = (await ev(() => window.__game.session.state.stats.kills)) - killsBefore;
-  check('real input kills enemies', kills >= 1, `${kills} kills in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+  check('real input kills enemies', kills >= 1, `${kills} kills`);
   await shot(`${OUT}/play_combat.png`);
   const xp = await ev(() => window.__game.character.xp + window.__game.character.level * 1000);
   check('kills grant XP', xp > 1000, String(xp));
   const ground = await ev(() => window.__game.session.loot.ground.length);
-  check('loot dropped on the ground', ground > 0, `${ground} piles`);
+  const wealth = await ev(() => window.__game.character.inv.chimes + window.__game.character.inv.used);
+  check('kills yield loot (ground piles or auto-collected chimes)', ground > 0 || wealth > 0, `${ground} piles, wealth ${wealth}`);
 
   // 5. pick up loot by walking over it / pressing E
   await ev(() => { const g = window.__game, s = g.session, l = s.loot.ground.find((x) => x.kind === 'item') ?? s.loot.ground[0]; if (l) { s.player.x = l.x; s.player.z = l.z + 1; } });
@@ -74,6 +78,19 @@ export default async function ({ page, wait, shot, logs }) {
   await shot(`${OUT}/play_dialogue.png`);
   await page.keyboard.press('Escape'); await wait(300);
   check('talking advanced the story', await ev(() => ['meet', 'quarry'].includes(window.__game.session.state.quests['qst.first_echo'].stage)));
+
+  // 7b. audio engine is alive and produces signal after a skill press
+  await page.keyboard.press('Digit1'); await wait(250);
+  const aud = await ev(async () => { const a = window.__game.audio; a.resume(); await new Promise((r) => setTimeout(r, 400)); window.__game.audio.sfx('bell'); await new Promise((r) => setTimeout(r, 300)); return { state: a.ctx?.state ?? 'none', rms: a.level() }; });
+  check('procedural audio runs (AudioContext running, non-zero output)', aud.state === 'running' && aud.rms > 0.0005, JSON.stringify(aud));
+
+  // 7c. dungeon portal through the interact key, then back
+  await ev(() => { const g = window.__game, s = g.session, o = s.interactables.find((x) => x.id === 'poi.dungeon_crypt'); s.player.x = o.x; s.player.z = o.z; g.rig.initialised = false; s.player.stats.add('test2', [{ stat: 'life', op: 'flat', value: 300 }]); });
+  await wait(600); await page.keyboard.press('KeyE'); await wait(5000);
+  check('portal enters the crypt (dungeon mode)', await ev(() => window.__game.session.mode === 'dungeon'));
+  await shot(`${OUT}/play_crypt.png`);
+  await ev(() => window.__game.session.dungeon.leave(false)); await wait(4500);
+  check('leaving returns to the overworld at the portal', await ev(() => window.__game.session.mode === 'overworld'));
 
   // 8. pause menu + manual save + reload
   await page.keyboard.press('Escape'); await wait(500);

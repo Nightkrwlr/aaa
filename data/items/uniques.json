@@ -139,12 +139,12 @@
    "mods": [
     {
      "stat": "resourceMax",
-     "op": "flat",
+     "op": "inc",
      "range": [
-      6,
-      10
+      0.06,
+      0.1
      ],
-     "scale": "none"
+     "scale": "pct"
     },
     {
      "stat": "cooldownRate",

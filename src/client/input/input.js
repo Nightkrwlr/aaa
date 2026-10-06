@@ -6,7 +6,7 @@ export const DEFAULT_BINDINGS = {
   moveUp: ['KeyW'], moveDown: ['KeyS'], moveLeft: ['KeyA'], moveRight: ['KeyD'],
   skill1: ['Digit1'], skill2: ['Digit2'], skill3: ['Digit3'], skill4: ['Digit4'], skill5: ['KeyQ'], skill6: ['Mouse2'],
   dodge: ['Space'], listen: ['KeyF'], voice: ['KeyR'], interact: ['KeyE'], potion: ['KeyZ'], hold: ['ShiftLeft'],
-  inventory: ['KeyI'], talents: ['KeyT'], map: ['KeyM'], quests: ['KeyJ'], codex: ['KeyC'], craft: ['KeyG'], pause: ['Escape'], voices: ['KeyV'], lootToggle: ['AltLeft'],
+  inventory: ['KeyI'], talents: ['KeyT'], map: ['KeyM'], quests: ['KeyJ'], codex: ['KeyC'], craft: ['KeyG'], pause: ['Escape'], voices: ['KeyV'], lootToggle: ['AltLeft'], devtools: ['Backquote'],
 };
 export const ACTION_LIST = Object.keys(DEFAULT_BINDINGS);
 const SKILL_SLOTS = { skill1: 's1', skill2: 's2', skill3: 's3', skill4: 's4', skill5: 's5', skill6: 's6' };

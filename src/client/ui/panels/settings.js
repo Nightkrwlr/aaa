@@ -5,6 +5,17 @@ import { DEFAULTS } from '../../settings.js';
 
 const keyLabel = (c) => c.replace('Key', '').replace('Digit', '').replace('Mouse', 'M').replace('Arrow', '↑↓←→'.includes('x') ? '' : '').replace('Space', '␣').replace('ShiftLeft', 'Shift').replace('AltLeft', 'Alt').replace('Escape', 'Esc');
 
+/** local-only telemetry dump: nothing is ever sent anywhere, the player decides what to do with the file */
+function exportTelemetry(game) {
+  const rows = game.session?.telemetry ?? [];
+  if (!rows.length) { game.toast(t('ui.telemetry_empty')); return; }
+  const blob = new Blob([JSON.stringify({ build: game.build ?? 'local', savedAt: new Date().toISOString(), events: rows }, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `sunderchoir-telemetry-${Date.now()}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  game.toast(t('toast.telemetry_saved', { n: rows.length }));
+}
+
 export function settings(game, ui) {
   const el = h('div', { class: 'settings-root' });
   let tab = 'graphics', capturing = null;
@@ -40,6 +51,7 @@ export function settings(game, ui) {
       slider(t('ui.screen_shake'), S.screenShake, { onInput: (v) => set('screenShake', v) }),
       slider(t('ui.aim_assist'), S.aimAssist, { onInput: (v) => set('aimAssist', v) }),
       toggle(t('ui.telemetry'), S.telemetry, (v) => set('telemetry', v), t('ui.telemetry_hint')),
+      button(t('ui.telemetry_export'), () => exportTelemetry(game), { cls: 'small' }),
       select(t('ui.language'), S.language, [['es', 'Español'], ['en', 'English']], (v) => { set('language', v); render(); }));
     else if (tab === 'access') body.append(
       slider(t('ui.ui_scale'), S.uiScale, { min: 0.8, max: 1.5, step: 0.05, fmt: (v) => `${Math.round(v * 100)}%`, onInput: (v) => set('uiScale', v) }),
@@ -54,7 +66,7 @@ export function settings(game, ui) {
     else {
       const grid = h('div', { class: 'bind-grid' });
       const binds = { ...DEFAULT_BINDINGS, ...(S.bindings ?? {}) };
-      for (const a of ACTION_LIST) {
+      for (const a of ACTION_LIST.filter((x) => x !== 'devtools' || game.dev)) {
         const b = h('button', { class: `btn bind ${capturing === a ? 'cap' : ''}`, type: 'button', onClick: () => { capturing = a; render(); } }, capturing === a ? t('ui.press_key') : binds[a].map(keyLabel).join(' / '));
         grid.append(h('div', { class: 'bind-row' }, h('span', {}, t(`act.${a}`)), b));
       }

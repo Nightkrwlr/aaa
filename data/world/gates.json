@@ -61,7 +61,7 @@
   },
   {
    "id": "gate.mechanism_vesper",
-   "region": "rgn.lost_echoes",
+   "region": "rgn.vesper",
    "designed": true,
    "requirements": [
     {

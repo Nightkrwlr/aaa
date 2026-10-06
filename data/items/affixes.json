@@ -867,12 +867,12 @@
    "mods": [
     {
      "stat": "resourceMax",
-     "op": "flat",
+     "op": "inc",
      "range": [
-      8,
-      16
+      0.08,
+      0.16
      ],
-     "scale": "none"
+     "scale": "pct"
     }
    ],
    "cost": 0.8

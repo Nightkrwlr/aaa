@@ -19,8 +19,8 @@
    "aim": "direction",
    "range": 2.6,
    "cast": {
-    "windup": 0.1,
-    "recover": 0.17,
+    "windup": 0.12,
+    "recover": 0.2,
     "cancelAt": 0.4,
     "moveFactor": 0.35
    },
@@ -35,7 +35,7 @@
       {
        "op": "damage",
        "type": "physical",
-       "coef": 0.72,
+       "coef": 0.5,
        "scaling": "weapon"
       }
      ]
@@ -51,7 +51,7 @@
       {
        "op": "damage",
        "type": "physical",
-       "coef": 0.72,
+       "coef": 0.5,
        "scaling": "weapon"
       }
      ]

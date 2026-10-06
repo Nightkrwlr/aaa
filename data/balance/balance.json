@@ -1,81 +1,288 @@
 {
-  "kind": "balance",
-  "items": [
-    {
-      "id": "bal.main",
-      "levelCap": 60,
-      "power": { "linear": 0.16, "quadratic": 0.0028 },
-      "player": {
-        "life": 250,
-        "dps": 45,
-        "armorK": 120,
-        "baseLifeShareOfExpected": 0.62,
-        "moveSpeed": 5.6,
-        "attackSpeedBase": 1,
-        "baseCritChance": 0.05,
-        "baseCritMult": 1.5,
-        "lifeRegenBaseFraction": 0.004,
-        "weaponShareOfDps": 0.5
-      },
-      "enemyTiers": {
-        "minion":   { "ttk": 0.9,  "xp": 0.35, "chimes": 0.4, "dropChance": 0.025, "dropRarityBias": 0 },
-        "standard": { "ttk": 1.9,  "xp": 1.0,  "chimes": 1.0, "dropChance": 0.07,  "dropRarityBias": 0 },
-        "tough":    { "ttk": 3.6,  "xp": 1.8,  "chimes": 1.8, "dropChance": 0.12,  "dropRarityBias": 0.1 },
-        "elite":    { "ttk": 12,   "xp": 5.5,  "chimes": 5,   "dropChance": 1.0,   "dropRarityBias": 0.5, "dropCount": [1, 2] },
-        "miniboss": { "ttk": 48,   "xp": 18,   "chimes": 16,  "dropChance": 1.0,   "dropRarityBias": 0.8, "dropCount": [2, 3] },
-        "boss":     { "ttk": 130,  "xp": 55,   "chimes": 45,  "dropChance": 1.0,   "dropRarityBias": 1.0, "dropCount": [3, 5] }
-      },
-      "enemyDamage": {
-        "pctLifePerHitBase": 0.075,
-        "difficultyDamage": { "wanderer": 0.8, "seeker": 1.0, "chorister": 1.25, "maestro": 1.55 },
-        "difficultyHp": { "wanderer": 0.85, "seeker": 1.0, "chorister": 1.1, "maestro": 1.2 },
-        "difficultyDropBonus": { "wanderer": 0, "seeker": 0, "chorister": 0.1, "maestro": 0.25 },
-        "difficultyAi": { "wanderer": 0.8, "seeker": 1.0, "chorister": 1.15, "maestro": 1.3 }
-      },
-      "xp": { "perStandardBase": 8, "perStandardExponent": 1.15, "killsPerLevelBase": 14, "killsPerLevelSlope": 1.6, "levelGapPenaltyStart": 4, "levelGapPenaltyStep": 0.12, "minFactor": 0.1 },
-      "economy": {
-        "chimeUnit": 5.2, "chimeUnitExponent": 0.92,
-        "sellFraction": 0.18,
-        "rarityValue": { "common": 1, "fine": 3, "attuned": 9, "relic": 24, "crafted": 6 },
-        "respec": { "base": 2.5, "growth": 0.35, "cap": 14, "freeRespecs": 3 },
-        "reforge": { "base": 6, "perAffixStep": 0.6 },
-        "upgrade": { "base": 8, "step": 1.0 },
-        "deathChimeLossPct": 0.08,
-        "restPotionCost": 3
-      },
-      "items": {
-        "weaponHitFraction": 0.34,
-        "rarity": {
-          "common":  { "affixes": [0, 0], "rollFloor": 0.0, "stability": 4 },
-          "fine":    { "affixes": [1, 2], "rollFloor": 0.55, "stability": 5 },
-          "attuned": { "affixes": [3, 5], "rollFloor": 0.25, "stability": 6 },
-          "relic":   { "affixes": [2, 4], "rollFloor": 0.4,  "stability": 3 }
-        },
-        "affixPercentScale": { "atLevel1": 0.55, "atCap": 1.0 },
-        "maxAffixPerSide": 3,
-        "socketChanceByRarity": { "common": 0.2, "fine": 0.3, "attuned": 0.35, "relic": 0.0 }
-      },
-      "caps": {
-        "resist": 0.75, "armorReduction": 0.85, "critChance": 0.75, "critMult": 4.0,
-        "actionSpeed": 2.0, "cooldownRate": 2.0, "moveSpeed": 1.6, "areaSize": 2.0,
-        "increasedDamage": 6.0, "moreGroupCap": 1.5, "lifeRegenPctPerSec": 0.04, "leechPct": 0.05,
-        "statusChance": 1.0, "damageTakenMin": 0.2, "penetration": 0.5
-      },
-      "moreGroupCaps": { "cadence": 0.5, "talent": 1.5, "gear": 1.0, "unique": 1.5, "buff": 1.0, "skill": 1.5, "vulnerable": 0.5, "misc": 1.0 },
-      "cadence": {
-        "windowSeconds": 4.0,
-        "triad":   { "dmg": 0.25, "duration": 4.0, "resourceRefund": 0.12, "voiceCharge": 1, "internalCooldown": 2.5 },
-        "unison":  { "dmg": 0.30, "area": 0.40, "cooldown": 5.0 },
-        "reprise": { "cooldownReduce": 1.5, "internalCooldown": 3.0 }
-      },
-      "listen": { "breathSeconds": 6, "breathRegenSeconds": 5, "moveFactor": 0.6, "rangeBase": 14, "pulseInterval": 0.9, "minBreathToStart": 0.8 },
-      "voices": { "captureWindow": 8, "captureRadius": 4, "baseSlots": 1, "defaultCharges": 3, "minLevelForVoices": 2 },
-      "dodge": { "baseDistance": 5.2, "baseDuration": 0.28, "baseCooldown": 1.6, "iFrameFraction": 0.7, "chargesBase": 1 },
-      "hitStop": { "minMs": 20, "maxMs": 70 },
-      "potions": { "belt": 4, "healPct": 0.38, "cooldown": 1.2, "dailyRefillOnRest": true },
-      "loot": { "autoPickMaterials": true, "magnetRadius": 2.6, "itemLifetimeSeconds": 600 },
-      "director": { "combatFatigueSeconds": 240, "quietFatigueSeconds": 150, "postBossQuietSeconds": 120, "eventCooldownSeconds": 180, "maxNudgesPerHour": 10 },
-      "aggro": { "activeRadius": 38, "sleepRadius": 55, "aiTickFar": 0.5 }
+ "kind": "balance",
+ "items": [
+  {
+   "id": "bal.main",
+   "levelCap": 60,
+   "power": {
+    "linear": 0.16,
+    "quadratic": 0.0028
+   },
+   "player": {
+    "life": 250,
+    "dps": 45,
+    "armorK": 120,
+    "baseLifeShareOfExpected": 0.62,
+    "moveSpeed": 5.6,
+    "attackSpeedBase": 1,
+    "baseCritChance": 0.05,
+    "baseCritMult": 1.5,
+    "lifeRegenBaseFraction": 0.004,
+    "weaponShareOfDps": 0.5
+   },
+   "enemyTiers": {
+    "minion": {
+     "ttk": 0.9,
+     "xp": 0.35,
+     "chimes": 0.4,
+     "dropChance": 0.025,
+     "dropRarityBias": 0
+    },
+    "standard": {
+     "ttk": 1.9,
+     "xp": 1.0,
+     "chimes": 1.0,
+     "dropChance": 0.07,
+     "dropRarityBias": 0
+    },
+    "tough": {
+     "ttk": 3.6,
+     "xp": 1.8,
+     "chimes": 1.8,
+     "dropChance": 0.12,
+     "dropRarityBias": 0.1
+    },
+    "elite": {
+     "ttk": 12,
+     "xp": 5.5,
+     "chimes": 5,
+     "dropChance": 1.0,
+     "dropRarityBias": 0.5,
+     "dropCount": [
+      1,
+      2
+     ]
+    },
+    "miniboss": {
+     "ttk": 48,
+     "xp": 18,
+     "chimes": 16,
+     "dropChance": 1.0,
+     "dropRarityBias": 0.8,
+     "dropCount": [
+      2,
+      3
+     ]
+    },
+    "boss": {
+     "ttk": 130,
+     "xp": 55,
+     "chimes": 45,
+     "dropChance": 1.0,
+     "dropRarityBias": 1.0,
+     "dropCount": [
+      3,
+      5
+     ]
     }
-  ]
+   },
+   "enemyDamage": {
+    "pctLifePerHitBase": 0.075,
+    "difficultyDamage": {
+     "wanderer": 0.8,
+     "seeker": 1.0,
+     "chorister": 1.25,
+     "maestro": 1.55
+    },
+    "difficultyHp": {
+     "wanderer": 0.85,
+     "seeker": 1.0,
+     "chorister": 1.1,
+     "maestro": 1.2
+    },
+    "difficultyDropBonus": {
+     "wanderer": 0,
+     "seeker": 0,
+     "chorister": 0.1,
+     "maestro": 0.25
+    },
+    "difficultyAi": {
+     "wanderer": 0.8,
+     "seeker": 1.0,
+     "chorister": 1.15,
+     "maestro": 1.3
+    }
+   },
+   "xp": {
+    "perStandardBase": 8,
+    "perStandardExponent": 1.15,
+    "killsPerLevelBase": 14,
+    "killsPerLevelSlope": 1.6,
+    "levelGapPenaltyStart": 4,
+    "levelGapPenaltyStep": 0.12,
+    "minFactor": 0.1
+   },
+   "economy": {
+    "chimeUnit": 5.2,
+    "chimeUnitExponent": 0.92,
+    "sellFraction": 0.18,
+    "rarityValue": {
+     "common": 1,
+     "fine": 3,
+     "attuned": 9,
+     "relic": 24,
+     "crafted": 6
+    },
+    "respec": {
+     "base": 2.5,
+     "growth": 0.35,
+     "cap": 14,
+     "freeRespecs": 3
+    },
+    "reforge": {
+     "base": 6,
+     "perAffixStep": 0.6
+    },
+    "upgrade": {
+     "base": 8,
+     "step": 1.0
+    },
+    "deathChimeLossPct": 0.08,
+    "restPotionCost": 3
+   },
+   "items": {
+    "weaponHitFraction": 0.34,
+    "rarity": {
+     "common": {
+      "affixes": [
+       0,
+       0
+      ],
+      "rollFloor": 0.0,
+      "stability": 4
+     },
+     "fine": {
+      "affixes": [
+       1,
+       2
+      ],
+      "rollFloor": 0.55,
+      "stability": 5
+     },
+     "attuned": {
+      "affixes": [
+       3,
+       5
+      ],
+      "rollFloor": 0.25,
+      "stability": 6
+     },
+     "relic": {
+      "affixes": [
+       2,
+       4
+      ],
+      "rollFloor": 0.4,
+      "stability": 3
+     }
+    },
+    "affixPercentScale": {
+     "atLevel1": 0.55,
+     "atCap": 1.0
+    },
+    "maxAffixPerSide": 3,
+    "socketChanceByRarity": {
+     "common": 0.2,
+     "fine": 0.3,
+     "attuned": 0.35,
+     "relic": 0.0
+    }
+   },
+   "caps": {
+    "resist": 0.75,
+    "armorReduction": 0.85,
+    "critChance": 0.75,
+    "critMult": 4.0,
+    "actionSpeed": 1.75,
+    "cooldownRate": 1.75,
+    "moveSpeed": 1.6,
+    "areaSize": 2.0,
+    "increasedDamage": 4.0,
+    "moreGroupCap": 1.5,
+    "lifeRegenPctPerSec": 0.04,
+    "leechPct": 0.05,
+    "statusChance": 1.0,
+    "damageTakenMin": 0.2,
+    "penetration": 0.5
+   },
+   "moreGroupCaps": {
+    "cadence": 0.5,
+    "talent": 1.5,
+    "gear": 1.0,
+    "unique": 1.5,
+    "buff": 1.0,
+    "skill": 1.5,
+    "vulnerable": 0.5,
+    "misc": 1.0
+   },
+   "cadence": {
+    "windowSeconds": 4.0,
+    "triad": {
+     "dmg": 0.25,
+     "duration": 4.0,
+     "resourceRefund": 0.12,
+     "voiceCharge": 1,
+     "internalCooldown": 2.5
+    },
+    "unison": {
+     "dmg": 0.3,
+     "area": 0.4,
+     "cooldown": 5.0
+    },
+    "reprise": {
+     "cooldownReduce": 1.5,
+     "internalCooldown": 3.0
+    }
+   },
+   "listen": {
+    "breathSeconds": 6,
+    "breathRegenSeconds": 5,
+    "moveFactor": 0.6,
+    "rangeBase": 14,
+    "pulseInterval": 0.9,
+    "minBreathToStart": 0.8
+   },
+   "voices": {
+    "captureWindow": 8,
+    "captureRadius": 4,
+    "baseSlots": 1,
+    "defaultCharges": 3,
+    "minLevelForVoices": 2
+   },
+   "dodge": {
+    "baseDistance": 5.2,
+    "baseDuration": 0.28,
+    "baseCooldown": 1.6,
+    "iFrameFraction": 0.7,
+    "chargesBase": 1
+   },
+   "hitStop": {
+    "minMs": 20,
+    "maxMs": 70
+   },
+   "potions": {
+    "belt": 4,
+    "healPct": 0.38,
+    "cooldown": 1.2,
+    "dailyRefillOnRest": true
+   },
+   "loot": {
+    "autoPickMaterials": true,
+    "magnetRadius": 2.6,
+    "itemLifetimeSeconds": 600
+   },
+   "director": {
+    "combatFatigueSeconds": 240,
+    "quietFatigueSeconds": 150,
+    "postBossQuietSeconds": 120,
+    "eventCooldownSeconds": 180,
+    "maxNudgesPerHour": 10
+   },
+   "aggro": {
+    "activeRadius": 38,
+    "sleepRadius": 55,
+    "aiTickFar": 0.5
+   }
+  }
+ ]
 }

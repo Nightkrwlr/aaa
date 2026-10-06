@@ -6,6 +6,17 @@ import * as THREE from 'three';
  * danger red · benefit green · silence violet · interactive gold · echo cyan.
  */
 export const FX_COLORS = { danger: '#ff4a3a', benign: '#6dff9a', hush: '#b79cff', gold: '#ffd27a', echo: '#7fe3ff', sonic: '#7fe3ff', fire: '#ff8a3a', frost: '#9fe8ff', toxic: '#9ad13a', physical: '#e8dcc0', shock: '#ffe34a' };
+
+const FX_BASE = { ...FX_COLORS };
+// colour-vision palettes (Okabe-Ito based): danger and benefit must never rely on red-vs-green
+const FX_CB = {
+  none: {},
+  protanopia: { danger: '#ffb000', benign: '#4aa8ff', hush: '#e07bff', gold: '#fff08a', toxic: '#56b4e9', fire: '#ffb000' },
+  deuteranopia: { danger: '#ffb000', benign: '#4aa8ff', hush: '#e07bff', gold: '#fff08a', toxic: '#56b4e9', fire: '#ffb000' },
+  tritanopia: { danger: '#ff3a3a', benign: '#e8fff0', hush: '#ff8ad0', echo: '#00f0ff', sonic: '#00f0ff', frost: '#ffffff', toxic: '#c8ff5a' },
+};
+/** swap ground-decal colours for a colour-vision palette ('none' restores the default) */
+export function setFxPalette(mode) { Object.assign(FX_COLORS, FX_BASE, FX_CB[mode] ?? {}); }
 const KIND = { circle: 0, arc: 1, line: 2, ring: 3, ringarc: 4 };
 
 const VERT = `varying vec2 vP; uniform float uExtent;

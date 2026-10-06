@@ -1,5 +1,5 @@
 // Visual QA of the dungeon renderer: enters each family through the Resonance Chart API and screenshots key rooms.
-const OUT = process.env.SHOT_DIR ?? '/tmp/claude-0/-home-user-aaa/3b641f7c-91e0-5f65-bdba-08dc578ec535/scratchpad/shots';
+const OUT = process.env.SHOT_DIR ?? 'artifacts/shots';
 export default async function ({ page, wait, shot, logs }) {
   const ev = (fn, arg) => page.evaluate(fn, arg);
   await ev(() => { const g = window.__game, s = g.session; s.character.level = 6; s.character.recompute(s.world, s.player); s.player.stats.add('test', [{ stat: 'life', op: 'flat', value: 900 }]); });

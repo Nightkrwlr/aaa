@@ -10,37 +10,37 @@
    ],
    "levelRange": [
     1,
-    8
+    18
    ],
    "identity": "listen",
    "gateOut": "gate.pass_lost_echo",
    "music": "mus.explore"
   },
   {
-   "id": "rgn.lost_echoes",
+   "id": "rgn.vesper",
    "status": "designed",
    "order": 2,
    "zones": [],
    "levelRange": [
-    8,
-    18
+    18,
+    38
    ],
-   "identity": "reverberation",
+   "identity": "measures",
    "gateOut": "gate.mechanism_vesper",
-   "music": "mus.echoes"
+   "music": "mus.vesper"
   },
   {
-   "id": "rgn.silence_fields",
+   "id": "rgn.silent_tides",
    "status": "designed",
    "order": 3,
    "zones": [],
    "levelRange": [
-    18,
-    30
+    38,
+    58
    ],
-   "identity": "silence",
+   "identity": "tide_silence",
    "gateOut": null,
-   "music": "mus.silence"
+   "music": "mus.tides"
   }
  ]
 }

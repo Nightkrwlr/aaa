@@ -1,6 +1,6 @@
 // Combat scenario: player vs a mixed group; captures telegraphs and hit VFX mid-fight.
 export default async function ({ page, wait, shot }) {
-  const dir = '/tmp/claude-0/-home-user-aaa/3b641f7c-91e0-5f65-bdba-08dc578ec535/scratchpad/shots';
+  const dir = 'artifacts/shots';
   await page.evaluate(() => {
     const g = window.__game, w = g.world, p = g.player;
     p.x = -24; p.z = 14; g.rig.initialised = false;

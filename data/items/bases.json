@@ -1252,8 +1252,8 @@
    "implicit": [
     {
      "stat": "resourceMax",
-     "op": "flat",
-     "value": 8
+     "op": "inc",
+     "value": 0.08
     }
    ],
    "icon": {
@@ -1318,8 +1318,8 @@
    "implicit": [
     {
      "stat": "resourceMax",
-     "op": "flat",
-     "value": 14
+     "op": "inc",
+     "value": 0.14
     }
    ],
    "icon": {

@@ -17,7 +17,8 @@ import { Hud } from './ui/hud.js';
 import { UIManager } from './ui/uiManager.js';
 import { registerPanels } from './ui/panels/index.js';
 import { AudioEngine } from './audio.js';
-import { itemName, RARITY_COLOR } from './ui/itemText.js';
+import { itemName, RARITY_COLOR, setRarityPalette } from './ui/itemText.js';
+import { setFxPalette } from './render/groundFx.js';
 import { loadSettings, saveSettings } from './settings.js';
 
 const log = logger('game');
@@ -189,7 +190,7 @@ export class Game {
       s.dungeon.world.events.on('door:open', (i) => { /* world-level events not used */ });
       s.events.on('door:open', () => {});
       this.gate = null;
-      this.dungeonViewDoors = () => { const dm = this.scene3d.dungeonMesh; for (const d of s.dungeon.doors) if (d.open && !dm.doorViews.get(d.id)?.open) dm.openDoor(d); };
+      this.dungeonViewDoors = () => { const rt = s.dungeon, dm = this.scene3d.dungeonMesh; if (!rt || !dm || s.mode !== 'dungeon') return; for (const d of rt.doors) { const v = dm.doorViews.get(d.id); if (v && d.open && !v.open) dm.openDoor(d); } };
     } else {
       this.scene3d.loadZone(s.zone);
       zoneLike = s.zone;
@@ -215,6 +216,8 @@ export class Game {
     root.setProperty('--ui-scale', st.uiScale); root.setProperty('--text-scale', st.textScale); root.setProperty('--hud-scale', st.hudScale);
     document.documentElement.classList.toggle('hc', !!st.highContrast);
     document.documentElement.classList.toggle('reduce-motion', !!st.reduceFlashes);
+    for (const m of ['protanopia', 'deuteranopia', 'tritanopia']) document.documentElement.classList.toggle(`cb-${m}`, st.colorblind === m);
+    setFxPalette(st.colorblind); setRarityPalette(st.colorblind);
     if (initial) return;
     this.scene3d.applyQuality(); this.rig.shakeScale = st.screenShake; this.rig.setZoom(st.cameraZoom);
     this.vfx.q = this.scene3d.q; this.vfx.particles.density = this.scene3d.q.particles;
@@ -263,6 +266,7 @@ export class Game {
       case 'craft': if (down) this.ui.open('craft', { station: null }); break;
       case 'voices': if (down) this.ui.open('skills'); break;
       case 'lootToggle': this.showAllLoot = down; break;
+      case 'devtools': if (down && this.dev) this.ui.toggle('dev'); break;
       default: break;
     }
   }
@@ -273,6 +277,7 @@ export class Game {
     if (button === 0) {
       this.leftHeld = down;
       if (!down) { c.holdPrimary = false; return; }
+      this.#refreshHover();
       if (this.hoverLoot) { this.pendingPickup = this.hoverLoot.uid; this.pendingInteract = null; c.attackTarget = null; this.#moveTo(this.hoverLoot.x, this.hoverLoot.z); return; }
       if (this.hoverIA && !this.hoverEnemy) { this.#clickInteract(this.hoverIA); return; }
       this.pendingInteract = null; this.pendingPickup = null;
@@ -280,6 +285,16 @@ export class Game {
       else if (this.hoverEnemy) { this.leftMode = 'attack'; c.attackTarget = this.hoverEnemy.uid; c.moveTo = null; }
       else { this.leftMode = 'move'; c.attackTarget = null; c.moveTo = { x: this.input.hoverGround.x, z: this.input.hoverGround.z }; }
     }
+  }
+
+  /** re-pick ground / enemy / loot / interactable under the pointer (also on press, so a click never uses a stale hover) */
+  #refreshHover() {
+    const m = this.input.mouse, w = this.session.world, p = this.player;
+    const g = this.scene3d.groundAt(m.x, m.y, p.y ?? 0);
+    this.input.hoverGround = g;
+    this.hoverEnemy = this.views.pick(w, this.scene3d.camera, this.scene3d.size, m.x, m.y, (e) => e.team === 'enemy' && !e.untargetable);
+    this.#hoverTargets(m.x, m.y);
+    return g;
   }
 
   #moveTo(x, z) { const c = this.player.cmd; c.moveTo = { x, z }; c.attackTarget = null; }
@@ -313,7 +328,7 @@ export class Game {
   // ───────────────────────── frame
   #frame(now) {
     if (!this.running) return;
-    const raw = Math.min(0.1, (now - this.last) / 1000); this.last = now;
+    const raw = this.fixedDt ?? Math.min(0.1, (now - this.last) / 1000); this.last = now;
     this.fps += (1 / Math.max(raw, 1e-4) - this.fps) * 0.05;
     this.time += raw;
     try { this.#update(raw); } catch (err) { log.error('frame failed', err); }
@@ -336,10 +351,7 @@ export class Game {
     const simDt = blocking || this.rebuilding ? 0 : (this.vfx.hitstop > 0 ? dt * 0.06 : dt);
     const m = input.mouse;
     if (!blocking) {
-      const g = this.scene3d.groundAt(m.x, m.y, p.y ?? 0);
-      input.hoverGround = g;
-      this.hoverEnemy = this.views.pick(w, this.scene3d.camera, this.scene3d.size, m.x, m.y, (e) => e.team === 'enemy' && !e.untargetable);
-      this.#hoverTargets(m.x, m.y);
+      const g = this.#refreshHover();
       this.#feedCommands(dt, g);
       this.#pending();
     } else { this.hoverEnemy = null; this.hoverIA = null; this.hoverLoot = null; }
