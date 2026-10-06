@@ -1,17 +1,23 @@
 # ASSET LICENSES
 
-**Este proyecto no incluye ningún asset de terceros con licencia dudosa. De hecho no incluye assets binarios de arte ni audio.**
+**Todo el arte de terceros que incluye este proyecto es CC0 1.0 (dominio público): uso comercial y sin atribución obligatoria.**
+Aun así se acredita aquí y en la pantalla «Acerca de».
 
-| Tipo | Origen | Licencia |
-|---|---|---|
-| Modelos 3D (héroes, enemigos, jefes, NPC, props, estructuras) | generados por código a partir de primitivas (`src/client/render/models.js`, `structures.js`, `kit.js`) con parámetros en `data/models/models.json` | propia del proyecto |
-| Texturas / materiales | procedurales (shaders y *vertex colors*); sin imágenes | propia del proyecto |
-| Iconos y glifos de UI | dibujados por código en canvas/SVG (`src/client/ui/`, `glyphs.js`) | propia del proyecto |
-| Efectos visuales | partículas y *decals* procedurales (`vfx.js`) | propia del proyecto |
-| Efectos de sonido | síntesis WebAudio en tiempo real (`src/client/audio.js`) | propia del proyecto |
-| Música | generativa en tiempo real (mismo motor; sin samples ni MIDI de terceros) | propia del proyecto |
-| Tipografías | pila de fuentes del sistema (`ui.css`); no se incrusta ninguna fuente | n/a |
-| Texto, lore, nombres, mundo (SUNDERCHOIR, Oravel, el Coro Quebrado…) | creados para este proyecto; **ninguna IP existente** | propia del proyecto |
+## Arte de terceros (CC0)
+Autor: **Kay Lousberg — KayKit** (https://kaylousberg.com). Descargado de los repositorios oficiales (`git clone --depth 1`) y procesado con `tools/assets/build-assets.mjs` (se descartan clips de animación no usados, se cuantizan y comprimen las mallas con meshopt; la geometría y las texturas no se modifican).
+
+| Pack | Repositorio | Licencia | Uso en el juego | Salida |
+|---|---|---|---|---|
+| KayKit Character Pack: Adventurers 1.0 | `KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0` | CC0 1.0 | clases jugables y PNJ (Knight, Barbarian, Mage, Rogue, Rogue_Hooded), armas y escudos | `public/assets/models/chars`, `weapons` |
+| KayKit Character Pack: Skeletons 1.0 | `KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0` | CC0 1.0 | enemigos humanoides (Warrior, Mage, Rogue, Minion) y sus armas | `chars`, `weapons_skeleton` |
+| KayKit Dungeon Remastered 1.0 | `KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0` | CC0 1.0 | mazmorras: muros, suelos, puertas, columnas, antorchas, cofres, mobiliario | `dungeon` |
+| KayKit Halloween Bits 1.0 | `KayKit-Game-Assets/KayKit-Halloween-Bits-1.0` | CC0 1.0 | exterior: árboles, lápidas, cripta, vallas, farolas, caminos | `graveyard` |
+
+Las animaciones (75 clips; el juego conserva ~70) vienen de los propios packs y se comparten entre todos los personajes (mismo esqueleto de 41 huesos) en `public/assets/models/anims/Rig_Medium.glb`.
+`public/assets/manifest.json` lista cada modelo con su tamaño y caja envolvente.
+
+## Procedural (propio del proyecto)
+Todo lo demás se genera por código: terreno, rocas y vegetación del exterior, estructuras singulares (cilindros de voz, campanas, la cortina de resonancia), efectos visuales, iconos, **sonido y música** (WebAudio, sin samples) y el texto/lore/nombres (SUNDERCHOIR, Oravel, el Coro Quebrado… ninguna IP existente).
 
 ## Dependencias de código
 | Paquete | Uso | Licencia |
@@ -19,6 +25,7 @@
 | `three` | render WebGL | MIT |
 | `vite` | bundler/dev server (dev) | MIT |
 | `playwright` | E2E (dev, no se distribuye) | Apache-2.0 |
+| `@gltf-transform/*`, `meshoptimizer` | optimización de assets (dev) | MIT |
 Comprobable con `npm ls` / `package-lock.json`.
 
 ## Regla para contribuciones

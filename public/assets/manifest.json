@@ -1,0 +1,5136 @@
+{
+ "license": "CC0-1.0",
+ "generator": "tools/assets/build-assets.mjs",
+ "models": {
+  "anims/Rig_Medium": {
+   "file": "models/anims/Rig_Medium.glb",
+   "bytes": 2197736,
+   "bbox": {
+    "min": [
+     null,
+     null,
+     null
+    ],
+    "max": [
+     null,
+     null,
+     null
+    ]
+   },
+   "clips": [
+    "1H_Melee_Attack_Chop",
+    "1H_Melee_Attack_Jump_Chop",
+    "1H_Melee_Attack_Slice_Diagonal",
+    "1H_Melee_Attack_Slice_Horizontal",
+    "1H_Melee_Attack_Stab",
+    "1H_Ranged_Aiming",
+    "1H_Ranged_Shoot",
+    "1H_Ranged_Shooting",
+    "2H_Melee_Attack_Chop",
+    "2H_Melee_Attack_Slice",
+    "2H_Melee_Attack_Spin",
+    "2H_Melee_Attack_Spinning",
+    "2H_Melee_Attack_Stab",
+    "2H_Melee_Idle",
+    "2H_Ranged_Aiming",
+    "2H_Ranged_Shoot",
+    "2H_Ranged_Shooting",
+    "Block",
+    "Block_Attack",
+    "Block_Hit",
+    "Blocking",
+    "Cheer",
+    "Death_A",
+    "Death_A_Pose",
+    "Death_B",
+    "Death_B_Pose",
+    "Death_C_Pose",
+    "Death_C_Skeletons",
+    "Dodge_Backward",
+    "Dodge_Forward",
+    "Dodge_Left",
+    "Dodge_Right",
+    "Dualwield_Melee_Attack_Chop",
+    "Dualwield_Melee_Attack_Slice",
+    "Dualwield_Melee_Attack_Stab",
+    "Hit_A",
+    "Hit_B",
+    "Idle",
+    "Idle_B",
+    "Idle_Combat",
+    "Interact",
+    "PickUp",
+    "Running_A",
+    "Running_B",
+    "Running_C",
+    "Running_Strafe_Left",
+    "Running_Strafe_Right",
+    "Skeleton_Inactive_Standing_Pose",
+    "Skeletons_Awaken_Floor",
+    "Skeletons_Awaken_Floor_Long",
+    "Skeletons_Awaken_Standing",
+    "Spawn_Air",
+    "Spawn_Ground",
+    "Spawn_Ground_Skeletons",
+    "Spellcast_Long",
+    "Spellcast_Raise",
+    "Spellcast_Shoot",
+    "Spellcast_Summon",
+    "Spellcasting",
+    "Taunt",
+    "Taunt_Longer",
+    "Throw",
+    "Unarmed_Idle",
+    "Unarmed_Melee_Attack_Kick",
+    "Unarmed_Melee_Attack_Punch_A",
+    "Unarmed_Melee_Attack_Punch_B",
+    "Use_Item",
+    "Walking_A",
+    "Walking_B",
+    "Walking_Backwards",
+    "Walking_C",
+    "Walking_D_Skeletons"
+   ]
+  },
+  "chars/Barbarian": {
+   "file": "models/chars/Barbarian.glb",
+   "bytes": 154164,
+   "bbox": {
+    "min": [
+     -1.503,
+     -1,
+     -0.909
+    ],
+    "max": [
+     1.472,
+     2.398,
+     1.325
+    ]
+   }
+  },
+  "chars/Knight": {
+   "file": "models/chars/Knight.glb",
+   "bytes": 172172,
+   "bbox": {
+    "min": [
+     -1.303,
+     -1,
+     -0.926
+    ],
+    "max": [
+     1.387,
+     2.467,
+     1.998
+    ]
+   }
+  },
+  "chars/Mage": {
+   "file": "models/chars/Mage.glb",
+   "bytes": 146796,
+   "bbox": {
+    "min": [
+     -1.128,
+     -1,
+     -1.017
+    ],
+    "max": [
+     1.297,
+     2.716,
+     1.254
+    ]
+   }
+  },
+  "chars/Rogue": {
+   "file": "models/chars/Rogue.glb",
+   "bytes": 152664,
+   "bbox": {
+    "min": [
+     -1.942,
+     -1,
+     -0.921
+    ],
+    "max": [
+     1.003,
+     1.661,
+     0.981
+    ]
+   }
+  },
+  "chars/Rogue_Hooded": {
+   "file": "models/chars/Rogue_Hooded.glb",
+   "bytes": 147888,
+   "bbox": {
+    "min": [
+     -1.942,
+     -1,
+     -1
+    ],
+    "max": [
+     1.003,
+     1.661,
+     1
+    ]
+   }
+  },
+  "chars/Skeleton_Mage": {
+   "file": "models/chars/Skeleton_Mage.glb",
+   "bytes": 130276,
+   "bbox": {
+    "min": [
+     -1,
+     -1,
+     -1
+    ],
+    "max": [
+     1,
+     2.63,
+     1
+    ]
+   }
+  },
+  "chars/Skeleton_Minion": {
+   "file": "models/chars/Skeleton_Minion.glb",
+   "bytes": 147064,
+   "bbox": {
+    "min": [
+     -1,
+     -1,
+     -1
+    ],
+    "max": [
+     1,
+     1,
+     1
+    ]
+   }
+  },
+  "chars/Skeleton_Rogue": {
+   "file": "models/chars/Skeleton_Rogue.glb",
+   "bytes": 153176,
+   "bbox": {
+    "min": [
+     -1,
+     -1,
+     -1
+    ],
+    "max": [
+     1,
+     2.308,
+     1
+    ]
+   }
+  },
+  "chars/Skeleton_Warrior": {
+   "file": "models/chars/Skeleton_Warrior.glb",
+   "bytes": 168132,
+   "bbox": {
+    "min": [
+     -1,
+     -1,
+     -1
+    ],
+    "max": [
+     1,
+     2.59,
+     1
+    ]
+   }
+  },
+  "dungeon/banner_blue": {
+   "file": "models/dungeon/banner_blue.glb",
+   "bytes": 20924,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_brown": {
+   "file": "models/dungeon/banner_brown.glb",
+   "bytes": 20924,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_green": {
+   "file": "models/dungeon/banner_green.glb",
+   "bytes": 20924,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternA_blue": {
+   "file": "models/dungeon/banner_patternA_blue.glb",
+   "bytes": 21280,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternA_brown": {
+   "file": "models/dungeon/banner_patternA_brown.glb",
+   "bytes": 21280,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternA_green": {
+   "file": "models/dungeon/banner_patternA_green.glb",
+   "bytes": 21280,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternA_red": {
+   "file": "models/dungeon/banner_patternA_red.glb",
+   "bytes": 21280,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternA_white": {
+   "file": "models/dungeon/banner_patternA_white.glb",
+   "bytes": 21280,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternA_yellow": {
+   "file": "models/dungeon/banner_patternA_yellow.glb",
+   "bytes": 21284,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternB_blue": {
+   "file": "models/dungeon/banner_patternB_blue.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternB_brown": {
+   "file": "models/dungeon/banner_patternB_brown.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternB_green": {
+   "file": "models/dungeon/banner_patternB_green.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternB_red": {
+   "file": "models/dungeon/banner_patternB_red.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternB_white": {
+   "file": "models/dungeon/banner_patternB_white.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternB_yellow": {
+   "file": "models/dungeon/banner_patternB_yellow.glb",
+   "bytes": 20940,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternC_blue": {
+   "file": "models/dungeon/banner_patternC_blue.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternC_brown": {
+   "file": "models/dungeon/banner_patternC_brown.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternC_green": {
+   "file": "models/dungeon/banner_patternC_green.glb",
+   "bytes": 20932,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternC_red": {
+   "file": "models/dungeon/banner_patternC_red.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternC_white": {
+   "file": "models/dungeon/banner_patternC_white.glb",
+   "bytes": 20936,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_patternC_yellow": {
+   "file": "models/dungeon/banner_patternC_yellow.glb",
+   "bytes": 20940,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_red": {
+   "file": "models/dungeon/banner_red.glb",
+   "bytes": 20924,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_shield_blue": {
+   "file": "models/dungeon/banner_shield_blue.glb",
+   "bytes": 33960,
+   "bbox": {
+    "min": [
+     -1.116,
+     0.531,
+     0.315
+    ],
+    "max": [
+     1.116,
+     3.727,
+     0.69
+    ]
+   }
+  },
+  "dungeon/banner_shield_brown": {
+   "file": "models/dungeon/banner_shield_brown.glb",
+   "bytes": 33956,
+   "bbox": {
+    "min": [
+     -1.116,
+     0.531,
+     0.315
+    ],
+    "max": [
+     1.116,
+     3.727,
+     0.69
+    ]
+   }
+  },
+  "dungeon/banner_shield_green": {
+   "file": "models/dungeon/banner_shield_green.glb",
+   "bytes": 33956,
+   "bbox": {
+    "min": [
+     -1.116,
+     0.531,
+     0.315
+    ],
+    "max": [
+     1.116,
+     3.727,
+     0.69
+    ]
+   }
+  },
+  "dungeon/banner_shield_red": {
+   "file": "models/dungeon/banner_shield_red.glb",
+   "bytes": 33960,
+   "bbox": {
+    "min": [
+     -1.116,
+     0.531,
+     0.315
+    ],
+    "max": [
+     1.116,
+     3.727,
+     0.69
+    ]
+   }
+  },
+  "dungeon/banner_shield_white": {
+   "file": "models/dungeon/banner_shield_white.glb",
+   "bytes": 33960,
+   "bbox": {
+    "min": [
+     -1.116,
+     0.531,
+     0.315
+    ],
+    "max": [
+     1.116,
+     3.727,
+     0.69
+    ]
+   }
+  },
+  "dungeon/banner_shield_yellow": {
+   "file": "models/dungeon/banner_shield_yellow.glb",
+   "bytes": 33960,
+   "bbox": {
+    "min": [
+     -1.116,
+     0.531,
+     0.315
+    ],
+    "max": [
+     1.116,
+     3.727,
+     0.69
+    ]
+   }
+  },
+  "dungeon/banner_thin_blue": {
+   "file": "models/dungeon/banner_thin_blue.glb",
+   "bytes": 20476,
+   "bbox": {
+    "min": [
+     -0.55,
+     0.556,
+     0.353
+    ],
+    "max": [
+     0.55,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_thin_brown": {
+   "file": "models/dungeon/banner_thin_brown.glb",
+   "bytes": 20480,
+   "bbox": {
+    "min": [
+     -0.55,
+     0.556,
+     0.353
+    ],
+    "max": [
+     0.55,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_thin_green": {
+   "file": "models/dungeon/banner_thin_green.glb",
+   "bytes": 20480,
+   "bbox": {
+    "min": [
+     -0.55,
+     0.556,
+     0.353
+    ],
+    "max": [
+     0.55,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_thin_red": {
+   "file": "models/dungeon/banner_thin_red.glb",
+   "bytes": 20476,
+   "bbox": {
+    "min": [
+     -0.55,
+     0.556,
+     0.353
+    ],
+    "max": [
+     0.55,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_thin_white": {
+   "file": "models/dungeon/banner_thin_white.glb",
+   "bytes": 20480,
+   "bbox": {
+    "min": [
+     -0.55,
+     0.556,
+     0.353
+    ],
+    "max": [
+     0.55,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_thin_yellow": {
+   "file": "models/dungeon/banner_thin_yellow.glb",
+   "bytes": 20480,
+   "bbox": {
+    "min": [
+     -0.55,
+     0.556,
+     0.353
+    ],
+    "max": [
+     0.55,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_triple_blue": {
+   "file": "models/dungeon/banner_triple_blue.glb",
+   "bytes": 25224,
+   "bbox": {
+    "min": [
+     -1.85,
+     0.531,
+     0.353
+    ],
+    "max": [
+     1.85,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_triple_brown": {
+   "file": "models/dungeon/banner_triple_brown.glb",
+   "bytes": 25224,
+   "bbox": {
+    "min": [
+     -1.85,
+     0.531,
+     0.353
+    ],
+    "max": [
+     1.85,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_triple_green": {
+   "file": "models/dungeon/banner_triple_green.glb",
+   "bytes": 25220,
+   "bbox": {
+    "min": [
+     -1.85,
+     0.531,
+     0.353
+    ],
+    "max": [
+     1.85,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_triple_red": {
+   "file": "models/dungeon/banner_triple_red.glb",
+   "bytes": 25224,
+   "bbox": {
+    "min": [
+     -1.85,
+     0.531,
+     0.353
+    ],
+    "max": [
+     1.85,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_triple_white": {
+   "file": "models/dungeon/banner_triple_white.glb",
+   "bytes": 25224,
+   "bbox": {
+    "min": [
+     -1.85,
+     0.531,
+     0.353
+    ],
+    "max": [
+     1.85,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_triple_yellow": {
+   "file": "models/dungeon/banner_triple_yellow.glb",
+   "bytes": 25224,
+   "bbox": {
+    "min": [
+     -1.85,
+     0.531,
+     0.353
+    ],
+    "max": [
+     1.85,
+     3.727,
+     0.716
+    ]
+   }
+  },
+  "dungeon/banner_white": {
+   "file": "models/dungeon/banner_white.glb",
+   "bytes": 20924,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/banner_yellow": {
+   "file": "models/dungeon/banner_yellow.glb",
+   "bytes": 20924,
+   "bbox": {
+    "min": [
+     -0.75,
+     0.531,
+     0.378
+    ],
+    "max": [
+     0.75,
+     3.727,
+     0.689
+    ]
+   }
+  },
+  "dungeon/barrel_large": {
+   "file": "models/dungeon/barrel_large.glb",
+   "bytes": 28180,
+   "bbox": {
+    "min": [
+     -0.9,
+     0,
+     -0.9
+    ],
+    "max": [
+     0.9,
+     2,
+     0.9
+    ]
+   }
+  },
+  "dungeon/barrel_large_decorated": {
+   "file": "models/dungeon/barrel_large_decorated.glb",
+   "bytes": 40248,
+   "bbox": {
+    "min": [
+     -0.919,
+     -0.002,
+     -0.919
+    ],
+    "max": [
+     1.019,
+     2.554,
+     0.937
+    ]
+   }
+  },
+  "dungeon/barrel_small": {
+   "file": "models/dungeon/barrel_small.glb",
+   "bytes": 23384,
+   "bbox": {
+    "min": [
+     -0.501,
+     0,
+     -0.501
+    ],
+    "max": [
+     0.501,
+     1.018,
+     0.501
+    ]
+   }
+  },
+  "dungeon/barrel_small_stack": {
+   "file": "models/dungeon/barrel_small_stack.glb",
+   "bytes": 47548,
+   "bbox": {
+    "min": [
+     -0.925,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.925,
+     1.77,
+     0.5
+    ]
+   }
+  },
+  "dungeon/barrier": {
+   "file": "models/dungeon/barrier.glb",
+   "bytes": 20136,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.25
+    ],
+    "max": [
+     2,
+     1.1,
+     0.25
+    ]
+   }
+  },
+  "dungeon/barrier_colum_half": {
+   "file": "models/dungeon/barrier_colum_half.glb",
+   "bytes": 20248,
+   "bbox": {
+    "min": [
+     -0.35,
+     0,
+     -0.35
+    ],
+    "max": [
+     2,
+     1.4,
+     0.35
+    ]
+   }
+  },
+  "dungeon/barrier_column": {
+   "file": "models/dungeon/barrier_column.glb",
+   "bytes": 20612,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.35
+    ],
+    "max": [
+     2,
+     1.4,
+     0.35
+    ]
+   }
+  },
+  "dungeon/barrier_corner": {
+   "file": "models/dungeon/barrier_corner.glb",
+   "bytes": 21380,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.395
+    ],
+    "max": [
+     0.395,
+     1.4,
+     2
+    ]
+   }
+  },
+  "dungeon/barrier_half": {
+   "file": "models/dungeon/barrier_half.glb",
+   "bytes": 19108,
+   "bbox": {
+    "min": [
+     0,
+     0,
+     -0.25
+    ],
+    "max": [
+     2,
+     1.1,
+     0.25
+    ]
+   }
+  },
+  "dungeon/bed_decorated": {
+   "file": "models/dungeon/bed_decorated.glb",
+   "bytes": 48360,
+   "bbox": {
+    "min": [
+     -0.75,
+     0,
+     -1.557
+    ],
+    "max": [
+     1.856,
+     1.701,
+     1.5
+    ]
+   }
+  },
+  "dungeon/bed_floor": {
+   "file": "models/dungeon/bed_floor.glb",
+   "bytes": 21568,
+   "bbox": {
+    "min": [
+     -0.75,
+     0,
+     -1.5
+    ],
+    "max": [
+     0.75,
+     0.563,
+     1.5
+    ]
+   }
+  },
+  "dungeon/bed_frame": {
+   "file": "models/dungeon/bed_frame.glb",
+   "bytes": 23252,
+   "bbox": {
+    "min": [
+     -0.75,
+     0,
+     -1.5
+    ],
+    "max": [
+     0.75,
+     1.063,
+     1.5
+    ]
+   }
+  },
+  "dungeon/bottle_A_brown": {
+   "file": "models/dungeon/bottle_A_brown.glb",
+   "bytes": 22216,
+   "bbox": {
+    "min": [
+     -0.184,
+     0,
+     -0.184
+    ],
+    "max": [
+     0.184,
+     0.886,
+     0.184
+    ]
+   }
+  },
+  "dungeon/bottle_A_green": {
+   "file": "models/dungeon/bottle_A_green.glb",
+   "bytes": 22384,
+   "bbox": {
+    "min": [
+     -0.184,
+     0,
+     -0.184
+    ],
+    "max": [
+     0.184,
+     0.886,
+     0.184
+    ]
+   }
+  },
+  "dungeon/bottle_A_labeled_brown": {
+   "file": "models/dungeon/bottle_A_labeled_brown.glb",
+   "bytes": 22360,
+   "bbox": {
+    "min": [
+     -0.184,
+     0,
+     -0.184
+    ],
+    "max": [
+     0.184,
+     0.886,
+     0.184
+    ]
+   }
+  },
+  "dungeon/bottle_A_labeled_green": {
+   "file": "models/dungeon/bottle_A_labeled_green.glb",
+   "bytes": 22460,
+   "bbox": {
+    "min": [
+     -0.184,
+     0,
+     -0.184
+    ],
+    "max": [
+     0.184,
+     0.886,
+     0.184
+    ]
+   }
+  },
+  "dungeon/bottle_B_brown": {
+   "file": "models/dungeon/bottle_B_brown.glb",
+   "bytes": 22216,
+   "bbox": {
+    "min": [
+     -0.276,
+     0,
+     -0.276
+    ],
+    "max": [
+     0.276,
+     0.886,
+     0.276
+    ]
+   }
+  },
+  "dungeon/bottle_B_green": {
+   "file": "models/dungeon/bottle_B_green.glb",
+   "bytes": 22388,
+   "bbox": {
+    "min": [
+     -0.276,
+     0,
+     -0.276
+    ],
+    "max": [
+     0.276,
+     0.886,
+     0.276
+    ]
+   }
+  },
+  "dungeon/bottle_C_brown": {
+   "file": "models/dungeon/bottle_C_brown.glb",
+   "bytes": 22168,
+   "bbox": {
+    "min": [
+     -0.369,
+     0,
+     -0.369
+    ],
+    "max": [
+     0.369,
+     0.906,
+     0.369
+    ]
+   }
+  },
+  "dungeon/bottle_C_green": {
+   "file": "models/dungeon/bottle_C_green.glb",
+   "bytes": 22352,
+   "bbox": {
+    "min": [
+     -0.369,
+     0,
+     -0.369
+    ],
+    "max": [
+     0.369,
+     0.906,
+     0.369
+    ]
+   }
+  },
+  "dungeon/box_large": {
+   "file": "models/dungeon/box_large.glb",
+   "bytes": 22608,
+   "bbox": {
+    "min": [
+     -0.75,
+     0,
+     -0.75
+    ],
+    "max": [
+     0.75,
+     1.5,
+     0.75
+    ]
+   }
+  },
+  "dungeon/box_small": {
+   "file": "models/dungeon/box_small.glb",
+   "bytes": 22536,
+   "bbox": {
+    "min": [
+     -0.5,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.5,
+     1,
+     0.5
+    ]
+   }
+  },
+  "dungeon/box_small_decorated": {
+   "file": "models/dungeon/box_small_decorated.glb",
+   "bytes": 40400,
+   "bbox": {
+    "min": [
+     -0.612,
+     0,
+     -0.633
+    ],
+    "max": [
+     0.878,
+     1.483,
+     0.855
+    ]
+   }
+  },
+  "dungeon/box_stacked": {
+   "file": "models/dungeon/box_stacked.glb",
+   "bytes": 68024,
+   "bbox": {
+    "min": [
+     -1.75,
+     0,
+     -1.773
+    ],
+    "max": [
+     1.725,
+     3.309,
+     1.861
+    ]
+   }
+  },
+  "dungeon/candle": {
+   "file": "models/dungeon/candle.glb",
+   "bytes": 19800,
+   "bbox": {
+    "min": [
+     -0.167,
+     0,
+     -0.17
+    ],
+    "max": [
+     0.167,
+     0.873,
+     0.16
+    ]
+   }
+  },
+  "dungeon/candle_lit": {
+   "file": "models/dungeon/candle_lit.glb",
+   "bytes": 20568,
+   "bbox": {
+    "min": [
+     -0.167,
+     0,
+     -0.17
+    ],
+    "max": [
+     0.167,
+     1.051,
+     0.16
+    ]
+   }
+  },
+  "dungeon/candle_melted": {
+   "file": "models/dungeon/candle_melted.glb",
+   "bytes": 19856,
+   "bbox": {
+    "min": [
+     -0.167,
+     0,
+     -0.17
+    ],
+    "max": [
+     0.167,
+     0.702,
+     0.16
+    ]
+   }
+  },
+  "dungeon/candle_thin": {
+   "file": "models/dungeon/candle_thin.glb",
+   "bytes": 19808,
+   "bbox": {
+    "min": [
+     -0.097,
+     0,
+     -0.098
+    ],
+    "max": [
+     0.097,
+     0.873,
+     0.092
+    ]
+   }
+  },
+  "dungeon/candle_thin_lit": {
+   "file": "models/dungeon/candle_thin_lit.glb",
+   "bytes": 20572,
+   "bbox": {
+    "min": [
+     -0.097,
+     0,
+     -0.098
+    ],
+    "max": [
+     0.097,
+     1.051,
+     0.092
+    ]
+   }
+  },
+  "dungeon/candle_triple": {
+   "file": "models/dungeon/candle_triple.glb",
+   "bytes": 22784,
+   "bbox": {
+    "min": [
+     -0.167,
+     0,
+     -0.16
+    ],
+    "max": [
+     0.334,
+     0.873,
+     0.23
+    ]
+   }
+  },
+  "dungeon/chair": {
+   "file": "models/dungeon/chair.glb",
+   "bytes": 25580,
+   "bbox": {
+    "min": [
+     -0.374,
+     0,
+     -0.375
+    ],
+    "max": [
+     0.376,
+     1.227,
+     0.375
+    ]
+   }
+  },
+  "dungeon/chest": {
+   "file": "models/dungeon/chest.glb",
+   "bytes": 36156,
+   "bbox": {
+    "min": [
+     -0.85,
+     0,
+     -0.7
+    ],
+    "max": [
+     0.85,
+     1.3,
+     0.746
+    ]
+   }
+  },
+  "dungeon/chest_gold": {
+   "file": "models/dungeon/chest_gold.glb",
+   "bytes": 53400,
+   "bbox": {
+    "min": [
+     -0.85,
+     0,
+     -0.7
+    ],
+    "max": [
+     0.85,
+     1.3,
+     0.746
+    ]
+   }
+  },
+  "dungeon/coin": {
+   "file": "models/dungeon/coin.glb",
+   "bytes": 20188,
+   "bbox": {
+    "min": [
+     -0.18,
+     -0.063,
+     -0.18
+    ],
+    "max": [
+     0.18,
+     0.062,
+     0.18
+    ]
+   }
+  },
+  "dungeon/coin_stack_large": {
+   "file": "models/dungeon/coin_stack_large.glb",
+   "bytes": 54176,
+   "bbox": {
+    "min": [
+     -0.719,
+     0,
+     -0.816
+    ],
+    "max": [
+     0.717,
+     1.157,
+     0.843
+    ]
+   }
+  },
+  "dungeon/coin_stack_medium": {
+   "file": "models/dungeon/coin_stack_medium.glb",
+   "bytes": 38536,
+   "bbox": {
+    "min": [
+     -0.446,
+     0,
+     -0.507
+    ],
+    "max": [
+     0.547,
+     0.641,
+     0.527
+    ]
+   }
+  },
+  "dungeon/coin_stack_small": {
+   "file": "models/dungeon/coin_stack_small.glb",
+   "bytes": 27304,
+   "bbox": {
+    "min": [
+     -0.445,
+     0,
+     -0.461
+    ],
+    "max": [
+     0.514,
+     0.478,
+     0.436
+    ]
+   }
+  },
+  "dungeon/column": {
+   "file": "models/dungeon/column.glb",
+   "bytes": 19300,
+   "bbox": {
+    "min": [
+     -0.35,
+     0,
+     -0.35
+    ],
+    "max": [
+     0.35,
+     1.4,
+     0.35
+    ]
+   }
+  },
+  "dungeon/crates_stacked": {
+   "file": "models/dungeon/crates_stacked.glb",
+   "bytes": 51400,
+   "bbox": {
+    "min": [
+     -1.09,
+     0,
+     -1.157
+    ],
+    "max": [
+     0.999,
+     2.142,
+     1.092
+    ]
+   }
+  },
+  "dungeon/floor_dirt_large": {
+   "file": "models/dungeon/floor_dirt_large.glb",
+   "bytes": 21548,
+   "bbox": {
+    "min": [
+     -2,
+     -0.1,
+     -2
+    ],
+    "max": [
+     2,
+     0.109,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_dirt_large_rocky": {
+   "file": "models/dungeon/floor_dirt_large_rocky.glb",
+   "bytes": 24048,
+   "bbox": {
+    "min": [
+     -2,
+     -0.1,
+     -2
+    ],
+    "max": [
+     2,
+     0.293,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_dirt_small_A": {
+   "file": "models/dungeon/floor_dirt_small_A.glb",
+   "bytes": 19672,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.086,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_dirt_small_B": {
+   "file": "models/dungeon/floor_dirt_small_B.glb",
+   "bytes": 19264,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.089,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_dirt_small_C": {
+   "file": "models/dungeon/floor_dirt_small_C.glb",
+   "bytes": 19228,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.109,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_dirt_small_corner": {
+   "file": "models/dungeon/floor_dirt_small_corner.glb",
+   "bytes": 19720,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.054,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_dirt_small_D": {
+   "file": "models/dungeon/floor_dirt_small_D.glb",
+   "bytes": 18748,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.038,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_dirt_small_weeds": {
+   "file": "models/dungeon/floor_dirt_small_weeds.glb",
+   "bytes": 28864,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.195,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_foundation_allsides": {
+   "file": "models/dungeon/floor_foundation_allsides.glb",
+   "bytes": 28288,
+   "bbox": {
+    "min": [
+     -1.1,
+     0,
+     -1.1
+    ],
+    "max": [
+     1.1,
+     2,
+     1.1
+    ]
+   }
+  },
+  "dungeon/floor_foundation_corner": {
+   "file": "models/dungeon/floor_foundation_corner.glb",
+   "bytes": 23556,
+   "bbox": {
+    "min": [
+     -1.1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1.1
+    ]
+   }
+  },
+  "dungeon/floor_foundation_diagonal_corner": {
+   "file": "models/dungeon/floor_foundation_diagonal_corner.glb",
+   "bytes": 21240,
+   "bbox": {
+    "min": [
+     -1.1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1.1
+    ]
+   }
+  },
+  "dungeon/floor_foundation_front": {
+   "file": "models/dungeon/floor_foundation_front.glb",
+   "bytes": 21204,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1.1
+    ]
+   }
+  },
+  "dungeon/floor_foundation_front_and_back": {
+   "file": "models/dungeon/floor_foundation_front_and_back.glb",
+   "bytes": 23524,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1.1
+    ],
+    "max": [
+     1,
+     2,
+     1.1
+    ]
+   }
+  },
+  "dungeon/floor_foundation_front_and_sides": {
+   "file": "models/dungeon/floor_foundation_front_and_sides.glb",
+   "bytes": 25936,
+   "bbox": {
+    "min": [
+     -1.1,
+     0,
+     -1
+    ],
+    "max": [
+     1.1,
+     2,
+     1.1
+    ]
+   }
+  },
+  "dungeon/floor_tile_big_grate": {
+   "file": "models/dungeon/floor_tile_big_grate.glb",
+   "bytes": 25020,
+   "bbox": {
+    "min": [
+     -2,
+     -1,
+     -2
+    ],
+    "max": [
+     2,
+     0.05,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_tile_big_grate_open": {
+   "file": "models/dungeon/floor_tile_big_grate_open.glb",
+   "bytes": 24872,
+   "bbox": {
+    "min": [
+     -2,
+     -1,
+     -2
+    ],
+    "max": [
+     2,
+     0.05,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_tile_big_spikes": {
+   "file": "models/dungeon/floor_tile_big_spikes.glb",
+   "bytes": 35104,
+   "bbox": {
+    "min": [
+     -2,
+     -0.1,
+     -2
+    ],
+    "max": [
+     2,
+     2,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_tile_extralarge_grates": {
+   "file": "models/dungeon/floor_tile_extralarge_grates.glb",
+   "bytes": 34892,
+   "bbox": {
+    "min": [
+     -4,
+     -0.98,
+     -4
+    ],
+    "max": [
+     4,
+     0.15,
+     4
+    ]
+   }
+  },
+  "dungeon/floor_tile_extralarge_grates_open": {
+   "file": "models/dungeon/floor_tile_extralarge_grates_open.glb",
+   "bytes": 34716,
+   "bbox": {
+    "min": [
+     -4,
+     -0.98,
+     -4
+    ],
+    "max": [
+     4,
+     0.15,
+     4
+    ]
+   }
+  },
+  "dungeon/floor_tile_grate": {
+   "file": "models/dungeon/floor_tile_grate.glb",
+   "bytes": 21268,
+   "bbox": {
+    "min": [
+     -2,
+     -0.98,
+     -1
+    ],
+    "max": [
+     2,
+     0.05,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_tile_grate_open": {
+   "file": "models/dungeon/floor_tile_grate_open.glb",
+   "bytes": 21184,
+   "bbox": {
+    "min": [
+     -2,
+     -0.98,
+     -1
+    ],
+    "max": [
+     2,
+     0.05,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_tile_large": {
+   "file": "models/dungeon/floor_tile_large.glb",
+   "bytes": 22204,
+   "bbox": {
+    "min": [
+     -2,
+     -0.1,
+     -2
+    ],
+    "max": [
+     2,
+     0.05,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_tile_large_rocks": {
+   "file": "models/dungeon/floor_tile_large_rocks.glb",
+   "bytes": 26972,
+   "bbox": {
+    "min": [
+     -2,
+     -0.1,
+     -2
+    ],
+    "max": [
+     2,
+     0.536,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_tile_small": {
+   "file": "models/dungeon/floor_tile_small.glb",
+   "bytes": 19452,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.05,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_tile_small_broken_A": {
+   "file": "models/dungeon/floor_tile_small_broken_A.glb",
+   "bytes": 19924,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.05,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_tile_small_broken_B": {
+   "file": "models/dungeon/floor_tile_small_broken_B.glb",
+   "bytes": 19724,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.05,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_tile_small_corner": {
+   "file": "models/dungeon/floor_tile_small_corner.glb",
+   "bytes": 18908,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.05,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_tile_small_decorated": {
+   "file": "models/dungeon/floor_tile_small_decorated.glb",
+   "bytes": 27556,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.673,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_tile_small_weeds_A": {
+   "file": "models/dungeon/floor_tile_small_weeds_A.glb",
+   "bytes": 29288,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.195,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_tile_small_weeds_B": {
+   "file": "models/dungeon/floor_tile_small_weeds_B.glb",
+   "bytes": 28892,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.195,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_wood_large": {
+   "file": "models/dungeon/floor_wood_large.glb",
+   "bytes": 23904,
+   "bbox": {
+    "min": [
+     -2,
+     -0.1,
+     -2
+    ],
+    "max": [
+     2,
+     0.05,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_wood_large_dark": {
+   "file": "models/dungeon/floor_wood_large_dark.glb",
+   "bytes": 23936,
+   "bbox": {
+    "min": [
+     -2,
+     -0.1,
+     -2
+    ],
+    "max": [
+     2,
+     0.05,
+     2
+    ]
+   }
+  },
+  "dungeon/floor_wood_small": {
+   "file": "models/dungeon/floor_wood_small.glb",
+   "bytes": 19796,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.05,
+     1
+    ]
+   }
+  },
+  "dungeon/floor_wood_small_dark": {
+   "file": "models/dungeon/floor_wood_small_dark.glb",
+   "bytes": 19804,
+   "bbox": {
+    "min": [
+     -1,
+     -0.1,
+     -1
+    ],
+    "max": [
+     1,
+     0.05,
+     1
+    ]
+   }
+  },
+  "dungeon/keg": {
+   "file": "models/dungeon/keg.glb",
+   "bytes": 34608,
+   "bbox": {
+    "min": [
+     -0.9,
+     0,
+     -0.976
+    ],
+    "max": [
+     0.9,
+     2.051,
+     1.024
+    ]
+   }
+  },
+  "dungeon/keg_decorated": {
+   "file": "models/dungeon/keg_decorated.glb",
+   "bytes": 65124,
+   "bbox": {
+    "min": [
+     -1.819,
+     0,
+     -0.976
+    ],
+    "max": [
+     1.7,
+     2.051,
+     1.024
+    ]
+   }
+  },
+  "dungeon/key": {
+   "file": "models/dungeon/key.glb",
+   "bytes": 21480,
+   "bbox": {
+    "min": [
+     -0.195,
+     -0.201,
+     -0.071
+    ],
+    "max": [
+     0.701,
+     0.201,
+     0.071
+    ]
+   }
+  },
+  "dungeon/keyring": {
+   "file": "models/dungeon/keyring.glb",
+   "bytes": 31696,
+   "bbox": {
+    "min": [
+     -0.447,
+     -0.02,
+     -0.672
+    ],
+    "max": [
+     0.584,
+     0.241,
+     0.537
+    ]
+   }
+  },
+  "dungeon/keyring_hanging": {
+   "file": "models/dungeon/keyring_hanging.glb",
+   "bytes": 31884,
+   "bbox": {
+    "min": [
+     -0.34,
+     -1.196,
+     -0.159
+    ],
+    "max": [
+     0.34,
+     0.023,
+     0.225
+    ]
+   }
+  },
+  "dungeon/pillar": {
+   "file": "models/dungeon/pillar.glb",
+   "bytes": 20932,
+   "bbox": {
+    "min": [
+     -0.75,
+     0,
+     -0.75
+    ],
+    "max": [
+     0.75,
+     4,
+     0.75
+    ]
+   }
+  },
+  "dungeon/pillar_decorated": {
+   "file": "models/dungeon/pillar_decorated.glb",
+   "bytes": 35864,
+   "bbox": {
+    "min": [
+     -1.116,
+     0,
+     -0.75
+    ],
+    "max": [
+     1.116,
+     4,
+     0.96
+    ]
+   }
+  },
+  "dungeon/plate": {
+   "file": "models/dungeon/plate.glb",
+   "bytes": 20332,
+   "bbox": {
+    "min": [
+     -0.485,
+     0,
+     -0.486
+    ],
+    "max": [
+     0.485,
+     0.129,
+     0.485
+    ]
+   }
+  },
+  "dungeon/plate_food_A": {
+   "file": "models/dungeon/plate_food_A.glb",
+   "bytes": 28388,
+   "bbox": {
+    "min": [
+     -0.54,
+     0,
+     -0.486
+    ],
+    "max": [
+     0.485,
+     0.788,
+     0.485
+    ]
+   }
+  },
+  "dungeon/plate_food_B": {
+   "file": "models/dungeon/plate_food_B.glb",
+   "bytes": 24592,
+   "bbox": {
+    "min": [
+     -0.485,
+     0,
+     -0.486
+    ],
+    "max": [
+     0.485,
+     0.236,
+     0.485
+    ]
+   }
+  },
+  "dungeon/plate_small": {
+   "file": "models/dungeon/plate_small.glb",
+   "bytes": 20324,
+   "bbox": {
+    "min": [
+     -0.243,
+     0,
+     -0.243
+    ],
+    "max": [
+     0.242,
+     0.129,
+     0.242
+    ]
+   }
+  },
+  "dungeon/plate_stack": {
+   "file": "models/dungeon/plate_stack.glb",
+   "bytes": 25608,
+   "bbox": {
+    "min": [
+     -0.492,
+     0,
+     -0.502
+    ],
+    "max": [
+     0.505,
+     0.564,
+     0.5
+    ]
+   }
+  },
+  "dungeon/rubble_half": {
+   "file": "models/dungeon/rubble_half.glb",
+   "bytes": 27000,
+   "bbox": {
+    "min": [
+     0,
+     0,
+     -1.516
+    ],
+    "max": [
+     4,
+     3.5,
+     1.484
+    ]
+   }
+  },
+  "dungeon/rubble_large": {
+   "file": "models/dungeon/rubble_large.glb",
+   "bytes": 35256,
+   "bbox": {
+    "min": [
+     -4.069,
+     0,
+     -1.585
+    ],
+    "max": [
+     4.06,
+     3.496,
+     1.597
+    ]
+   }
+  },
+  "dungeon/shelf_large": {
+   "file": "models/dungeon/shelf_large.glb",
+   "bytes": 19904,
+   "bbox": {
+    "min": [
+     -1,
+     -0.35,
+     0
+    ],
+    "max": [
+     1,
+     0.1,
+     0.5
+    ]
+   }
+  },
+  "dungeon/shelf_small": {
+   "file": "models/dungeon/shelf_small.glb",
+   "bytes": 19604,
+   "bbox": {
+    "min": [
+     -0.5,
+     -0.3,
+     0
+    ],
+    "max": [
+     0.5,
+     0.1,
+     0.5
+    ]
+   }
+  },
+  "dungeon/shelf_small_candles": {
+   "file": "models/dungeon/shelf_small_candles.glb",
+   "bytes": 23508,
+   "bbox": {
+    "min": [
+     -0.5,
+     -0.3,
+     0
+    ],
+    "max": [
+     0.5,
+     0.694,
+     0.5
+    ]
+   }
+  },
+  "dungeon/shelves": {
+   "file": "models/dungeon/shelves.glb",
+   "bytes": 21596,
+   "bbox": {
+    "min": [
+     -1,
+     0.75,
+     0.25
+    ],
+    "max": [
+     1,
+     2.7,
+     0.75
+    ]
+   }
+  },
+  "dungeon/stairs": {
+   "file": "models/dungeon/stairs.glb",
+   "bytes": 28408,
+   "bbox": {
+    "min": [
+     -2.5,
+     0,
+     0
+    ],
+    "max": [
+     2.5,
+     5.1,
+     4
+    ]
+   }
+  },
+  "dungeon/stairs_narrow": {
+   "file": "models/dungeon/stairs_narrow.glb",
+   "bytes": 28412,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     0
+    ],
+    "max": [
+     2,
+     5.1,
+     4
+    ]
+   }
+  },
+  "dungeon/stairs_wall_left": {
+   "file": "models/dungeon/stairs_wall_left.glb",
+   "bytes": 33932,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     5.1,
+     4.5
+    ]
+   }
+  },
+  "dungeon/stairs_wall_right": {
+   "file": "models/dungeon/stairs_wall_right.glb",
+   "bytes": 33864,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     5.1,
+     4.5
+    ]
+   }
+  },
+  "dungeon/stairs_walled": {
+   "file": "models/dungeon/stairs_walled.glb",
+   "bytes": 39360,
+   "bbox": {
+    "min": [
+     -2.5,
+     0,
+     0
+    ],
+    "max": [
+     2.5,
+     4,
+     4
+    ]
+   }
+  },
+  "dungeon/stairs_wide": {
+   "file": "models/dungeon/stairs_wide.glb",
+   "bytes": 28300,
+   "bbox": {
+    "min": [
+     -3.5,
+     0,
+     0
+    ],
+    "max": [
+     3.5,
+     5.1,
+     4
+    ]
+   }
+  },
+  "dungeon/stairs_wood": {
+   "file": "models/dungeon/stairs_wood.glb",
+   "bytes": 23356,
+   "bbox": {
+    "min": [
+     -1.65,
+     0,
+     0
+    ],
+    "max": [
+     1.65,
+     4.05,
+     6
+    ]
+   }
+  },
+  "dungeon/stairs_wood_decorated": {
+   "file": "models/dungeon/stairs_wood_decorated.glb",
+   "bytes": 73300,
+   "bbox": {
+    "min": [
+     -1.65,
+     0,
+     0
+    ],
+    "max": [
+     1.65,
+     4.05,
+     6
+    ]
+   }
+  },
+  "dungeon/stool": {
+   "file": "models/dungeon/stool.glb",
+   "bytes": 22644,
+   "bbox": {
+    "min": [
+     -0.374,
+     0,
+     -0.375
+    ],
+    "max": [
+     0.376,
+     0.5,
+     0.375
+    ]
+   }
+  },
+  "dungeon/sword_shield": {
+   "file": "models/dungeon/sword_shield.glb",
+   "bytes": 31572,
+   "bbox": {
+    "min": [
+     -1.116,
+     -0.815,
+     -0.085
+    ],
+    "max": [
+     1.116,
+     0.852,
+     0.251
+    ]
+   }
+  },
+  "dungeon/sword_shield_broken": {
+   "file": "models/dungeon/sword_shield_broken.glb",
+   "bytes": 28256,
+   "bbox": {
+    "min": [
+     -0.759,
+     -0.793,
+     -0.085
+    ],
+    "max": [
+     0.667,
+     1.169,
+     0.251
+    ]
+   }
+  },
+  "dungeon/sword_shield_gold": {
+   "file": "models/dungeon/sword_shield_gold.glb",
+   "bytes": 31576,
+   "bbox": {
+    "min": [
+     -1.116,
+     -0.815,
+     -0.085
+    ],
+    "max": [
+     1.116,
+     0.852,
+     0.251
+    ]
+   }
+  },
+  "dungeon/table_long": {
+   "file": "models/dungeon/table_long.glb",
+   "bytes": 24856,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -2
+    ],
+    "max": [
+     1,
+     1,
+     2
+    ]
+   }
+  },
+  "dungeon/table_long_broken": {
+   "file": "models/dungeon/table_long_broken.glb",
+   "bytes": 33468,
+   "bbox": {
+    "min": [
+     -1.391,
+     0,
+     -2.176
+    ],
+    "max": [
+     1.018,
+     1.266,
+     2.228
+    ]
+   }
+  },
+  "dungeon/table_long_decorated_A": {
+   "file": "models/dungeon/table_long_decorated_A.glb",
+   "bytes": 57480,
+   "bbox": {
+    "min": [
+     -1.031,
+     0,
+     -2
+    ],
+    "max": [
+     1.028,
+     1.886,
+     2
+    ]
+   }
+  },
+  "dungeon/table_long_decorated_C": {
+   "file": "models/dungeon/table_long_decorated_C.glb",
+   "bytes": 98392,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -2.025
+    ],
+    "max": [
+     1,
+     2.768,
+     2
+    ]
+   }
+  },
+  "dungeon/table_long_tablecloth": {
+   "file": "models/dungeon/table_long_tablecloth.glb",
+   "bytes": 25428,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -2
+    ],
+    "max": [
+     1,
+     1,
+     2
+    ]
+   }
+  },
+  "dungeon/table_long_tablecloth_decorated_A": {
+   "file": "models/dungeon/table_long_tablecloth_decorated_A.glb",
+   "bytes": 58192,
+   "bbox": {
+    "min": [
+     -1.031,
+     0,
+     -2
+    ],
+    "max": [
+     1.028,
+     1.886,
+     2
+    ]
+   }
+  },
+  "dungeon/table_medium": {
+   "file": "models/dungeon/table_medium.glb",
+   "bytes": 24332,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     1,
+     1
+    ]
+   }
+  },
+  "dungeon/table_medium_broken": {
+   "file": "models/dungeon/table_medium_broken.glb",
+   "bytes": 25800,
+   "bbox": {
+    "min": [
+     -1.051,
+     -0.002,
+     -0.961
+    ],
+    "max": [
+     1.226,
+     0.97,
+     1.468
+    ]
+   }
+  },
+  "dungeon/table_medium_decorated_A": {
+   "file": "models/dungeon/table_medium_decorated_A.glb",
+   "bytes": 43412,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     1.886,
+     1
+    ]
+   }
+  },
+  "dungeon/table_medium_tablecloth": {
+   "file": "models/dungeon/table_medium_tablecloth.glb",
+   "bytes": 24620,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     1,
+     1
+    ]
+   }
+  },
+  "dungeon/table_medium_tablecloth_decorated_B": {
+   "file": "models/dungeon/table_medium_tablecloth_decorated_B.glb",
+   "bytes": 43712,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     1.886,
+     1
+    ]
+   }
+  },
+  "dungeon/table_small": {
+   "file": "models/dungeon/table_small.glb",
+   "bytes": 22960,
+   "bbox": {
+    "min": [
+     -0.501,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.499,
+     1,
+     0.5
+    ]
+   }
+  },
+  "dungeon/table_small_decorated_A": {
+   "file": "models/dungeon/table_small_decorated_A.glb",
+   "bytes": 37632,
+   "bbox": {
+    "min": [
+     -0.54,
+     0,
+     -0.621
+    ],
+    "max": [
+     0.499,
+     1.621,
+     0.59
+    ]
+   }
+  },
+  "dungeon/table_small_decorated_B": {
+   "file": "models/dungeon/table_small_decorated_B.glb",
+   "bytes": 53600,
+   "bbox": {
+    "min": [
+     -0.503,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.509,
+     2.157,
+     0.5
+    ]
+   }
+  },
+  "dungeon/torch": {
+   "file": "models/dungeon/torch.glb",
+   "bytes": 23416,
+   "bbox": {
+    "min": [
+     -0.275,
+     -0.395,
+     -0.275
+    ],
+    "max": [
+     0.275,
+     0.647,
+     0.275
+    ]
+   }
+  },
+  "dungeon/torch_lit": {
+   "file": "models/dungeon/torch_lit.glb",
+   "bytes": 24224,
+   "bbox": {
+    "min": [
+     -0.275,
+     -0.395,
+     -0.275
+    ],
+    "max": [
+     0.275,
+     0.731,
+     0.275
+    ]
+   }
+  },
+  "dungeon/torch_mounted": {
+   "file": "models/dungeon/torch_mounted.glb",
+   "bytes": 25132,
+   "bbox": {
+    "min": [
+     -0.275,
+     -0.381,
+     0
+    ],
+    "max": [
+     0.275,
+     0.682,
+     0.616
+    ]
+   }
+  },
+  "dungeon/trunk_large_A": {
+   "file": "models/dungeon/trunk_large_A.glb",
+   "bytes": 23136,
+   "bbox": {
+    "min": [
+     -0.75,
+     0,
+     -0.65
+    ],
+    "max": [
+     0.75,
+     1,
+     0.65
+    ]
+   }
+  },
+  "dungeon/trunk_large_B": {
+   "file": "models/dungeon/trunk_large_B.glb",
+   "bytes": 23132,
+   "bbox": {
+    "min": [
+     -0.75,
+     0,
+     -0.65
+    ],
+    "max": [
+     0.75,
+     1,
+     0.65
+    ]
+   }
+  },
+  "dungeon/trunk_large_C": {
+   "file": "models/dungeon/trunk_large_C.glb",
+   "bytes": 23136,
+   "bbox": {
+    "min": [
+     -0.75,
+     0,
+     -0.65
+    ],
+    "max": [
+     0.75,
+     1,
+     0.65
+    ]
+   }
+  },
+  "dungeon/trunk_medium_A": {
+   "file": "models/dungeon/trunk_medium_A.glb",
+   "bytes": 21888,
+   "bbox": {
+    "min": [
+     -0.477,
+     0,
+     -0.438
+    ],
+    "max": [
+     0.477,
+     0.726,
+     0.438
+    ]
+   }
+  },
+  "dungeon/trunk_medium_B": {
+   "file": "models/dungeon/trunk_medium_B.glb",
+   "bytes": 21888,
+   "bbox": {
+    "min": [
+     -0.477,
+     0,
+     -0.438
+    ],
+    "max": [
+     0.477,
+     0.726,
+     0.438
+    ]
+   }
+  },
+  "dungeon/trunk_medium_C": {
+   "file": "models/dungeon/trunk_medium_C.glb",
+   "bytes": 21888,
+   "bbox": {
+    "min": [
+     -0.477,
+     0,
+     -0.438
+    ],
+    "max": [
+     0.477,
+     0.726,
+     0.438
+    ]
+   }
+  },
+  "dungeon/trunk_small_A": {
+   "file": "models/dungeon/trunk_small_A.glb",
+   "bytes": 23220,
+   "bbox": {
+    "min": [
+     -0.338,
+     0,
+     -0.292
+    ],
+    "max": [
+     0.338,
+     0.484,
+     0.292
+    ]
+   }
+  },
+  "dungeon/trunk_small_B": {
+   "file": "models/dungeon/trunk_small_B.glb",
+   "bytes": 23220,
+   "bbox": {
+    "min": [
+     -0.338,
+     0,
+     -0.292
+    ],
+    "max": [
+     0.338,
+     0.484,
+     0.292
+    ]
+   }
+  },
+  "dungeon/trunk_small_C": {
+   "file": "models/dungeon/trunk_small_C.glb",
+   "bytes": 23224,
+   "bbox": {
+    "min": [
+     -0.338,
+     0,
+     -0.292
+    ],
+    "max": [
+     0.338,
+     0.484,
+     0.292
+    ]
+   }
+  },
+  "dungeon/wall": {
+   "file": "models/dungeon/wall.glb",
+   "bytes": 32488,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_arched": {
+   "file": "models/dungeon/wall_arched.glb",
+   "bytes": 38972,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_archedwindow_gated": {
+   "file": "models/dungeon/wall_archedwindow_gated.glb",
+   "bytes": 35316,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_archedwindow_gated_scaffold": {
+   "file": "models/dungeon/wall_archedwindow_gated_scaffold.glb",
+   "bytes": 34276,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_archedwindow_open": {
+   "file": "models/dungeon/wall_archedwindow_open.glb",
+   "bytes": 33264,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_broken": {
+   "file": "models/dungeon/wall_broken.glb",
+   "bytes": 37916,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_corner": {
+   "file": "models/dungeon/wall_corner.glb",
+   "bytes": 30748,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.5,
+     4,
+     2
+    ]
+   }
+  },
+  "dungeon/wall_corner_gated": {
+   "file": "models/dungeon/wall_corner_gated.glb",
+   "bytes": 29940,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.5,
+     4,
+     2
+    ]
+   }
+  },
+  "dungeon/wall_corner_scaffold": {
+   "file": "models/dungeon/wall_corner_scaffold.glb",
+   "bytes": 32804,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.5,
+     4,
+     2
+    ]
+   }
+  },
+  "dungeon/wall_corner_small": {
+   "file": "models/dungeon/wall_corner_small.glb",
+   "bytes": 24696,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.5,
+     4,
+     1
+    ]
+   }
+  },
+  "dungeon/wall_cracked": {
+   "file": "models/dungeon/wall_cracked.glb",
+   "bytes": 68340,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.63
+    ],
+    "max": [
+     2,
+     4,
+     0.63
+    ]
+   }
+  },
+  "dungeon/wall_crossing": {
+   "file": "models/dungeon/wall_crossing.glb",
+   "bytes": 37444,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -2
+    ],
+    "max": [
+     2,
+     4,
+     2
+    ]
+   }
+  },
+  "dungeon/wall_doorway": {
+   "file": "models/dungeon/wall_doorway.glb",
+   "bytes": 41308,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_doorway_scaffold": {
+   "file": "models/dungeon/wall_doorway_scaffold.glb",
+   "bytes": 43840,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_doorway_sides": {
+   "file": "models/dungeon/wall_doorway_sides.glb",
+   "bytes": 49460,
+   "bbox": {
+    "min": [
+     -2.5,
+     0,
+     -2
+    ],
+    "max": [
+     2.5,
+     4,
+     2
+    ]
+   }
+  },
+  "dungeon/wall_doorway_Tsplit": {
+   "file": "models/dungeon/wall_doorway_Tsplit.glb",
+   "bytes": 46892,
+   "bbox": {
+    "min": [
+     -4,
+     0,
+     -0.5
+    ],
+    "max": [
+     4,
+     4,
+     2
+    ]
+   }
+  },
+  "dungeon/wall_endcap": {
+   "file": "models/dungeon/wall_endcap.glb",
+   "bytes": 25012,
+   "bbox": {
+    "min": [
+     0,
+     0,
+     -0.5
+    ],
+    "max": [
+     1.067,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_gated": {
+   "file": "models/dungeon/wall_gated.glb",
+   "bytes": 27452,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_half": {
+   "file": "models/dungeon/wall_half.glb",
+   "bytes": 26028,
+   "bbox": {
+    "min": [
+     0,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_half_endcap": {
+   "file": "models/dungeon/wall_half_endcap.glb",
+   "bytes": 25984,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     0,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_half_endcap_sloped": {
+   "file": "models/dungeon/wall_half_endcap_sloped.glb",
+   "bytes": 24536,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     0,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_open_scaffold": {
+   "file": "models/dungeon/wall_open_scaffold.glb",
+   "bytes": 22492,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_pillar": {
+   "file": "models/dungeon/wall_pillar.glb",
+   "bytes": 32688,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.75
+    ],
+    "max": [
+     2,
+     4,
+     0.75
+    ]
+   }
+  },
+  "dungeon/wall_scaffold": {
+   "file": "models/dungeon/wall_scaffold.glb",
+   "bytes": 34992,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_shelves": {
+   "file": "models/dungeon/wall_shelves.glb",
+   "bytes": 57896,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.868
+    ]
+   }
+  },
+  "dungeon/wall_sloped": {
+   "file": "models/dungeon/wall_sloped.glb",
+   "bytes": 25732,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_Tsplit": {
+   "file": "models/dungeon/wall_Tsplit.glb",
+   "bytes": 35024,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     2
+    ]
+   }
+  },
+  "dungeon/wall_Tsplit_sloped": {
+   "file": "models/dungeon/wall_Tsplit_sloped.glb",
+   "bytes": 33908,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     2
+    ]
+   }
+  },
+  "dungeon/wall_window_closed": {
+   "file": "models/dungeon/wall_window_closed.glb",
+   "bytes": 34676,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_window_closed_scaffold": {
+   "file": "models/dungeon/wall_window_closed_scaffold.glb",
+   "bytes": 36752,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_window_open": {
+   "file": "models/dungeon/wall_window_open.glb",
+   "bytes": 33340,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "dungeon/wall_window_open_scaffold": {
+   "file": "models/dungeon/wall_window_open_scaffold.glb",
+   "bytes": 35436,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.5
+    ],
+    "max": [
+     2,
+     4,
+     0.5
+    ]
+   }
+  },
+  "graveyard/arch": {
+   "file": "models/graveyard/arch.glb",
+   "bytes": 27088,
+   "bbox": {
+    "min": [
+     -2.109,
+     0,
+     -0.385
+    ],
+    "max": [
+     2.109,
+     4.414,
+     0.385
+    ]
+   }
+  },
+  "graveyard/arch_gate": {
+   "file": "models/graveyard/arch_gate.glb",
+   "bytes": 39520,
+   "bbox": {
+    "min": [
+     -2.109,
+     0,
+     -0.385
+    ],
+    "max": [
+     2.109,
+     4.414,
+     0.385
+    ]
+   }
+  },
+  "graveyard/bench": {
+   "file": "models/graveyard/bench.glb",
+   "bytes": 21260,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -0.375
+    ],
+    "max": [
+     1,
+     0.5,
+     0.375
+    ]
+   }
+  },
+  "graveyard/bench_decorated": {
+   "file": "models/graveyard/bench_decorated.glb",
+   "bytes": 35656,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -0.503
+    ],
+    "max": [
+     1,
+     1.677,
+     0.514
+    ]
+   }
+  },
+  "graveyard/bone_A": {
+   "file": "models/graveyard/bone_A.glb",
+   "bytes": 20788,
+   "bbox": {
+    "min": [
+     -0.353,
+     -0.138,
+     -0.1
+    ],
+    "max": [
+     0.353,
+     0.138,
+     0.1
+    ]
+   }
+  },
+  "graveyard/bone_B": {
+   "file": "models/graveyard/bone_B.glb",
+   "bytes": 20168,
+   "bbox": {
+    "min": [
+     -0.298,
+     -0.087,
+     -0.143
+    ],
+    "max": [
+     0.309,
+     0.087,
+     0.143
+    ]
+   }
+  },
+  "graveyard/bone_C": {
+   "file": "models/graveyard/bone_C.glb",
+   "bytes": 20732,
+   "bbox": {
+    "min": [
+     -0.553,
+     -0.138,
+     -0.1
+    ],
+    "max": [
+     0.553,
+     0.138,
+     0.1
+    ]
+   }
+  },
+  "graveyard/candle": {
+   "file": "models/graveyard/candle.glb",
+   "bytes": 18880,
+   "bbox": {
+    "min": [
+     -0.15,
+     0,
+     -0.153
+    ],
+    "max": [
+     0.15,
+     0.786,
+     0.144
+    ]
+   }
+  },
+  "graveyard/candle_melted": {
+   "file": "models/graveyard/candle_melted.glb",
+   "bytes": 18940,
+   "bbox": {
+    "min": [
+     -0.15,
+     0,
+     -0.153
+    ],
+    "max": [
+     0.15,
+     0.631,
+     0.144
+    ]
+   }
+  },
+  "graveyard/candle_thin": {
+   "file": "models/graveyard/candle_thin.glb",
+   "bytes": 18884,
+   "bbox": {
+    "min": [
+     -0.087,
+     0,
+     -0.088
+    ],
+    "max": [
+     0.087,
+     0.786,
+     0.083
+    ]
+   }
+  },
+  "graveyard/candle_triple": {
+   "file": "models/graveyard/candle_triple.glb",
+   "bytes": 21520,
+   "bbox": {
+    "min": [
+     -0.15,
+     0,
+     -0.144
+    ],
+    "max": [
+     0.301,
+     0.786,
+     0.207
+    ]
+   }
+  },
+  "graveyard/coffin": {
+   "file": "models/graveyard/coffin.glb",
+   "bytes": 24972,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1.5
+    ],
+    "max": [
+     1,
+     1.322,
+     1.5
+    ]
+   }
+  },
+  "graveyard/coffin_decorated": {
+   "file": "models/graveyard/coffin_decorated.glb",
+   "bytes": 48736,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1.5
+    ],
+    "max": [
+     1,
+     0.902,
+     1.5
+    ]
+   }
+  },
+  "graveyard/crypt": {
+   "file": "models/graveyard/crypt.glb",
+   "bytes": 36272,
+   "bbox": {
+    "min": [
+     -3,
+     0,
+     -4
+    ],
+    "max": [
+     3,
+     8,
+     4
+    ]
+   }
+  },
+  "graveyard/fence": {
+   "file": "models/graveyard/fence.glb",
+   "bytes": 26280,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.25
+    ],
+    "max": [
+     2,
+     2.2,
+     0.25
+    ]
+   }
+  },
+  "graveyard/fence_broken": {
+   "file": "models/graveyard/fence_broken.glb",
+   "bytes": 27584,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.25
+    ],
+    "max": [
+     2,
+     2.2,
+     0.25
+    ]
+   }
+  },
+  "graveyard/fence_gate": {
+   "file": "models/graveyard/fence_gate.glb",
+   "bytes": 33956,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.25
+    ],
+    "max": [
+     2,
+     3,
+     0.25
+    ]
+   }
+  },
+  "graveyard/fence_pillar": {
+   "file": "models/graveyard/fence_pillar.glb",
+   "bytes": 19668,
+   "bbox": {
+    "min": [
+     -0.25,
+     0,
+     -0.25
+    ],
+    "max": [
+     0.25,
+     2.2,
+     0.25
+    ]
+   }
+  },
+  "graveyard/fence_pillar_broken": {
+   "file": "models/graveyard/fence_pillar_broken.glb",
+   "bytes": 20052,
+   "bbox": {
+    "min": [
+     -0.25,
+     0,
+     -0.25
+    ],
+    "max": [
+     0.25,
+     1.503,
+     0.25
+    ]
+   }
+  },
+  "graveyard/fence_seperate": {
+   "file": "models/graveyard/fence_seperate.glb",
+   "bytes": 24980,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.085
+    ],
+    "max": [
+     2,
+     2,
+     0.085
+    ]
+   }
+  },
+  "graveyard/fence_seperate_broken": {
+   "file": "models/graveyard/fence_seperate_broken.glb",
+   "bytes": 25520,
+   "bbox": {
+    "min": [
+     -2,
+     0,
+     -0.085
+    ],
+    "max": [
+     2,
+     2,
+     0.085
+    ]
+   }
+  },
+  "graveyard/floor_dirt": {
+   "file": "models/graveyard/floor_dirt.glb",
+   "bytes": 19992,
+   "bbox": {
+    "min": [
+     -2,
+     -0.5,
+     -2
+    ],
+    "max": [
+     2,
+     0.03,
+     2
+    ]
+   }
+  },
+  "graveyard/floor_dirt_grave": {
+   "file": "models/graveyard/floor_dirt_grave.glb",
+   "bytes": 20432,
+   "bbox": {
+    "min": [
+     -2,
+     -1.5,
+     -2
+    ],
+    "max": [
+     2,
+     0.03,
+     2
+    ]
+   }
+  },
+  "graveyard/floor_dirt_small": {
+   "file": "models/graveyard/floor_dirt_small.glb",
+   "bytes": 19232,
+   "bbox": {
+    "min": [
+     -1,
+     -0.5,
+     -1
+    ],
+    "max": [
+     1,
+     0.03,
+     1
+    ]
+   }
+  },
+  "graveyard/grave_A": {
+   "file": "models/graveyard/grave_A.glb",
+   "bytes": 22908,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -0.5
+    ],
+    "max": [
+     1,
+     2.129,
+     0.5
+    ]
+   }
+  },
+  "graveyard/grave_A_destroyed": {
+   "file": "models/graveyard/grave_A_destroyed.glb",
+   "bytes": 26416,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -0.635
+    ],
+    "max": [
+     1.077,
+     2.106,
+     0.5
+    ]
+   }
+  },
+  "graveyard/grave_B": {
+   "file": "models/graveyard/grave_B.glb",
+   "bytes": 22264,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -0.5
+    ],
+    "max": [
+     1,
+     2.2,
+     0.5
+    ]
+   }
+  },
+  "graveyard/gravemarker_A": {
+   "file": "models/graveyard/gravemarker_A.glb",
+   "bytes": 19476,
+   "bbox": {
+    "min": [
+     -0.434,
+     0,
+     -0.168
+    ],
+    "max": [
+     0.372,
+     1.196,
+     0.111
+    ]
+   }
+  },
+  "graveyard/gravemarker_B": {
+   "file": "models/graveyard/gravemarker_B.glb",
+   "bytes": 21864,
+   "bbox": {
+    "min": [
+     -0.41,
+     0,
+     -0.038
+    ],
+    "max": [
+     0.393,
+     1.179,
+     0.375
+    ]
+   }
+  },
+  "graveyard/gravestone": {
+   "file": "models/graveyard/gravestone.glb",
+   "bytes": 21824,
+   "bbox": {
+    "min": [
+     -0.7,
+     0,
+     -0.2
+    ],
+    "max": [
+     0.7,
+     1.6,
+     0.2
+    ]
+   }
+  },
+  "graveyard/lantern_hanging": {
+   "file": "models/graveyard/lantern_hanging.glb",
+   "bytes": 24836,
+   "bbox": {
+    "min": [
+     -0.32,
+     -1.309,
+     -0.32
+    ],
+    "max": [
+     0.32,
+     0.1,
+     0.32
+    ]
+   }
+  },
+  "graveyard/lantern_standing": {
+   "file": "models/graveyard/lantern_standing.glb",
+   "bytes": 22140,
+   "bbox": {
+    "min": [
+     -0.32,
+     0,
+     -0.32
+    ],
+    "max": [
+     0.32,
+     0.925,
+     0.32
+    ]
+   }
+  },
+  "graveyard/path_A": {
+   "file": "models/graveyard/path_A.glb",
+   "bytes": 22432,
+   "bbox": {
+    "min": [
+     -0.966,
+     0,
+     -0.938
+    ],
+    "max": [
+     0.937,
+     0.1,
+     0.945
+    ]
+   }
+  },
+  "graveyard/path_B": {
+   "file": "models/graveyard/path_B.glb",
+   "bytes": 22380,
+   "bbox": {
+    "min": [
+     -0.933,
+     0,
+     -0.93
+    ],
+    "max": [
+     0.953,
+     0.1,
+     0.926
+    ]
+   }
+  },
+  "graveyard/path_C": {
+   "file": "models/graveyard/path_C.glb",
+   "bytes": 22988,
+   "bbox": {
+    "min": [
+     -0.913,
+     0,
+     -0.925
+    ],
+    "max": [
+     0.937,
+     0.1,
+     0.932
+    ]
+   }
+  },
+  "graveyard/path_D": {
+   "file": "models/graveyard/path_D.glb",
+   "bytes": 21436,
+   "bbox": {
+    "min": [
+     -0.816,
+     0,
+     -0.825
+    ],
+    "max": [
+     0.839,
+     0.1,
+     0.882
+    ]
+   }
+  },
+  "graveyard/pillar": {
+   "file": "models/graveyard/pillar.glb",
+   "bytes": 19656,
+   "bbox": {
+    "min": [
+     -0.5,
+     0,
+     -0.5
+    ],
+    "max": [
+     0.5,
+     4.4,
+     0.5
+    ]
+   }
+  },
+  "graveyard/plaque": {
+   "file": "models/graveyard/plaque.glb",
+   "bytes": 19296,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     0.4,
+     1
+    ]
+   }
+  },
+  "graveyard/plaque_candles": {
+   "file": "models/graveyard/plaque_candles.glb",
+   "bytes": 25532,
+   "bbox": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     1.131,
+     1
+    ]
+   }
+  },
+  "graveyard/post": {
+   "file": "models/graveyard/post.glb",
+   "bytes": 19884,
+   "bbox": {
+    "min": [
+     -0.208,
+     0,
+     -0.216
+    ],
+    "max": [
+     0.216,
+     3.3,
+     1.35
+    ]
+   }
+  },
+  "graveyard/post_lantern": {
+   "file": "models/graveyard/post_lantern.glb",
+   "bytes": 28588,
+   "bbox": {
+    "min": [
+     -0.32,
+     0,
+     -0.216
+    ],
+    "max": [
+     0.32,
+     3.3,
+     1.35
+    ]
+   }
+  },
+  "graveyard/post_skull": {
+   "file": "models/graveyard/post_skull.glb",
+   "bytes": 31076,
+   "bbox": {
+    "min": [
+     -0.405,
+     0,
+     -0.216
+    ],
+    "max": [
+     0.404,
+     3.3,
+     1.35
+    ]
+   }
+  },
+  "graveyard/pumpkin_orange": {
+   "file": "models/graveyard/pumpkin_orange.glb",
+   "bytes": 21332,
+   "bbox": {
+    "min": [
+     -0.501,
+     -0.003,
+     -0.501
+    ],
+    "max": [
+     0.501,
+     0.697,
+     0.501
+    ]
+   }
+  },
+  "graveyard/pumpkin_orange_jackolantern": {
+   "file": "models/graveyard/pumpkin_orange_jackolantern.glb",
+   "bytes": 23384,
+   "bbox": {
+    "min": [
+     -0.75,
+     -0.004,
+     -0.7
+    ],
+    "max": [
+     0.75,
+     1.296,
+     0.7
+    ]
+   }
+  },
+  "graveyard/pumpkin_orange_small": {
+   "file": "models/graveyard/pumpkin_orange_small.glb",
+   "bytes": 21620,
+   "bbox": {
+    "min": [
+     -0.3,
+     -0.003,
+     -0.3
+    ],
+    "max": [
+     0.3,
+     0.547,
+     0.3
+    ]
+   }
+  },
+  "graveyard/pumpkin_yellow": {
+   "file": "models/graveyard/pumpkin_yellow.glb",
+   "bytes": 21336,
+   "bbox": {
+    "min": [
+     -0.501,
+     -0.003,
+     -0.501
+    ],
+    "max": [
+     0.501,
+     0.697,
+     0.501
+    ]
+   }
+  },
+  "graveyard/pumpkin_yellow_jackolantern": {
+   "file": "models/graveyard/pumpkin_yellow_jackolantern.glb",
+   "bytes": 23380,
+   "bbox": {
+    "min": [
+     -0.75,
+     -0.004,
+     -0.7
+    ],
+    "max": [
+     0.75,
+     1.296,
+     0.7
+    ]
+   }
+  },
+  "graveyard/pumpkin_yellow_small": {
+   "file": "models/graveyard/pumpkin_yellow_small.glb",
+   "bytes": 21620,
+   "bbox": {
+    "min": [
+     -0.3,
+     -0.003,
+     -0.3
+    ],
+    "max": [
+     0.3,
+     0.547,
+     0.3
+    ]
+   }
+  },
+  "graveyard/ribcage": {
+   "file": "models/graveyard/ribcage.glb",
+   "bytes": 38912,
+   "bbox": {
+    "min": [
+     -0.423,
+     -0.387,
+     -0.422
+    ],
+    "max": [
+     0.423,
+     0.471,
+     0.325
+    ]
+   }
+  },
+  "graveyard/shrine": {
+   "file": "models/graveyard/shrine.glb",
+   "bytes": 19512,
+   "bbox": {
+    "min": [
+     -0.55,
+     0,
+     -0.55
+    ],
+    "max": [
+     0.55,
+     2.4,
+     0.55
+    ]
+   }
+  },
+  "graveyard/shrine_candles": {
+   "file": "models/graveyard/shrine_candles.glb",
+   "bytes": 24848,
+   "bbox": {
+    "min": [
+     -0.55,
+     0,
+     -0.55
+    ],
+    "max": [
+     0.55,
+     1.789,
+     0.55
+    ]
+   }
+  },
+  "graveyard/skull": {
+   "file": "models/graveyard/skull.glb",
+   "bytes": 23036,
+   "bbox": {
+    "min": [
+     -0.459,
+     0.017,
+     -0.458
+    ],
+    "max": [
+     0.459,
+     0.916,
+     0.449
+    ]
+   }
+  },
+  "graveyard/skull_candle": {
+   "file": "models/graveyard/skull_candle.glb",
+   "bytes": 27428,
+   "bbox": {
+    "min": [
+     -0.459,
+     0.057,
+     -0.519
+    ],
+    "max": [
+     0.459,
+     1.245,
+     0.417
+    ]
+   }
+  },
+  "graveyard/tree_dead_large": {
+   "file": "models/graveyard/tree_dead_large.glb",
+   "bytes": 20456,
+   "bbox": {
+    "min": [
+     -1.322,
+     -0.272,
+     -0.726
+    ],
+    "max": [
+     0.98,
+     4.794,
+     0.651
+    ]
+   }
+  },
+  "graveyard/tree_dead_large_decorated": {
+   "file": "models/graveyard/tree_dead_large_decorated.glb",
+   "bytes": 36616,
+   "bbox": {
+    "min": [
+     -1.322,
+     -0.272,
+     -0.855
+    ],
+    "max": [
+     0.98,
+     5.145,
+     0.759
+    ]
+   }
+  },
+  "graveyard/tree_dead_medium": {
+   "file": "models/graveyard/tree_dead_medium.glb",
+   "bytes": 19756,
+   "bbox": {
+    "min": [
+     -0.485,
+     -0.3,
+     -0.233
+    ],
+    "max": [
+     1.323,
+     3.889,
+     0.233
+    ]
+   }
+  },
+  "graveyard/tree_dead_small": {
+   "file": "models/graveyard/tree_dead_small.glb",
+   "bytes": 19668,
+   "bbox": {
+    "min": [
+     -1.202,
+     -0.297,
+     -0.805
+    ],
+    "max": [
+     0.206,
+     2.69,
+     0.21
+    ]
+   }
+  },
+  "graveyard/tree_pine_orange_large": {
+   "file": "models/graveyard/tree_pine_orange_large.glb",
+   "bytes": 25056,
+   "bbox": {
+    "min": [
+     -2.363,
+     -0.555,
+     -2.076
+    ],
+    "max": [
+     2.397,
+     6.92,
+     2.079
+    ]
+   }
+  },
+  "graveyard/tree_pine_orange_medium": {
+   "file": "models/graveyard/tree_pine_orange_medium.glb",
+   "bytes": 25036,
+   "bbox": {
+    "min": [
+     -1.677,
+     -0.48,
+     -1.355
+    ],
+    "max": [
+     1.653,
+     5.392,
+     1.766
+    ]
+   }
+  },
+  "graveyard/tree_pine_orange_small": {
+   "file": "models/graveyard/tree_pine_orange_small.glb",
+   "bytes": 23532,
+   "bbox": {
+    "min": [
+     -1.185,
+     -0.395,
+     -1.144
+    ],
+    "max": [
+     1.216,
+     3.648,
+     1.053
+    ]
+   }
+  },
+  "graveyard/tree_pine_yellow_large": {
+   "file": "models/graveyard/tree_pine_yellow_large.glb",
+   "bytes": 25056,
+   "bbox": {
+    "min": [
+     -2.363,
+     -0.555,
+     -2.076
+    ],
+    "max": [
+     2.397,
+     6.92,
+     2.079
+    ]
+   }
+  },
+  "graveyard/tree_pine_yellow_medium": {
+   "file": "models/graveyard/tree_pine_yellow_medium.glb",
+   "bytes": 25036,
+   "bbox": {
+    "min": [
+     -1.677,
+     -0.48,
+     -1.355
+    ],
+    "max": [
+     1.653,
+     5.392,
+     1.766
+    ]
+   }
+  },
+  "graveyard/tree_pine_yellow_small": {
+   "file": "models/graveyard/tree_pine_yellow_small.glb",
+   "bytes": 23532,
+   "bbox": {
+    "min": [
+     -1.185,
+     -0.395,
+     -1.144
+    ],
+    "max": [
+     1.216,
+     3.648,
+     1.053
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Arrow": {
+   "file": "models/weapons_skeleton/Skeleton_Arrow.glb",
+   "bytes": 20656,
+   "bbox": {
+    "min": [
+     -0.059,
+     -0.383,
+     -0.034
+    ],
+    "max": [
+     0.059,
+     0.366,
+     0.068
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Arrow_Broken": {
+   "file": "models/weapons_skeleton/Skeleton_Arrow_Broken.glb",
+   "bytes": 20984,
+   "bbox": {
+    "min": [
+     -0.034,
+     -0.383,
+     -0.059
+    ],
+    "max": [
+     0.284,
+     0.302,
+     0.059
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Arrow_Broken_Half": {
+   "file": "models/weapons_skeleton/Skeleton_Arrow_Broken_Half.glb",
+   "bytes": 20720,
+   "bbox": {
+    "min": [
+     -0.016,
+     0,
+     -0.059
+    ],
+    "max": [
+     0.284,
+     0.585,
+     0.059
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Arrow_Half": {
+   "file": "models/weapons_skeleton/Skeleton_Arrow_Half.glb",
+   "bytes": 20448,
+   "bbox": {
+    "min": [
+     -0.059,
+     0,
+     -0.034
+    ],
+    "max": [
+     0.059,
+     0.365,
+     0.068
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Axe": {
+   "file": "models/weapons_skeleton/Skeleton_Axe.glb",
+   "bytes": 28948,
+   "bbox": {
+    "min": [
+     -0.494,
+     -0.251,
+     -0.141
+    ],
+    "max": [
+     0.494,
+     1.001,
+     0.141
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Blade": {
+   "file": "models/weapons_skeleton/Skeleton_Blade.glb",
+   "bytes": 27308,
+   "bbox": {
+    "min": [
+     -0.286,
+     -0.329,
+     -0.111
+    ],
+    "max": [
+     0.286,
+     1.168,
+     0.111
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Crossbow": {
+   "file": "models/weapons_skeleton/Skeleton_Crossbow.glb",
+   "bytes": 31036,
+   "bbox": {
+    "min": [
+     -0.556,
+     -0.171,
+     -0.278
+    ],
+    "max": [
+     0.556,
+     0.337,
+     1.141
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Quiver": {
+   "file": "models/weapons_skeleton/Skeleton_Quiver.glb",
+   "bytes": 27272,
+   "bbox": {
+    "min": [
+     -0.153,
+     -0.406,
+     -0.089
+    ],
+    "max": [
+     0.153,
+     0.523,
+     0.131
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Shield_Large_A": {
+   "file": "models/weapons_skeleton/Skeleton_Shield_Large_A.glb",
+   "bytes": 33172,
+   "bbox": {
+    "min": [
+     -0.436,
+     -0.568,
+     -0.169
+    ],
+    "max": [
+     0.441,
+     0.567,
+     0.193
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Shield_Large_B": {
+   "file": "models/weapons_skeleton/Skeleton_Shield_Large_B.glb",
+   "bytes": 26396,
+   "bbox": {
+    "min": [
+     -0.436,
+     -0.568,
+     -0.169
+    ],
+    "max": [
+     0.441,
+     0.567,
+     0.218
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Shield_Small_A": {
+   "file": "models/weapons_skeleton/Skeleton_Shield_Small_A.glb",
+   "bytes": 27920,
+   "bbox": {
+    "min": [
+     -0.416,
+     -0.416,
+     -0.045
+    ],
+    "max": [
+     0.416,
+     0.416,
+     0.111
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Shield_Small_B": {
+   "file": "models/weapons_skeleton/Skeleton_Shield_Small_B.glb",
+   "bytes": 30752,
+   "bbox": {
+    "min": [
+     -0.416,
+     -0.416,
+     -0.045
+    ],
+    "max": [
+     0.416,
+     0.416,
+     0.461
+    ]
+   }
+  },
+  "weapons_skeleton/Skeleton_Staff": {
+   "file": "models/weapons_skeleton/Skeleton_Staff.glb",
+   "bytes": 47432,
+   "bbox": {
+    "min": [
+     -0.458,
+     -0.846,
+     -0.368
+    ],
+    "max": [
+     0.14,
+     1.255,
+     0.385
+    ]
+   }
+  },
+  "weapons/arrow": {
+   "file": "models/weapons/arrow.glb",
+   "bytes": 20300,
+   "bbox": {
+    "min": [
+     -0.059,
+     -0.383,
+     -0.034
+    ],
+    "max": [
+     0.059,
+     0.366,
+     0.068
+    ]
+   }
+  },
+  "weapons/arrow_bundle": {
+   "file": "models/weapons/arrow_bundle.glb",
+   "bytes": 25744,
+   "bbox": {
+    "min": [
+     -0.151,
+     -0.327,
+     -0.133
+    ],
+    "max": [
+     0.141,
+     0.404,
+     0.154
+    ]
+   }
+  },
+  "weapons/axe_1handed": {
+   "file": "models/weapons/axe_1handed.glb",
+   "bytes": 22688,
+   "bbox": {
+    "min": [
+     -0.589,
+     -0.273,
+     -0.092
+    ],
+    "max": [
+     0.125,
+     0.971,
+     0.092
+    ]
+   }
+  },
+  "weapons/axe_2handed": {
+   "file": "models/weapons/axe_2handed.glb",
+   "bytes": 26596,
+   "bbox": {
+    "min": [
+     -0.62,
+     -0.433,
+     -0.131
+    ],
+    "max": [
+     0.62,
+     1.292,
+     0.131
+    ]
+   }
+  },
+  "weapons/crossbow_1handed": {
+   "file": "models/weapons/crossbow_1handed.glb",
+   "bytes": 29236,
+   "bbox": {
+    "min": [
+     -0.454,
+     -0.171,
+     -0.278
+    ],
+    "max": [
+     0.457,
+     0.235,
+     0.944
+    ]
+   }
+  },
+  "weapons/crossbow_2handed": {
+   "file": "models/weapons/crossbow_2handed.glb",
+   "bytes": 32940,
+   "bbox": {
+    "min": [
+     -0.612,
+     -0.171,
+     -0.278
+    ],
+    "max": [
+     0.612,
+     0.308,
+     1.163
+    ]
+   }
+  },
+  "weapons/dagger": {
+   "file": "models/weapons/dagger.glb",
+   "bytes": 22300,
+   "bbox": {
+    "min": [
+     -0.12,
+     -0.225,
+     -0.076
+    ],
+    "max": [
+     0.139,
+     0.981,
+     0.076
+    ]
+   }
+  },
+  "weapons/mug_empty": {
+   "file": "models/weapons/mug_empty.glb",
+   "bytes": 23168,
+   "bbox": {
+    "min": [
+     -0.198,
+     -0.239,
+     -0.198
+    ],
+    "max": [
+     0.336,
+     0.248,
+     0.198
+    ]
+   }
+  },
+  "weapons/mug_full": {
+   "file": "models/weapons/mug_full.glb",
+   "bytes": 23680,
+   "bbox": {
+    "min": [
+     -0.198,
+     -0.239,
+     -0.198
+    ],
+    "max": [
+     0.336,
+     0.31,
+     0.198
+    ]
+   }
+  },
+  "weapons/quiver": {
+   "file": "models/weapons/quiver.glb",
+   "bytes": 24992,
+   "bbox": {
+    "min": [
+     -0.153,
+     -0.509,
+     -0.073
+    ],
+    "max": [
+     0.153,
+     0.421,
+     0.121
+    ]
+   }
+  },
+  "weapons/shield_badge": {
+   "file": "models/weapons/shield_badge.glb",
+   "bytes": 21048,
+   "bbox": {
+    "min": [
+     -0.441,
+     -0.54,
+     -0.145
+    ],
+    "max": [
+     0.441,
+     0.481,
+     0.101
+    ]
+   }
+  },
+  "weapons/shield_badge_color": {
+   "file": "models/weapons/shield_badge_color.glb",
+   "bytes": 21016,
+   "bbox": {
+    "min": [
+     -0.441,
+     -0.54,
+     -0.145
+    ],
+    "max": [
+     0.441,
+     0.481,
+     0.101
+    ]
+   }
+  },
+  "weapons/shield_round": {
+   "file": "models/weapons/shield_round.glb",
+   "bytes": 21648,
+   "bbox": {
+    "min": [
+     -0.441,
+     -0.441,
+     -0.145
+    ],
+    "max": [
+     0.441,
+     0.441,
+     0.187
+    ]
+   }
+  },
+  "weapons/shield_round_barbarian": {
+   "file": "models/weapons/shield_round_barbarian.glb",
+   "bytes": 22440,
+   "bbox": {
+    "min": [
+     -0.441,
+     -0.441,
+     -0.145
+    ],
+    "max": [
+     0.441,
+     0.441,
+     0.187
+    ]
+   }
+  },
+  "weapons/shield_round_color": {
+   "file": "models/weapons/shield_round_color.glb",
+   "bytes": 21504,
+   "bbox": {
+    "min": [
+     -0.441,
+     -0.441,
+     -0.145
+    ],
+    "max": [
+     0.441,
+     0.441,
+     0.187
+    ]
+   }
+  },
+  "weapons/shield_spikes": {
+   "file": "models/weapons/shield_spikes.glb",
+   "bytes": 25372,
+   "bbox": {
+    "min": [
+     -0.504,
+     -0.556,
+     -0.145
+    ],
+    "max": [
+     0.504,
+     0.481,
+     0.315
+    ]
+   }
+  },
+  "weapons/shield_spikes_color": {
+   "file": "models/weapons/shield_spikes_color.glb",
+   "bytes": 25384,
+   "bbox": {
+    "min": [
+     -0.504,
+     -0.556,
+     -0.145
+    ],
+    "max": [
+     0.504,
+     0.481,
+     0.315
+    ]
+   }
+  },
+  "weapons/shield_square": {
+   "file": "models/weapons/shield_square.glb",
+   "bytes": 21100,
+   "bbox": {
+    "min": [
+     -0.441,
+     -0.596,
+     -0.145
+    ],
+    "max": [
+     0.441,
+     0.596,
+     0.156
+    ]
+   }
+  },
+  "weapons/shield_square_color": {
+   "file": "models/weapons/shield_square_color.glb",
+   "bytes": 21108,
+   "bbox": {
+    "min": [
+     -0.441,
+     -0.596,
+     -0.145
+    ],
+    "max": [
+     0.441,
+     0.596,
+     0.156
+    ]
+   }
+  },
+  "weapons/smokebomb": {
+   "file": "models/weapons/smokebomb.glb",
+   "bytes": 23848,
+   "bbox": {
+    "min": [
+     -0.191,
+     -0.171,
+     -0.182
+    ],
+    "max": [
+     0.191,
+     0.252,
+     0.182
+    ]
+   }
+  },
+  "weapons/spellbook_closed": {
+   "file": "models/weapons/spellbook_closed.glb",
+   "bytes": 24028,
+   "bbox": {
+    "min": [
+     -0.147,
+     -0.287,
+     -0.211
+    ],
+    "max": [
+     0.147,
+     0.288,
+     0.216
+    ]
+   }
+  },
+  "weapons/spellbook_open": {
+   "file": "models/weapons/spellbook_open.glb",
+   "bytes": 24476,
+   "bbox": {
+    "min": [
+     -0.414,
+     -0.284,
+     -0.088
+    ],
+    "max": [
+     0.414,
+     0.284,
+     0.134
+    ]
+   }
+  },
+  "weapons/staff": {
+   "file": "models/weapons/staff.glb",
+   "bytes": 25904,
+   "bbox": {
+    "min": [
+     -0.245,
+     -0.9,
+     -0.146
+    ],
+    "max": [
+     0.331,
+     1.254,
+     0.146
+    ]
+   }
+  },
+  "weapons/sword_1handed": {
+   "file": "models/weapons/sword_1handed.glb",
+   "bytes": 21860,
+   "bbox": {
+    "min": [
+     -0.252,
+     -0.366,
+     -0.065
+    ],
+    "max": [
+     0.252,
+     1.409,
+     0.065
+    ]
+   }
+  },
+  "weapons/sword_2handed": {
+   "file": "models/weapons/sword_2handed.glb",
+   "bytes": 24284,
+   "bbox": {
+    "min": [
+     -0.42,
+     -0.401,
+     -0.124
+    ],
+    "max": [
+     0.42,
+     1.964,
+     0.124
+    ]
+   }
+  },
+  "weapons/sword_2handed_color": {
+   "file": "models/weapons/sword_2handed_color.glb",
+   "bytes": 24208,
+   "bbox": {
+    "min": [
+     -0.42,
+     -0.401,
+     -0.124
+    ],
+    "max": [
+     0.42,
+     1.964,
+     0.124
+    ]
+   }
+  },
+  "weapons/wand": {
+   "file": "models/weapons/wand.glb",
+   "bytes": 21256,
+   "bbox": {
+    "min": [
+     -0.08,
+     -0.266,
+     -0.08
+    ],
+    "max": [
+     0.08,
+     0.7,
+     0.08
+    ]
+   }
+  }
+ }
+}
