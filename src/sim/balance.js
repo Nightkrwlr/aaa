@@ -26,6 +26,13 @@ export class Balance {
     return 1 + linear * l + quadratic * l * l;
   }
 
+  /** talent points earned by reaching `level`: 1 per level up to `fullUntil`, then `perLevelAfter` — the trees are bigger than the budget so builds stay a choice */
+  talentPointsAt(level) {
+    const { fullUntil = 30, perLevelAfter = 0.5 } = this.d.talents ?? {};
+    const l = Math.max(1, Math.round(level));
+    return l <= fullUntil ? l - 1 : fullUntil - 1 + Math.floor((l - fullUntil) * perLevelAfter);
+  }
+
   expectedLife(level) { return this.d.player.life * this.P(level); }
   expectedDps(level) { return this.d.player.dps * this.P(level); }
   /** armor needed to have ~33 % reduction at level L */

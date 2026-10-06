@@ -10,7 +10,7 @@ Versión: 0.1.0 (vertical slice) · Rama de trabajo: `claude/affectionate-rubin-
 | Simulación (`src/sim`) | ≈ 8.100 líneas · headless, determinista |
 | Cliente (`src/client`) | ≈ 5.400 líneas (líneas densas) |
 | Núcleo (`src/core`) | ≈ 390 líneas |
-| Pruebas | 70 tests Node (≈ 1.260 líneas) + 5 escenarios E2E de navegador + simulador de balance + fuzz de mazmorras |
+| Pruebas | 72 tests Node (≈ 1.290 líneas) + 5 escenarios E2E de navegador + simulador de balance + fuzz de mazmorras |
 | Contenido | **623 entradas** en 37 tipos (≈ 390 KB de JSON) · **1.818 claves de texto** en ES y en EN (paridad exacta) |
 | Documentación | 11 documentos (`docs/`) |
 
@@ -18,7 +18,7 @@ Versión: 0.1.0 (vertical slice) · Rama de trabajo: `claude/affectionate-rubin-
 | Sistema | Evidencia |
 |---|---|
 | Estadísticas con orden flat→inc→more, grupos con tope, condiciones por etiqueta | `stats.test.js` (5) |
-| Pipeline de daño único, armadura/resistencias, críticos, escudos, DoT, control con DR, reacciones | `combat.test.js` (8) |
+| Pipeline de daño único, armadura/resistencias, críticos, escudos, DoT, control con DR, reacciones, daño plano sin doble escalado | `combat.test.js` (9) |
 | Habilidades 100 % datos (17 ops de efecto), canalizados, cargas, parches de talentos/únicos | `combat/character/items.test.js` |
 | **Cadencia** (Tríada/Unísono/Reprise), **Escucha**, **Voces Prestadas** | `bosses.test.js`, `character.test.js`, sesión |
 | IA: 16 *brains* distintos + jefe de fases, LOD, percepción, token de ataque | `enemies.test.js` (3): todos atacan, roles distintos, telégrafos justos |
@@ -26,14 +26,14 @@ Versión: 0.1.0 (vertical slice) · Rama de trabajo: `claude/affectionate-rubin-
 | 2 jefes de historia artesanales (Brannoch, Ildra) + 4 guardianes/jefes de mazmorra | `bosses.test.js` (5) + `story.test.js` |
 | Loot con afijos y presupuesto de poder, rarezas, uniques con reglas, comparador consciente de build, filtro | `items.test.js` (6) |
 | Crafteo con Estabilidad, desmontar, mejoras con fallo, recetas, consumibles/pociones con eficiencia decreciente | `items.test.js` |
-| Personaje, 3 árboles de 52 nodos con transformadores, respec con coste | `character.test.js` (9) |
+| Personaje, 3 árboles de 70 nodos (69 comprables) con transformadores y presupuesto de puntos menor que el árbol, respec con coste | `character.test.js` (10) |
 | Terraza Baja: terreno, navegación, POIs, spawns alcanzables | `zone.test.js`, `nav.test.js` (7) |
 | Mazmorras procedurales: 3 familias, grafo→rejilla→validación, 750 semillas válidas | `fuzz:dungeons` (0 fallos; 137 ms/semilla de media) |
 | 3 tipos de puzle con solución verificada y pistas por capas | `puzzles.test.js` (4) |
 | Misiones por objetivos, diálogos con memoria, puertas por objetivos, secretos, eventos dinámicos, códice | `story.test.js` (7), `session.test.js` (6) |
 | Guardado versionado con checksum, copias rotativas, recuperación, migraciones, import/export | `save.test.js` (8) |
 | Integridad de datos y localización ES/EN | `validate-data` (0 errores, 0 avisos), `check-ui-keys` |
-| Equilibrio: modelo central + simulador + guardia | `npm run balance` (7 avisos conocidos, ver BALANCE §7) |
+| Equilibrio: modelo central + simulador (mediana de 5 equipos, dispersión entre clases) + guardia | `npm run balance` → `BALANCE GUARD: OK` (ver BALANCE §5 y §7) |
 
 ## 3. Construido y verificado en navegador (E2E + capturas) 🖥
 Arranque, menú, nueva partida/continuar, HUD, combate con telégrafos y números de daño, clic para mover/atacar, WASD, interacción con E y por clic, diálogos, tienda, inventario, forja, alijo, talentos (lienzo con zoom/arrastre + lista accesible), habilidades/Voces, misiones, mapa con niebla de guerra, códice, ajustes (remapeo), pausa, Gráfico de Resonancia (mazmorras por código de semilla), portal ↔ mazmorra de las 3 familias, jefes con barra, audio con señal real. Las capturas se generan con `npm run e2e` (`artifacts/shots/`).
@@ -54,8 +54,8 @@ Arranque, menú, nueva partida/continuar, HUD, combate con telégrafos y número
 | # | Asunto | Impacto | Plan |
 |---|---|---|---|
 | 1 | **Cantidad de contenido**: 26 arquetipos de enemigo jugables (objetivo del brief: 40–60), 12 únicos, 3 familias de mazmorra, 5 misiones, 1 zona | medio | la producción masiva está habilitada por datos ([CONTENT_GUIDE.md](CONTENT_GUIDE.md)); priorizado tras validar el *feel* |
-| 2 | Árboles de talentos de 52 nodos por clase (objetivo: «grandes») | medio | ampliar ramas de especialización con el generador de plantillas |
-| 3 | Balance: 7 avisos del simulador (Campanario L5, equipo de nivel alto, Prismante élite con rotación genérica) | bajo/medio | ver BALANCE §7 |
+| 2 | Árboles de talentos de 69 nodos comprables por clase (objetivo del brief: «grandes», p. ej. 150+); el presupuesto (44 puntos a L60) ya obliga a elegir | medio | añadir alas exteriores y ramas de especialización (misma técnica: nodos `tmpl` + notables con texto) |
+| 3 | Balance: guardia en verde, pero el bot no flanquea (tough alto para Prismante/Rondador), la dispersión entre clases a L10 está en el límite (2,37× de 2,4×) y no se mide AoE multiobjetivo | bajo/medio | ver BALANCE §7: bot con flanqueo y escenarios multiobjetivo |
 | 4 | Profesiones: recolección + recetas + alquimia funcionan; **sin árbol de profesión propio** (solo `minProf`) | bajo | añadir progresión de profesión |
 | 5 | Telemetría: buffer local opt-in con descarga JSON desde Opciones; **solo vive durante la sesión** (no se persiste entre partidas) | bajo | persistir en `localStorage` con tope |
 | 6 | Sin multijugador/replays (la sim determinista lo permite) | n/a | fuera de alcance |

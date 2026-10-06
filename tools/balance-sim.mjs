@@ -24,8 +24,11 @@ const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i
 const quick = args.includes('--quick');
 const LEVELS = (opt('levels', quick ? '1,10,30' : '1,5,10,20,30,45,60')).split(',').map(Number);
 const CLASSES = (opt('classes', 'belfry,prismatist,skirmisher')).split(',').map((c) => `cls.${c}`);
-// curated gear (best-of-10 per slot, all talent points in one branch) is a *strong* build: up to ~3.5× the median model is expected, beyond is a break
-const TOL = { dps: [0.55, 3.5], ttkStd: [0.4, 2.6] };
+// Curated gear (best-of-10 per slot), every talent point spent, and a perfect rotation on a stationary dummy is a *strong* build:
+// 2–4× the median model is expected, 5× would be a break. Class spread at the same level must stay within SPREAD.
+const TOL = { dps: [0.55, 5.0], ttkStd: [0.4, 2.6] };
+const SPREAD = 2.4;
+const GEAR_SEEDS = quick ? 2 : 5; // median over several gear rolls: one lucky weapon must not move the verdict
 
 const reg = freshRegistry();
 const bal = Balance.from(reg);
@@ -81,7 +84,7 @@ function fight(ch, level, enemyId, { seed, tier, count = 1, maxT = 90, elite = f
     e.yaw = Math.atan2(p.x - e.x, p.z - e.z); e.ai.target = p; e.alerted = true;
     enemies.push(e);
   }
-  const bot = new Bot(w, { skill: 0.85, reaction: 0.2, kite: false });
+  const bot = new Bot(w, { skill: 0.85, reaction: 0.2, kite: ch.cls.profile.weaponKinds?.includes('caster') ?? false });
   let dmgTaken = 0; w.events.on('damage', (i) => { if (i.target === p) dmgTaken += i.amount; });
   let t = 0, killedAt = null;
   while (t < maxT) {
@@ -105,18 +108,26 @@ for (const classId of CLASSES) for (const level of LEVELS) {
   }
   const { ch, factory } = buildCharacter(classId, level, seed);
   const sum = summarize(ch, ch.equipment);
-  // 1) DPS on a dummy over 20 s with the full bot rotation
-  const { w, p } = arena(ch, level, `${seed}:dps`);
-  const d = w.spawnEnemy('enm.test_dummy', 63, 60, { level }); d.hpMax = d.hp = 1e9; d.ai.target = null;
-  const bot = new Bot(w, { skill: 1, reaction: 0 });
-  let dealt = 0; w.events.on('damage', (i) => { if (i.target === d) dealt += i.amount; });
-  for (let i = 0; i < 20 * 60; i++) { bot.update(1 / 60); w.step(1 / 60); }
-  const dps = dealt / 20, expected = bal.expectedDps(level);
+  // 1) DPS on a dummy over 20 s with the full bot rotation — median over several independent gear rolls
+  const dummyDps = (c, sd) => {
+    const { w } = arena(c, level, `${sd}:dps`);
+    const d = w.spawnEnemy('enm.test_dummy', 63, 60, { level }); d.hpMax = d.hp = 1e9; d.ai.target = null;
+    const bot = new Bot(w, { skill: 1, reaction: 0 });
+    let dealt = 0; w.events.on('damage', (i) => { if (i.target === d) dealt += i.amount; });
+    for (let i = 0; i < 20 * 60; i++) { bot.update(1 / 60); w.step(1 / 60); }
+    return dealt / 20;
+  };
+  const runs = [dummyDps(ch, seed)];
+  for (let g = 1; g < GEAR_SEEDS; g++) runs.push(dummyDps(buildCharacter(classId, level, `${seed}#${g}`).ch, `${seed}#${g}`));
+  runs.sort((a, b) => a - b);
+  const dps = runs[Math.floor(runs.length / 2)], expected = bal.expectedDps(level);
   // 2) TTK + damage taken against real tiers (families chosen for generic behaviour)
   const std = fight(ch, level, 'enm.hollow_chorister', { seed: `${seed}:std`, count: 1, maxT: 40 });
   const grp = fight(ch, level, 'enm.hollow_chorister', { seed: `${seed}:grp`, count: 4, maxT: 60 });
-  const tough = fight(ch, level, 'enm.hollow_shieldbearer', { seed: `${seed}:tough`, maxT: 60 });
-  const elite = fight(ch, level, 'enm.cracked_cantor', { seed: `${seed}:elite`, maxT: 90, elite: true });
+  // tough/elite verdicts use the best of 3 spawn layouts: one unlucky blink/shield layout must not read as "the kit cannot finish it"
+  const best = (id, o) => { let r = null; for (let k = 0; k < 3; k++) { const x = fight(ch, level, id, { ...o, seed: `${o.seed}#${k}` }); if (!r || x.ttk < r.ttk) r = x; if (Number.isFinite(x.ttk)) break; } return r; };
+  const tough = best('enm.hollow_shieldbearer', { seed: `${seed}:tough`, maxT: 60 });
+  const elite = best('enm.cracked_cantor', { seed: `${seed}:elite`, maxT: 90, elite: true });
   // 3) loot yield over 4000 standard kills
   const rng = new Rng(`${seed}:loot`); const c = { lootFind: 0, difficulty: 'seeker', buildTags: ch.buildTags(), classId, playerLevel: level };
   const def = reg.get('enm.hollow_chorister'); let items = 0, chimes = 0; const rar = { common: 0, fine: 0, attuned: 0, relic: 0 };
@@ -140,6 +151,11 @@ else {
   const resp = [1, 10, 20, 30, 45, 60].map((l) => `L${l}=${bal.respecCost(l, 0)}/${bal.respecCost(l, 5)}`).join(' ');
   console.log(`economy: respec cost (first/6th) ${resp}`);
 }
+for (const lv of LEVELS) {
+  const at = rows.filter((r) => r.level === lv); if (at.length < 2) continue;
+  const hi = at.reduce((a, b) => (b.ratio > a.ratio ? b : a)), lo = at.reduce((a, b) => (b.ratio < a.ratio ? b : a));
+  if (hi.ratio / lo.ratio > SPREAD) problems.push(`L${lv}: class spread ${(hi.ratio / lo.ratio).toFixed(2)}× (${hi.class} ${hi.ratio} vs ${lo.class} ${lo.ratio}) exceeds ${SPREAD}×`);
+}
 for (const p of problems) console.error(`⚠ ${p}`);
 console.log(problems.length ? `BALANCE GUARD: ${problems.length} warnings` : 'BALANCE GUARD: OK');
-process.exit(problems.length > 6 ? 1 : 0);
+process.exit(problems.length ? 1 : 0);

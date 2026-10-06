@@ -181,3 +181,15 @@ test('compare: multi-dimensional verdict and transforms flag', () => {
   const u = factory.makeUnique(new Rng('u'), 'unq.dissonant_lash', 12);
   assert.equal(compareItem(ch, factory, u, 'weapon').transforms, true);
 });
+
+test('talent budget: 1 point per level to the soft cap, then fewer — and the trees are bigger than the budget', () => {
+  assert.equal(bal.talentPointsAt(1), 0);
+  assert.equal(bal.talentPointsAt(20), 19);
+  assert.equal(bal.talentPointsAt(30), 29);
+  assert.ok(bal.talentPointsAt(60) < 59, 'late levels earn fewer than 1 point per level');
+  for (const classId of ['cls.belfry', 'cls.prismatist', 'cls.skirmisher']) {
+    const { ch } = setup(classId, 60);
+    const purchasable = ch.tree.nodes.size - 1;
+    assert.ok(purchasable > bal.talentPointsAt(60) + 10, `${classId}: tree (${purchasable} nodes) must outgrow the level-60 budget so builds stay a choice`);
+  }
+});

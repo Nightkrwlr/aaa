@@ -34,6 +34,21 @@ test('damage numbers are deterministic for equal seeds', () => {
   assert.equal(out[0], out[1]);
 });
 
+test('flat added damage is scaled once (by item level at roll time), not again by the damage model', () => {
+  const w = makeWorld();
+  const p = makePlayer(w);
+  const eff = { type: 'physical', coef: 1, scaling: 'weapon' };
+  const noCrit = { noCrit: true };
+  const a = w.dmg.roll(p, eff, ['attack'], w.rng, noCrit).amount;
+  p.stats.add('test', [{ stat: 'damageFlat', op: 'flat', value: 50 }]);
+  const b = w.dmg.roll(p, eff, ['attack'], w.rng, noCrit).amount;
+  const mult = p.stats.get('damage', ['attack', 'physical'], p.flags ?? undefined);
+  assert.ok(Math.abs((b - a) - 50 * mult) < 1e-6, `flat +50 must add exactly 50 × damage multiplier (got ${(b - a).toFixed(2)})`);
+  // coefficient below 1 scales the added flat proportionally
+  const half = w.dmg.roll(p, { ...eff, coef: 0.5 }, ['attack'], w.rng, noCrit).amount;
+  assert.ok(Math.abs(half - (a / 2 + 25 * mult)) < 1e-6);
+});
+
 test('armor and resistance mitigate; vulnerable multiplies; floor of 1', () => {
   const w = makeWorld();
   const d = w.spawnEnemy('enm.test_dummy', 40, 42);

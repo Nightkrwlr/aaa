@@ -35,7 +35,7 @@
       {
        "op": "damage",
        "type": "physical",
-       "coef": 0.5,
+       "coef": 0.45,
        "scaling": "weapon"
       }
      ]
@@ -51,7 +51,7 @@
       {
        "op": "damage",
        "type": "physical",
-       "coef": 0.5,
+       "coef": 0.45,
        "scaling": "weapon"
       }
      ]

@@ -37,7 +37,7 @@ export class Character {
 
   // ───────────────────────── level / xp
   get cap() { return this.bal.levelCap; }
-  talentPoints() { return this.level - 1 + this.talentBonus - this.tree.spent(this.alloc); }
+  talentPoints() { return this.bal.talentPointsAt(this.level) + this.talentBonus - this.tree.spent(this.alloc); }
 
   grantXp(world, entity, amount) {
     if (this.level >= this.cap) return 0;

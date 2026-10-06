@@ -13,7 +13,7 @@
 | `npm run build` | build de producción en `dist/` (herramientas de desarrollo **excluidas**, sin sourcemaps) |
 | `npm run build:dev` | build con herramientas de desarrollo y sourcemaps |
 | `npm run preview` | sirve `dist/` |
-| `npm test` | 70 tests de simulación (Node, sin navegador) |
+| `npm test` | 72 tests de simulación (Node, sin navegador) |
 | `npm run validate` | validador de datos (referencias, esquemas, locales ES/EN, zona, mazmorras de muestra) |
 | `node tools/check-ui-keys.mjs` | toda clave `t('…')` del cliente existe en ES y EN |
 | `npm run fuzz:dungeons -- 250` | generación masiva de mazmorras: 250 semillas × 3 familias (= 750), tamaños y objetivos rotados; cada semilla debe validar (`--ascii` dibuja el mapa) |
@@ -53,7 +53,7 @@ Desactivada por defecto. Con `settings.telemetry = true` la sesión acumula **lo
 ```
 data/        contenido JSON (ver DATA_SCHEMA.md)          locales/{es,en}/   textos
 src/core/    Rng, EventBus, Registry, i18n, logger        src/sim/           simulación pura (Node-safe)
-src/client/  render, UI, input, audio, bucle              tests/             node:test (70)
+src/client/  render, UI, input, audio, bucle              tests/             node:test (72)
 tools/       validate, balance, fuzz, e2e, shot           docs/              documentación
 public/      (vacío: sin assets)                          artifacts/         (git-ignored) capturas E2E
 ```

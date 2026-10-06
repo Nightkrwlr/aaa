@@ -11,7 +11,7 @@ export function summarize(character, equipment, alloc = character.alloc) {
   const type = eff.type ?? 'physical';
   const qt = tags.includes(type) ? tags : [...tags, type];
   const base = ((eff.scaling === 'spell' ? weapon?.spell : weapon?.hit) ?? bal.weaponHit(character.level) * (character.cls.profile.unarmedMult ?? 0.6)) * (eff.coef ?? 1);
-  const flat = sb.get('damageFlat', qt) * 0.01 * bal.P(character.level);
+  const flat = sb.get('damageFlat', qt) * Math.min(1, eff.coef ?? 1); // same rule as DamageModel.roll: level scaling is already inside the rolled value
   const dmg = (base + flat) * sb.get('damage', qt);
   const cc = Math.min(0.75, sb.get('critChance', qt));
   const speed = sb.get('actionSpeed', tags);

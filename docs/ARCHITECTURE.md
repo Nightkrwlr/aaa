@@ -72,4 +72,4 @@ Presets: low / medium / high / ultra (sombras, resolución, partículas, luces, 
 - Modelos: `data/models/models.json` describe plantilla + parámetros; para arte real basta un cargador glTF que respete los nombres de articulación (`rig` en `models.js`).
 
 ## 9. Qué se probó y cómo
-Ver [QA_CHECKLIST.md](QA_CHECKLIST.md) y [TDD.md](TDD.md). Resumen: 70 tests de node (combate, estadísticas, IA, jefes, ítems, personajes, puzles, zona, sesión, historia completa, guardado), fuzz de mazmorras (750 semillas válidas), validador de datos (referencias cruzadas + paridad ES/EN), simulador de balance, y E2E con navegador real (`tools/e2e/*.mjs`).
+Ver [QA_CHECKLIST.md](QA_CHECKLIST.md) y [TDD.md](TDD.md). Resumen: 72 tests de node (combate, estadísticas, IA, jefes, ítems, personajes, puzles, zona, sesión, historia completa, guardado), fuzz de mazmorras (750 semillas válidas), validador de datos (referencias cruzadas + paridad ES/EN), simulador de balance, y E2E con navegador real (`tools/e2e/*.mjs`).

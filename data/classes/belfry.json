@@ -36,7 +36,7 @@
      "heavy"
     ],
     "unarmedMult": 0.6,
-    "dmg": 1.2
+    "dmg": 1.0
    },
    "loadout": {
     "primary": "abl.belfry.clapper",

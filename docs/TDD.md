@@ -59,7 +59,7 @@ Sobre de versión + checksum + escritura atómica + copias rotativas + migracion
 ## 10. Estrategia de pruebas
 | Capa | Herramienta | Qué demuestra |
 |---|---|---|
-| Unitarias/sistema | `npm test` (70 tests Node) | stats, daño, estados, IA, jefes, ítems, personaje, puzles, zona, sesión, historia completa, guardado |
+| Unitarias/sistema | `npm test` (72 tests Node) | stats, daño, estados, IA, jefes, ítems, personaje, puzles, zona, sesión, historia completa, guardado |
 | Contenido | `npm run validate` | toda referencia resuelve, esquemas, ES/EN en paridad (0 errores/0 avisos) |
 | UI/i18n | `tools/check-ui-keys.mjs` | cada clave `t('…')` del cliente existe |
 | Generación | `npm run fuzz:dungeons` | 750 semillas (3 familias × tamaños × objetivos) generan mazmorras **válidas** |

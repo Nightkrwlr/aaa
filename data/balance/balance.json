@@ -282,6 +282,10 @@
     "activeRadius": 38,
     "sleepRadius": 55,
     "aiTickFar": 0.5
+   },
+   "talents": {
+    "fullUntil": 30,
+    "perLevelAfter": 0.5
    }
   }
  ]

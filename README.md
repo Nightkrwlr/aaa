@@ -52,5 +52,5 @@ npm run e2e                     # navegador real (Chromium + Playwright)
 ```
 data/ locales/      contenido JSON y textos          src/sim/    simulación pura (Node-safe, determinista)
 src/client/         render 3D, UI, input, audio      src/core/   Rng, eventos, registro, i18n, logger
-tests/ tools/       70 tests, validador, balance, fuzz, E2E        docs/  documentación
+tests/ tools/       72 tests, validador, balance, fuzz, E2E        docs/  documentación
 ```

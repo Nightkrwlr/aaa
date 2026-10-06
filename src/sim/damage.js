@@ -43,7 +43,8 @@ export class DamageModel {
     const qtags = tags.includes(type) ? tags : [...tags, type];
     let base = this.scalingBase(source, eff);
     const flatAdded = source.stats.get('damageFlat', qtags, source.flags ?? undefined) ?? 0;
-    if (flatAdded) base += flatAdded * Math.min(1, eff.coef ?? 1) * (source.team === 'player' ? this.bal.P(source.level ?? 1) / 4 : 1);
+    // flat added damage is already scaled by the item level when the affix is rolled (Balance.affixFlatScale) — never scale it twice
+    if (flatAdded) base += flatAdded * Math.min(1, eff.coef ?? 1);
     const flags = opts.flags ?? source.flags ?? EMPTY_FLAGS;
     let out = base * source.stats.get('damage', qtags, flags);
     if (opts.extraMore) out *= 1 + opts.extraMore;
