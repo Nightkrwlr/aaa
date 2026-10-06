@@ -1,6 +1,8 @@
 /**
  * Input — mouse+keyboard (click-to-move or WASD), gamepad and touch all write the same player.cmd.
  * Bindings are data (remappable). The sim never sees devices.
+ * Touch lives in src/client/mobile/touchControls.js: it drives `touch` (virtual stick), `virtual` (attack/aim state) and
+ * calls tapAt() for world taps; Input only exposes the shared state and the aim helper.
  */
 export const DEFAULT_BINDINGS = {
   moveUp: ['KeyW'], moveDown: ['KeyS'], moveLeft: ['KeyA'], moveRight: ['KeyD'],
@@ -16,7 +18,9 @@ export class Input {
     this.canvas = canvas; this.settings = settings; this.hooks = hooks;
     this.keys = new Set(); this.mouse = { x: 0, y: 0, down: [false, false, false], over: true };
     this.pad = { active: false, ax: 0, az: 0, bx: 0, bz: 0 };
-    this.touch = { move: null, aim: null, stickId: null, startX: 0, startY: 0, dx: 0, dz: 0 };
+    this.touch = { stickId: null, dx: 0, dz: 0 };            // virtual move stick (written by TouchControls)
+    this.virtual = { primary: false, aimDir: null, autoAimUntil: 0 }; // touch attack / aim state
+    this.touchMode = false; this.touchStick = true;          // touchStick: ground taps do not move the player (the stick does)
     this.locked = false; // UI modal open
     this.hoverUid = null; this.hoverGround = { x: 0, y: 0, z: 0 };
     this.bind();
@@ -52,32 +56,32 @@ export class Input {
       for (const a of this.actionsFor(`Mouse${e.button + 1}`)) this.hooks.onAction?.(a, false, e);
     });
     c.addEventListener('wheel', (e) => { e.preventDefault(); this.hooks.onWheel?.(e.deltaY); }, { passive: false });
-    // touch: left half = virtual stick (move), right half taps = aim/attack
-    c.addEventListener('touchstart', (e) => this.#touch(e, 'start'), { passive: false });
-    c.addEventListener('touchmove', (e) => this.#touch(e, 'move'), { passive: false });
-    c.addEventListener('touchend', (e) => this.#touch(e, 'end'), { passive: false });
-    c.addEventListener('touchcancel', (e) => this.#touch(e, 'end'), { passive: false });
+    // touch input is handled by TouchControls (pointer events on the stick/buttons and on the canvas)
+    c.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
   }
 
   actionsFor(code) { const out = []; for (const [a, codes] of Object.entries(this.bindings)) if (codes.includes(code)) out.push(a); return out; }
 
-  #touch(e, phase) {
-    e.preventDefault();
-    this.touchMode = true;
+  /** world tap from the touch layer: behaves like a quick left click at that screen point */
+  tapAt(clientX, clientY) {
     const r = this.canvas.getBoundingClientRect();
-    for (const t of e.changedTouches) {
-      const x = t.clientX - r.left, y = t.clientY - r.top;
-      if (phase === 'start') {
-        if (x < r.width * 0.5 && this.touch.stickId === null) { this.touch.stickId = t.identifier; this.touch.startX = x; this.touch.startY = y; this.touch.dx = this.touch.dz = 0; }
-        else { this.mouse.x = x; this.mouse.y = y; this.hooks.onMouse?.(0, true, this.mouse); this.mouse.down[0] = true; this.touch.aimId = t.identifier; }
-      } else if (phase === 'move') {
-        if (t.identifier === this.touch.stickId) { const dx = (x - this.touch.startX) / 60, dy = (y - this.touch.startY) / 60; const l = Math.hypot(dx, dy); this.touch.dx = l > 1 ? dx / l : dx; this.touch.dz = l > 1 ? dy / l : dy; if (l < 0.18) { this.touch.dx = this.touch.dz = 0; } }
-        else if (t.identifier === this.touch.aimId) { this.mouse.x = x; this.mouse.y = y; }
-      } else {
-        if (t.identifier === this.touch.stickId) { this.touch.stickId = null; this.touch.dx = this.touch.dz = 0; }
-        if (t.identifier === this.touch.aimId) { this.mouse.down[0] = false; this.hooks.onMouse?.(0, false, this.mouse); this.touch.aimId = null; }
-      }
-    }
+    this.mouse.x = clientX - r.left; this.mouse.y = clientY - r.top;
+    this.touchMode = true;
+    this.mouse.down[0] = true; this.hooks.onMouse?.(0, true, this.mouse);
+    setTimeout(() => { this.mouse.down[0] = false; this.hooks.onMouse?.(0, false, this.mouse); }, 90);
+  }
+
+  /**
+   * Where should a touch attack/skill point? Explicit aim-drag wins; otherwise the nearest hostile (so a thumb never has to
+   * aim); otherwise straight ahead. Returns null when touch is not asking for an aim (the mouse path is used then).
+   */
+  touchAim(p, w) {
+    const v = this.virtual;
+    if (v.aimDir) return { x: p.x + v.aimDir.x * 9, z: p.z + v.aimDir.z * 9 };
+    if (!(v.primary || performance.now() < v.autoAimUntil)) return null;
+    const near = w.nearestHostile(p, 11, (e) => !e.untargetable);
+    if (near) return { x: near.x, z: near.z };
+    return { x: p.x + Math.sin(p.yaw) * 6, z: p.z + Math.cos(p.yaw) * 6 };
   }
 
   /** gamepad polling → this.pad + discrete actions (rising edge) */

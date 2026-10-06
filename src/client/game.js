@@ -283,6 +283,7 @@ export class Game {
       this.pendingInteract = null; this.pendingPickup = null;
       if (this.input.keys.has('ShiftLeft')) { this.leftMode = 'stand'; c.holdPrimary = true; c.attackTarget = null; c.moveTo = null; }
       else if (this.hoverEnemy) { this.leftMode = 'attack'; c.attackTarget = this.hoverEnemy.uid; c.moveTo = null; }
+      else if (this.input.touchMode && this.input.touchStick) return; // touch + stick: a tap on bare ground must not walk the player there
       else { this.leftMode = 'move'; c.attackTarget = null; c.moveTo = { x: this.input.hoverGround.x, z: this.input.hoverGround.z }; }
     }
   }
@@ -328,6 +329,8 @@ export class Game {
   // ───────────────────────── frame
   #frame(now) {
     if (!this.running) return;
+    const cap = this.fpsCap ?? this.settings.fpsCap; // 0 = uncapped; the mobile PerfGovernor / battery saver sets 30
+    if (cap > 0 && !this.fixedDt && now - this.last < 1000 / cap - 2) { requestAnimationFrame((n) => this.#frame(n)); return; }
     const raw = this.fixedDt ?? Math.min(0.1, (now - this.last) / 1000); this.last = now;
     this.fps += (1 / Math.max(raw, 1e-4) - this.fps) * 0.05;
     this.time += raw;
@@ -418,6 +421,7 @@ export class Game {
     const p = this.player, c = p.cmd, inp = this.input, w = this.world;
     if (p.dead) return;
     c.aim = { x: ground.x, z: ground.z };
+    const ta = inp.touchAim(p, w); if (ta) c.aim = ta; // touch: aim-drag / nearest hostile / facing (never the stale finger position)
     const f = this.rig.forwardDir(), r = this.rig.rightDir();
     let ix = 0, iz = 0;
     if (inp.isDown('moveUp')) iz += 1; if (inp.isDown('moveDown')) iz -= 1;
@@ -433,8 +437,8 @@ export class Game {
     else if (inp.pad.active && c.moveDir && !inp.mouse.down[0]) c.aim = { x: p.x + c.moveDir.x * 6, z: p.z + c.moveDir.z * 6 };
     if (this.leftHeld && this.leftMode === 'move' && !this.hoverEnemy && !this.pendingInteract && !this.pendingPickup) c.moveTo = { x: ground.x, z: ground.z };
     if (this.leftHeld && this.leftMode === 'attack' && this.hoverEnemy) c.attackTarget = this.hoverEnemy.uid;
-    if (inp.pad.primary) c.holdPrimary = true; else if (!this.leftHeld || this.leftMode !== 'stand') c.holdPrimary = this.leftMode === 'stand' && this.leftHeld;
-    if (this.settings.scheme === 'wasd') { c.holdPrimary = this.leftHeld || !!inp.pad.primary; if (this.leftHeld) { c.attackTarget = null; if (!this.pendingInteract && !this.pendingPickup) c.moveTo = null; } }
+    if (inp.pad.primary || inp.virtual.primary) c.holdPrimary = true; else if (!this.leftHeld || this.leftMode !== 'stand') c.holdPrimary = this.leftMode === 'stand' && this.leftHeld;
+    if (this.settings.scheme === 'wasd') { c.holdPrimary = this.leftHeld || !!inp.pad.primary || inp.virtual.primary; if (this.leftHeld) { c.attackTarget = null; if (!this.pendingInteract && !this.pendingPickup) c.moveTo = null; } }
     if ((inp.pad.active || inp.touchMode) && this.settings.aimAssist > 0) {
       const near = w.nearestHostile(p, 9, (e) => !e.untargetable);
       if (near && Math.hypot(near.x - c.aim.x, near.z - c.aim.z) < 5 * this.settings.aimAssist + 2) c.aim = { x: near.x, z: near.z };

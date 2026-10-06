@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="78%"><stop offset="0" stop-color="#24344d"/><stop offset=".55" stop-color="#101722"/><stop offset="1" stop-color="#06090e"/></radialGradient>
+    <radialGradient id="glow" cx="50%" cy="54%" r="50%"><stop offset="0" stop-color="#7fe3ff" stop-opacity=".42"/><stop offset="1" stop-color="#7fe3ff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="bronze" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#fff0c0"/><stop offset=".42" stop-color="#e0aa50"/><stop offset="1" stop-color="#7a5320"/></linearGradient>
+    <linearGradient id="bronzeD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8923e"/><stop offset="1" stop-color="#5a3a14"/></linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bff3ff"/><stop offset="1" stop-color="#3fb8e0"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="282" r="210" fill="url(#glow)"/>
+  <g id="art">
+    <!-- resonance rings (broken: the outer ones are cut) -->
+    <g fill="none" stroke="url(#ring)" stroke-linecap="round">
+      <path d="M 355.2 337.6 A 156 156 0 0 0 355.2 226.4" stroke-width="11" opacity=".95"/>
+      <path d="M 156.8 226.4 A 156 156 0 0 0 156.8 337.6" stroke-width="11" opacity=".95"/>
+      <path d="M 392.7 355.4 A 196 196 0 0 0 392.7 208.6" stroke-width="9" opacity=".7"/>
+      <path d="M 119.3 208.6 A 196 196 0 0 0 119.3 355.4" stroke-width="9" opacity=".7"/>
+      <path d="M 428 370 A 236 236 0 0 0 428 194" stroke-width="7" opacity=".42" stroke-dasharray="70 40"/>
+      <path d="M 84 194 A 236 236 0 0 0 84 370" stroke-width="7" opacity=".42" stroke-dasharray="70 40"/>
+    </g>
+    <!-- bell -->
+    <rect x="249" y="84" width="14" height="28" rx="6" fill="url(#bronzeD)"/>
+    <circle cx="256" cy="84" r="15" fill="url(#bronze)" stroke="#5a3a14" stroke-width="4"/>
+    <path d="M256 108c-46 0-72 38-74 96c-2 52-12 84-38 106v18h224v-18c-26-22-36-54-38-106c-2-58-28-96-74-96z" fill="url(#bronze)" stroke="#5a3a14" stroke-width="6" stroke-linejoin="round"/>
+    <rect x="132" y="322" width="248" height="30" rx="15" fill="url(#bronzeD)" stroke="#4a2e10" stroke-width="5"/>
+    <path d="M214 150c-14 32-18 72-16 112" fill="none" stroke="#fff6d8" stroke-width="13" stroke-linecap="round" opacity=".55"/>
+    <path d="M262 116l-11 36 15 26-13 32 11 30" fill="none" stroke="#2c1a08" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="249" y="350" width="14" height="18" fill="url(#bronzeD)"/>
+    <circle cx="256" cy="378" r="26" fill="url(#bronze)" stroke="#5a3a14" stroke-width="5"/>
+  </g>
+</svg>

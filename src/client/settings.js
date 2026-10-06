@@ -11,6 +11,8 @@ export const DEFAULTS = {
   scheme: 'click', bindings: {}, aimAssist: 0.35, autoPickupMaterials: true, lootFilter: 'normal',
   puzzleHints: true, hudTracker: true, hudScale: 1, cameraZoom: 32, difficulty: 'seeker', telemetry: false,
   showFps: false,
+  // touch / mobile (see src/client/mobile): touchControls auto|on|off · touchScheme stick|tap · perfMode auto|saver|smooth
+  touchControls: 'auto', touchScheme: 'stick', touchScale: 1, touchOpacity: 0.9, leftHanded: false, listenToggle: true, showAimLine: true, perfMode: 'auto', perfInit: false,
 };
 
 export function loadSettings() {
