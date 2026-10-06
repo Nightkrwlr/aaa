@@ -111,7 +111,7 @@ export const BRAINS = {
         ai.dashStart = null;
         const planned = ai.cfg.chargeDist ?? 9;
         if (travelled < planned * 0.8 && ai.cfg.crashStun !== 0) {
-          w.status.apply(e, 'st.stunned', { duration: ai.cfg.crashStun ?? 2.2 });
+          w.status.apply(e, e.tier === 'boss' || e.tier === 'miniboss' ? 'st.staggered' : 'st.stunned', { duration: ai.cfg.crashStun ?? 2.2 });
           w.status.apply(e, 'st.vulnerable', { duration: ai.cfg.crashStun ?? 2.2 });
           w.events.emit('ai:crash', { entity: e });
         }

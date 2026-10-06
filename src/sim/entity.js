@@ -47,8 +47,8 @@ export function createEnemy(world, defId, x, z, opts = {}) {
   e.stats.add('base', [
     { stat: 'life', op: 'base', value: life },
     { stat: 'armor', op: 'base', value: bal.expectedArmor(level) * (def.armor ?? 0.4) },
-    { stat: 'moveSpeed', op: 'set', value: (def.speed ?? 4.5) * (opts.speedMult ?? 1) * (bal.d.enemyDamage.difficultyAi[diff] ?? 1) ** 0.5 },
-    { stat: 'critChance', op: 'set', value: 0.04 },
+    { stat: 'moveSpeed', op: 'base', value: (def.speed ?? 4.5) * (opts.speedMult ?? 1) * (bal.d.enemyDamage.difficultyAi[diff] ?? 1) ** 0.5 },
+    { stat: 'critChance', op: 'base', value: -0.01 },
   ]);
   for (const [t, r] of Object.entries(def.resist ?? {})) e.stats.add('base', { stat: `res.${t}`, op: 'flat', value: r });
   for (const m of def.mods ?? []) e.stats.add('def', m);

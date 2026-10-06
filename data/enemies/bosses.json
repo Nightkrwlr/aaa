@@ -1,0 +1,343 @@
+{
+ "kind": "enemy",
+ "items": [
+  {
+   "id": "boss.brannoch",
+   "family": "fam.hollow",
+   "tier": "miniboss",
+   "role": [
+    "boss",
+    "bruiser"
+   ],
+   "model": "mdl.brannoch",
+   "radius": 1.1,
+   "height": 3.6,
+   "speed": 4.2,
+   "hpMult": 1.0,
+   "armor": 1.4,
+   "kbResist": 0.85,
+   "bossId": "boss.brannoch",
+   "ai": {
+    "brain": "boss",
+    "aggroRange": 24,
+    "noLeash": true,
+    "chargeDist": 14,
+    "crashStun": 3.6
+   },
+   "abilities": [
+    "abl.brannoch.maul",
+    "abl.brannoch.stomp",
+    "abl.brannoch.quake",
+    "abl.brannoch.charge",
+    "abl.brannoch.rubble",
+    "abl.brannoch.call"
+   ],
+   "boss": {
+    "style": "melee",
+    "crash": true,
+    "arena": {
+     "x": 48,
+     "z": 6,
+     "r": 16
+    },
+    "reach": 3.6,
+    "phases": [
+     {
+      "id": "p1",
+      "at": 1.0,
+      "gap": [
+       0.7,
+       1.5
+      ],
+      "rotation": [
+       {
+        "ab": "abl.brannoch.maul",
+        "w": 4,
+        "maxD": 4.6
+       },
+       {
+        "ab": "abl.brannoch.stomp",
+        "w": 2,
+        "maxD": 5.4
+       },
+       {
+        "ab": "abl.brannoch.quake",
+        "w": 3,
+        "minD": 3.5
+       },
+       {
+        "ab": "abl.brannoch.charge",
+        "w": 3,
+        "minD": 7
+       }
+      ]
+     },
+     {
+      "id": "p2",
+      "at": 0.55,
+      "gap": [
+       0.5,
+       1.1
+      ],
+      "enter": {
+       "say": "boss.brannoch.p2",
+       "abilities": [
+        "abl.brannoch.call"
+       ]
+      },
+      "rotation": [
+       {
+        "ab": "abl.brannoch.maul",
+        "w": 3,
+        "maxD": 4.6
+       },
+       {
+        "ab": "abl.brannoch.stomp",
+        "w": 2,
+        "maxD": 5.4
+       },
+       {
+        "ab": "abl.brannoch.quake",
+        "w": 3,
+        "minD": 3.5
+       },
+       {
+        "ab": "abl.brannoch.charge",
+        "w": 3,
+        "minD": 7
+       },
+       {
+        "ab": "abl.brannoch.rubble",
+        "w": 3,
+        "minD": 2
+       }
+      ]
+     }
+    ]
+   },
+   "voice": "voc.brannoch_quake",
+   "uniqueDrops": [
+    {
+     "id": "unq.brannoch_maul",
+     "chance": 0.4,
+     "firstChance": 1.0
+    }
+   ],
+   "drops": {
+    "materials": [
+     {
+      "id": "mat.quarry_heart",
+      "chance": 1.0
+     },
+     {
+      "id": "mat.brass_scrap",
+      "chance": 1.0,
+      "min": 3,
+      "max": 6
+     },
+     {
+      "id": "mat.hollow_resin",
+      "chance": 1.0,
+      "min": 2,
+      "max": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "boss.ildra",
+   "family": "fam.hollow",
+   "tier": "boss",
+   "role": [
+    "boss",
+    "caster"
+   ],
+   "model": "mdl.ildra",
+   "radius": 0.8,
+   "height": 3.2,
+   "speed": 4.4,
+   "hpMult": 1.0,
+   "armor": 0.4,
+   "kbResist": 1,
+   "bossId": "boss.ildra",
+   "ai": {
+    "brain": "boss",
+    "aggroRange": 26,
+    "noLeash": true
+   },
+   "abilities": [
+    "abl.ildra.pure_note",
+    "abl.ildra.ring_of_voice",
+    "abl.ildra.litany",
+    "abl.ildra.hush_bloom",
+    "abl.ildra.rain_note",
+    "abl.ildra.coda",
+    "abl.ildra.summon",
+    "abl.ildra.summon_cantor"
+   ],
+   "boss": {
+    "style": "hover",
+    "arena": {
+     "x": 5,
+     "z": 62,
+     "r": 15
+    },
+    "range": [
+     7,
+     11
+    ],
+    "shield": {
+     "break": "triad"
+    },
+    "phases": [
+     {
+      "id": "p1",
+      "at": 1.0,
+      "gap": [
+       1.0,
+       1.8
+      ],
+      "shield": {
+       "window": 9,
+       "regen": 13
+      },
+      "say": "boss.ildra.p1",
+      "rotation": [
+       {
+        "ab": "abl.ildra.pure_note",
+        "w": 4
+       },
+       {
+        "ab": "abl.ildra.ring_of_voice",
+        "w": 2,
+        "minD": 3
+       },
+       {
+        "ab": "abl.ildra.litany",
+        "w": 2
+       }
+      ],
+      "summons": {
+       "every": 26,
+       "ab": "abl.ildra.summon"
+      }
+     },
+     {
+      "id": "p2",
+      "at": 0.62,
+      "gap": [
+       0.9,
+       1.6
+      ],
+      "shield": {
+       "window": 8,
+       "regen": 12
+      },
+      "enter": {
+       "say": "boss.ildra.p2",
+       "abilities": [
+        "abl.ildra.hush_bloom"
+       ]
+      },
+      "rotation": [
+       {
+        "ab": "abl.ildra.pure_note",
+        "w": 3
+       },
+       {
+        "ab": "abl.ildra.ring_of_voice",
+        "w": 2
+       },
+       {
+        "ab": "abl.ildra.litany",
+        "w": 2
+       },
+       {
+        "ab": "abl.ildra.hush_bloom",
+        "w": 1
+       }
+      ],
+      "summons": {
+       "every": 24,
+       "ab": "abl.ildra.summon_cantor"
+      }
+     },
+     {
+      "id": "p3",
+      "at": 0.3,
+      "gap": [
+       0.7,
+       1.3
+      ],
+      "shield": {
+       "window": 7,
+       "regen": 10
+      },
+      "enter": {
+       "say": "boss.ildra.p3",
+       "abilities": [
+        "abl.ildra.coda"
+       ]
+      },
+      "rotation": [
+       {
+        "ab": "abl.ildra.pure_note",
+        "w": 2
+       },
+       {
+        "ab": "abl.ildra.ring_of_voice",
+        "w": 2
+       },
+       {
+        "ab": "abl.ildra.litany",
+        "w": 1
+       },
+       {
+        "ab": "abl.ildra.coda",
+        "w": 1
+       }
+      ],
+      "hazards": [
+       {
+        "every": 5.2,
+        "ab": "abl.ildra.rain_note"
+       }
+      ],
+      "summons": {
+       "every": 28,
+       "ab": "abl.ildra.summon"
+      }
+     }
+    ]
+   },
+   "voice": "voc.ildra_note",
+   "uniqueDrops": [
+    {
+     "id": "unq.ildra_lens",
+     "chance": 0.35,
+     "firstChance": 1.0
+    }
+   ],
+   "drops": {
+    "materials": [
+     {
+      "id": "mat.precentor_larynx",
+      "chance": 1.0
+     },
+     {
+      "id": "mat.serrane_filament",
+      "chance": 1.0,
+      "min": 2,
+      "max": 3
+     },
+     {
+      "id": "mat.hollow_resin",
+      "chance": 1.0,
+      "min": 3,
+      "max": 5
+     }
+    ]
+   }
+  }
+ ]
+}

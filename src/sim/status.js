@@ -57,12 +57,12 @@ export class StatusSystem {
     const def = this.def(statusId);
     const now = this.now();
     if (target.statusImmune?.has(statusId)) { this.stats.resisted++; return null; }
-    if (def.behavior === 'control' && target.ccImmune?.includes?.(def.ctl?.[0]) ) { this.stats.resisted++; return null; }
+    if (!def.bypassImmune && def.behavior === 'control' && target.ccImmune?.includes?.(def.ctl?.[0]) ) { this.stats.resisted++; return null; }
     if ((target.imm[statusId] ?? 0) > now) { this.stats.resisted++; return null; }
     for (const s of target.st) if (s.def.immuneTags && def.tags?.some((t) => s.def.immuneTags.includes(t))) { this.stats.resisted++; return null; }
 
     let duration = (o.duration ?? def.duration) * (o.durMult ?? 1);
-    if (def.behavior === 'control' || statusId === 'st.slowed') duration *= 1 - (target.ccResist ?? 0);
+    if (!def.bypassImmune && (def.behavior === 'control' || statusId === 'st.slowed')) duration *= 1 - (target.ccResist ?? 0);
     if (def.dr) {
       const mem = target.drMem[statusId];
       if (mem && mem.until > now) {

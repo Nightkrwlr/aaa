@@ -304,7 +304,7 @@
   {
    "id": "stat.moveSpeed",
    "key": "moveSpeed",
-   "base": 5.6,
+   "base": 0,
    "min": 0,
    "max": 8.96,
    "fmt": "float",

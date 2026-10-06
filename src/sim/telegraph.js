@@ -21,7 +21,7 @@ export function telegraphOf(ab, caster, cast) {
   }
   if (!shape) return null;
   const x = at === 'aim' ? cast.aimX : caster.x, z = at === 'aim' ? cast.aimZ : caster.z;
-  return { shape, x, z, yaw: cast.yaw, benign, hush: !!t?.hush };
+  return { shape, x, z, yaw: cast.yaw + (eff?.yawOffset ?? 0), benign, hush: !!t?.hush };
 }
 
 /** would the telegraphed shape hit this entity right now? */

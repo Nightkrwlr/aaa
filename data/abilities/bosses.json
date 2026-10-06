@@ -1,0 +1,735 @@
+{
+ "kind": "ability",
+ "items": [
+  {
+   "id": "abl.brannoch.maul",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "melee"
+   ],
+   "aim": "direction",
+   "range": 4.0,
+   "cooldown": 1.2,
+   "cast": {
+    "windup": 0.85,
+    "recover": 0.6,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "arc",
+     "radius": 4.0,
+     "angle": 130,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "scaling": "pct",
+       "pct": 0.12
+      },
+      {
+       "op": "knockback",
+       "force": 2.4
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "heavy_hit",
+    "anim": "swing_h"
+   }
+  },
+  {
+   "id": "abl.brannoch.stomp",
+   "slotType": "enemy",
+   "tags": [
+    "attack"
+   ],
+   "aim": "self",
+   "range": 5.4,
+   "cooldown": 5,
+   "cast": {
+    "windup": 1.0,
+    "recover": 0.7,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 5.4,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "scaling": "pct",
+       "pct": 0.11
+      },
+      {
+       "op": "status",
+       "id": "st.slowed",
+       "duration": 2.5
+      },
+      {
+       "op": "knockback",
+       "force": 1.8
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "stomp",
+    "anim": "slam"
+   }
+  },
+  {
+   "id": "abl.brannoch.quake",
+   "slotType": "enemy",
+   "tags": [
+    "attack"
+   ],
+   "aim": "direction",
+   "range": 12,
+   "cooldown": 6,
+   "cast": {
+    "windup": 1.15,
+    "recover": 0.8,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "line",
+     "length": 12,
+     "width": 3.2,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "scaling": "pct",
+       "pct": 0.14
+      },
+      {
+       "op": "status",
+       "id": "st.stunned",
+       "duration": 0.7
+      },
+      {
+       "op": "knockback",
+       "force": 1.6
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "quake",
+    "anim": "slam"
+   },
+   "telegraph": {
+    "shape": "line",
+    "length": 12,
+    "width": 3.2
+   }
+  },
+  {
+   "id": "abl.brannoch.charge",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "melee",
+    "dash",
+    "charge"
+   ],
+   "aim": "direction",
+   "range": 15,
+   "cooldown": 9,
+   "cast": {
+    "windup": 1.25,
+    "recover": 0.9,
+    "track": 0.4,
+    "turnRate": 4
+   },
+   "effects": [
+    {
+     "op": "dash",
+     "distance": 14,
+     "duration": 0.8,
+     "radius": 1.7,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "scaling": "pct",
+       "pct": 0.15
+      },
+      {
+       "op": "knockback",
+       "force": 3.2
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "charge",
+    "anim": "charge"
+   },
+   "telegraph": {
+    "shape": "line",
+    "length": 14,
+    "width": 3.4
+   }
+  },
+  {
+   "id": "abl.brannoch.rubble",
+   "slotType": "enemy",
+   "tags": [
+    "attack"
+   ],
+   "aim": "ground",
+   "range": 14,
+   "cooldown": 8,
+   "cast": {
+    "windup": 0.9,
+    "recover": 0.7,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 2.4,
+     "origin": "aim",
+     "trigger": "timer",
+     "arm": 1.15,
+     "scatter": {
+      "count": 6,
+      "r": 6,
+      "minR": 0
+     },
+     "stagger": 0.12,
+     "kind": "rubble",
+     "color": "danger",
+     "duration": 3,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "scaling": "pct",
+       "pct": 0.1
+      },
+      {
+       "op": "knockback",
+       "force": 1.5
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "rubble",
+    "anim": "howl"
+   }
+  },
+  {
+   "id": "abl.brannoch.call",
+   "slotType": "enemy",
+   "tags": [
+    "summon"
+   ],
+   "aim": "self",
+   "range": 10,
+   "cooldown": 0,
+   "cast": {
+    "windup": 1.1,
+    "recover": 0.5,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "summon",
+     "enemy": "enm.hollow_chorister",
+     "count": 3,
+     "max": 6,
+     "radius": 4,
+     "tier": "standard",
+     "ring": true
+    },
+    {
+     "op": "buff",
+     "status": "st.enraged",
+     "duration": 10
+    }
+   ],
+   "fx": {
+    "sfx": "wail",
+    "anim": "wail"
+   }
+  },
+  {
+   "id": "abl.ildra.pure_note",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "projectile",
+    "sonic"
+   ],
+   "aim": "direction",
+   "range": 22,
+   "cooldown": 1.6,
+   "cast": {
+    "windup": 0.55,
+    "recover": 0.4,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "projectile",
+     "speed": 19,
+     "radius": 0.45,
+     "range": 22,
+     "model": "note",
+     "color": "#d7c4ff",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.085
+      },
+      {
+       "op": "status",
+       "id": "st.dissonance",
+       "chance": 0.3
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "note",
+    "anim": "cast"
+   },
+   "telegraph": {
+    "shape": "line",
+    "length": 22,
+    "width": 0.9
+   }
+  },
+  {
+   "id": "abl.ildra.ring_of_voice",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "area",
+    "sonic"
+   ],
+   "aim": "self",
+   "range": 14,
+   "cooldown": 7,
+   "cast": {
+    "windup": 1.0,
+    "recover": 0.6,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 0.5,
+     "radius": 4.5,
+     "angle": 290,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.1
+      },
+      {
+       "op": "knockback",
+       "force": 1.4
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 3.5,
+     "radius": 9.0,
+     "angle": 290,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "delay": 0.3,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.1
+      },
+      {
+       "op": "knockback",
+       "force": 1.4
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 8.0,
+     "radius": 13.5,
+     "angle": 290,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "delay": 0.6,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.1
+      },
+      {
+       "op": "knockback",
+       "force": 1.4
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "ring_big",
+    "anim": "toll"
+   },
+   "telegraph": {
+    "shape": "ringarc",
+    "radius": 13.5,
+    "inner": 0.5,
+    "angle": 290
+   }
+  },
+  {
+   "id": "abl.ildra.litany",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "projectile",
+    "sonic"
+   ],
+   "aim": "direction",
+   "range": 16,
+   "cooldown": 6,
+   "cast": {
+    "windup": 0.95,
+    "recover": 0.6,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "projectile",
+     "count": 7,
+     "spread": 84,
+     "speed": 13,
+     "radius": 0.4,
+     "range": 16,
+     "model": "note",
+     "color": "#b79cff",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.065
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "chord_enemy",
+    "anim": "wail"
+   },
+   "telegraph": {
+    "shape": "arc",
+    "radius": 16,
+    "angle": 90
+   }
+  },
+  {
+   "id": "abl.ildra.hush_bloom",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "zone",
+    "silence"
+   ],
+   "aim": "ground",
+   "range": 16,
+   "cooldown": 16,
+   "cast": {
+    "windup": 1.1,
+    "recover": 0.6,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 4.4,
+     "origin": "aim",
+     "duration": 9,
+     "tick": 0.5,
+     "kind": "hush",
+     "color": "hush",
+     "auraStatus": "st.hush",
+     "scatter": {
+      "count": 3,
+      "r": 9,
+      "minR": 3
+     },
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.012
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "howl",
+    "anim": "wail"
+   }
+  },
+  {
+   "id": "abl.ildra.rain_note",
+   "slotType": "enemy",
+   "tags": [
+    "attack"
+   ],
+   "aim": "ground",
+   "range": 20,
+   "cooldown": 0,
+   "cast": {
+    "windup": 0.0,
+    "recover": 0.0,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 1.9,
+     "origin": "aim",
+     "trigger": "timer",
+     "arm": 1.1,
+     "scatter": {
+      "count": 5,
+      "r": 9,
+      "minR": 0
+     },
+     "stagger": 0.22,
+     "kind": "rain",
+     "color": "danger",
+     "duration": 3,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.085
+      },
+      {
+       "op": "knockback",
+       "force": 1.2
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "note",
+    "anim": "wail"
+   }
+  },
+  {
+   "id": "abl.ildra.coda",
+   "slotType": "enemy",
+   "tags": [
+    "attack",
+    "area",
+    "sonic"
+   ],
+   "aim": "self",
+   "range": 17,
+   "cooldown": 18,
+   "cast": {
+    "windup": 1.4,
+    "recover": 0.9,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 0.5,
+     "radius": 5,
+     "angle": 280,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.12
+      },
+      {
+       "op": "knockback",
+       "force": 2
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 4,
+     "radius": 9,
+     "angle": 280,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "delay": 0.5,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.12
+      },
+      {
+       "op": "knockback",
+       "force": 2
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 8,
+     "radius": 13,
+     "angle": 280,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "delay": 1.0,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.12
+      },
+      {
+       "op": "knockback",
+       "force": 2
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "ringarc",
+     "inner": 12,
+     "radius": 17,
+     "angle": 280,
+     "yawOffset": 3.14159,
+     "origin": "self",
+     "delay": 1.5,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "scaling": "pct",
+       "pct": 0.12
+      },
+      {
+       "op": "knockback",
+       "force": 2
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "coda",
+    "anim": "toll"
+   },
+   "telegraph": {
+    "shape": "ringarc",
+    "radius": 17,
+    "inner": 0.5,
+    "angle": 280
+   }
+  },
+  {
+   "id": "abl.ildra.summon",
+   "slotType": "enemy",
+   "tags": [
+    "summon"
+   ],
+   "aim": "self",
+   "range": 12,
+   "cooldown": 0,
+   "cast": {
+    "windup": 1.2,
+    "recover": 0.5,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "summon",
+     "enemy": "enm.hollow_chorister",
+     "count": 2,
+     "max": 5,
+     "radius": 5,
+     "tier": "standard",
+     "ring": true
+    }
+   ],
+   "fx": {
+    "sfx": "wail",
+    "anim": "summon"
+   }
+  },
+  {
+   "id": "abl.ildra.summon_cantor",
+   "slotType": "enemy",
+   "tags": [
+    "summon"
+   ],
+   "aim": "self",
+   "range": 12,
+   "cooldown": 0,
+   "cast": {
+    "windup": 1.2,
+    "recover": 0.5,
+    "track": 0.5
+   },
+   "effects": [
+    {
+     "op": "summon",
+     "enemy": "enm.cracked_cantor",
+     "count": 1,
+     "max": 2,
+     "radius": 6,
+     "tier": "standard",
+     "ring": true
+    }
+   ],
+   "fx": {
+    "sfx": "wail",
+    "anim": "summon"
+   }
+  }
+ ]
+}

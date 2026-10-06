@@ -18,6 +18,13 @@ export function shapeContains(s, ox, oz, yaw, ex, ez, er = 0) {
       const d = Math.hypot(ex - ox, ez - oz);
       return d + er >= (s.inner ?? 0) && d - er <= s.radius;
     }
+    case 'ringarc': { // ring segment: everything in the ring EXCEPT a gap centred behind `yaw`
+      const d = Math.hypot(ex - ox, ez - oz);
+      if (!(d + er >= (s.inner ?? 0) && d - er <= s.radius)) return false;
+      const a = Math.atan2(ex - ox, ez - oz);
+      let diff = Math.abs(((a - yaw) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI); // 0 = in front, PI = behind
+      return diff <= (s.angle ?? 300) * DEG / 2;
+    }
     default: return false;
   }
 }

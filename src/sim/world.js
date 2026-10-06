@@ -18,6 +18,7 @@ import { AiSystem } from './ai/ai.js';
 import { PlayerController } from './controller.js';
 import { ListenSystem } from './listen.js';
 import { TriggerSystem } from './triggers.js';
+import { ElitesSystem, pickEliteMods } from './director/elites.js';
 
 const log = logger('world');
 export const STEP = 1 / 60;
@@ -91,6 +92,7 @@ export class World {
     this.listen = new ListenSystem(this);
     this.echoes = [];
     this.triggers = new TriggerSystem(this);
+    this.elites = new ElitesSystem(this);
     this._tmp = [];
   }
 
@@ -103,8 +105,9 @@ export class World {
   }
 
   spawnEnemy(defId, x, z, opts = {}) {
-    const e = createEnemy(this, defId, x, z, opts);
+    const e = createEnemy(this, defId, x, z, opts.elite || opts.eliteMods ? { ...opts, tier: 'elite' } : opts);
     if (opts.yaw !== undefined) e.yaw = opts.yaw;
+    if (opts.elite || opts.eliteMods) this.elites.apply(e, opts.eliteMods ?? pickEliteMods(this.registry, e.def, e.level, this.rng, opts.eliteCount));
     this.add(e);
     this.events.emit('entity:spawned', { entity: e });
     return e;
@@ -155,6 +158,7 @@ export class World {
     for (const e of this.entities) if (!e.removed) this.hash.insert(e);
 
     this.controller.update(dt);
+    this.elites.update();
     this.ai.update(dt);
     this.listen.tick();
     for (const e of this.entities) {
@@ -330,6 +334,7 @@ export class World {
     e.dead = true; e.hp = 0; e.deathTime = this.time;
     e.intent = null; e.cast = null; e.dash = null;
     if (e.def?.deathAbility) this.abilities.castImmediate(e, e.def.deathAbility);
+    if (e.boss) this.events.emit('boss:defeated', { entity: e, killer });
     this.events.emit('entity:died', { entity: e, killer, info });
     if (e.team === 'enemy') {
       this.metrics.kills++;

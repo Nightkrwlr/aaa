@@ -5,6 +5,7 @@
  */
 import { angleTo, dist2, turnToward, clamp } from '../../core/math.js';
 import { BRAINS } from './brains.js';
+import './boss.js';
 import { logger } from '../../core/logger.js';
 import * as tk from './toolkit.js';
 

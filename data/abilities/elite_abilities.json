@@ -1,0 +1,177 @@
+{
+ "kind": "ability",
+ "items": [
+  {
+   "id": "abl.elm.hush_field",
+   "slotType": "elite",
+   "tags": [
+    "zone",
+    "silence"
+   ],
+   "aim": "self",
+   "telegraph": {
+    "shape": "circle",
+    "radius": 4.4,
+    "hush": true
+   },
+   "cast": {
+    "windup": 0.9,
+    "recover": 0.2
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 4.4,
+     "origin": "self",
+     "duration": 6,
+     "tick": 0.5,
+     "kind": "hush",
+     "color": "hush",
+     "auraStatus": "st.hush",
+     "hit": []
+    }
+   ]
+  },
+  {
+   "id": "abl.elm.twin_call",
+   "slotType": "elite",
+   "tags": [
+    "summon"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0.5,
+    "recover": 0.3
+   },
+   "effects": [
+    {
+     "op": "summon",
+     "enemyFromSelf": true,
+     "count": 2,
+     "max": 2,
+     "radius": 2.4,
+     "hpMult": 0.3,
+     "damageMult": 0.6,
+     "lifetime": 60,
+     "tier": "minion"
+    }
+   ]
+  },
+  {
+   "id": "abl.elm.blink_strike",
+   "slotType": "elite",
+   "tags": [
+    "attack"
+   ],
+   "aim": "ground",
+   "range": 14,
+   "telegraph": {
+    "shape": "circle",
+    "radius": 2.6,
+    "at": "aim"
+   },
+   "cast": {
+    "windup": 0.9,
+    "recover": 0.4
+   },
+   "effects": [
+    {
+     "op": "blink",
+     "distance": 12,
+     "toTarget": true,
+     "onArrive": [
+      {
+       "op": "area",
+       "shape": "circle",
+       "radius": 2.6,
+       "origin": "self",
+       "hit": [
+        {
+         "op": "damage",
+         "type": "physical",
+         "scaling": "pct",
+         "pct": 0.08
+        },
+        {
+         "op": "knockback",
+         "force": 1.4
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "abl.elm.warcry",
+   "slotType": "elite",
+   "tags": [
+    "buff"
+   ],
+   "aim": "self",
+   "telegraph": {
+    "shape": "circle",
+    "radius": 9
+   },
+   "cast": {
+    "windup": 0.8,
+    "recover": 0.3
+   },
+   "effects": [
+    {
+     "op": "buff",
+     "target": "allies",
+     "radius": 9,
+     "status": "st.enraged",
+     "duration": 6
+    }
+   ]
+  },
+  {
+   "id": "abl.elm.mines",
+   "slotType": "elite",
+   "tags": [
+    "trap"
+   ],
+   "aim": "ground",
+   "range": 12,
+   "telegraph": {
+    "shape": "circle",
+    "radius": 1.6,
+    "at": "aim"
+   },
+   "cast": {
+    "windup": 0.5,
+    "recover": 0.3
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 1.6,
+     "origin": "aim",
+     "duration": 16,
+     "arm": 0.8,
+     "trigger": "proximity",
+     "once": true,
+     "kind": "snare",
+     "max": 3,
+     "color": "danger",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "fire",
+       "scaling": "pct",
+       "pct": 0.09
+      },
+      {
+       "op": "knockback",
+       "force": 1.8
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

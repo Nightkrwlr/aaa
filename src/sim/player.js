@@ -28,7 +28,7 @@ export function classMods(world, cls, level) {
   const mods = [
     { stat: 'life', op: 'base', value: b.playerBaseLife(level) * p.life },
     { stat: 'armor', op: 'base', value: b.expectedArmor(level) * 0.4 * p.armor },
-    { stat: 'moveSpeed', op: 'set', value: p.moveSpeed },
+    { stat: 'moveSpeed', op: 'base', value: p.moveSpeed },
   ];
   for (const [t, v] of Object.entries(p.res ?? {})) mods.push({ stat: `res.${t}`, op: 'flat', value: v });
   return mods;

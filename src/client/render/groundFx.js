@@ -6,7 +6,7 @@ import * as THREE from 'three';
  * danger red · benefit green · silence violet · interactive gold · echo cyan.
  */
 export const FX_COLORS = { danger: '#ff4a3a', benign: '#6dff9a', hush: '#b79cff', gold: '#ffd27a', echo: '#7fe3ff', sonic: '#7fe3ff', fire: '#ff8a3a', frost: '#9fe8ff', toxic: '#9ad13a', physical: '#e8dcc0', shock: '#ffe34a' };
-const KIND = { circle: 0, arc: 1, line: 2, ring: 3 };
+const KIND = { circle: 0, arc: 1, line: 2, ring: 3, ringarc: 4 };
 
 const VERT = `varying vec2 vP; uniform float uExtent;
 void main(){ vP = position.xy * uExtent; vec4 mv = modelViewMatrix * vec4(position,1.0); gl_Position = projectionMatrix * mv; }`;
@@ -16,7 +16,9 @@ float sdf(vec2 p, out float fill){
   if (uKind < 0.5) { float d = length(p); fill = d / uR; return d - uR; }
   if (uKind < 1.5) { float d = length(p); float a = abs(atan(p.x, p.y)); float inside = step(a, uAng*0.5); fill = d / uR; float e = max(d - uR, (a - uAng*0.5) * d * 0.9); return e; }
   if (uKind < 2.5) { fill = p.y / uL; float ex = abs(p.x) - uW*0.5; float ey = max(-p.y, p.y - uL); return max(ex, ey); }
-  float d = length(p); fill = (d - uInner) / max(uR - uInner, 0.001); return max(d - uR, uInner - d);
+  float d = length(p); fill = (d - uInner) / max(uR - uInner, 0.001); float e = max(d - uR, uInner - d);
+  if (uKind > 3.5) { float a = abs(atan(p.x, p.y)); e = max(e, (a - uAng*0.5) * d * 0.9); }
+  return e;
 }
 void main(){
   float fill; float e = sdf(vP, fill);

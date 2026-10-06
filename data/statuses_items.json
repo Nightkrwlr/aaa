@@ -150,6 +150,44 @@
      "value": 0.6
     }
    ]
+  },
+  {
+   "id": "st.staggered",
+   "behavior": "control",
+   "ctl": [
+    "stunned"
+   ],
+   "duration": 3.5,
+   "stacking": "refresh",
+   "bypassImmune": true,
+   "tags": [
+    "control",
+    "stagger"
+   ],
+   "color": "#ffd27a",
+   "icon": "stars",
+   "vfx": "stars"
+  },
+  {
+   "id": "st.boss_vuln",
+   "behavior": "debuff",
+   "duration": 8,
+   "stacking": "refresh",
+   "tags": [
+    "curse"
+   ],
+   "color": "#ff9aa8",
+   "icon": "target",
+   "vfx": "ring",
+   "bypassImmune": true,
+   "mods": [
+    {
+     "stat": "damageTaken",
+     "op": "more",
+     "group": "vulnerable",
+     "value": 0.25
+    }
+   ]
   }
  ]
 }

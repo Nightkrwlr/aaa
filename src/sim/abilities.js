@@ -239,6 +239,7 @@ export class AbilityRuntime {
   origin(e, c, eff) {
     switch (eff.origin ?? 'self') {
       case 'aim': return { x: c.aimX, z: c.aimZ };
+      case 'point': return { x: eff.px, z: eff.pz };
       case 'target': { const t = c.targetUid ? this.w.get(c.targetUid) : e.ai?.target; return t ? { x: t.x, z: t.z } : { x: c.aimX, z: c.aimZ }; }
       default: return { x: e.x, z: e.z };
     }
@@ -414,7 +415,7 @@ const EFFECTS = {
     const o = c.originOverride && eff.origin === 'aim' ? c.originOverride : rt.origin(e, c, eff);
     const scale = e.team === 'player' ? e.stats.get('areaSize', c.ab.tags, e.flags) * c.areaMult : 1;
     const shape = { kind: eff.shape ?? 'circle', radius: (eff.radius ?? 3) * (eff.noScale ? 1 : scale), angle: eff.angle, length: eff.length ? eff.length * (eff.noScale ? 1 : scale) : undefined, width: eff.width, inner: eff.inner };
-    const yaw = eff.origin === 'aim' && !eff.faceCaster ? c.yaw : c.yaw;
+    const yaw = c.yaw + (eff.yawOffset ?? 0);
     const targets = w.queryCircle(o.x, o.z, shapeReach(shape), (t) => w.isHostile(e, t) && !t.untargetable && !(t.hidden && !t.revealedHit));
     w.events.emit('area:hit', { entity: e, ab: c.ab, shape, x: o.x, z: o.z, yaw, effect: eff, color: eff.color });
     let n = 0;
@@ -465,6 +466,7 @@ const EFFECTS = {
     const d = Math.min(eff.distance ?? 7, d0 || (eff.distance ?? 7));
     const yaw = c.yaw;
     let tx = e.x + Math.sin(yaw) * d, tz = e.z + Math.cos(yaw) * d;
+    if (eff.toTarget) { tx = c.aimX - Math.sin(yaw) * 1.8; tz = c.aimZ - Math.cos(yaw) * 1.8; }
     // step back until walkable & visible
     for (let k = 0; k < 14 && (!w.nav.isWalkable(tx, tz) || !w.nav.los(e.x, e.z, tx, tz, 0.3)); k++) { tx -= Math.sin(yaw) * 0.5; tz -= Math.cos(yaw) * 0.5; }
     const from = { x: e.x, z: e.z };
@@ -511,7 +513,7 @@ const EFFECTS = {
       const r = eff.radius ?? 2;
       let x = e.x + Math.sin(ang) * r, z = e.z + Math.cos(ang) * r;
       if (!w.nav.isWalkable(x, z)) { const n = w.nav.nearestWalkable(x, z, 5); if (!n) continue; x = n.x; z = n.z; }
-      const s = w.spawnEnemy(eff.enemy, x, z, { level: e.level, team: e.team, tier: eff.tier, hpMult: eff.hpMult, damageMult: eff.damageMult });
+      const s = w.spawnEnemy(eff.enemyFromSelf ? e.id : eff.enemy, x, z, { level: e.level, team: e.team, tier: eff.tier, hpMult: eff.hpMult, damageMult: eff.damageMult });
       s.owner = e; s.summonSrc = c.ab.id; s.lifetimeEnd = eff.lifetime ? w.time + eff.lifetime : 0;
       s.noLoot = true; s.noXp = true;
       if (eff.inheritStats) s.stats.add('inherit', [{ stat: 'damage', op: 'more', group: 'summon', value: e.stats.get('summonDamage') || 0 }]);
@@ -522,6 +524,14 @@ const EFFECTS = {
   zone(rt, e, c, eff) {
     const o = c.originOverride && eff.origin === 'aim' ? c.originOverride : rt.origin(e, c, eff);
     const scale = e.team === 'player' ? e.stats.get('areaSize', c.ab.tags, e.flags) * c.areaMult : 1;
+    if (eff.scatter) { // N independent copies scattered around the origin (rubble rain, falling notes…)
+      const { count = 4, r = 5, minR = 0 } = eff.scatter;
+      for (let k = 0; k < count; k++) {
+        const a = rt.w.rng.range(0, Math.PI * 2), d = minR + Math.sqrt(rt.w.rng.next()) * (r - minR);
+        EFFECTS.zone(rt, e, c, { ...eff, scatter: null, origin: 'point', px: o.x + Math.sin(a) * d, pz: o.z + Math.cos(a) * d, arm: (eff.arm ?? 1) + (eff.stagger ?? 0) * k });
+      }
+      return;
+    }
     const z = {
       uid: rt.projUid++, x: o.x, z: o.z, yaw: c.yaw, shape: eff.shape ?? 'circle', radius: (eff.radius ?? 3) * scale, angle: eff.angle, inner: eff.inner, length: eff.length, width: eff.width,
       duration: eff.duration ?? 4, t: 0, tick: eff.tick ?? 0.5, tickT: eff.firstTick ?? (eff.tick ?? 0.5), team: e.team, source: e, ab: c.ab, cast: c, hit: eff.hit ?? [], allyHit: eff.allyHit ?? null,
@@ -583,8 +593,16 @@ AbilityRuntime.prototype.updateZones = function updateZones(dt) {
       w.zones.splice(i, 1);
       continue;
     }
-    if (z.t < z.arm) continue;
     const shape = { kind: z.shape, radius: z.radius, angle: z.angle, inner: z.inner, length: z.length, width: z.width };
+    if (z.t < z.arm && z.trigger !== 'timer') continue;
+    if (z.trigger === 'timer') {
+      if (z.t >= z.arm) {
+        for (const t of w.queryCircle(z.x, z.z, z.radius + 1, (o) => w.isHostile({ team: z.team }, o) && !o.untargetable && !o.dead)) if (shapeContains(shape, z.x, z.z, z.yaw, t.x, t.z, t.radius)) this.applyHit(z.source, z.cast, t, z.hit, { origin: { x: z.x, z: z.z }, extraMore: z.extraMore });
+        w.events.emit('zone:trigger', { zone: z });
+        w.zones.splice(i, 1);
+      }
+      continue;
+    }
     if (z.trigger === 'proximity') {
       const near = w.queryCircle(z.x, z.z, z.radius, (o) => w.isHostile({ team: z.team }, o) && !o.untargetable && !o.hidden);
       if (near.length) {

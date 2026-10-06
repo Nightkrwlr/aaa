@@ -1,0 +1,144 @@
+{
+ "kind": "eliteMod",
+ "items": [
+  {
+   "id": "elm.hush_aura",
+   "weight": 80,
+   "minLevel": 2,
+   "exclusive": [],
+   "color": "#8a6fd0",
+   "hooks": [
+    {
+     "every": 9,
+     "first": 3,
+     "ability": "abl.elm.hush_field"
+    }
+   ]
+  },
+  {
+   "id": "elm.twins",
+   "weight": 60,
+   "minLevel": 3,
+   "exclusive": [
+    "elm.barrier"
+   ],
+   "color": "#ffb36a",
+   "excludeRoles": [
+    "stationary",
+    "boss"
+   ],
+   "hooks": [
+    {
+     "onAggro": true,
+     "ability": "abl.elm.twin_call"
+    }
+   ]
+  },
+  {
+   "id": "elm.barrier",
+   "weight": 70,
+   "minLevel": 2,
+   "exclusive": [
+    "elm.twins"
+   ],
+   "color": "#9fe8ff",
+   "shield": 0.45
+  },
+  {
+   "id": "elm.blinker",
+   "weight": 55,
+   "minLevel": 3,
+   "exclusive": [
+    "elm.mine_layer"
+   ],
+   "color": "#7fe3ff",
+   "excludeRoles": [
+    "stationary",
+    "turret"
+   ],
+   "hooks": [
+    {
+     "every": 7,
+     "first": 4,
+     "ability": "abl.elm.blink_strike",
+     "needsTarget": true
+    }
+   ]
+  },
+  {
+   "id": "elm.absorb",
+   "weight": 50,
+   "minLevel": 3,
+   "exclusive": [],
+   "color": "#e6d98a",
+   "absorbTags": [
+    "projectile"
+   ]
+  },
+  {
+   "id": "elm.warcry",
+   "weight": 70,
+   "minLevel": 2,
+   "exclusive": [],
+   "color": "#ff6a4a",
+   "hooks": [
+    {
+     "every": 11,
+     "first": 5,
+     "ability": "abl.elm.warcry"
+    }
+   ]
+  },
+  {
+   "id": "elm.mine_layer",
+   "weight": 55,
+   "minLevel": 3,
+   "exclusive": [
+    "elm.blinker"
+   ],
+   "color": "#d9a24a",
+   "hooks": [
+    {
+     "every": 6,
+     "first": 2,
+     "ability": "abl.elm.mines",
+     "needsTarget": true
+    }
+   ]
+  },
+  {
+   "id": "elm.frenzy",
+   "weight": 65,
+   "minLevel": 2,
+   "exclusive": [],
+   "color": "#ff4a3a",
+   "lowHp": {
+    "below": 0.4,
+    "status": "st.enraged",
+    "speed": 0.3
+   }
+  },
+  {
+   "id": "elm.swift",
+   "weight": 50,
+   "minLevel": 2,
+   "exclusive": [],
+   "color": "#6dff9a",
+   "mods": [
+    {
+     "stat": "moveSpeed",
+     "op": "more",
+     "group": "elite",
+     "value": 0.25
+    },
+    {
+     "stat": "actionSpeed",
+     "op": "more",
+     "group": "elite",
+     "value": 0.15
+    }
+   ],
+   "hpMult": 0.85
+  }
+ ]
+}
