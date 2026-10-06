@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * mobile-shot — runs a script against the game inside an emulated PHONE/TABLET (touch events, DPR, safe areas, mobile UA).
- * usage: node tools/mobile-shot.mjs [script=tools/e2e/mobile.mjs] [--device pixel7|iphone14|se|tablet] [--portrait] [--query "e2e=1&..."]
+ * usage: node tools/mobile-shot.mjs [script=tools/e2e/mobile.mjs] [--device pixel7|iphone14|se|small|tablet] [--portrait] [--dpr 1] [--query "e2e=1&..."]
+ * --dpr overrides the device pixel ratio (layout is in CSS px, so dpr 1 is a much cheaper software-GL run with the same checks)
  * The script receives { page, cdp, touch, wait, shot, logs, device, size } — `touch` drives real CDP touch events (multi-touch aware):
  *   touch.down(id,x,y) · touch.move(id,x,y) · touch.up(id) · touch.tap(x,y) · touch.drag(id,[x0,y0],[x1,y1],steps)
  */
@@ -29,7 +30,7 @@ const query = opt('query', 'e2e=1&autostart=belfry&seed=mobile&fixed=1&quality=l
 const server = await createServer({ server: { port: 0, host: '127.0.0.1' }, logLevel: 'error' });
 await server.listen(); const port = server.httpServer.address().port;
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl', '--autoplay-policy=no-user-gesture-required'] });
-const ctx = await browser.newContext({ viewport: size, screen: size, deviceScaleFactor: D.dpr, isMobile: true, hasTouch: true, userAgent: D.ua });
+const ctx = await browser.newContext({ viewport: size, screen: size, deviceScaleFactor: Number(opt('dpr', D.dpr)), isMobile: true, hasTouch: true, userAgent: D.ua });
 const page = await ctx.newPage();
 const logs = [];
 page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) logs.push(`[${m.type()}] ${m.text()}`); });
