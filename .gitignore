@@ -9,3 +9,6 @@ coverage/
 /artifacts/
 /tmp/
 *.tmp
+
+# Claude Code agent worktrees (live working copies, never project content)
+/.claude/worktrees/
