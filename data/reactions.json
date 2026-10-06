@@ -1,0 +1,15 @@
+{
+  "kind": "reaction",
+  "items": [
+    { "id": "rx.shatter", "trigger": "hit", "requires": ["st.frozen"], "hitTypes": ["physical", "sonic", "shock"],
+      "effect": { "op": "burst", "coef": 0.9, "type": "sonic", "radius": 2.2, "removeStatus": "st.frozen" }, "icd": 2.0 },
+    { "id": "rx.echo", "trigger": "hit", "requires": ["st.resonant"], "hitTypes": ["sonic"],
+      "effect": { "op": "echoHit", "coef": 0.35, "removeStatus": "st.resonant" }, "icd": 0.8 },
+    { "id": "rx.venom_flame", "trigger": "applied", "status": "st.burning", "requires": ["st.poisoned"],
+      "effect": { "op": "consumeStacks", "status": "st.poisoned", "toBurst": 0.5, "type": "fire", "perStackCoef": 0.25 }, "icd": 3.0 },
+    { "id": "rx.shock_arc", "trigger": "applied", "status": "st.shocked", "requires": ["st.chilled"],
+      "effect": { "op": "chainDamage", "coef": 0.4, "type": "shock", "radius": 4, "targets": 2 }, "icd": 2.5 },
+    { "id": "rx.mark_pierce", "trigger": "crit", "requires": ["st.marked"],
+      "effect": { "op": "refund", "resource": 0.06 }, "icd": 1.5 }
+  ]
+}

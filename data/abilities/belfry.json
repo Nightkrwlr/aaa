@@ -1,0 +1,98 @@
+{
+  "kind": "ability",
+  "items": [
+    {
+      "id": "abl.belfry.clapper", "owner": "cls.belfry", "slotType": "primary", "tags": ["attack", "melee", "area", "sonic", "basic"],
+      "aim": "direction", "range": 3.2,
+      "cast": { "windup": 0.17, "recover": 0.26, "cancelAt": 0.45, "moveFactor": 0.15 },
+      "effects": [{ "op": "area", "shape": "arc", "radius": 3.1, "angle": 120, "origin": "self",
+        "hit": [{ "op": "damage", "type": "sonic", "coef": 1.0, "scaling": "weapon" }, { "op": "knockback", "force": 0.7 }] }],
+      "fx": { "hitstop": 40, "shake": 0.12, "vfx": "arc_sonic", "sfx": "bell_low", "anim": "swing_h" },
+      "icon": { "glyph": "bell", "elem": "sonic" }
+    },
+    {
+      "id": "abl.belfry.peal", "owner": "cls.belfry", "slotType": "skill", "tone": "low", "tags": ["attack", "melee", "area", "sonic", "slam"],
+      "aim": "direction", "range": 3.4, "cost": { "res": "toll", "amount": 30 }, "cooldown": 0.8,
+      "cast": { "windup": 0.34, "recover": 0.38, "cancelAt": 0.6, "moveFactor": 0 },
+      "effects": [{ "op": "area", "shape": "circle", "radius": 3.6, "origin": "aim",
+        "hit": [{ "op": "damage", "type": "sonic", "coef": 2.4, "scaling": "weapon" }, { "op": "status", "id": "st.stunned", "chance": 0.3, "duration": 0.9 }, { "op": "status", "id": "st.dissonance", "chance": 0.35 }, { "op": "knockback", "force": 1.2 }] }],
+      "fx": { "hitstop": 70, "shake": 0.35, "vfx": "shockwave", "sfx": "bell_big", "anim": "slam" },
+      "icon": { "glyph": "bell", "elem": "sonic" }
+    },
+    {
+      "id": "abl.belfry.chain_bell", "owner": "cls.belfry", "slotType": "skill", "tone": "high", "tags": ["attack", "projectile", "physical", "chain_skill"],
+      "aim": "direction", "range": 11, "cost": { "res": "toll", "amount": 12 }, "cooldown": 2.5,
+      "cast": { "windup": 0.2, "recover": 0.28, "cancelAt": 0.5, "moveFactor": 0.3 },
+      "effects": [{ "op": "projectile", "speed": 22, "radius": 0.5, "range": 10.5, "pierce": 3, "model": "chainbell", "color": "#d9a24a",
+        "hit": [{ "op": "damage", "type": "physical", "coef": 1.5, "scaling": "weapon" }, { "op": "pull", "force": 2.6 }, { "op": "status", "id": "st.bleeding", "chance": 0.25, "coef": 1.0 }] }],
+      "fx": { "hitstop": 35, "shake": 0.1, "vfx": "chain", "sfx": "chain_throw", "anim": "throw" },
+      "icon": { "glyph": "chain", "elem": "physical" }
+    },
+    {
+      "id": "abl.belfry.bronze_ward", "owner": "cls.belfry", "slotType": "skill", "tone": "low", "tags": ["buff", "defense", "ward"],
+      "aim": "self", "cost": { "res": "toll", "amount": 25 }, "cooldown": 12,
+      "cast": { "windup": 0.15, "recover": 0.3, "moveFactor": 0.4 },
+      "effects": [{ "op": "buff", "status": "st.brazen_ward", "duration": 6 }, { "op": "shield", "pct": 0.14, "duration": 6 },
+        { "op": "area", "shape": "circle", "radius": 3, "origin": "self", "hit": [{ "op": "knockback", "force": 1.6 }, { "op": "damage", "type": "sonic", "coef": 0.6, "scaling": "weapon" }] }],
+      "fx": { "hitstop": 0, "shake": 0.1, "vfx": "ward", "sfx": "ward_up", "anim": "brace" },
+      "icon": { "glyph": "shield", "elem": "physical" }
+    },
+    {
+      "id": "abl.belfry.slow_toll", "owner": "cls.belfry", "slotType": "skill", "tone": "high", "tags": ["attack", "area", "sonic", "spell", "wave"],
+      "aim": "self", "range": 7, "cost": { "res": "toll", "amount": 22 }, "cooldown": 4,
+      "cast": { "windup": 0.28, "recover": 0.4, "moveFactor": 0.1 },
+      "effects": [
+        { "op": "area", "shape": "ring", "inner": 0, "radius": 2.6, "origin": "self", "hit": [{ "op": "damage", "type": "sonic", "coef": 1.3, "scaling": "weapon" }, { "op": "status", "id": "st.dissonance", "chance": 0.7 }] },
+        { "op": "area", "shape": "ring", "inner": 1.8, "radius": 4.6, "origin": "self", "delay": 0.22, "hit": [{ "op": "damage", "type": "sonic", "coef": 1.3, "scaling": "weapon" }, { "op": "status", "id": "st.dissonance", "chance": 0.7 }] },
+        { "op": "area", "shape": "ring", "inner": 3.8, "radius": 6.8, "origin": "self", "delay": 0.44, "hit": [{ "op": "damage", "type": "sonic", "coef": 1.3, "scaling": "weapon" }, { "op": "status", "id": "st.dissonance", "chance": 0.7 }] }
+      ],
+      "fx": { "hitstop": 25, "shake": 0.2, "vfx": "rings", "sfx": "bell_ring", "anim": "toll" },
+      "icon": { "glyph": "waves", "elem": "sonic" }
+    },
+    {
+      "id": "abl.belfry.iron_charge", "owner": "cls.belfry", "slotType": "skill", "tone": "low", "tags": ["attack", "melee", "movement", "physical", "dash"],
+      "aim": "direction", "range": 8, "cooldown": 7, "gain": { "perCast": 10 },
+      "cast": { "windup": 0.08, "recover": 0.2, "moveFactor": 0, "noSpeedScale": true },
+      "effects": [{ "op": "dash", "distance": 7.5, "duration": 0.3, "radius": 1.3, "hit": [{ "op": "damage", "type": "physical", "coef": 1.6, "scaling": "weapon" }, { "op": "knockback", "force": 2.2 }, { "op": "status", "id": "st.stunned", "chance": 0.5, "duration": 0.6 }] }],
+      "fx": { "hitstop": 50, "shake": 0.3, "vfx": "charge", "sfx": "charge", "anim": "charge" },
+      "icon": { "glyph": "ram", "elem": "physical" }
+    },
+    {
+      "id": "abl.belfry.alarm", "owner": "cls.belfry", "slotType": "skill", "tone": "mid", "tags": ["buff", "area", "taunt", "sonic"],
+      "aim": "self", "range": 8, "cost": { "res": "toll", "amount": 15 }, "cooldown": 14,
+      "cast": { "windup": 0.25, "recover": 0.3, "moveFactor": 0.2 },
+      "effects": [
+        { "op": "area", "shape": "circle", "radius": 8, "origin": "self", "hit": [{ "op": "taunt", "duration": 3 }, { "op": "status", "id": "st.weakened", "duration": 5 }, { "op": "damage", "type": "sonic", "coef": 0.5, "scaling": "weapon" }] },
+        { "op": "buff", "status": "st.empowered", "duration": 8 }
+      ],
+      "fx": { "hitstop": 0, "shake": 0.25, "vfx": "alarm", "sfx": "alarm", "anim": "toll" },
+      "icon": { "glyph": "alarm", "elem": "sonic" }
+    },
+    {
+      "id": "abl.belfry.dueling_bells", "owner": "cls.belfry", "slotType": "skill", "tone": "mid", "tags": ["attack", "area", "sonic", "summon", "orbit", "dot"],
+      "aim": "self", "cost": { "res": "toll", "amount": 30 }, "cooldown": 10,
+      "cast": { "windup": 0.2, "recover": 0.3, "moveFactor": 0.5 },
+      "effects": [{ "op": "zone", "shape": "ring", "inner": 1.5, "radius": 3.1, "origin": "self", "follow": true, "duration": 8, "tick": 0.45, "spin": 3.2, "kind": "orbit_bells", "color": "sonic", "max": 1,
+        "hit": [{ "op": "damage", "type": "sonic", "coef": 0.62, "scaling": "weapon", "noCrit": false }, { "op": "knockback", "force": 0.35 }] }],
+      "fx": { "hitstop": 15, "shake": 0.05, "vfx": "orbit", "sfx": "bells_orbit", "anim": "summon" },
+      "icon": { "glyph": "orbit", "elem": "sonic" }
+    },
+    {
+      "id": "abl.belfry.knell", "owner": "cls.belfry", "slotType": "skill", "tone": "low", "tags": ["attack", "area", "sonic", "ultimate", "slam"],
+      "aim": "self", "range": 7, "cost": { "res": "toll", "amount": 60 }, "cooldown": 18,
+      "cast": { "windup": 0.7, "recover": 0.55, "moveFactor": 0 },
+      "effects": [{ "op": "area", "shape": "circle", "radius": 6.6, "origin": "self",
+        "hit": [{ "op": "damage", "type": "sonic", "coef": 5.2, "scaling": "weapon" }, { "op": "status", "id": "st.stunned", "duration": 1.6 }, { "op": "status", "id": "st.dissonance", "stacks": 2 }, { "op": "knockback", "force": 2.6 }] }],
+      "fx": { "hitstop": 90, "shake": 0.6, "vfx": "knell", "sfx": "knell", "anim": "knell" },
+      "icon": { "glyph": "bellcrown", "elem": "sonic" }
+    },
+    {
+      "id": "abl.belfry.shoulder_roll", "owner": "cls.belfry", "slotType": "dodge", "tags": ["movement", "dodge"], "charges": 1, "cooldown": 1.5,
+      "aim": "direction", "range": 5.2,
+      "cast": { "windup": 0, "recover": 0.12, "noSpeedScale": true },
+      "effects": [{ "op": "dash", "distance": 5.0, "duration": 0.27, "iframes": true }],
+      "fx": { "sfx": "dodge", "anim": "roll" },
+      "icon": { "glyph": "roll", "elem": "physical" }
+    }
+  ]
+}

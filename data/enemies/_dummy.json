@@ -1,0 +1,6 @@
+{
+  "kind": "enemy",
+  "items": [
+    { "id": "enm.test_dummy", "family": "fam.test", "tier": "standard", "role": ["dummy"], "radius": 0.6, "speed": 0, "hpMult": 1, "ai": { "brain": "melee", "aggroRange": 0 }, "abilities": [] }
+  ]
+}

@@ -1,0 +1,413 @@
+{
+ "kind": "statDef",
+ "items": [
+  {
+   "id": "stat.life",
+   "key": "life",
+   "base": 0,
+   "min": 1,
+   "fmt": "int",
+   "group": "defense"
+  },
+  {
+   "id": "stat.lifeRegen",
+   "key": "lifeRegen",
+   "base": 0,
+   "fmt": "per_s",
+   "group": "defense"
+  },
+  {
+   "id": "stat.armor",
+   "key": "armor",
+   "base": 0,
+   "min": 0,
+   "fmt": "int",
+   "group": "defense"
+  },
+  {
+   "id": "stat.res.fire",
+   "key": "res.fire",
+   "base": 0,
+   "max": 0.75,
+   "min": -1,
+   "fmt": "pct",
+   "group": "defense"
+  },
+  {
+   "id": "stat.res.frost",
+   "key": "res.frost",
+   "base": 0,
+   "max": 0.75,
+   "min": -1,
+   "fmt": "pct",
+   "group": "defense"
+  },
+  {
+   "id": "stat.res.shock",
+   "key": "res.shock",
+   "base": 0,
+   "max": 0.75,
+   "min": -1,
+   "fmt": "pct",
+   "group": "defense"
+  },
+  {
+   "id": "stat.res.toxic",
+   "key": "res.toxic",
+   "base": 0,
+   "max": 0.75,
+   "min": -1,
+   "fmt": "pct",
+   "group": "defense"
+  },
+  {
+   "id": "stat.res.sonic",
+   "key": "res.sonic",
+   "base": 0,
+   "max": 0.75,
+   "min": -1,
+   "fmt": "pct",
+   "group": "defense"
+  },
+  {
+   "id": "stat.res.hollow",
+   "key": "res.hollow",
+   "base": 0,
+   "max": 0.75,
+   "min": -1,
+   "fmt": "pct",
+   "group": "defense"
+  },
+  {
+   "id": "stat.damageTaken",
+   "key": "damageTaken",
+   "base": 1,
+   "min": 0.2,
+   "fmt": "mult",
+   "group": "defense"
+  },
+  {
+   "id": "stat.shieldMax",
+   "key": "shieldMax",
+   "base": 0,
+   "min": 0,
+   "fmt": "int",
+   "group": "defense"
+  },
+  {
+   "id": "stat.dodgeCharges",
+   "key": "dodgeCharges",
+   "base": 1,
+   "min": 1,
+   "max": 4,
+   "fmt": "int",
+   "group": "defense"
+  },
+  {
+   "id": "stat.dodgeCooldown",
+   "key": "dodgeCooldown",
+   "base": 1,
+   "min": 0.4,
+   "fmt": "mult",
+   "group": "defense"
+  },
+  {
+   "id": "stat.damage",
+   "key": "damage",
+   "base": 1,
+   "fmt": "mult",
+   "group": "offense"
+  },
+  {
+   "id": "stat.damageFlat",
+   "key": "damageFlat",
+   "base": 0,
+   "fmt": "int",
+   "group": "offense"
+  },
+  {
+   "id": "stat.critChance",
+   "key": "critChance",
+   "base": 0.05,
+   "min": 0,
+   "max": 0.75,
+   "fmt": "pct",
+   "group": "offense"
+  },
+  {
+   "id": "stat.critMult",
+   "key": "critMult",
+   "base": 1.5,
+   "min": 1,
+   "max": 4,
+   "fmt": "mult",
+   "group": "offense"
+  },
+  {
+   "id": "stat.actionSpeed",
+   "key": "actionSpeed",
+   "base": 1,
+   "min": 0.5,
+   "max": 2,
+   "fmt": "mult",
+   "group": "offense"
+  },
+  {
+   "id": "stat.cooldownRate",
+   "key": "cooldownRate",
+   "base": 1,
+   "min": 0.5,
+   "max": 2,
+   "fmt": "mult",
+   "group": "offense"
+  },
+  {
+   "id": "stat.areaSize",
+   "key": "areaSize",
+   "base": 1,
+   "min": 0.5,
+   "max": 2,
+   "fmt": "mult",
+   "group": "offense"
+  },
+  {
+   "id": "stat.projectileSpeed",
+   "key": "projectileSpeed",
+   "base": 1,
+   "min": 0.5,
+   "max": 2.5,
+   "fmt": "mult",
+   "group": "offense"
+  },
+  {
+   "id": "stat.statusChance",
+   "key": "statusChance",
+   "base": 0,
+   "min": 0,
+   "max": 1,
+   "fmt": "pct",
+   "group": "offense"
+  },
+  {
+   "id": "stat.statusPotency",
+   "key": "statusPotency",
+   "base": 1,
+   "min": 0.25,
+   "max": 3,
+   "fmt": "mult",
+   "group": "offense"
+  },
+  {
+   "id": "stat.statusDuration",
+   "key": "statusDuration",
+   "base": 1,
+   "min": 0.25,
+   "max": 3,
+   "fmt": "mult",
+   "group": "offense"
+  },
+  {
+   "id": "stat.pierce",
+   "key": "pierce",
+   "base": 0,
+   "min": 0,
+   "max": 8,
+   "fmt": "int",
+   "group": "offense"
+  },
+  {
+   "id": "stat.chain",
+   "key": "chain",
+   "base": 0,
+   "min": 0,
+   "max": 5,
+   "fmt": "int",
+   "group": "offense"
+  },
+  {
+   "id": "stat.pen",
+   "key": "pen",
+   "base": 0,
+   "min": 0,
+   "max": 0.5,
+   "fmt": "pct",
+   "group": "offense"
+  },
+  {
+   "id": "stat.lifeLeech",
+   "key": "lifeLeech",
+   "base": 0,
+   "min": 0,
+   "max": 0.05,
+   "fmt": "pct",
+   "group": "defense"
+  },
+  {
+   "id": "stat.lifeOnHit",
+   "key": "lifeOnHit",
+   "base": 0,
+   "min": 0,
+   "fmt": "int",
+   "group": "defense"
+  },
+  {
+   "id": "stat.lifeOnKill",
+   "key": "lifeOnKill",
+   "base": 0,
+   "min": 0,
+   "fmt": "int",
+   "group": "defense"
+  },
+  {
+   "id": "stat.thorns",
+   "key": "thorns",
+   "base": 0,
+   "min": 0,
+   "fmt": "int",
+   "group": "defense"
+  },
+  {
+   "id": "stat.resourceMax",
+   "key": "resourceMax",
+   "base": 0,
+   "min": 0,
+   "fmt": "int",
+   "group": "resource"
+  },
+  {
+   "id": "stat.resourceRegen",
+   "key": "resourceRegen",
+   "base": 1,
+   "min": 0,
+   "max": 3,
+   "fmt": "mult",
+   "group": "resource"
+  },
+  {
+   "id": "stat.resourceGain",
+   "key": "resourceGain",
+   "base": 1,
+   "min": 0,
+   "max": 3,
+   "fmt": "mult",
+   "group": "resource"
+  },
+  {
+   "id": "stat.resourceCost",
+   "key": "resourceCost",
+   "base": 1,
+   "min": 0.3,
+   "max": 2,
+   "fmt": "mult",
+   "group": "resource"
+  },
+  {
+   "id": "stat.moveSpeed",
+   "key": "moveSpeed",
+   "base": 5.6,
+   "min": 2,
+   "max": 8.96,
+   "fmt": "float",
+   "group": "utility"
+  },
+  {
+   "id": "stat.listenRange",
+   "key": "listenRange",
+   "base": 14,
+   "min": 6,
+   "max": 30,
+   "fmt": "float",
+   "group": "utility"
+  },
+  {
+   "id": "stat.listenBreath",
+   "key": "listenBreath",
+   "base": 6,
+   "min": 3,
+   "max": 14,
+   "fmt": "float",
+   "group": "utility"
+  },
+  {
+   "id": "stat.pickupRadius",
+   "key": "pickupRadius",
+   "base": 2.6,
+   "min": 1.5,
+   "max": 6,
+   "fmt": "float",
+   "group": "utility"
+  },
+  {
+   "id": "stat.lootFind",
+   "key": "lootFind",
+   "base": 0,
+   "min": 0,
+   "max": 1.0,
+   "fmt": "pct",
+   "group": "utility"
+  },
+  {
+   "id": "stat.chimeFind",
+   "key": "chimeFind",
+   "base": 0,
+   "min": 0,
+   "max": 2.0,
+   "fmt": "pct",
+   "group": "utility"
+  },
+  {
+   "id": "stat.xpGain",
+   "key": "xpGain",
+   "base": 1,
+   "min": 1,
+   "max": 1.5,
+   "fmt": "mult",
+   "group": "utility"
+  },
+  {
+   "id": "stat.potionEfficiency",
+   "key": "potionEfficiency",
+   "base": 1,
+   "min": 0.5,
+   "max": 2,
+   "fmt": "mult",
+   "group": "utility"
+  },
+  {
+   "id": "stat.voiceSlots",
+   "key": "voiceSlots",
+   "base": 1,
+   "min": 1,
+   "max": 2,
+   "fmt": "int",
+   "group": "utility"
+  },
+  {
+   "id": "stat.voiceCharges",
+   "key": "voiceCharges",
+   "base": 0,
+   "min": 0,
+   "max": 4,
+   "fmt": "int",
+   "group": "utility"
+  },
+  {
+   "id": "stat.lifeRegenPct",
+   "key": "lifeRegenPct",
+   "base": 0.004,
+   "min": 0,
+   "max": 0.04,
+   "fmt": "pct_s",
+   "group": "defense"
+  },
+  {
+   "id": "stat.critChanceTaken",
+   "key": "critChanceTaken",
+   "base": 0,
+   "min": 0,
+   "max": 0.5,
+   "fmt": "pct",
+   "group": "offense"
+  }
+ ]
+}

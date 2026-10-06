@@ -1,0 +1,26 @@
+{
+  "name": "sunderchoir",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SUNDERCHOIR — ARPG 3D isométrico data-driven (vertical slice).",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test --test-reporter=spec \"tests/**/*.test.js\"",
+    "test:fast": "node --test \"tests/**/*.test.js\"",
+    "validate": "node tools/validate-data.mjs",
+    "fuzz:dungeons": "node tools/dungeon-fuzz.mjs",
+    "balance": "node tools/balance-sim.mjs",
+    "e2e": "node tools/e2e-smoke.mjs"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1",
+    "vite": "^8.3.3"
+  }
+}
