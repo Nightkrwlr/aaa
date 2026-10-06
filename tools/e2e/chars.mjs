@@ -27,6 +27,7 @@ export default async function ({ page, wait: wallWait, shot, logs }) {
   console.log('art ready:', ready);
   const view = process.env.VIEW ?? 'sheet';
   const zoom = Number(process.env.ZOOM ?? 22);
+  const yaw = process.env.YAW !== undefined ? Number(process.env.YAW) : Math.PI / 4;     // facing: PI/4 = towards the camera, PI/4+1.57 = profile
   const setName = process.env.SET ?? 'all';
   const ids = process.env.IDS ? process.env.IDS.split(',') : (SETS[setName] ?? SETS.all);
   if (!process.env.HUD) await ev(() => { document.getElementById('ui').style.visibility = 'hidden'; });
@@ -67,7 +68,7 @@ export default async function ({ page, wait: wallWait, shot, logs }) {
         e = w.spawnEnemy(id, x, z, { level: 6 });
         e.ai.cfg.aggroRange = 0; e.ai.cfg.hearRange = 0; e.asleep = false;
       }
-      e.yaw = Math.PI / 4; e.hp = e.hpMax = e.hpMax || 1;
+      e.yaw = opts.yaw; e.hp = e.hpMax = e.hpMax || 1;
       out.push({ id, uid: e.uid });
     });
     // keep the player close (so distance-LOD matches real play) but out of frame: just behind the camera side of the clearing
@@ -83,7 +84,7 @@ export default async function ({ page, wait: wallWait, shot, logs }) {
   const per = Math.min(8, ids.length);
   const groups = []; for (let i = 0; i < ids.length; i += 8) groups.push(ids.slice(i, i + 8));
 
-  const lineup = async (list, name) => { await setup(list, { spacing: zoom > 26 ? 3.2 : 2.5, perRow: 8, zoom, perRowShift: 0 }); await frames(20); await shot(`${OUT}/${TAG}_${name}.png`); };
+  const lineup = async (list, name) => { await setup(list, { spacing: zoom > 26 ? 3.2 : 2.5, perRow: 8, zoom, yaw, perRowShift: 0 }); await frames(20); await shot(`${OUT}/${TAG}_${name}.png`); };
 
   if (view === 'lineup' || view === 'sheet') {
     let gi = 0;
@@ -93,7 +94,7 @@ export default async function ({ page, wait: wallWait, shot, logs }) {
   if (view === 'run' || view === 'sheet') {
     let gi = 0;
     for (const grp of groups) {
-      await setup(grp, { spacing: 2.6, perRow: 8, zoom, perRowShift: 0 });
+      await setup(grp, { spacing: 2.6, perRow: 8, zoom, yaw, perRowShift: 0 });
       await ev(() => { const w = window.__game.world; for (const e of w.entities) { if (e === window.__game.player || e.removed || e.untargetable && e.kind !== 'object') continue; if (e.kind === 'player') continue; e.intent = { x: -Math.SQRT1_2, z: -Math.SQRT1_2, speedMult: 1 }; } });
       await frames(26); await shot(`${OUT}/${TAG}_${setName}_${gi}_run.png`);
       await ev(() => { const w = window.__game.world; for (const e of w.entities) if (e !== window.__game.player && e.kind !== 'npc') e.removed = true; });
@@ -104,7 +105,7 @@ export default async function ({ page, wait: wallWait, shot, logs }) {
   if (view === 'attack' || view === 'sheet') {
     let gi = 0;
     for (const grp of groups) {
-      await setup(grp, { spacing: 2.6, perRow: 8, zoom, perRowShift: 0 });
+      await setup(grp, { spacing: 2.6, perRow: 8, zoom, yaw, perRowShift: 0 });
       // every enemy casts its first ability at the player (free:true): shoot at the impact moment of each cast
       await ev(() => {
         const g = window.__game, w = g.world, p = g.player;
@@ -120,7 +121,7 @@ export default async function ({ page, wait: wallWait, shot, logs }) {
   if (view === 'death' || view === 'sheet') {
     let gi = 0;
     for (const grp of groups) {
-      await setup(grp, { spacing: 2.6, perRow: 8, zoom, perRowShift: 0 });
+      await setup(grp, { spacing: 2.6, perRow: 8, zoom, yaw, perRowShift: 0 });
       await ev(() => { const g = window.__game, w = g.world; for (const e of w.entities) { if (e === g.player || e.dead || e.kind === 'object') continue; if (e.team === 'enemy') w.kill(e, g.player); } });
       await frames(14); await shot(`${OUT}/${TAG}_${setName}_${gi}_death_a.png`);
       await frames(20); await shot(`${OUT}/${TAG}_${setName}_${gi}_death_b.png`);
@@ -130,7 +131,7 @@ export default async function ({ page, wait: wallWait, shot, logs }) {
   }
 
   if (view === 'hit') {
-    await setup(groups[0], { spacing: 2.6, perRow: 8, zoom, perRowShift: 0 });
+    await setup(groups[0], { spacing: 2.6, perRow: 8, zoom, yaw, perRowShift: 0 });
     await ev(() => { const g = window.__game, w = g.world, p = g.player; for (const e of w.entities) if (e.team === 'enemy' && !e.dead) w.dealDirect(p, e, e.hpMax * 0.06, 'physical', {}); });
     await frames(3); await shot(`${OUT}/${TAG}_hit_a.png`);
     await frames(5); await shot(`${OUT}/${TAG}_hit_b.png`);
