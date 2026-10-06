@@ -1,0 +1,155 @@
+{
+ "kind": "status",
+ "items": [
+  {
+   "id": "st.potion_trickle",
+   "behavior": "buff",
+   "duration": 8,
+   "stacking": "refresh",
+   "tags": [
+    "buff"
+   ],
+   "color": "#6dff9a",
+   "icon": "leaf",
+   "vfx": "heal",
+   "mods": [
+    {
+     "stat": "lifeRegenPct",
+     "op": "flat",
+     "value": 0.05
+    }
+   ],
+   "uncapRegen": true
+  },
+  {
+   "id": "st.potion_resist",
+   "behavior": "buff",
+   "duration": 20,
+   "stacking": "refresh",
+   "tags": [
+    "buff"
+   ],
+   "color": "#9fe8ff",
+   "icon": "flake",
+   "vfx": "glow",
+   "mods": [
+    {
+     "stat": "res.fire",
+     "op": "flat",
+     "value": 0.25
+    },
+    {
+     "stat": "res.frost",
+     "op": "flat",
+     "value": 0.25
+    },
+    {
+     "stat": "res.shock",
+     "op": "flat",
+     "value": 0.25
+    },
+    {
+     "stat": "res.toxic",
+     "op": "flat",
+     "value": 0.25
+    },
+    {
+     "stat": "res.sonic",
+     "op": "flat",
+     "value": 0.25
+    }
+   ]
+  },
+  {
+   "id": "st.potion_haste",
+   "behavior": "buff",
+   "duration": 12,
+   "stacking": "refresh",
+   "tags": [
+    "buff"
+   ],
+   "color": "#ffe34a",
+   "icon": "wing",
+   "vfx": "wind",
+   "mods": [
+    {
+     "stat": "moveSpeed",
+     "op": "more",
+     "group": "haste",
+     "value": 0.25
+    },
+    {
+     "stat": "actionSpeed",
+     "op": "more",
+     "group": "haste",
+     "value": 0.15
+    }
+   ]
+  },
+  {
+   "id": "st.antidote_immune",
+   "behavior": "buff",
+   "duration": 6,
+   "stacking": "refresh",
+   "tags": [
+    "buff"
+   ],
+   "color": "#b6e84a",
+   "icon": "shield",
+   "vfx": "glow",
+   "immuneTags": [
+    "ailment"
+   ]
+  },
+  {
+   "id": "st.listen_boost",
+   "behavior": "buff",
+   "duration": 90,
+   "stacking": "refresh",
+   "tags": [
+    "buff",
+    "exploration"
+   ],
+   "color": "#7fe3ff",
+   "icon": "ear",
+   "vfx": "glow",
+   "mods": [
+    {
+     "stat": "listenRange",
+     "op": "flat",
+     "value": 7
+    },
+    {
+     "stat": "listenBreath",
+     "op": "flat",
+     "value": 2
+    }
+   ]
+  },
+  {
+   "id": "st.brazen_ward_reflect",
+   "behavior": "buff",
+   "duration": 6,
+   "stacking": "refresh",
+   "tags": [
+    "buff"
+   ],
+   "color": "#d9a24a",
+   "icon": "shield",
+   "vfx": "ward",
+   "mods": [
+    {
+     "stat": "damageTaken",
+     "op": "more",
+     "group": "ward",
+     "value": -0.35
+    },
+    {
+     "stat": "reflectPct",
+     "op": "flat",
+     "value": 0.6
+    }
+   ]
+  }
+ ]
+}

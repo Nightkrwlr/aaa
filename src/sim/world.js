@@ -17,6 +17,7 @@ import { ResourceSystem } from './resources.js';
 import { AiSystem } from './ai/ai.js';
 import { PlayerController } from './controller.js';
 import { ListenSystem } from './listen.js';
+import { TriggerSystem } from './triggers.js';
 
 const log = logger('world');
 export const STEP = 1 / 60;
@@ -89,6 +90,7 @@ export class World {
     this.controller = new PlayerController(this);
     this.listen = new ListenSystem(this);
     this.echoes = [];
+    this.triggers = new TriggerSystem(this);
     this._tmp = [];
   }
 
@@ -222,6 +224,7 @@ export class World {
     const pct = Math.min(this.balance.caps().lifeRegenPctPerSec, e.stats.get('lifeRegenPct'));
     const flat = e.stats.get('lifeRegen');
     if (e.team === 'player' && (pct > 0 || flat > 0)) this.heal(e, (e.hpMax * pct + flat) * dt, null, true);
+    if (e.flags.has('shieldRegen') && e.shield < e.shieldMax && this.time - e.lastHurtTime > 3) e.shield = Math.min(e.shieldMax, e.shield + e.shieldMax * 0.22 * dt);
   }
 
   #cleanup() {
@@ -282,6 +285,8 @@ export class World {
     if (source?.team === 'player') this.metrics.damageDealt += dealt; else this.metrics.damageTaken += dealt;
     const info = { source, target, amount: dealt, life: dmg, absorbed, type, crit: !!o.crit, ab: o.ab, dot: isDot, killed: false, fx: o.ab?.fx };
     this.events.emit('damage', info);
+    const refl = target.stats.get('reflectPct');
+    if (refl > 0 && source && !isDot && !o.reaction && source !== target && dealt > 0) this.dealDirect(target, source, dealt * refl, 'sonic', { reaction: true });
     if (!isDot && !o.reaction) {
       this.resources.onHit(source, target, info);
       this.status.onHit(target, { source, type, amount: o.base ?? dealt, crit: !!o.crit });
@@ -324,6 +329,7 @@ export class World {
     if (e.dead) return;
     e.dead = true; e.hp = 0; e.deathTime = this.time;
     e.intent = null; e.cast = null; e.dash = null;
+    if (e.def?.deathAbility) this.abilities.castImmediate(e, e.def.deathAbility);
     this.events.emit('entity:died', { entity: e, killer, info });
     if (e.team === 'enemy') {
       this.metrics.kills++;

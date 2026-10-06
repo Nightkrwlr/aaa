@@ -45,6 +45,7 @@ export class ResourceSystem {
   onHit(source, target, info) {
     if (source?.res && source.res.cfg.onHit && !info.dot && (info.ab ? !info.ab.noResourceGain : true)) this.gain(source, source.res.cfg.onHit, 'hit');
     if (target?.res && target.res.cfg.onHurt) this.gain(target, target.res.cfg.onHurt, 'hurt');
+    if (target?.res && target.flags.has('damageToToll') && info.life > 0) this.gain(target, info.life / target.hpMax * 100 * 0.9, 'conversion');
   }
   onKill(killer, victim) { if (killer?.res?.cfg.onKill) this.gain(killer, killer.res.cfg.onKill, 'kill'); }
   onDodge(e, perfect) {
@@ -64,13 +65,14 @@ export class ResourceSystem {
       while (r.moveAcc >= c.moveGainDist) { r.moveAcc -= c.moveGainDist; this.gain(e, c.moveGain ?? 1, 'move'); }
     }
     // decay
-    if (c.decay && now - r.lastGain > c.decay.delay && (c.decay.outOfCombatOnly ? now - Math.max(e.lastHitTime, e.lastHurtTime) > c.decay.delay : true)) {
+    if (c.decay && !e.flags.has('noDecay') && now - r.lastGain > c.decay.delay && (c.decay.outOfCombatOnly ? now - Math.max(e.lastHitTime, e.lastHurtTime) > c.decay.delay : true)) {
       r.value = Math.max(0, r.value - c.decay.rate * dt);
     }
     if (c.regen) r.value = Math.max(0, Math.min(this.max(e), r.value + c.regen * dt * e.stats.get('resourceRegen')));
     // thresholds → status buffs
     for (const t of c.thresholds ?? []) {
-      const on = r.value >= t.at;
+      const at = t.at - (t.status === 'st.incandescent' ? (e.stats.get('thresholdShift') || 0) : 0);
+      const on = r.value >= at;
       const cur = this.w.status.get(e, t.status);
       if (on && (!cur || cur.remaining < 0.15)) this.w.status.apply(e, t.status, { duration: 0.5, silent: true });
       else if (!on && cur) this.w.status.remove(e, t.status, 'threshold');
@@ -95,9 +97,10 @@ export class ResourceSystem {
     const w = this.w;
     w.status.apply(e, o.status ?? 'st.dazzled', { silent: false });
     e.res.value = o.resetTo ?? 0;
-    const amount = w.balance.expectedLife(e.level) * (o.burstPct ?? 0.2) * 0.25;
+    const big = e.flags.has('bigOverload');
+    const amount = w.balance.expectedLife(e.level) * (o.burstPct ?? 0.2) * 0.25 * (big ? 3 : 1);
     w.events.emit('resource:overflow', { entity: e, resource: e.res.id });
-    for (const v of w.queryCircle(e.x, e.z, o.radius ?? 3.5, (x) => w.isHostile(e, x))) w.dealDirect(e, v, amount * e.stats.get('damage', ['area']), 'fire', { reaction: true });
+    for (const v of w.queryCircle(e.x, e.z, (o.radius ?? 3.5) * (big ? 1.6 : 1), (x) => w.isHostile(e, x))) w.dealDirect(e, v, amount * e.stats.get('damage', ['area']), 'fire', { reaction: true });
   }
 }
 const EMPTY = [];

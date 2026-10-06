@@ -1,0 +1,4836 @@
+{
+ "kind": "talentTree",
+ "items": [
+  {
+   "id": "tree.belfry",
+   "nodes": [
+    {
+     "id": "tal.belfry.hub",
+     "kind": "start",
+     "branch": "core",
+     "ring": 0,
+     "lane": 0,
+     "links": [
+      "tal.belfry.c_life",
+      "tal.belfry.c_armor",
+      "tal.belfry.a1a",
+      "tal.belfry.a1b",
+      "tal.belfry.b1a",
+      "tal.belfry.b1b",
+      "tal.belfry.c1a",
+      "tal.belfry.c1b"
+     ],
+     "cost": 1,
+     "pos": [
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c_life",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 0,
+     "lane": -1,
+     "links": [
+      "tal.belfry.hub",
+      "tal.belfry.c_toll"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "life",
+     "pos": [
+      80.0,
+      -54.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c_armor",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 0,
+     "lane": 1,
+     "links": [
+      "tal.belfry.hub",
+      "tal.belfry.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "armor",
+       "op": "inc",
+       "value": 0.08
+      }
+     ],
+     "tmpl": "armor",
+     "pos": [
+      80.0,
+      54.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c_toll",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.belfry.c_life",
+      "tal.belfry.n_ear"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "resourceGain",
+       "op": "inc",
+       "value": 0.06
+      }
+     ],
+     "tmpl": "toll",
+     "pos": [
+      146.0,
+      -54.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c_listen",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.belfry.c_armor",
+      "tal.belfry.n_ear",
+      "tal.belfry.n_steady"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "listenRange",
+       "op": "flat",
+       "value": 1.5
+      }
+     ],
+     "tmpl": "listen",
+     "pos": [
+      146.0,
+      54.0
+     ]
+    },
+    {
+     "id": "tal.belfry.n_ear",
+     "kind": "notable",
+     "branch": "core",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.belfry.c_toll",
+      "tal.belfry.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "listenRange",
+       "op": "flat",
+       "value": 3
+      },
+      {
+       "stat": "listenBreath",
+       "op": "flat",
+       "value": 1
+      },
+      {
+       "stat": "chord.window",
+       "op": "flat",
+       "value": 0.4
+      }
+     ],
+     "pos": [
+      212.0,
+      0.0
+     ]
+    },
+    {
+     "id": "tal.belfry.n_steady",
+     "kind": "notable",
+     "branch": "core",
+     "ring": 2,
+     "lane": 2,
+     "links": [
+      "tal.belfry.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "chord.triadRefund",
+       "op": "flat",
+       "value": 0.04
+      },
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "pos": [
+      212.0,
+      108.0
+     ]
+    },
+    {
+     "id": "tal.belfry.a1a",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.belfry.hub",
+      "tal.belfry.a2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "armor",
+       "op": "inc",
+       "value": 0.1
+      }
+     ],
+     "tmpl": "armor",
+     "pos": [
+      -99.4,
+      119.8
+     ]
+    },
+    {
+     "id": "tal.belfry.a1b",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.belfry.hub",
+      "tal.belfry.a2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "life",
+     "pos": [
+      -153.4,
+      26.2
+     ]
+    },
+    {
+     "id": "tal.belfry.a2",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.belfry.a1a",
+      "tal.belfry.a1b",
+      "tal.belfry.a3a",
+      "tal.belfry.a3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "armor",
+       "op": "inc",
+       "value": 0.18
+      },
+      {
+       "stat": "damageTaken",
+       "op": "more",
+       "value": -0.04,
+       "group": "talent"
+      }
+     ],
+     "pos": [
+      -183.6,
+      106.0
+     ]
+    },
+    {
+     "id": "tal.belfry.a3a",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.belfry.a2",
+      "tal.belfry.a4a",
+      "tal.belfry.a9",
+      "tal.belfry.x_ca"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "res.fire",
+       "op": "flat",
+       "value": 0.05
+      },
+      {
+       "stat": "res.frost",
+       "op": "flat",
+       "value": 0.05
+      },
+      {
+       "stat": "res.shock",
+       "op": "flat",
+       "value": 0.05
+      },
+      {
+       "stat": "res.sonic",
+       "op": "flat",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "res",
+     "pos": [
+      -213.8,
+      185.8
+     ]
+    },
+    {
+     "id": "tal.belfry.a3b",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.belfry.a2",
+      "tal.belfry.a4b",
+      "tal.belfry.x_ab"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "reflectPct",
+       "op": "flat",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "reflect",
+     "pos": [
+      -267.8,
+      92.2
+     ]
+    },
+    {
+     "id": "tal.belfry.a4a",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.belfry.a3a",
+      "tal.belfry.a5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.belfry.bronze_ward",
+       "op": "set",
+       "path": "effects[op=buff].status",
+       "value": "st.brazen_ward_reflect"
+      }
+     ],
+     "excl": "belfry.ward",
+     "ability": "abl.belfry.bronze_ward",
+     "pos": [
+      -270.9,
+      218.8
+     ]
+    },
+    {
+     "id": "tal.belfry.a4b",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.belfry.a3b",
+      "tal.belfry.a5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.belfry.bronze_ward",
+       "op": "replaceEffects",
+       "value": [
+        {
+         "op": "buff",
+         "status": "st.brazen_ward",
+         "duration": 10
+        },
+        {
+         "op": "buff",
+         "status": "st.haste",
+         "duration": 5
+        },
+        {
+         "op": "shield",
+         "pct": 0.1,
+         "duration": 8
+        }
+       ]
+      }
+     ],
+     "excl": "belfry.ward",
+     "ability": "abl.belfry.bronze_ward",
+     "pos": [
+      -324.9,
+      125.2
+     ]
+    },
+    {
+     "id": "tal.belfry.a5",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.belfry.a4a",
+      "tal.belfry.a4b",
+      "tal.belfry.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "shieldMax",
+       "op": "flat",
+       "value": 30
+      }
+     ],
+     "tmpl": "shield",
+     "pos": [
+      -355.1,
+      205.0
+     ]
+    },
+    {
+     "id": "tal.belfry.a6",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.belfry.a5",
+      "tal.belfry.a7",
+      "tal.belfry.a_x1",
+      "tal.belfry.a_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.08
+      },
+      {
+       "stat": "lifeRegenPct",
+       "op": "flat",
+       "value": 0.004
+      }
+     ],
+     "pos": [
+      -412.2,
+      238.0
+     ]
+    },
+    {
+     "id": "tal.belfry.a7",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.belfry.a6",
+      "tal.belfry.a8"
+     ],
+     "cost": 1,
+     "triggers": [
+      {
+       "on": "hurt",
+       "cond": {
+        "selfHasAny": [
+         "st.brazen_ward",
+         "st.brazen_ward_reflect"
+        ]
+       },
+       "icd": 2.5,
+       "chance": 1,
+       "ability": "abl.talent.retort"
+      }
+     ],
+     "excl": "belfry.retort",
+     "pos": [
+      -469.4,
+      271.0
+     ]
+    },
+    {
+     "id": "tal.belfry.a8",
+     "kind": "keystone",
+     "branch": "A",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.belfry.a7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "more",
+       "value": -0.2,
+       "group": "talent"
+      }
+     ],
+     "flags": [
+      "damageToToll"
+     ],
+     "pos": [
+      -526.5,
+      304.0
+     ]
+    },
+    {
+     "id": "tal.belfry.a9",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 5,
+     "lane": -2,
+     "links": [
+      "tal.belfry.a3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "voiceCharges",
+       "op": "flat",
+       "value": 1
+      },
+      {
+       "stat": "lifeOnKill",
+       "op": "flat",
+       "value": 12
+      }
+     ],
+     "pos": [
+      -301.1,
+      298.5
+     ]
+    },
+    {
+     "id": "tal.belfry.b1a",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.belfry.hub",
+      "tal.belfry.b2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "sonic"
+       ]
+      }
+     ],
+     "tmpl": "dmg_sonic",
+     "pos": [
+      -54.0,
+      -146.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b1b",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.belfry.hub",
+      "tal.belfry.b2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "areaSize",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "area",
+     "pos": [
+      54.0,
+      -146.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b2",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.belfry.b1a",
+      "tal.belfry.b1b",
+      "tal.belfry.b3a",
+      "tal.belfry.b3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.12,
+       "tags": [
+        "sonic"
+       ]
+      },
+      {
+       "stat": "areaSize",
+       "op": "inc",
+       "value": 0.08
+      },
+      {
+       "stat": "resourceGain",
+       "op": "inc",
+       "value": 0.08
+      }
+     ],
+     "pos": [
+      0.0,
+      -212.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b3a",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.belfry.b2",
+      "tal.belfry.b4a",
+      "tal.belfry.x_ab"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "statusChance",
+       "op": "flat",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "status",
+     "pos": [
+      -54.0,
+      -278.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b3b",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.belfry.b2",
+      "tal.belfry.b4b",
+      "tal.belfry.b9",
+      "tal.belfry.x_bc"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "resourceGain",
+       "op": "inc",
+       "value": 0.06
+      }
+     ],
+     "tmpl": "toll",
+     "pos": [
+      54.0,
+      -278.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b4a",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.belfry.b3a",
+      "tal.belfry.b5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.belfry.peal",
+       "op": "set",
+       "path": "effects[op=area]",
+       "value": {
+        "op": "area",
+        "shape": "line",
+        "length": 10,
+        "width": 2.8,
+        "origin": "self",
+        "hit": [
+         {
+          "op": "damage",
+          "type": "sonic",
+          "coef": 2.6,
+          "scaling": "weapon"
+         },
+         {
+          "op": "status",
+          "id": "st.stunned",
+          "chance": 0.3,
+          "duration": 0.9
+         },
+         {
+          "op": "status",
+          "id": "st.dissonance",
+          "chance": 0.35
+         },
+         {
+          "op": "knockback",
+          "force": 1.2
+         }
+        ]
+       }
+      }
+     ],
+     "excl": "belfry.peal",
+     "ability": "abl.belfry.peal",
+     "pos": [
+      -54.0,
+      -344.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b4b",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.belfry.b3b",
+      "tal.belfry.b5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.belfry.peal",
+       "op": "push",
+       "path": "effects",
+       "value": {
+        "op": "area",
+        "shape": "circle",
+        "radius": 3.6,
+        "origin": "aim",
+        "delay": 0.38,
+        "hit": [
+         {
+          "op": "damage",
+          "type": "sonic",
+          "coef": 1.5,
+          "scaling": "weapon"
+         },
+         {
+          "op": "knockback",
+          "force": 1.0
+         }
+        ]
+       }
+      }
+     ],
+     "excl": "belfry.peal",
+     "ability": "abl.belfry.peal",
+     "pos": [
+      54.0,
+      -344.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b5",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.belfry.b4a",
+      "tal.belfry.b4b",
+      "tal.belfry.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "cd",
+     "pos": [
+      0.0,
+      -410.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b6",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.belfry.b5",
+      "tal.belfry.b7",
+      "tal.belfry.b_x1",
+      "tal.belfry.b_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.25,
+       "tags": [
+        "slam"
+       ]
+      },
+      {
+       "stat": "chord.unisonArea",
+       "op": "flat",
+       "value": 0.15
+      }
+     ],
+     "pos": [
+      0.0,
+      -476.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b7",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.belfry.b6",
+      "tal.belfry.b8"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.belfry.slow_toll",
+       "op": "replaceEffects",
+       "value": [
+        {
+         "op": "area",
+         "shape": "ring",
+         "inner": 3.8,
+         "radius": 6.8,
+         "origin": "self",
+         "hit": [
+          {
+           "op": "damage",
+           "type": "sonic",
+           "coef": 1.3,
+           "scaling": "weapon"
+          },
+          {
+           "op": "pull",
+           "force": 3
+          },
+          {
+           "op": "status",
+           "id": "st.dissonance",
+           "chance": 0.7
+          }
+         ]
+        },
+        {
+         "op": "area",
+         "shape": "ring",
+         "inner": 1.8,
+         "radius": 4.6,
+         "origin": "self",
+         "delay": 0.22,
+         "hit": [
+          {
+           "op": "damage",
+           "type": "sonic",
+           "coef": 1.3,
+           "scaling": "weapon"
+          },
+          {
+           "op": "pull",
+           "force": 2.2
+          },
+          {
+           "op": "status",
+           "id": "st.dissonance",
+           "chance": 0.7
+          }
+         ]
+        },
+        {
+         "op": "area",
+         "shape": "ring",
+         "inner": 0,
+         "radius": 2.6,
+         "origin": "self",
+         "delay": 0.44,
+         "hit": [
+          {
+           "op": "damage",
+           "type": "sonic",
+           "coef": 2.0,
+           "scaling": "weapon"
+          },
+          {
+           "op": "status",
+           "id": "st.stunned",
+           "chance": 0.5,
+           "duration": 0.8
+          },
+          {
+           "op": "status",
+           "id": "st.dissonance",
+           "chance": 1
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "excl": "belfry.toll",
+     "ability": "abl.belfry.slow_toll",
+     "pos": [
+      0.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b8",
+     "kind": "keystone",
+     "branch": "B",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.belfry.b7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "resourceMax",
+       "op": "flat",
+       "value": -40
+      }
+     ],
+     "patches": [
+      {
+       "ability": "abl.belfry.peal",
+       "op": "set",
+       "path": "cost.amount",
+       "value": 15
+      },
+      {
+       "ability": "abl.belfry.knell",
+       "op": "set",
+       "path": "cost.amount",
+       "value": 35
+      }
+     ],
+     "flags": [
+      "noDecay"
+     ],
+     "pos": [
+      0.0,
+      -608.0
+     ]
+    },
+    {
+     "id": "tal.belfry.b9",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 5,
+     "lane": 2,
+     "links": [
+      "tal.belfry.b3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "statusPotency",
+       "op": "inc",
+       "value": 0.25,
+       "tags": [
+        "sonic"
+       ]
+      },
+      {
+       "stat": "statusDuration",
+       "op": "inc",
+       "value": 0.15
+      }
+     ],
+     "pos": [
+      108.0,
+      -410.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c1a",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.belfry.hub",
+      "tal.belfry.c2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "move",
+     "pos": [
+      153.4,
+      26.2
+     ]
+    },
+    {
+     "id": "tal.belfry.c1b",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.belfry.hub",
+      "tal.belfry.c2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "dodgeCooldown",
+       "op": "inc",
+       "value": -0.06
+      }
+     ],
+     "tmpl": "dodge",
+     "pos": [
+      99.4,
+      119.8
+     ]
+    },
+    {
+     "id": "tal.belfry.c2",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.belfry.c1a",
+      "tal.belfry.c1b",
+      "tal.belfry.c3a",
+      "tal.belfry.c3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "pierce",
+       "op": "flat",
+       "value": 1,
+       "tags": [
+        "projectile"
+       ]
+      },
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.15,
+       "tags": [
+        "projectile"
+       ]
+      }
+     ],
+     "pos": [
+      183.6,
+      106.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c3a",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.belfry.c2",
+      "tal.belfry.c4a",
+      "tal.belfry.c9",
+      "tal.belfry.x_bc"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "statusDuration",
+       "op": "inc",
+       "value": 0.1
+      }
+     ],
+     "tmpl": "dur",
+     "pos": [
+      267.8,
+      92.2
+     ]
+    },
+    {
+     "id": "tal.belfry.c3b",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.belfry.c2",
+      "tal.belfry.c4b",
+      "tal.belfry.x_ca"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "cd",
+     "pos": [
+      213.8,
+      185.8
+     ]
+    },
+    {
+     "id": "tal.belfry.c4a",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.belfry.c3a",
+      "tal.belfry.c5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.belfry.chain_bell",
+       "op": "replaceEffects",
+       "value": [
+        {
+         "op": "zone",
+         "shape": "ring",
+         "inner": 1.4,
+         "radius": 3.4,
+         "origin": "self",
+         "follow": true,
+         "duration": 5,
+         "tick": 0.4,
+         "spin": -3.0,
+         "kind": "orbit_bells",
+         "color": "physical",
+         "max": 1,
+         "hit": [
+          {
+           "op": "damage",
+           "type": "physical",
+           "coef": 0.95,
+           "scaling": "weapon"
+          },
+          {
+           "op": "status",
+           "id": "st.bleeding",
+           "chance": 0.15,
+           "coef": 0.6
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "ability": "abl.belfry.chain_bell",
+       "op": "removeTag",
+       "value": [
+        "projectile"
+       ]
+      },
+      {
+       "ability": "abl.belfry.chain_bell",
+       "op": "addTag",
+       "value": [
+        "orbit",
+        "area"
+       ]
+      },
+      {
+       "ability": "abl.belfry.chain_bell",
+       "op": "set",
+       "path": "aim",
+       "value": "self"
+      }
+     ],
+     "excl": "belfry.chain",
+     "ability": "abl.belfry.chain_bell",
+     "pos": [
+      324.9,
+      125.2
+     ]
+    },
+    {
+     "id": "tal.belfry.c4b",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.belfry.c3b",
+      "tal.belfry.c5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.belfry.chain_bell",
+       "op": "set",
+       "path": "effects[op=projectile].hit.1.force",
+       "value": 4.8
+      },
+      {
+       "ability": "abl.belfry.chain_bell",
+       "op": "push",
+       "path": "effects.0.hit",
+       "value": {
+        "op": "status",
+        "id": "st.stunned",
+        "chance": 0.6,
+        "duration": 0.6
+       }
+      },
+      {
+       "ability": "abl.belfry.chain_bell",
+       "op": "set",
+       "path": "cooldown",
+       "value": 3.2
+      }
+     ],
+     "excl": "belfry.chain",
+     "ability": "abl.belfry.chain_bell",
+     "pos": [
+      270.9,
+      218.8
+     ]
+    },
+    {
+     "id": "tal.belfry.c5",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.belfry.c4a",
+      "tal.belfry.c4b",
+      "tal.belfry.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "chord.window",
+       "op": "flat",
+       "value": 0.3
+      }
+     ],
+     "tmpl": "chord",
+     "pos": [
+      355.1,
+      205.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c6",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.belfry.c5",
+      "tal.belfry.c7",
+      "tal.belfry.c_x1",
+      "tal.belfry.c_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "chord.triadDmg",
+       "op": "flat",
+       "value": 0.1
+      },
+      {
+       "stat": "chord.triadDuration",
+       "op": "flat",
+       "value": 1.5
+      },
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "pos": [
+      412.2,
+      238.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c7",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.belfry.c6",
+      "tal.belfry.c8"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.belfry.alarm",
+       "op": "set",
+       "path": "effects.0.radius",
+       "value": 11
+      },
+      {
+       "ability": "abl.belfry.alarm",
+       "op": "push",
+       "path": "effects.0.hit",
+       "value": {
+        "op": "status",
+        "id": "st.vulnerable",
+        "duration": 5
+       }
+      },
+      {
+       "ability": "abl.belfry.alarm",
+       "op": "push",
+       "path": "effects",
+       "value": {
+        "op": "cooldown",
+        "tag": "attack",
+        "seconds": 3
+       }
+      }
+     ],
+     "excl": "belfry.alarm",
+     "ability": "abl.belfry.alarm",
+     "pos": [
+      469.4,
+      271.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c8",
+     "kind": "keystone",
+     "branch": "C",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.belfry.c7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "chord.window",
+       "op": "flat",
+       "value": -1.0
+      }
+     ],
+     "triggers": [
+      {
+       "on": "chord",
+       "cond": {
+        "chord": "triad"
+       },
+       "icd": 2.5,
+       "chance": 1,
+       "ability": "abl.belfry.peal",
+       "atNearest": 8
+      }
+     ],
+     "pos": [
+      526.5,
+      304.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c9",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 5,
+     "lane": -2,
+     "links": [
+      "tal.belfry.c3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "dodgeCharges",
+       "op": "flat",
+       "value": 1
+      }
+     ],
+     "pos": [
+      409.1,
+      111.5
+     ]
+    },
+    {
+     "id": "tal.belfry.x_ab",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": -3,
+     "links": [
+      "tal.belfry.a3b",
+      "tal.belfry.b3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.04
+      },
+      {
+       "stat": "areaSize",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      -162.0
+     ]
+    },
+    {
+     "id": "tal.belfry.x_bc",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": 3,
+     "links": [
+      "tal.belfry.b3b",
+      "tal.belfry.c3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.04
+      },
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.06,
+       "tags": [
+        "melee"
+       ]
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      162.0
+     ]
+    },
+    {
+     "id": "tal.belfry.x_ca",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": 6,
+     "links": [
+      "tal.belfry.c3b",
+      "tal.belfry.a3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.03
+      },
+      {
+       "stat": "armor",
+       "op": "inc",
+       "value": 0.06
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      324.0
+     ]
+    },
+    {
+     "id": "tal.belfry.a_x1",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.belfry.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "life",
+     "pos": [
+      -442.4,
+      317.8
+     ]
+    },
+    {
+     "id": "tal.belfry.b_x1",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.belfry.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "sonic"
+       ]
+      }
+     ],
+     "tmpl": "dmg_sonic",
+     "pos": [
+      -54.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.belfry.c_x1",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.belfry.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "move",
+     "pos": [
+      496.4,
+      224.2
+     ]
+    },
+    {
+     "id": "tal.belfry.b_x2",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.belfry.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "critChance",
+       "op": "flat",
+       "value": 0.02
+      }
+     ],
+     "tmpl": "crit",
+     "pos": [
+      54.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.belfry.a_x2",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.belfry.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "armor",
+       "op": "inc",
+       "value": 0.08
+      }
+     ],
+     "tmpl": "armor",
+     "pos": [
+      -496.4,
+      224.2
+     ]
+    },
+    {
+     "id": "tal.belfry.c_x2",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.belfry.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "statusChance",
+       "op": "flat",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "status",
+     "pos": [
+      442.4,
+      317.8
+     ]
+    }
+   ],
+   "class": "cls.belfry",
+   "branches": {
+    "A": {
+     "name": "tal.branch.belfry.A"
+    },
+    "B": {
+     "name": "tal.branch.belfry.B"
+    },
+    "C": {
+     "name": "tal.branch.belfry.C"
+    }
+   }
+  },
+  {
+   "id": "tree.prismatist",
+   "nodes": [
+    {
+     "id": "tal.prismatist.hub",
+     "kind": "start",
+     "branch": "core",
+     "ring": 0,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.c_res",
+      "tal.prismatist.c_life",
+      "tal.prismatist.a1a",
+      "tal.prismatist.a1b",
+      "tal.prismatist.b1a",
+      "tal.prismatist.b1b",
+      "tal.prismatist.c1a",
+      "tal.prismatist.c1b"
+     ],
+     "cost": 1,
+     "pos": [
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c_res",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 0,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.hub",
+      "tal.prismatist.c_cd"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "resourceMax",
+       "op": "flat",
+       "value": 8
+      }
+     ],
+     "tmpl": "res_max",
+     "pos": [
+      80.0,
+      -54.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c_life",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 0,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.hub",
+      "tal.prismatist.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "life",
+     "pos": [
+      80.0,
+      54.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c_cd",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.c_res",
+      "tal.prismatist.n_ear"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "cd",
+     "pos": [
+      146.0,
+      -54.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c_listen",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.c_life",
+      "tal.prismatist.n_ear",
+      "tal.prismatist.n_steady"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "listenRange",
+       "op": "flat",
+       "value": 1.5
+      }
+     ],
+     "tmpl": "listen",
+     "pos": [
+      146.0,
+      54.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.n_ear",
+     "kind": "notable",
+     "branch": "core",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.c_cd",
+      "tal.prismatist.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "listenRange",
+       "op": "flat",
+       "value": 3
+      },
+      {
+       "stat": "listenBreath",
+       "op": "flat",
+       "value": 1
+      },
+      {
+       "stat": "chord.window",
+       "op": "flat",
+       "value": 0.4
+      }
+     ],
+     "pos": [
+      212.0,
+      0.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.n_steady",
+     "kind": "notable",
+     "branch": "core",
+     "ring": 2,
+     "lane": 2,
+     "links": [
+      "tal.prismatist.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "chord.triadRefund",
+       "op": "flat",
+       "value": 0.05
+      },
+      {
+       "stat": "resourceGain",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "pos": [
+      212.0,
+      108.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.a1a",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.hub",
+      "tal.prismatist.a2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.06
+      }
+     ],
+     "tmpl": "dmg_fire",
+     "pos": [
+      -99.4,
+      119.8
+     ]
+    },
+    {
+     "id": "tal.prismatist.a1b",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.hub",
+      "tal.prismatist.a2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "resourceMax",
+       "op": "flat",
+       "value": 8
+      }
+     ],
+     "tmpl": "res_max",
+     "pos": [
+      -153.4,
+      26.2
+     ]
+    },
+    {
+     "id": "tal.prismatist.a2",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.a1a",
+      "tal.prismatist.a1b",
+      "tal.prismatist.a3a",
+      "tal.prismatist.a3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "thresholdShift",
+       "op": "flat",
+       "value": 10
+      },
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.1,
+       "tags": [
+        "spell"
+       ]
+      }
+     ],
+     "pos": [
+      -183.6,
+      106.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.a3a",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.a2",
+      "tal.prismatist.a4a",
+      "tal.prismatist.a9",
+      "tal.prismatist.x_ca"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "areaSize",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "area",
+     "pos": [
+      -213.8,
+      185.8
+     ]
+    },
+    {
+     "id": "tal.prismatist.a3b",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.a2",
+      "tal.prismatist.a4b",
+      "tal.prismatist.x_ab"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "cd",
+     "pos": [
+      -267.8,
+      92.2
+     ]
+    },
+    {
+     "id": "tal.prismatist.a4a",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.a3a",
+      "tal.prismatist.a5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.nova",
+       "op": "push",
+       "path": "effects",
+       "value": {
+        "op": "zone",
+        "shape": "circle",
+        "radius": 4.2,
+        "origin": "self",
+        "duration": 4,
+        "tick": 0.5,
+        "kind": "ember_field",
+        "color": "fire",
+        "hit": [
+         {
+          "op": "damage",
+          "type": "fire",
+          "coef": 0.5,
+          "scaling": "spell"
+         },
+         {
+          "op": "status",
+          "id": "st.burning",
+          "chance": 0.4,
+          "coef": 0.8
+         }
+        ]
+       }
+      }
+     ],
+     "excl": "prism.nova",
+     "ability": "abl.prism.nova",
+     "pos": [
+      -270.9,
+      218.8
+     ]
+    },
+    {
+     "id": "tal.prismatist.a4b",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.a3b",
+      "tal.prismatist.a5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.nova",
+       "op": "replaceEffects",
+       "value": [
+        {
+         "op": "area",
+         "shape": "circle",
+         "radius": 7.5,
+         "origin": "self",
+         "hit": [
+          {
+           "op": "damage",
+           "type": "fire",
+           "coef": 2.4,
+           "scaling": "spell"
+          },
+          {
+           "op": "pull",
+           "force": 4.5
+          },
+          {
+           "op": "status",
+           "id": "st.burning",
+           "chance": 0.6,
+           "coef": 0.9
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "excl": "prism.nova",
+     "ability": "abl.prism.nova",
+     "pos": [
+      -324.9,
+      125.2
+     ]
+    },
+    {
+     "id": "tal.prismatist.a5",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.a4a",
+      "tal.prismatist.a4b",
+      "tal.prismatist.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.06,
+       "tags": [
+        "spell"
+       ]
+      }
+     ],
+     "tmpl": "dmg_fire",
+     "pos": [
+      -355.1,
+      205.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.a6",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.a5",
+      "tal.prismatist.a7",
+      "tal.prismatist.a_x1",
+      "tal.prismatist.a_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.2,
+       "tags": [
+        "beam"
+       ]
+      },
+      {
+       "stat": "critChance",
+       "op": "flat",
+       "value": 0.03
+      }
+     ],
+     "pos": [
+      -412.2,
+      238.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.a7",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.a6",
+      "tal.prismatist.a8"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.broken_beam",
+       "op": "set",
+       "path": "channel.maxDuration",
+       "value": 5
+      },
+      {
+       "ability": "abl.prism.broken_beam",
+       "op": "set",
+       "path": "channel.effects.0.hit.0.coef",
+       "value": 0.82
+      },
+      {
+       "ability": "abl.prism.broken_beam",
+       "op": "set",
+       "path": "channel.gainPerTick",
+       "value": 3.2
+      },
+      {
+       "ability": "abl.prism.broken_beam",
+       "op": "set",
+       "path": "channel.interval",
+       "value": 0.25
+      }
+     ],
+     "excl": "prism.beam",
+     "ability": "abl.prism.broken_beam",
+     "pos": [
+      -469.4,
+      271.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.a8",
+     "kind": "keystone",
+     "branch": "A",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.a7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "more",
+       "value": 0.15,
+       "group": "talent"
+      }
+     ],
+     "flags": [
+      "bigOverload"
+     ],
+     "pos": [
+      -526.5,
+      304.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.a9",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 5,
+     "lane": -2,
+     "links": [
+      "tal.prismatist.a3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "resourceMax",
+       "op": "flat",
+       "value": 0
+      },
+      {
+       "stat": "resourceCost",
+       "op": "inc",
+       "value": -0.1
+      }
+     ],
+     "pos": [
+      -301.1,
+      298.5
+     ]
+    },
+    {
+     "id": "tal.prismatist.b1a",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.hub",
+      "tal.prismatist.b2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "frost"
+       ]
+      }
+     ],
+     "tmpl": "dmg_frost",
+     "pos": [
+      -54.0,
+      -146.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b1b",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.hub",
+      "tal.prismatist.b2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "shock"
+       ]
+      }
+     ],
+     "tmpl": "dmg_shock",
+     "pos": [
+      54.0,
+      -146.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b2",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.b1a",
+      "tal.prismatist.b1b",
+      "tal.prismatist.b3a",
+      "tal.prismatist.b3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "statusChance",
+       "op": "flat",
+       "value": 0.1
+      },
+      {
+       "stat": "statusPotency",
+       "op": "inc",
+       "value": 0.15
+      }
+     ],
+     "pos": [
+      0.0,
+      -212.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b3a",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.b2",
+      "tal.prismatist.b4a",
+      "tal.prismatist.x_ab"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "projectileSpeed",
+       "op": "inc",
+       "value": 0.12
+      }
+     ],
+     "tmpl": "proj",
+     "pos": [
+      -54.0,
+      -278.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b3b",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.b2",
+      "tal.prismatist.b4b",
+      "tal.prismatist.b9",
+      "tal.prismatist.x_bc"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "fire"
+       ]
+      }
+     ],
+     "tmpl": "dmg_fire",
+     "pos": [
+      54.0,
+      -278.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b4a",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.b3a",
+      "tal.prismatist.b5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "effects.0.speed",
+       "value": 7
+      },
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "effects.0.pierce",
+       "value": 99
+      },
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "effects.0.radius",
+       "value": 0.7
+      },
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "effects.0.hit.0.coef",
+       "value": 1.5
+      },
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "cast.recover",
+       "value": 0.4
+      }
+     ],
+     "excl": "prism.shard",
+     "ability": "abl.prism.shard",
+     "pos": [
+      -54.0,
+      -344.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b4b",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.b3b",
+      "tal.prismatist.b5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "effects.0.onHit",
+       "value": [
+        {
+         "op": "area",
+         "shape": "circle",
+         "radius": 2.4,
+         "origin": "aim",
+         "hit": [
+          {
+           "op": "damage",
+           "type": "fire",
+           "coef": 0.7,
+           "scaling": "spell"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "effects.0.pierce",
+       "value": 0
+      }
+     ],
+     "excl": "prism.shard",
+     "ability": "abl.prism.shard",
+     "pos": [
+      54.0,
+      -344.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b5",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.b4a",
+      "tal.prismatist.b4b",
+      "tal.prismatist.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "critChance",
+       "op": "flat",
+       "value": 0.02
+      }
+     ],
+     "tmpl": "crit",
+     "pos": [
+      0.0,
+      -410.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b6",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.b5",
+      "tal.prismatist.b7",
+      "tal.prismatist.b_x1",
+      "tal.prismatist.b_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "chord.triadDmg",
+       "op": "flat",
+       "value": 0.08
+      },
+      {
+       "stat": "critMult",
+       "op": "flat",
+       "value": 0.2
+      }
+     ],
+     "pos": [
+      0.0,
+      -476.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b7",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.b6",
+      "tal.prismatist.b8"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.ice_needle",
+       "op": "set",
+       "path": "effects[op=projectile].onEnd",
+       "value": {
+        "always": true,
+        "effects": [
+         {
+          "op": "projectile",
+          "count": 5,
+          "spread": 150,
+          "speed": 16,
+          "radius": 0.3,
+          "range": 7,
+          "model": "bolt",
+          "color": "#9fe8ff",
+          "hit": [
+           {
+            "op": "damage",
+            "type": "frost",
+            "coef": 0.8,
+            "scaling": "spell"
+           },
+           {
+            "op": "status",
+            "id": "st.chilled",
+            "chance": 1,
+            "build": 30
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "excl": "prism.needle",
+     "ability": "abl.prism.ice_needle",
+     "pos": [
+      0.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b8",
+     "kind": "keystone",
+     "branch": "B",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.b7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.2,
+       "tags": [
+        "sonic"
+       ]
+      }
+     ],
+     "patches": [
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "effects.0.cycle",
+       "value": null
+      },
+      {
+       "ability": "abl.prism.shard",
+       "op": "set",
+       "path": "effects.0.hit.1",
+       "value": {
+        "op": "status",
+        "id": "st.dissonance",
+        "chance": 0.3
+       }
+      },
+      {
+       "matchTags": [
+        "refract"
+       ],
+       "op": "convertDamage",
+       "to": "sonic"
+      },
+      {
+       "matchTags": [
+        "refract"
+       ],
+       "op": "set",
+       "path": "effects.0.hit.0.coef",
+       "value": 1.45
+      }
+     ],
+     "pos": [
+      0.0,
+      -608.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.b9",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 5,
+     "lane": 2,
+     "links": [
+      "tal.prismatist.b3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.15,
+       "tags": [
+        "dot"
+       ]
+      },
+      {
+       "stat": "statusDuration",
+       "op": "inc",
+       "value": 0.2
+      }
+     ],
+     "pos": [
+      108.0,
+      -410.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c1a",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.hub",
+      "tal.prismatist.c2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "shieldMax",
+       "op": "flat",
+       "value": 25
+      }
+     ],
+     "tmpl": "shield",
+     "pos": [
+      153.4,
+      26.2
+     ]
+    },
+    {
+     "id": "tal.prismatist.c1b",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.hub",
+      "tal.prismatist.c2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "move",
+     "pos": [
+      99.4,
+      119.8
+     ]
+    },
+    {
+     "id": "tal.prismatist.c2",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.c1a",
+      "tal.prismatist.c1b",
+      "tal.prismatist.c3a",
+      "tal.prismatist.c3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "shieldMax",
+       "op": "flat",
+       "value": 40
+      },
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.06
+      }
+     ],
+     "pos": [
+      183.6,
+      106.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c3a",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.c2",
+      "tal.prismatist.c4a",
+      "tal.prismatist.c9",
+      "tal.prismatist.x_bc"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "res.fire",
+       "op": "flat",
+       "value": 0.05
+      },
+      {
+       "stat": "res.frost",
+       "op": "flat",
+       "value": 0.05
+      },
+      {
+       "stat": "res.shock",
+       "op": "flat",
+       "value": 0.05
+      },
+      {
+       "stat": "res.sonic",
+       "op": "flat",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "res",
+     "pos": [
+      267.8,
+      92.2
+     ]
+    },
+    {
+     "id": "tal.prismatist.c3b",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.c2",
+      "tal.prismatist.c4b",
+      "tal.prismatist.x_ca"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "dodgeCooldown",
+       "op": "inc",
+       "value": -0.08
+      }
+     ],
+     "tmpl": "dodge",
+     "pos": [
+      213.8,
+      185.8
+     ]
+    },
+    {
+     "id": "tal.prismatist.c4a",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.c3a",
+      "tal.prismatist.c5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.dome",
+       "op": "replaceEffects",
+       "value": [
+        {
+         "op": "buff",
+         "status": "st.brazen_ward_reflect",
+         "duration": 7
+        },
+        {
+         "op": "shield",
+         "pct": 0.25,
+         "duration": 7
+        }
+       ]
+      }
+     ],
+     "excl": "prism.dome",
+     "ability": "abl.prism.dome",
+     "pos": [
+      324.9,
+      125.2
+     ]
+    },
+    {
+     "id": "tal.prismatist.c4b",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.c3b",
+      "tal.prismatist.c5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.dome",
+       "op": "push",
+       "path": "effects",
+       "value": {
+        "op": "zone",
+        "shape": "circle",
+        "radius": 3.6,
+        "origin": "self",
+        "follow": true,
+        "duration": 7,
+        "tick": 0.5,
+        "kind": "ember_field",
+        "color": "fire",
+        "hit": [
+         {
+          "op": "damage",
+          "type": "fire",
+          "coef": 0.45,
+          "scaling": "spell"
+         }
+        ]
+       }
+      }
+     ],
+     "excl": "prism.dome",
+     "ability": "abl.prism.dome",
+     "pos": [
+      270.9,
+      218.8
+     ]
+    },
+    {
+     "id": "tal.prismatist.c5",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.c4a",
+      "tal.prismatist.c4b",
+      "tal.prismatist.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "life",
+     "pos": [
+      355.1,
+      205.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c6",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.c5",
+      "tal.prismatist.c7",
+      "tal.prismatist.c_x1",
+      "tal.prismatist.c_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "reflectPct",
+       "op": "flat",
+       "value": 0.1
+      },
+      {
+       "stat": "shieldPower",
+       "op": "inc",
+       "value": 0.2
+      }
+     ],
+     "pos": [
+      412.2,
+      238.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c7",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.c6",
+      "tal.prismatist.c8"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.prism.cascade",
+       "op": "set",
+       "path": "effects[op=zone].follow",
+       "value": true
+      },
+      {
+       "ability": "abl.prism.cascade",
+       "op": "set",
+       "path": "effects[op=zone].radius",
+       "value": 3.6
+      },
+      {
+       "ability": "abl.prism.cascade",
+       "op": "set",
+       "path": "effects[op=zone].origin",
+       "value": "self"
+      },
+      {
+       "ability": "abl.prism.cascade",
+       "op": "set",
+       "path": "aim",
+       "value": "self"
+      }
+     ],
+     "excl": "prism.cascade",
+     "ability": "abl.prism.cascade",
+     "pos": [
+      469.4,
+      271.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c8",
+     "kind": "keystone",
+     "branch": "C",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.prismatist.c7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "more",
+       "value": -0.35,
+       "group": "talent"
+      },
+      {
+       "stat": "shieldMax",
+       "op": "flat",
+       "value": 160
+      }
+     ],
+     "flags": [
+      "shieldRegen"
+     ],
+     "pos": [
+      526.5,
+      304.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c9",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 5,
+     "lane": -2,
+     "links": [
+      "tal.prismatist.c3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "dodgeCharges",
+       "op": "flat",
+       "value": 1
+      }
+     ],
+     "pos": [
+      409.1,
+      111.5
+     ]
+    },
+    {
+     "id": "tal.prismatist.x_ab",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": -3,
+     "links": [
+      "tal.prismatist.a3b",
+      "tal.prismatist.b3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.04
+      },
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.03
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      -162.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.x_bc",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": 3,
+     "links": [
+      "tal.prismatist.b3b",
+      "tal.prismatist.c3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.04
+      },
+      {
+       "stat": "statusChance",
+       "op": "flat",
+       "value": 0.03
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      162.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.x_ca",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": 6,
+     "links": [
+      "tal.prismatist.c3b",
+      "tal.prismatist.a3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.03
+      },
+      {
+       "stat": "resourceMax",
+       "op": "flat",
+       "value": 5
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      324.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.a_x1",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.06,
+       "tags": [
+        "beam"
+       ]
+      }
+     ],
+     "tmpl": "dmg_shock",
+     "pos": [
+      -442.4,
+      317.8
+     ]
+    },
+    {
+     "id": "tal.prismatist.b_x1",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "frost"
+       ]
+      }
+     ],
+     "tmpl": "dmg_frost",
+     "pos": [
+      -54.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.c_x1",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.prismatist.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "shieldMax",
+       "op": "flat",
+       "value": 30
+      }
+     ],
+     "tmpl": "shield",
+     "pos": [
+      496.4,
+      224.2
+     ]
+    },
+    {
+     "id": "tal.prismatist.b_x2",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "critChance",
+       "op": "flat",
+       "value": 0.02
+      }
+     ],
+     "tmpl": "crit",
+     "pos": [
+      54.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.prismatist.a_x2",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "areaSize",
+       "op": "inc",
+       "value": 0.06
+      }
+     ],
+     "tmpl": "area",
+     "pos": [
+      -496.4,
+      224.2
+     ]
+    },
+    {
+     "id": "tal.prismatist.c_x2",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.prismatist.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "life",
+     "pos": [
+      442.4,
+      317.8
+     ]
+    }
+   ],
+   "class": "cls.prismatist",
+   "branches": {
+    "A": {
+     "name": "tal.branch.prismatist.A"
+    },
+    "B": {
+     "name": "tal.branch.prismatist.B"
+    },
+    "C": {
+     "name": "tal.branch.prismatist.C"
+    }
+   }
+  },
+  {
+   "id": "tree.skirmisher",
+   "nodes": [
+    {
+     "id": "tal.skirmisher.hub",
+     "kind": "start",
+     "branch": "core",
+     "ring": 0,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.c_move",
+      "tal.skirmisher.c_life",
+      "tal.skirmisher.a1a",
+      "tal.skirmisher.a1b",
+      "tal.skirmisher.b1a",
+      "tal.skirmisher.b1b",
+      "tal.skirmisher.c1a",
+      "tal.skirmisher.c1b"
+     ],
+     "cost": 1,
+     "pos": [
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c_move",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 0,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.hub",
+      "tal.skirmisher.c_crit"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "move",
+     "pos": [
+      80.0,
+      -54.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c_life",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 0,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.hub",
+      "tal.skirmisher.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "life",
+     "pos": [
+      80.0,
+      54.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c_crit",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.c_move",
+      "tal.skirmisher.n_ear"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "critChance",
+       "op": "flat",
+       "value": 0.02
+      }
+     ],
+     "tmpl": "crit",
+     "pos": [
+      146.0,
+      -54.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c_listen",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.c_life",
+      "tal.skirmisher.n_ear",
+      "tal.skirmisher.n_steady"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "listenRange",
+       "op": "flat",
+       "value": 1.5
+      }
+     ],
+     "tmpl": "listen",
+     "pos": [
+      146.0,
+      54.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.n_ear",
+     "kind": "notable",
+     "branch": "core",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.c_crit",
+      "tal.skirmisher.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "listenRange",
+       "op": "flat",
+       "value": 3
+      },
+      {
+       "stat": "listenBreath",
+       "op": "flat",
+       "value": 1
+      },
+      {
+       "stat": "chord.window",
+       "op": "flat",
+       "value": 0.4
+      }
+     ],
+     "pos": [
+      212.0,
+      0.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.n_steady",
+     "kind": "notable",
+     "branch": "core",
+     "ring": 2,
+     "lane": 2,
+     "links": [
+      "tal.skirmisher.c_listen"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "chord.repriseSeconds",
+       "op": "flat",
+       "value": 0.6
+      },
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "pos": [
+      212.0,
+      108.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a1a",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.hub",
+      "tal.skirmisher.a2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "physical"
+       ]
+      }
+     ],
+     "tmpl": "dmg_phys",
+     "pos": [
+      -99.4,
+      119.8
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a1b",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.hub",
+      "tal.skirmisher.a2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.1,
+       "tags": [
+        "dot"
+       ]
+      }
+     ],
+     "tmpl": "bleed",
+     "pos": [
+      -153.4,
+      26.2
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a2",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.a1a",
+      "tal.skirmisher.a1b",
+      "tal.skirmisher.a3a",
+      "tal.skirmisher.a3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "critMult",
+       "op": "flat",
+       "value": 0.25
+      },
+      {
+       "stat": "statusPotency",
+       "op": "inc",
+       "value": 0.15
+      }
+     ],
+     "pos": [
+      -183.6,
+      106.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a3a",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.a2",
+      "tal.skirmisher.a4a",
+      "tal.skirmisher.a9",
+      "tal.skirmisher.x_ca"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "statusChance",
+       "op": "flat",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "status",
+     "pos": [
+      -213.8,
+      185.8
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a3b",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.a2",
+      "tal.skirmisher.a4b",
+      "tal.skirmisher.x_ab"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "melee"
+       ]
+      }
+     ],
+     "tmpl": "dmg_phys",
+     "pos": [
+      -267.8,
+      92.2
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a4a",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.a3a",
+      "tal.skirmisher.a5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.rending_leap",
+       "op": "set",
+       "path": "charges",
+       "value": 2
+      },
+      {
+       "ability": "abl.skir.rending_leap",
+       "op": "set",
+       "path": "cooldown",
+       "value": 4.5
+      }
+     ],
+     "excl": "skir.leap",
+     "ability": "abl.skir.rending_leap",
+     "pos": [
+      -270.9,
+      218.8
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a4b",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.a3b",
+      "tal.skirmisher.a5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.rending_leap",
+       "op": "set",
+       "path": "effects[op=dash].onEnd.0.radius",
+       "value": 4.2
+      },
+      {
+       "ability": "abl.skir.rending_leap",
+       "op": "push",
+       "path": "effects[op=dash].onEnd.0.hit",
+       "value": {
+        "op": "status",
+        "id": "st.stunned",
+        "duration": 1.0
+       }
+      },
+      {
+       "ability": "abl.skir.rending_leap",
+       "op": "set",
+       "path": "cooldown",
+       "value": 8
+      }
+     ],
+     "excl": "skir.leap",
+     "ability": "abl.skir.rending_leap",
+     "pos": [
+      -324.9,
+      125.2
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a5",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.a4a",
+      "tal.skirmisher.a4b",
+      "tal.skirmisher.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "dot"
+       ]
+      }
+     ],
+     "tmpl": "bleed",
+     "pos": [
+      -355.1,
+      205.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a6",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.a5",
+      "tal.skirmisher.a7",
+      "tal.skirmisher.a_x1",
+      "tal.skirmisher.a_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.2,
+       "tags": [
+        "bleed"
+       ]
+      },
+      {
+       "stat": "lifeLeech",
+       "op": "flat",
+       "value": 0.004
+      }
+     ],
+     "pos": [
+      -412.2,
+      238.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a7",
+     "kind": "transformer",
+     "branch": "A",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.a6",
+      "tal.skirmisher.a8"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.bleeding_cut",
+       "op": "set",
+       "path": "effects.0.hit.1.stacks",
+       "value": 3
+      },
+      {
+       "ability": "abl.skir.bleeding_cut",
+       "op": "set",
+       "path": "cost.amount",
+       "value": 2
+      },
+      {
+       "ability": "abl.skir.bleeding_cut",
+       "op": "set",
+       "path": "effects.0.hit.0.coef",
+       "value": 1.8
+      }
+     ],
+     "excl": "skir.cut",
+     "ability": "abl.skir.bleeding_cut",
+     "pos": [
+      -469.4,
+      271.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a8",
+     "kind": "keystone",
+     "branch": "A",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.a7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.5,
+       "tags": [
+        "bleed"
+       ]
+      },
+      {
+       "stat": "damageTaken",
+       "op": "more",
+       "value": 0.1,
+       "group": "talent"
+      }
+     ],
+     "pos": [
+      -526.5,
+      304.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a9",
+     "kind": "notable",
+     "branch": "A",
+     "ring": 5,
+     "lane": -2,
+     "links": [
+      "tal.skirmisher.a3a"
+     ],
+     "cost": 1,
+     "triggers": [
+      {
+       "on": "kill",
+       "icd": 0.4,
+       "chance": 1,
+       "effects": [
+        {
+         "op": "resource",
+         "amount": 2
+        }
+       ]
+      }
+     ],
+     "pos": [
+      -301.1,
+      298.5
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b1a",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.hub",
+      "tal.skirmisher.b2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "move",
+     "pos": [
+      -54.0,
+      -146.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b1b",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.hub",
+      "tal.skirmisher.b2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "actionSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "speed",
+     "pos": [
+      54.0,
+      -146.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b2",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.b1a",
+      "tal.skirmisher.b1b",
+      "tal.skirmisher.b3a",
+      "tal.skirmisher.b3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "dodgeCharges",
+       "op": "flat",
+       "value": 1
+      },
+      {
+       "stat": "dodgeCooldown",
+       "op": "inc",
+       "value": -0.1
+      }
+     ],
+     "pos": [
+      0.0,
+      -212.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b3a",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.b2",
+      "tal.skirmisher.b4a",
+      "tal.skirmisher.x_ab"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "cd",
+     "pos": [
+      -54.0,
+      -278.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b3b",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.b2",
+      "tal.skirmisher.b4b",
+      "tal.skirmisher.b9",
+      "tal.skirmisher.x_bc"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "actionSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "speed",
+     "pos": [
+      54.0,
+      -278.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b4a",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.b3a",
+      "tal.skirmisher.b5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.slide",
+       "op": "set",
+       "path": "effects[op=dash].onEnd",
+       "value": [
+        {
+         "op": "area",
+         "shape": "circle",
+         "radius": 3,
+         "origin": "self",
+         "hit": [
+          {
+           "op": "damage",
+           "type": "physical",
+           "coef": 1.0,
+           "scaling": "weapon"
+          },
+          {
+           "op": "knockback",
+           "force": 1.5
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "excl": "skir.slide",
+     "ability": "abl.skir.slide",
+     "pos": [
+      -54.0,
+      -344.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b4b",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.b3b",
+      "tal.skirmisher.b5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.slide",
+       "op": "set",
+       "path": "effects[op=dash].distance",
+       "value": 9
+      },
+      {
+       "ability": "abl.skir.slide",
+       "op": "set",
+       "path": "effects[op=dash].duration",
+       "value": 0.34
+      },
+      {
+       "ability": "abl.skir.slide",
+       "op": "set",
+       "path": "cooldown",
+       "value": 2.2
+      }
+     ],
+     "excl": "skir.slide",
+     "ability": "abl.skir.slide",
+     "pos": [
+      54.0,
+      -344.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b5",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.b4a",
+      "tal.skirmisher.b4b",
+      "tal.skirmisher.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "move",
+     "pos": [
+      0.0,
+      -410.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b6",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.b5",
+      "tal.skirmisher.b7",
+      "tal.skirmisher.b_x1",
+      "tal.skirmisher.b_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "resourceMax",
+       "op": "flat",
+       "value": 4
+      },
+      {
+       "stat": "resourceGain",
+       "op": "inc",
+       "value": 0.15
+      }
+     ],
+     "pos": [
+      0.0,
+      -476.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b7",
+     "kind": "transformer",
+     "branch": "B",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.b6",
+      "tal.skirmisher.b8"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.leaf_dance",
+       "op": "set",
+       "path": "cast.moveFactor",
+       "value": 1.0
+      },
+      {
+       "ability": "abl.skir.leaf_dance",
+       "op": "set",
+       "path": "channel.maxDuration",
+       "value": 3.2
+      },
+      {
+       "ability": "abl.skir.leaf_dance",
+       "op": "set",
+       "path": "channel.effects.0.hit.0.coef",
+       "value": 0.5
+      }
+     ],
+     "excl": "skir.dance",
+     "ability": "abl.skir.leaf_dance",
+     "pos": [
+      0.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b8",
+     "kind": "keystone",
+     "branch": "B",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.b7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "resourceMax",
+       "op": "flat",
+       "value": 10
+      }
+     ],
+     "triggers": [
+      {
+       "on": "perfectDodge",
+       "icd": 0.5,
+       "chance": 1,
+       "ability": "abl.skir.twin_knives",
+       "atNearest": 10
+      }
+     ],
+     "pos": [
+      0.0,
+      -608.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b9",
+     "kind": "notable",
+     "branch": "B",
+     "ring": 5,
+     "lane": 2,
+     "links": [
+      "tal.skirmisher.b3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "actionSpeed",
+       "op": "inc",
+       "value": 0.08
+      },
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.06
+      }
+     ],
+     "pos": [
+      108.0,
+      -410.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c1a",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 1,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.hub",
+      "tal.skirmisher.c2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.08,
+       "tags": [
+        "projectile"
+       ]
+      }
+     ],
+     "tmpl": "proj",
+     "pos": [
+      153.4,
+      26.2
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c1b",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 1,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.hub",
+      "tal.skirmisher.c2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "areaSize",
+       "op": "inc",
+       "value": 0.06
+      }
+     ],
+     "tmpl": "area",
+     "pos": [
+      99.4,
+      119.8
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c2",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 2,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.c1a",
+      "tal.skirmisher.c1b",
+      "tal.skirmisher.c3a",
+      "tal.skirmisher.c3b"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "extraProjectiles",
+       "op": "flat",
+       "value": 1,
+       "tags": [
+        "projectile"
+       ]
+      },
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.1,
+       "tags": [
+        "trap"
+       ]
+      }
+     ],
+     "pos": [
+      183.6,
+      106.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c3a",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 3,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.c2",
+      "tal.skirmisher.c4a",
+      "tal.skirmisher.c9",
+      "tal.skirmisher.x_bc"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "statusDuration",
+       "op": "inc",
+       "value": 0.1
+      }
+     ],
+     "tmpl": "dur",
+     "pos": [
+      267.8,
+      92.2
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c3b",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 3,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.c2",
+      "tal.skirmisher.c4b",
+      "tal.skirmisher.x_ca"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "cd",
+     "pos": [
+      213.8,
+      185.8
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c4a",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 4,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.c3a",
+      "tal.skirmisher.c5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.twin_knives",
+       "op": "set",
+       "path": "effects[op=projectile].count",
+       "value": 5
+      },
+      {
+       "ability": "abl.skir.twin_knives",
+       "op": "set",
+       "path": "effects[op=projectile].spread",
+       "value": 52
+      },
+      {
+       "ability": "abl.skir.twin_knives",
+       "op": "set",
+       "path": "effects[op=projectile].hit.0.coef",
+       "value": 0.7
+      }
+     ],
+     "excl": "skir.knives",
+     "ability": "abl.skir.twin_knives",
+     "pos": [
+      324.9,
+      125.2
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c4b",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 4,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.c3b",
+      "tal.skirmisher.c5"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.twin_knives",
+       "op": "set",
+       "path": "effects[op=projectile].count",
+       "value": 1
+      },
+      {
+       "ability": "abl.skir.twin_knives",
+       "op": "set",
+       "path": "effects[op=projectile].pierce",
+       "value": 4
+      },
+      {
+       "ability": "abl.skir.twin_knives",
+       "op": "set",
+       "path": "effects[op=projectile].speed",
+       "value": 32
+      },
+      {
+       "ability": "abl.skir.twin_knives",
+       "op": "set",
+       "path": "effects[op=projectile].hit.0.coef",
+       "value": 2.0
+      }
+     ],
+     "excl": "skir.knives",
+     "ability": "abl.skir.twin_knives",
+     "pos": [
+      270.9,
+      218.8
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c5",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 5,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.c4a",
+      "tal.skirmisher.c4b",
+      "tal.skirmisher.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.03
+      }
+     ],
+     "tmpl": "move",
+     "pos": [
+      355.1,
+      205.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c6",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 6,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.c5",
+      "tal.skirmisher.c7",
+      "tal.skirmisher.c_x1",
+      "tal.skirmisher.c_x2"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.2,
+       "tags": [
+        "trap"
+       ]
+      },
+      {
+       "stat": "statusPotency",
+       "op": "inc",
+       "value": 0.2
+      }
+     ],
+     "pos": [
+      412.2,
+      238.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c7",
+     "kind": "transformer",
+     "branch": "C",
+     "ring": 7,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.c6",
+      "tal.skirmisher.c8"
+     ],
+     "cost": 1,
+     "patches": [
+      {
+       "ability": "abl.skir.rope_trap",
+       "op": "set",
+       "path": "effects[op=zone].radius",
+       "value": 3.2
+      },
+      {
+       "ability": "abl.skir.rope_trap",
+       "op": "set",
+       "path": "effects[op=zone].max",
+       "value": 2
+      },
+      {
+       "ability": "abl.skir.rope_trap",
+       "op": "set",
+       "path": "effects[op=zone].hit.0.coef",
+       "value": 3.2
+      },
+      {
+       "ability": "abl.skir.rope_trap",
+       "op": "set",
+       "path": "effects[op=zone].hit.1",
+       "value": {
+        "op": "knockback",
+        "force": 3
+       }
+      }
+     ],
+     "excl": "skir.trap",
+     "ability": "abl.skir.rope_trap",
+     "pos": [
+      469.4,
+      271.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c8",
+     "kind": "keystone",
+     "branch": "C",
+     "ring": 8,
+     "lane": 0,
+     "links": [
+      "tal.skirmisher.c7"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "more",
+       "value": -0.2,
+       "group": "talent"
+      },
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.2
+      }
+     ],
+     "flags": [
+      "cloakWalk"
+     ],
+     "pos": [
+      526.5,
+      304.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c9",
+     "kind": "notable",
+     "branch": "C",
+     "ring": 5,
+     "lane": -2,
+     "links": [
+      "tal.skirmisher.c3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "potionEfficiency",
+       "op": "inc",
+       "value": 0.25
+      },
+      {
+       "stat": "lootFind",
+       "op": "flat",
+       "value": 0.05
+      }
+     ],
+     "pos": [
+      409.1,
+      111.5
+     ]
+    },
+    {
+     "id": "tal.skirmisher.x_ab",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": -3,
+     "links": [
+      "tal.skirmisher.a3b",
+      "tal.skirmisher.b3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.04,
+       "tags": [
+        "melee"
+       ]
+      },
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.03
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      -162.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.x_bc",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": 3,
+     "links": [
+      "tal.skirmisher.b3b",
+      "tal.skirmisher.c3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "actionSpeed",
+       "op": "inc",
+       "value": 0.03
+      },
+      {
+       "stat": "statusChance",
+       "op": "flat",
+       "value": 0.03
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      162.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.x_ca",
+     "kind": "minor",
+     "branch": "core",
+     "ring": 3,
+     "lane": 6,
+     "links": [
+      "tal.skirmisher.c3b",
+      "tal.skirmisher.a3a"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.05
+      },
+      {
+       "stat": "cooldownRate",
+       "op": "inc",
+       "value": 0.03
+      }
+     ],
+     "tmpl": "hybrid",
+     "pos": [
+      278.0,
+      324.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a_x1",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "critChance",
+       "op": "flat",
+       "value": 0.02
+      }
+     ],
+     "tmpl": "crit",
+     "pos": [
+      -442.4,
+      317.8
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b_x1",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "moveSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "move",
+     "pos": [
+      -54.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c_x1",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 7,
+     "lane": -1,
+     "links": [
+      "tal.skirmisher.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.06,
+       "tags": [
+        "projectile"
+       ]
+      }
+     ],
+     "tmpl": "proj",
+     "pos": [
+      496.4,
+      224.2
+     ]
+    },
+    {
+     "id": "tal.skirmisher.a_x2",
+     "kind": "minor",
+     "branch": "A",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.a6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "damage",
+       "op": "inc",
+       "value": 0.06,
+       "tags": [
+        "physical"
+       ]
+      }
+     ],
+     "tmpl": "dmg_phys",
+     "pos": [
+      -496.4,
+      224.2
+     ]
+    },
+    {
+     "id": "tal.skirmisher.b_x2",
+     "kind": "minor",
+     "branch": "B",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.b6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "actionSpeed",
+       "op": "inc",
+       "value": 0.04
+      }
+     ],
+     "tmpl": "speed",
+     "pos": [
+      54.0,
+      -542.0
+     ]
+    },
+    {
+     "id": "tal.skirmisher.c_x2",
+     "kind": "minor",
+     "branch": "C",
+     "ring": 7,
+     "lane": 1,
+     "links": [
+      "tal.skirmisher.c6"
+     ],
+     "cost": 1,
+     "mods": [
+      {
+       "stat": "life",
+       "op": "inc",
+       "value": 0.05
+      }
+     ],
+     "tmpl": "life",
+     "pos": [
+      442.4,
+      317.8
+     ]
+    }
+   ],
+   "class": "cls.skirmisher",
+   "branches": {
+    "A": {
+     "name": "tal.branch.skirmisher.A"
+    },
+    "B": {
+     "name": "tal.branch.skirmisher.B"
+    },
+    "C": {
+     "name": "tal.branch.skirmisher.C"
+    }
+   }
+  }
+ ]
+}

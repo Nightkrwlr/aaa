@@ -305,7 +305,7 @@
    "id": "stat.moveSpeed",
    "key": "moveSpeed",
    "base": 5.6,
-   "min": 2,
+   "min": 0,
    "max": 8.96,
    "fmt": "float",
    "group": "utility"
@@ -408,6 +408,49 @@
    "max": 0.5,
    "fmt": "pct",
    "group": "offense"
+  },
+  {
+   "id": "stat.reflectPct",
+   "key": "reflectPct",
+   "base": 0,
+   "min": 0,
+   "max": 1,
+   "fmt": "pct",
+   "group": "defense"
+  },
+  {
+   "id": "stat.thresholdShift",
+   "key": "thresholdShift",
+   "base": 0,
+   "min": 0,
+   "max": 40,
+   "fmt": "int",
+   "group": "resource"
+  },
+  {
+   "id": "stat.summonDamage",
+   "key": "summonDamage",
+   "base": 0,
+   "fmt": "pct",
+   "group": "offense"
+  },
+  {
+   "id": "stat.extraProjectiles",
+   "key": "extraProjectiles",
+   "base": 0,
+   "min": 0,
+   "max": 6,
+   "fmt": "int",
+   "group": "offense"
+  },
+  {
+   "id": "stat.shieldPower",
+   "key": "shieldPower",
+   "base": 1,
+   "min": 0.5,
+   "max": 3,
+   "fmt": "mult",
+   "group": "defense"
   }
  ]
 }

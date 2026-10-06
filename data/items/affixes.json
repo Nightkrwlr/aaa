@@ -1,0 +1,1768 @@
+{
+ "kind": "affix",
+ "items": [
+  {
+   "id": "afx.p.sonic_dmg",
+   "type": "prefix",
+   "group": "p.sonic_dmg",
+   "slots": [
+    "weapon",
+    "offhand",
+    "neck",
+    "ring",
+    "hands",
+    "relic"
+   ],
+   "tags": [
+    "sonic",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 90,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct",
+     "tags": [
+      "sonic"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.fire_dmg",
+   "type": "prefix",
+   "group": "p.fire_dmg",
+   "slots": [
+    "weapon",
+    "offhand",
+    "neck",
+    "ring",
+    "hands",
+    "relic"
+   ],
+   "tags": [
+    "fire",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 90,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct",
+     "tags": [
+      "fire"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.frost_dmg",
+   "type": "prefix",
+   "group": "p.frost_dmg",
+   "slots": [
+    "weapon",
+    "offhand",
+    "neck",
+    "ring",
+    "hands",
+    "relic"
+   ],
+   "tags": [
+    "frost",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 90,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct",
+     "tags": [
+      "frost"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.shock_dmg",
+   "type": "prefix",
+   "group": "p.shock_dmg",
+   "slots": [
+    "weapon",
+    "offhand",
+    "neck",
+    "ring",
+    "hands",
+    "relic"
+   ],
+   "tags": [
+    "shock",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 90,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct",
+     "tags": [
+      "shock"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.toxic_dmg",
+   "type": "prefix",
+   "group": "p.toxic_dmg",
+   "slots": [
+    "weapon",
+    "offhand",
+    "neck",
+    "ring",
+    "hands",
+    "relic"
+   ],
+   "tags": [
+    "toxic",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 90,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct",
+     "tags": [
+      "toxic"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.hollow_dmg",
+   "type": "prefix",
+   "group": "p.hollow_dmg",
+   "slots": [
+    "weapon",
+    "offhand",
+    "neck",
+    "ring",
+    "hands",
+    "relic"
+   ],
+   "tags": [
+    "hollow",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 30,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct",
+     "tags": [
+      "hollow"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.phys_dmg",
+   "type": "prefix",
+   "group": "p.phys_dmg",
+   "slots": [
+    "weapon",
+    "hands",
+    "ring",
+    "chest"
+   ],
+   "tags": [
+    "physical",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 90,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct",
+     "tags": [
+      "physical"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.melee_dmg",
+   "type": "prefix",
+   "group": "p.melee_dmg",
+   "slots": [
+    "weapon",
+    "hands",
+    "chest",
+    "ring"
+   ],
+   "tags": [
+    "melee",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 80,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.2
+     ],
+     "scale": "pct",
+     "tags": [
+      "melee"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.proj_dmg",
+   "type": "prefix",
+   "group": "p.proj_dmg",
+   "slots": [
+    "weapon",
+    "hands",
+    "neck",
+    "ring"
+   ],
+   "tags": [
+    "projectile",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.2
+     ],
+     "scale": "pct",
+     "tags": [
+      "projectile"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.area_dmg",
+   "type": "prefix",
+   "group": "p.area_dmg",
+   "slots": [
+    "weapon",
+    "head",
+    "neck",
+    "relic"
+   ],
+   "tags": [
+    "area",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.2
+     ],
+     "scale": "pct",
+     "tags": [
+      "area"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.dot_dmg",
+   "type": "prefix",
+   "group": "p.dot_dmg",
+   "slots": [
+    "weapon",
+    "neck",
+    "ring"
+   ],
+   "tags": [
+    "dot",
+    "damage"
+   ],
+   "minIlvl": 1,
+   "weight": 60,
+   "mods": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "range": [
+      0.12,
+      0.24
+     ],
+     "scale": "pct",
+     "tags": [
+      "dot"
+     ]
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.flat_dmg",
+   "type": "prefix",
+   "group": "p.flat_dmg",
+   "slots": [
+    "weapon",
+    "ring",
+    "hands"
+   ],
+   "tags": [
+    "damage",
+    "flat"
+   ],
+   "minIlvl": 1,
+   "weight": 100,
+   "mods": [
+    {
+     "stat": "damageFlat",
+     "op": "flat",
+     "range": [
+      4,
+      7
+     ],
+     "scale": "flat"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.speed",
+   "type": "prefix",
+   "group": "p.speed",
+   "slots": [
+    "weapon",
+    "hands",
+    "relic"
+   ],
+   "tags": [
+    "speed"
+   ],
+   "minIlvl": 3,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "actionSpeed",
+     "op": "inc",
+     "range": [
+      0.05,
+      0.1
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.crit",
+   "type": "prefix",
+   "group": "p.crit",
+   "slots": [
+    "weapon",
+    "ring",
+    "neck",
+    "offhand",
+    "head"
+   ],
+   "tags": [
+    "crit"
+   ],
+   "minIlvl": 1,
+   "weight": 80,
+   "mods": [
+    {
+     "stat": "critChance",
+     "op": "flat",
+     "range": [
+      0.02,
+      0.045
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.critmult",
+   "type": "prefix",
+   "group": "p.critmult",
+   "slots": [
+    "weapon",
+    "neck",
+    "ring",
+    "hands"
+   ],
+   "tags": [
+    "crit"
+   ],
+   "minIlvl": 5,
+   "weight": 60,
+   "mods": [
+    {
+     "stat": "critMult",
+     "op": "flat",
+     "range": [
+      0.15,
+      0.35
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.area_size",
+   "type": "prefix",
+   "group": "p.area_size",
+   "slots": [
+    "head",
+    "neck",
+    "offhand",
+    "relic"
+   ],
+   "tags": [
+    "area"
+   ],
+   "minIlvl": 4,
+   "weight": 55,
+   "mods": [
+    {
+     "stat": "areaSize",
+     "op": "inc",
+     "range": [
+      0.06,
+      0.12
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.proj_speed",
+   "type": "prefix",
+   "group": "p.proj_speed",
+   "slots": [
+    "weapon",
+    "offhand",
+    "hands"
+   ],
+   "tags": [
+    "projectile"
+   ],
+   "minIlvl": 1,
+   "weight": 50,
+   "mods": [
+    {
+     "stat": "projectileSpeed",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.pierce",
+   "type": "prefix",
+   "group": "p.pierce",
+   "slots": [
+    "weapon",
+    "offhand"
+   ],
+   "tags": [
+    "projectile",
+    "build"
+   ],
+   "minIlvl": 8,
+   "weight": 12,
+   "mods": [
+    {
+     "stat": "pierce",
+     "op": "flat",
+     "range": [
+      1,
+      1
+     ],
+     "scale": "none",
+     "tags": [
+      "projectile"
+     ]
+    }
+   ],
+   "cost": 2.2
+  },
+  {
+   "id": "afx.p.chain",
+   "type": "prefix",
+   "group": "p.chain",
+   "slots": [
+    "weapon",
+    "relic"
+   ],
+   "tags": [
+    "projectile",
+    "build"
+   ],
+   "minIlvl": 10,
+   "weight": 10,
+   "mods": [
+    {
+     "stat": "chain",
+     "op": "flat",
+     "range": [
+      1,
+      1
+     ],
+     "scale": "none",
+     "tags": [
+      "projectile"
+     ]
+    }
+   ],
+   "cost": 2.4
+  },
+  {
+   "id": "afx.p.status_chance",
+   "type": "prefix",
+   "group": "p.status_chance",
+   "slots": [
+    "weapon",
+    "ring",
+    "neck",
+    "offhand"
+   ],
+   "tags": [
+    "status"
+   ],
+   "minIlvl": 1,
+   "weight": 60,
+   "mods": [
+    {
+     "stat": "statusChance",
+     "op": "flat",
+     "range": [
+      0.05,
+      0.11
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.status_potency",
+   "type": "prefix",
+   "group": "p.status_potency",
+   "slots": [
+    "weapon",
+    "ring",
+    "neck",
+    "relic"
+   ],
+   "tags": [
+    "status"
+   ],
+   "minIlvl": 1,
+   "weight": 55,
+   "mods": [
+    {
+     "stat": "statusPotency",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.life_flat",
+   "type": "prefix",
+   "group": "p.life_flat",
+   "slots": [
+    "chest",
+    "head",
+    "hands",
+    "feet",
+    "ring",
+    "neck",
+    "offhand"
+   ],
+   "tags": [
+    "life"
+   ],
+   "minIlvl": 1,
+   "weight": 110,
+   "mods": [
+    {
+     "stat": "life",
+     "op": "flat",
+     "range": [
+      30,
+      52
+     ],
+     "scale": "flat"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.life_inc",
+   "type": "prefix",
+   "group": "p.life_inc",
+   "slots": [
+    "chest",
+    "head",
+    "ring",
+    "neck",
+    "relic"
+   ],
+   "tags": [
+    "life"
+   ],
+   "minIlvl": 4,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "range": [
+      0.04,
+      0.08
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.armor_flat",
+   "type": "prefix",
+   "group": "p.armor_flat",
+   "slots": [
+    "head",
+    "chest",
+    "hands",
+    "feet",
+    "offhand"
+   ],
+   "tags": [
+    "armor"
+   ],
+   "minIlvl": 1,
+   "weight": 100,
+   "mods": [
+    {
+     "stat": "armor",
+     "op": "flat",
+     "range": [
+      20,
+      36
+     ],
+     "scale": "flat"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.armor_inc",
+   "type": "prefix",
+   "group": "p.armor_inc",
+   "slots": [
+    "head",
+    "chest",
+    "hands",
+    "feet",
+    "offhand"
+   ],
+   "tags": [
+    "armor"
+   ],
+   "minIlvl": 1,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "armor",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.22
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.shield",
+   "type": "prefix",
+   "group": "p.shield",
+   "slots": [
+    "chest",
+    "offhand",
+    "head",
+    "neck"
+   ],
+   "tags": [
+    "shield"
+   ],
+   "minIlvl": 3,
+   "weight": 60,
+   "mods": [
+    {
+     "stat": "shieldMax",
+     "op": "flat",
+     "range": [
+      18,
+      34
+     ],
+     "scale": "flat"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.regen",
+   "type": "prefix",
+   "group": "p.regen",
+   "slots": [
+    "chest",
+    "ring",
+    "feet",
+    "neck"
+   ],
+   "tags": [
+    "regen"
+   ],
+   "minIlvl": 1,
+   "weight": 60,
+   "mods": [
+    {
+     "stat": "lifeRegenPct",
+     "op": "flat",
+     "range": [
+      0.002,
+      0.005
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.thorns",
+   "type": "prefix",
+   "group": "p.thorns",
+   "slots": [
+    "chest",
+    "offhand",
+    "hands"
+   ],
+   "tags": [
+    "thorns",
+    "melee"
+   ],
+   "minIlvl": 4,
+   "weight": 40,
+   "mods": [
+    {
+     "stat": "thorns",
+     "op": "flat",
+     "range": [
+      6,
+      12
+     ],
+     "scale": "flat"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.res_max",
+   "type": "prefix",
+   "group": "p.res_max",
+   "slots": [
+    "relic",
+    "neck",
+    "ring",
+    "head"
+   ],
+   "tags": [
+    "resource"
+   ],
+   "minIlvl": 1,
+   "weight": 60,
+   "mods": [
+    {
+     "stat": "resourceMax",
+     "op": "flat",
+     "range": [
+      8,
+      16
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 0.8
+  },
+  {
+   "id": "afx.p.res_gain",
+   "type": "prefix",
+   "group": "p.res_gain",
+   "slots": [
+    "relic",
+    "weapon",
+    "hands",
+    "ring"
+   ],
+   "tags": [
+    "resource"
+   ],
+   "minIlvl": 1,
+   "weight": 60,
+   "mods": [
+    {
+     "stat": "resourceGain",
+     "op": "inc",
+     "range": [
+      0.08,
+      0.16
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.p.res_cost",
+   "type": "prefix",
+   "group": "p.res_cost",
+   "slots": [
+    "relic",
+    "head",
+    "neck"
+   ],
+   "tags": [
+    "resource"
+   ],
+   "minIlvl": 6,
+   "weight": 50,
+   "mods": [
+    {
+     "stat": "resourceCost",
+     "op": "inc",
+     "range": [
+      -0.1,
+      -0.05
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.res_fire",
+   "type": "suffix",
+   "group": "s.res_fire",
+   "slots": [
+    "chest",
+    "head",
+    "hands",
+    "feet",
+    "offhand",
+    "neck",
+    "ring"
+   ],
+   "tags": [
+    "resist",
+    "fire"
+   ],
+   "minIlvl": 1,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "res.fire",
+     "op": "flat",
+     "range": [
+      0.08,
+      0.16
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.res_frost",
+   "type": "suffix",
+   "group": "s.res_frost",
+   "slots": [
+    "chest",
+    "head",
+    "hands",
+    "feet",
+    "offhand",
+    "neck",
+    "ring"
+   ],
+   "tags": [
+    "resist",
+    "frost"
+   ],
+   "minIlvl": 1,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "res.frost",
+     "op": "flat",
+     "range": [
+      0.08,
+      0.16
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.res_shock",
+   "type": "suffix",
+   "group": "s.res_shock",
+   "slots": [
+    "chest",
+    "head",
+    "hands",
+    "feet",
+    "offhand",
+    "neck",
+    "ring"
+   ],
+   "tags": [
+    "resist",
+    "shock"
+   ],
+   "minIlvl": 1,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "res.shock",
+     "op": "flat",
+     "range": [
+      0.08,
+      0.16
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.res_toxic",
+   "type": "suffix",
+   "group": "s.res_toxic",
+   "slots": [
+    "chest",
+    "head",
+    "hands",
+    "feet",
+    "offhand",
+    "neck",
+    "ring"
+   ],
+   "tags": [
+    "resist",
+    "toxic"
+   ],
+   "minIlvl": 1,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "res.toxic",
+     "op": "flat",
+     "range": [
+      0.08,
+      0.16
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.res_sonic",
+   "type": "suffix",
+   "group": "s.res_sonic",
+   "slots": [
+    "chest",
+    "head",
+    "hands",
+    "feet",
+    "offhand",
+    "neck",
+    "ring"
+   ],
+   "tags": [
+    "resist",
+    "sonic"
+   ],
+   "minIlvl": 1,
+   "weight": 70,
+   "mods": [
+    {
+     "stat": "res.sonic",
+     "op": "flat",
+     "range": [
+      0.08,
+      0.16
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.res_hollow",
+   "type": "suffix",
+   "group": "s.res_hollow",
+   "slots": [
+    "chest",
+    "head",
+    "hands",
+    "feet",
+    "offhand",
+    "neck",
+    "ring"
+   ],
+   "tags": [
+    "resist",
+    "hollow"
+   ],
+   "minIlvl": 1,
+   "weight": 35,
+   "mods": [
+    {
+     "stat": "res.hollow",
+     "op": "flat",
+     "range": [
+      0.08,
+      0.16
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.res_all",
+   "type": "suffix",
+   "group": "res_all",
+   "slots": [
+    "chest",
+    "neck",
+    "ring",
+    "relic"
+   ],
+   "tags": [
+    "resist"
+   ],
+   "minIlvl": 8,
+   "weight": 25,
+   "mods": [
+    {
+     "stat": "res.fire",
+     "op": "flat",
+     "range": [
+      0.04,
+      0.08
+     ],
+     "scale": "pct"
+    },
+    {
+     "stat": "res.frost",
+     "op": "flat",
+     "range": [
+      0.04,
+      0.08
+     ],
+     "scale": "pct"
+    },
+    {
+     "stat": "res.shock",
+     "op": "flat",
+     "range": [
+      0.04,
+      0.08
+     ],
+     "scale": "pct"
+    },
+    {
+     "stat": "res.sonic",
+     "op": "flat",
+     "range": [
+      0.04,
+      0.08
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 2.0
+  },
+  {
+   "id": "afx.s.move",
+   "type": "suffix",
+   "group": "s.move",
+   "slots": [
+    "feet",
+    "relic"
+   ],
+   "tags": [
+    "movement"
+   ],
+   "minIlvl": 1,
+   "weight": 80,
+   "mods": [
+    {
+     "stat": "moveSpeed",
+     "op": "inc",
+     "range": [
+      0.05,
+      0.1
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.dodge_cd",
+   "type": "suffix",
+   "group": "s.dodge_cd",
+   "slots": [
+    "feet",
+    "hands",
+    "relic"
+   ],
+   "tags": [
+    "movement",
+    "dodge"
+   ],
+   "minIlvl": 5,
+   "weight": 40,
+   "mods": [
+    {
+     "stat": "dodgeCooldown",
+     "op": "inc",
+     "range": [
+      -0.12,
+      -0.06
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.dodge_charge",
+   "type": "suffix",
+   "group": "s.dodge_charge",
+   "slots": [
+    "feet",
+    "relic"
+   ],
+   "tags": [
+    "movement",
+    "dodge",
+    "build"
+   ],
+   "minIlvl": 12,
+   "weight": 8,
+   "mods": [
+    {
+     "stat": "dodgeCharges",
+     "op": "flat",
+     "range": [
+      1,
+      1
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 2.6
+  },
+  {
+   "id": "afx.s.cdr",
+   "type": "suffix",
+   "group": "s.cdr",
+   "slots": [
+    "head",
+    "hands",
+    "relic",
+    "neck"
+   ],
+   "tags": [
+    "cooldown"
+   ],
+   "minIlvl": 4,
+   "weight": 60,
+   "mods": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "range": [
+      0.05,
+      0.1
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.leech",
+   "type": "suffix",
+   "group": "s.leech",
+   "slots": [
+    "weapon",
+    "ring",
+    "hands"
+   ],
+   "tags": [
+    "leech"
+   ],
+   "minIlvl": 6,
+   "weight": 35,
+   "mods": [
+    {
+     "stat": "lifeLeech",
+     "op": "flat",
+     "range": [
+      0.004,
+      0.009
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.life_hit",
+   "type": "suffix",
+   "group": "s.life_hit",
+   "slots": [
+    "weapon",
+    "ring",
+    "hands"
+   ],
+   "tags": [
+    "leech"
+   ],
+   "minIlvl": 1,
+   "weight": 45,
+   "mods": [
+    {
+     "stat": "lifeOnHit",
+     "op": "flat",
+     "range": [
+      1.5,
+      3.0
+     ],
+     "scale": "flat"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.life_kill",
+   "type": "suffix",
+   "group": "s.life_kill",
+   "slots": [
+    "weapon",
+    "chest",
+    "ring",
+    "neck"
+   ],
+   "tags": [
+    "leech"
+   ],
+   "minIlvl": 1,
+   "weight": 45,
+   "mods": [
+    {
+     "stat": "lifeOnKill",
+     "op": "flat",
+     "range": [
+      8,
+      16
+     ],
+     "scale": "flat"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.listen_range",
+   "type": "suffix",
+   "group": "s.listen_range",
+   "slots": [
+    "head",
+    "neck",
+    "relic"
+   ],
+   "tags": [
+    "listen"
+   ],
+   "minIlvl": 1,
+   "weight": 45,
+   "mods": [
+    {
+     "stat": "listenRange",
+     "op": "flat",
+     "range": [
+      2,
+      5
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.listen_breath",
+   "type": "suffix",
+   "group": "s.listen_breath",
+   "slots": [
+    "neck",
+    "chest",
+    "relic"
+   ],
+   "tags": [
+    "listen"
+   ],
+   "minIlvl": 1,
+   "weight": 35,
+   "mods": [
+    {
+     "stat": "listenBreath",
+     "op": "flat",
+     "range": [
+      0.6,
+      1.5
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.pickup",
+   "type": "suffix",
+   "group": "s.pickup",
+   "slots": [
+    "hands",
+    "ring",
+    "feet"
+   ],
+   "tags": [
+    "utility"
+   ],
+   "minIlvl": 1,
+   "weight": 40,
+   "mods": [
+    {
+     "stat": "pickupRadius",
+     "op": "flat",
+     "range": [
+      0.5,
+      1.2
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 0.5
+  },
+  {
+   "id": "afx.s.loot",
+   "type": "suffix",
+   "group": "s.loot",
+   "slots": [
+    "neck",
+    "ring",
+    "head"
+   ],
+   "tags": [
+    "loot"
+   ],
+   "minIlvl": 3,
+   "weight": 30,
+   "mods": [
+    {
+     "stat": "lootFind",
+     "op": "flat",
+     "range": [
+      0.04,
+      0.09
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 0.7
+  },
+  {
+   "id": "afx.s.chimes",
+   "type": "suffix",
+   "group": "s.chimes",
+   "slots": [
+    "neck",
+    "ring",
+    "hands"
+   ],
+   "tags": [
+    "loot"
+   ],
+   "minIlvl": 1,
+   "weight": 35,
+   "mods": [
+    {
+     "stat": "chimeFind",
+     "op": "flat",
+     "range": [
+      0.08,
+      0.18
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 0.6
+  },
+  {
+   "id": "afx.s.potion",
+   "type": "suffix",
+   "group": "s.potion",
+   "slots": [
+    "chest",
+    "ring",
+    "relic"
+   ],
+   "tags": [
+    "utility"
+   ],
+   "minIlvl": 1,
+   "weight": 35,
+   "mods": [
+    {
+     "stat": "potionEfficiency",
+     "op": "inc",
+     "range": [
+      0.1,
+      0.2
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.status_dur",
+   "type": "suffix",
+   "group": "s.status_dur",
+   "slots": [
+    "weapon",
+    "neck",
+    "ring",
+    "head"
+   ],
+   "tags": [
+    "status"
+   ],
+   "minIlvl": 1,
+   "weight": 45,
+   "mods": [
+    {
+     "stat": "statusDuration",
+     "op": "inc",
+     "range": [
+      0.12,
+      0.24
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.pen",
+   "type": "suffix",
+   "group": "s.pen",
+   "slots": [
+    "weapon",
+    "ring",
+    "neck"
+   ],
+   "tags": [
+    "pen"
+   ],
+   "minIlvl": 8,
+   "weight": 35,
+   "mods": [
+    {
+     "stat": "pen",
+     "op": "flat",
+     "range": [
+      0.04,
+      0.09
+     ],
+     "scale": "pct"
+    }
+   ],
+   "cost": 1.0
+  },
+  {
+   "id": "afx.s.chord_dmg",
+   "type": "suffix",
+   "group": "s.chord_dmg",
+   "slots": [
+    "relic",
+    "weapon",
+    "neck"
+   ],
+   "tags": [
+    "cadence",
+    "build"
+   ],
+   "minIlvl": 5,
+   "weight": 18,
+   "mods": [
+    {
+     "stat": "chord.triadDmg",
+     "op": "flat",
+     "range": [
+      0.05,
+      0.1
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 1.8
+  },
+  {
+   "id": "afx.s.chord_time",
+   "type": "suffix",
+   "group": "s.chord_time",
+   "slots": [
+    "relic",
+    "head",
+    "neck"
+   ],
+   "tags": [
+    "cadence",
+    "build"
+   ],
+   "minIlvl": 5,
+   "weight": 18,
+   "mods": [
+    {
+     "stat": "chord.window",
+     "op": "flat",
+     "range": [
+      0.4,
+      0.9
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 1.4
+  },
+  {
+   "id": "afx.s.chord_refund",
+   "type": "suffix",
+   "group": "s.chord_refund",
+   "slots": [
+    "relic",
+    "ring",
+    "hands"
+   ],
+   "tags": [
+    "cadence",
+    "build"
+   ],
+   "minIlvl": 6,
+   "weight": 16,
+   "mods": [
+    {
+     "stat": "chord.triadRefund",
+     "op": "flat",
+     "range": [
+      0.05,
+      0.09
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 1.6
+  },
+  {
+   "id": "afx.s.unison",
+   "type": "suffix",
+   "group": "s.unison",
+   "slots": [
+    "relic",
+    "weapon",
+    "chest"
+   ],
+   "tags": [
+    "cadence",
+    "build"
+   ],
+   "minIlvl": 7,
+   "weight": 14,
+   "mods": [
+    {
+     "stat": "chord.unisonArea",
+     "op": "flat",
+     "range": [
+      0.1,
+      0.2
+     ],
+     "scale": "none"
+    },
+    {
+     "stat": "chord.unisonDmg",
+     "op": "flat",
+     "range": [
+      0.05,
+      0.1
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 2.0
+  },
+  {
+   "id": "afx.s.reprise",
+   "type": "suffix",
+   "group": "s.reprise",
+   "slots": [
+    "relic",
+    "hands",
+    "head"
+   ],
+   "tags": [
+    "cadence",
+    "build"
+   ],
+   "minIlvl": 6,
+   "weight": 16,
+   "mods": [
+    {
+     "stat": "chord.repriseSeconds",
+     "op": "flat",
+     "range": [
+      0.5,
+      1.2
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 1.5
+  },
+  {
+   "id": "afx.s.voice",
+   "type": "suffix",
+   "group": "s.voice",
+   "slots": [
+    "relic",
+    "neck"
+   ],
+   "tags": [
+    "voice",
+    "build"
+   ],
+   "minIlvl": 8,
+   "weight": 10,
+   "mods": [
+    {
+     "stat": "voiceCharges",
+     "op": "flat",
+     "range": [
+      1,
+      1
+     ],
+     "scale": "none"
+    }
+   ],
+   "cost": 2.2
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+{
+  "kind": "family",
+  "items": [
+    { "id": "fam.test", "color": "#888888" },
+    { "id": "fam.discordant", "color": "#7fe3ff", "region": "reg.calvarre" },
+    { "id": "fam.hollow", "color": "#b79cff", "region": "reg.calvarre" },
+    { "id": "fam.serrane_construct", "color": "#d9a24a", "region": "reg.calvarre" }
+  ]
+}

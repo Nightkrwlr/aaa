@@ -1,0 +1,85 @@
+{
+ "kind": "class",
+ "items": [
+  {
+   "id": "cls.prismatist",
+   "model": "mdl.prismatist",
+   "color": "#7fe3ff",
+   "resource": {
+    "id": "fulgor",
+    "max": 100,
+    "start": 0,
+    "decay": {
+     "delay": 1.6,
+     "rate": 6
+    },
+    "onHit": 0,
+    "onHurt": 0,
+    "thresholds": [
+     {
+      "at": 60,
+      "status": "st.incandescent"
+     }
+    ],
+    "overflow": {
+     "at": 100,
+     "status": "st.dazzled",
+     "resetTo": 40,
+     "radius": 3.5,
+     "burstPct": 0.2
+    }
+   },
+   "profile": {
+    "life": 0.88,
+    "armor": 0.35,
+    "res": {
+     "fire": 0.05,
+     "frost": 0.05,
+     "shock": 0.05
+    },
+    "moveSpeed": 5.6,
+    "weaponKinds": [
+     "caster"
+    ],
+    "unarmedMult": 0.6
+   },
+   "loadout": {
+    "primary": "abl.prism.shard",
+    "s1": "abl.prism.nova",
+    "dodge": "abl.prism.refract"
+   },
+   "unlocks": [
+    {
+     "level": 1,
+     "ability": "abl.prism.nova"
+    },
+    {
+     "level": 2,
+     "ability": "abl.prism.ice_needle"
+    },
+    {
+     "level": 3,
+     "ability": "abl.prism.dome"
+    },
+    {
+     "level": 4,
+     "ability": "abl.prism.broken_beam"
+    },
+    {
+     "level": 6,
+     "ability": "abl.prism.cascade"
+    },
+    {
+     "level": 8,
+     "ability": "abl.prism.prism_storm"
+    },
+    {
+     "level": 10,
+     "ability": "abl.prism.fracture"
+    }
+   ],
+   "talentTree": "tree.prismatist",
+   "startingWeapon": "itm.base.prism_staff_worn"
+  }
+ ]
+}

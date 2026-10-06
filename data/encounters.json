@@ -1,0 +1,27 @@
+{
+  "kind": "encounter",
+  "items": [
+    { "id": "enc.first_blood", "name": "enc.first_blood", "budget": 3.0, "eliteChance": 0,
+      "slots": [{ "enemy": "enm.hollow_chorister", "min": 2, "max": 3 }], "formation": "cluster" },
+    { "id": "enc.hollow_walkers", "budget": 4.5, "eliteChance": 0.04,
+      "slots": [{ "enemy": "enm.hollow_chorister", "min": 2, "max": 4 }, { "role": "ranged", "family": "fam.hollow", "min": 0, "max": 1 }], "formation": "cluster" },
+    { "id": "enc.spit_and_shamble", "budget": 5.0, "eliteChance": 0.05,
+      "slots": [{ "enemy": "enm.chime_spitter", "min": 1, "max": 1, "pos": "back" }, { "enemy": "enm.hollow_chorister", "min": 2, "max": 3, "pos": "front" }], "formation": "line" },
+    { "id": "enc.stalker_pack", "budget": 5.5, "eliteChance": 0.08,
+      "slots": [{ "enemy": "enm.cliff_stalker", "min": 2, "max": 3 }, { "enemy": "enm.drone_swarm", "min": 0, "max": 3 }], "formation": "ring" },
+    { "id": "enc.wisp_garden", "budget": 6.5, "eliteChance": 0.1,
+      "slots": [{ "enemy": "enm.keening_wisp", "min": 1, "max": 2, "pos": "back" }, { "enemy": "enm.pulsing_cocoon", "min": 1, "max": 1, "pos": "mid" }, { "enemy": "enm.hollow_chorister", "min": 2, "max": 3, "pos": "front" }], "formation": "line" },
+    { "id": "enc.whispers_in_wind", "budget": 6.0, "eliteChance": 0.1,
+      "slots": [{ "enemy": "enm.hollow_whisperer", "min": 2, "max": 3 }, { "enemy": "enm.cracked_cantor", "min": 1, "max": 1, "pos": "back" }], "formation": "ring" },
+    { "id": "enc.fortified_line", "budget": 8.0, "eliteChance": 0.12, "notes": "tank protects artillery, support empowers the tank",
+      "slots": [{ "enemy": "enm.hollow_shieldbearer", "min": 1, "max": 2, "pos": "front" }, { "enemy": "enm.cracked_cantor", "min": 2, "max": 2, "pos": "back" }, { "enemy": "enm.hollow_sacristan", "min": 1, "max": 1, "pos": "back" }], "formation": "line" },
+    { "id": "enc.bull_run", "budget": 6.0, "eliteChance": 0.1,
+      "slots": [{ "enemy": "enm.crackhide_boar", "min": 1, "max": 2 }, { "enemy": "enm.cliff_stalker", "min": 1, "max": 2 }], "formation": "cluster" },
+    { "id": "enc.bell_and_blast", "budget": 7.0, "eliteChance": 0.12,
+      "slots": [{ "enemy": "enm.mute_bellringer", "min": 1, "max": 1, "pos": "mid" }, { "enemy": "enm.penitent_blast", "min": 2, "max": 3, "pos": "front" }, { "enemy": "enm.hollow_chorister", "min": 1, "max": 2, "pos": "front" }], "formation": "line" },
+    { "id": "enc.construct_guard", "budget": 8.5, "eliteChance": 0.15,
+      "slots": [{ "enemy": "enm.brass_sentinel", "min": 1, "max": 1, "pos": "front" }, { "enemy": "enm.tuning_turret", "min": 1, "max": 2, "pos": "back" }, { "enemy": "enm.wire_spider", "min": 1, "max": 2, "pos": "mid" }], "formation": "line" },
+    { "id": "enc.summoner_court", "budget": 8.0, "eliteChance": 0.15,
+      "slots": [{ "enemy": "enm.wailer", "min": 1, "max": 1, "pos": "back" }, { "enemy": "enm.hollow_shieldbearer", "min": 1, "max": 1, "pos": "front" }, { "enemy": "enm.hollow_sacristan", "min": 0, "max": 1, "pos": "back" }, { "enemy": "enm.hollow_chorister", "min": 2, "max": 3, "pos": "front" }], "formation": "line" }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+ "kind": "enemy",
+ "items": [
+  {
+   "id": "enm.echo_decoy",
+   "family": "fam.test",
+   "tier": "standard",
+   "role": [
+    "decoy"
+   ],
+   "model": "mdl.echo_decoy",
+   "radius": 0.5,
+   "speed": 0,
+   "hpMult": 4,
+   "deathAbility": "abl.unq.decoy_blast",
+   "ai": {
+    "brain": "decoy",
+    "aggroRange": 0
+   },
+   "abilities": [],
+   "noSeparate": true,
+   "kbResist": 1
+  }
+ ]
+}

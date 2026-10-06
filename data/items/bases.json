@@ -1,0 +1,1331 @@
+{
+ "kind": "itemBase",
+ "items": [
+  {
+   "id": "itm.base.bell_hammer_worn",
+   "slot": "weapon",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "bell_hammer",
+   "kind": "melee",
+   "tags": [
+    "melee",
+    "heavy",
+    "sonic"
+   ],
+   "weapon": {
+    "mult": 1.18,
+    "speed": 0.88,
+    "spell": 0.55
+   },
+   "implicit": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "value": 0.05,
+     "tags": [
+      "sonic"
+     ]
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "sonic"
+   },
+   "model": "bell_hammer"
+  },
+  {
+   "id": "itm.base.bell_hammer_tempered",
+   "slot": "weapon",
+   "minIlvl": 9,
+   "weight": 100,
+   "wtype": "bell_hammer",
+   "kind": "melee",
+   "tags": [
+    "melee",
+    "heavy",
+    "sonic"
+   ],
+   "weapon": {
+    "mult": 1.227,
+    "speed": 0.88,
+    "spell": 0.55
+   },
+   "implicit": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "value": 0.08,
+     "tags": [
+      "sonic"
+     ]
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "sonic"
+   },
+   "model": "bell_hammer"
+  },
+  {
+   "id": "itm.base.bell_hammer_serrane",
+   "slot": "weapon",
+   "minIlvl": 18,
+   "weight": 100,
+   "wtype": "bell_hammer",
+   "kind": "melee",
+   "tags": [
+    "melee",
+    "heavy",
+    "sonic"
+   ],
+   "weapon": {
+    "mult": 1.274,
+    "speed": 0.88,
+    "spell": 0.55
+   },
+   "implicit": [
+    {
+     "stat": "damage",
+     "op": "inc",
+     "value": 0.11,
+     "tags": [
+      "sonic"
+     ]
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "sonic"
+   },
+   "model": "bell_hammer"
+  },
+  {
+   "id": "itm.base.handbell_worn",
+   "slot": "weapon",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "handbell",
+   "kind": "melee",
+   "tags": [
+    "melee",
+    "light",
+    "sonic"
+   ],
+   "weapon": {
+    "mult": 0.85,
+    "speed": 1.15,
+    "spell": 0.7
+   },
+   "implicit": [
+    {
+     "stat": "resourceGain",
+     "op": "inc",
+     "value": 0.06
+    }
+   ],
+   "icon": {
+    "glyph": "bell",
+    "elem": "sonic"
+   },
+   "model": "handbell"
+  },
+  {
+   "id": "itm.base.handbell_serrane",
+   "slot": "weapon",
+   "minIlvl": 14,
+   "weight": 100,
+   "wtype": "handbell",
+   "kind": "melee",
+   "tags": [
+    "melee",
+    "light",
+    "sonic"
+   ],
+   "weapon": {
+    "mult": 0.884,
+    "speed": 1.15,
+    "spell": 0.7
+   },
+   "implicit": [
+    {
+     "stat": "resourceGain",
+     "op": "inc",
+     "value": 0.1
+    }
+   ],
+   "icon": {
+    "glyph": "bell",
+    "elem": "sonic"
+   },
+   "model": "handbell"
+  },
+  {
+   "id": "itm.base.prism_staff_worn",
+   "slot": "weapon",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "prism_staff",
+   "kind": "caster",
+   "tags": [
+    "spell",
+    "staff"
+   ],
+   "weapon": {
+    "mult": 0.9,
+    "speed": 1.0,
+    "spell": 1.4
+   },
+   "implicit": [
+    {
+     "stat": "areaSize",
+     "op": "inc",
+     "value": 0.04
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "fire"
+   },
+   "model": "prism_staff"
+  },
+  {
+   "id": "itm.base.prism_staff_tempered",
+   "slot": "weapon",
+   "minIlvl": 9,
+   "weight": 100,
+   "wtype": "prism_staff",
+   "kind": "caster",
+   "tags": [
+    "spell",
+    "staff"
+   ],
+   "weapon": {
+    "mult": 0.936,
+    "speed": 1.0,
+    "spell": 1.4
+   },
+   "implicit": [
+    {
+     "stat": "areaSize",
+     "op": "inc",
+     "value": 0.06
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "fire"
+   },
+   "model": "prism_staff"
+  },
+  {
+   "id": "itm.base.prism_staff_serrane",
+   "slot": "weapon",
+   "minIlvl": 18,
+   "weight": 100,
+   "wtype": "prism_staff",
+   "kind": "caster",
+   "tags": [
+    "spell",
+    "staff"
+   ],
+   "weapon": {
+    "mult": 0.972,
+    "speed": 1.0,
+    "spell": 1.4
+   },
+   "implicit": [
+    {
+     "stat": "areaSize",
+     "op": "inc",
+     "value": 0.08
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "fire"
+   },
+   "model": "prism_staff"
+  },
+  {
+   "id": "itm.base.twin_blades_worn",
+   "slot": "weapon",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "twin_blades",
+   "kind": "light",
+   "tags": [
+    "melee",
+    "light",
+    "blade"
+   ],
+   "weapon": {
+    "mult": 0.82,
+    "speed": 1.22,
+    "spell": 0.5
+   },
+   "implicit": [
+    {
+     "stat": "critChance",
+     "op": "flat",
+     "value": 0.015
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "physical"
+   },
+   "model": "twin_blades"
+  },
+  {
+   "id": "itm.base.twin_blades_tempered",
+   "slot": "weapon",
+   "minIlvl": 9,
+   "weight": 100,
+   "wtype": "twin_blades",
+   "kind": "light",
+   "tags": [
+    "melee",
+    "light",
+    "blade"
+   ],
+   "weapon": {
+    "mult": 0.853,
+    "speed": 1.22,
+    "spell": 0.5
+   },
+   "implicit": [
+    {
+     "stat": "critChance",
+     "op": "flat",
+     "value": 0.025
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "physical"
+   },
+   "model": "twin_blades"
+  },
+  {
+   "id": "itm.base.twin_blades_serrane",
+   "slot": "weapon",
+   "minIlvl": 18,
+   "weight": 100,
+   "wtype": "twin_blades",
+   "kind": "light",
+   "tags": [
+    "melee",
+    "light",
+    "blade"
+   ],
+   "weapon": {
+    "mult": 0.886,
+    "speed": 1.22,
+    "spell": 0.5
+   },
+   "implicit": [
+    {
+     "stat": "critChance",
+     "op": "flat",
+     "value": 0.035
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "physical"
+   },
+   "model": "twin_blades"
+  },
+  {
+   "id": "itm.base.dagger_worn",
+   "slot": "weapon",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "dagger",
+   "kind": "light",
+   "tags": [
+    "melee",
+    "light",
+    "blade"
+   ],
+   "weapon": {
+    "mult": 0.7,
+    "speed": 1.35,
+    "spell": 0.5
+   },
+   "implicit": [
+    {
+     "stat": "critMult",
+     "op": "flat",
+     "value": 0.08
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "physical"
+   },
+   "model": "dagger"
+  },
+  {
+   "id": "itm.base.dagger_serrane",
+   "slot": "weapon",
+   "minIlvl": 16,
+   "weight": 100,
+   "wtype": "dagger",
+   "kind": "light",
+   "tags": [
+    "melee",
+    "light",
+    "blade"
+   ],
+   "weapon": {
+    "mult": 0.728,
+    "speed": 1.35,
+    "spell": 0.5
+   },
+   "implicit": [
+    {
+     "stat": "critMult",
+     "op": "flat",
+     "value": 0.14
+    }
+   ],
+   "icon": {
+    "glyph": "weapon",
+    "elem": "physical"
+   },
+   "model": "dagger"
+  },
+  {
+   "id": "itm.base.round_shield_worn",
+   "slot": "offhand",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "shield",
+   "kind": "offhand",
+   "tags": [
+    "shield",
+    "defense"
+   ],
+   "armorShare": 0.5,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "armor",
+     "op": "inc",
+     "value": 0.08
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.round_shield_tempered",
+   "slot": "offhand",
+   "minIlvl": 10,
+   "weight": 100,
+   "wtype": "shield",
+   "kind": "offhand",
+   "tags": [
+    "shield",
+    "defense"
+   ],
+   "armorShare": 0.5,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "armor",
+     "op": "inc",
+     "value": 0.12
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.round_shield_serrane",
+   "slot": "offhand",
+   "minIlvl": 19,
+   "weight": 100,
+   "wtype": "shield",
+   "kind": "offhand",
+   "tags": [
+    "shield",
+    "defense"
+   ],
+   "armorShare": 0.5,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "armor",
+     "op": "inc",
+     "value": 0.16
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.focus_lens_worn",
+   "slot": "offhand",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "lens",
+   "kind": "offhand",
+   "tags": [
+    "lens",
+    "spell"
+   ],
+   "armorShare": 0.1,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "critChance",
+     "op": "flat",
+     "value": 0.02
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.focus_lens_tempered",
+   "slot": "offhand",
+   "minIlvl": 10,
+   "weight": 100,
+   "wtype": "lens",
+   "kind": "offhand",
+   "tags": [
+    "lens",
+    "spell"
+   ],
+   "armorShare": 0.1,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "critChance",
+     "op": "flat",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.focus_lens_serrane",
+   "slot": "offhand",
+   "minIlvl": 19,
+   "weight": 100,
+   "wtype": "lens",
+   "kind": "offhand",
+   "tags": [
+    "lens",
+    "spell"
+   ],
+   "armorShare": 0.1,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "critChance",
+     "op": "flat",
+     "value": 0.04
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.quartz_charm_worn",
+   "slot": "offhand",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "charm",
+   "kind": "offhand",
+   "tags": [
+    "charm"
+   ],
+   "armorShare": 0.15,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "statusChance",
+     "op": "flat",
+     "value": 0.05
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "itm.base.quartz_charm_tempered",
+   "slot": "offhand",
+   "minIlvl": 10,
+   "weight": 100,
+   "wtype": "charm",
+   "kind": "offhand",
+   "tags": [
+    "charm"
+   ],
+   "armorShare": 0.15,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "statusChance",
+     "op": "flat",
+     "value": 0.07
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "itm.base.quartz_charm_serrane",
+   "slot": "offhand",
+   "minIlvl": 19,
+   "weight": 100,
+   "wtype": "charm",
+   "kind": "offhand",
+   "tags": [
+    "charm"
+   ],
+   "armorShare": 0.15,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "statusChance",
+     "op": "flat",
+     "value": 0.09
+    }
+   ],
+   "icon": {
+    "glyph": "offhand",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "itm.base.head_heavy_worn",
+   "slot": "head",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "head_heavy",
+   "kind": "heavy",
+   "tags": [
+    "heavy",
+    "head"
+   ],
+   "armorShare": 0.18,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "helm",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.head_heavy_serrane",
+   "slot": "head",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "head_heavy",
+   "kind": "heavy",
+   "tags": [
+    "heavy",
+    "head"
+   ],
+   "armorShare": 0.18,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.05
+    }
+   ],
+   "icon": {
+    "glyph": "helm",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.head_medium_worn",
+   "slot": "head",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "head_medium",
+   "kind": "medium",
+   "tags": [
+    "medium",
+    "head"
+   ],
+   "armorShare": 0.18,
+   "armorClass": "medium",
+   "implicit": [],
+   "icon": {
+    "glyph": "helm",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.head_medium_serrane",
+   "slot": "head",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "head_medium",
+   "kind": "medium",
+   "tags": [
+    "medium",
+    "head"
+   ],
+   "armorShare": 0.18,
+   "armorClass": "medium",
+   "implicit": [],
+   "icon": {
+    "glyph": "helm",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.head_light_worn",
+   "slot": "head",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "head_light",
+   "kind": "light",
+   "tags": [
+    "light",
+    "head"
+   ],
+   "armorShare": 0.18,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "value": 0.02
+    }
+   ],
+   "icon": {
+    "glyph": "helm",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.head_light_serrane",
+   "slot": "head",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "head_light",
+   "kind": "light",
+   "tags": [
+    "light",
+    "head"
+   ],
+   "armorShare": 0.18,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "helm",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.chest_heavy_worn",
+   "slot": "chest",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "chest_heavy",
+   "kind": "heavy",
+   "tags": [
+    "heavy",
+    "chest"
+   ],
+   "armorShare": 0.34,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "chest",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.chest_heavy_serrane",
+   "slot": "chest",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "chest_heavy",
+   "kind": "heavy",
+   "tags": [
+    "heavy",
+    "chest"
+   ],
+   "armorShare": 0.34,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.05
+    }
+   ],
+   "icon": {
+    "glyph": "chest",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.chest_medium_worn",
+   "slot": "chest",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "chest_medium",
+   "kind": "medium",
+   "tags": [
+    "medium",
+    "chest"
+   ],
+   "armorShare": 0.34,
+   "armorClass": "medium",
+   "implicit": [],
+   "icon": {
+    "glyph": "chest",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.chest_medium_serrane",
+   "slot": "chest",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "chest_medium",
+   "kind": "medium",
+   "tags": [
+    "medium",
+    "chest"
+   ],
+   "armorShare": 0.34,
+   "armorClass": "medium",
+   "implicit": [],
+   "icon": {
+    "glyph": "chest",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.chest_light_worn",
+   "slot": "chest",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "chest_light",
+   "kind": "light",
+   "tags": [
+    "light",
+    "chest"
+   ],
+   "armorShare": 0.34,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "value": 0.02
+    }
+   ],
+   "icon": {
+    "glyph": "chest",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.chest_light_serrane",
+   "slot": "chest",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "chest_light",
+   "kind": "light",
+   "tags": [
+    "light",
+    "chest"
+   ],
+   "armorShare": 0.34,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "chest",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.hands_heavy_worn",
+   "slot": "hands",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "hands_heavy",
+   "kind": "heavy",
+   "tags": [
+    "heavy",
+    "hands"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "gloves",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.hands_heavy_serrane",
+   "slot": "hands",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "hands_heavy",
+   "kind": "heavy",
+   "tags": [
+    "heavy",
+    "hands"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.05
+    }
+   ],
+   "icon": {
+    "glyph": "gloves",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.hands_medium_worn",
+   "slot": "hands",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "hands_medium",
+   "kind": "medium",
+   "tags": [
+    "medium",
+    "hands"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "medium",
+   "implicit": [
+    {
+     "stat": "dodgeCooldown",
+     "op": "inc",
+     "value": -0.03
+    }
+   ],
+   "icon": {
+    "glyph": "gloves",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.hands_medium_serrane",
+   "slot": "hands",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "hands_medium",
+   "kind": "medium",
+   "tags": [
+    "medium",
+    "hands"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "medium",
+   "implicit": [
+    {
+     "stat": "dodgeCooldown",
+     "op": "inc",
+     "value": -0.03
+    }
+   ],
+   "icon": {
+    "glyph": "gloves",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.hands_light_worn",
+   "slot": "hands",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "hands_light",
+   "kind": "light",
+   "tags": [
+    "light",
+    "hands"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "value": 0.02
+    }
+   ],
+   "icon": {
+    "glyph": "gloves",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.hands_light_serrane",
+   "slot": "hands",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "hands_light",
+   "kind": "light",
+   "tags": [
+    "light",
+    "hands"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "gloves",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.feet_heavy_worn",
+   "slot": "feet",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "feet_heavy",
+   "kind": "heavy",
+   "tags": [
+    "heavy",
+    "feet"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "boots",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.feet_heavy_serrane",
+   "slot": "feet",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "feet_heavy",
+   "kind": "heavy",
+   "tags": [
+    "heavy",
+    "feet"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "heavy",
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.05
+    }
+   ],
+   "icon": {
+    "glyph": "boots",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.feet_medium_worn",
+   "slot": "feet",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "feet_medium",
+   "kind": "medium",
+   "tags": [
+    "medium",
+    "feet"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "medium",
+   "implicit": [
+    {
+     "stat": "moveSpeed",
+     "op": "inc",
+     "value": 0.05
+    }
+   ],
+   "icon": {
+    "glyph": "boots",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.feet_medium_serrane",
+   "slot": "feet",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "feet_medium",
+   "kind": "medium",
+   "tags": [
+    "medium",
+    "feet"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "medium",
+   "implicit": [
+    {
+     "stat": "moveSpeed",
+     "op": "inc",
+     "value": 0.07
+    }
+   ],
+   "icon": {
+    "glyph": "boots",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "itm.base.feet_light_worn",
+   "slot": "feet",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "feet_light",
+   "kind": "light",
+   "tags": [
+    "light",
+    "feet"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "value": 0.02
+    }
+   ],
+   "icon": {
+    "glyph": "boots",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.feet_light_serrane",
+   "slot": "feet",
+   "minIlvl": 12,
+   "weight": 100,
+   "wtype": "feet_light",
+   "kind": "light",
+   "tags": [
+    "light",
+    "feet"
+   ],
+   "armorShare": 0.16,
+   "armorClass": "light",
+   "implicit": [
+    {
+     "stat": "cooldownRate",
+     "op": "inc",
+     "value": 0.03
+    }
+   ],
+   "icon": {
+    "glyph": "boots",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.neck_worn",
+   "slot": "neck",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "neck",
+   "kind": "jewelry",
+   "tags": [
+    "jewelry"
+   ],
+   "implicit": [
+    {
+     "stat": "listenRange",
+     "op": "flat",
+     "value": 1.0
+    }
+   ],
+   "icon": {
+    "glyph": "amulet",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.ring_worn",
+   "slot": "ring",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "ring",
+   "kind": "jewelry",
+   "tags": [
+    "jewelry"
+   ],
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.02
+    }
+   ],
+   "icon": {
+    "glyph": "ring",
+    "elem": "brass"
+   }
+  },
+  {
+   "id": "itm.base.relic_worn",
+   "slot": "relic",
+   "minIlvl": 1,
+   "weight": 100,
+   "wtype": "relic",
+   "kind": "relic",
+   "tags": [
+    "relic"
+   ],
+   "implicit": [
+    {
+     "stat": "resourceMax",
+     "op": "flat",
+     "value": 8
+    }
+   ],
+   "icon": {
+    "glyph": "relic",
+    "elem": "brass"
+   }
+  },
+  {
+   "id": "itm.base.neck_serrane",
+   "slot": "neck",
+   "minIlvl": 13,
+   "weight": 100,
+   "wtype": "neck",
+   "kind": "jewelry",
+   "tags": [
+    "jewelry"
+   ],
+   "implicit": [
+    {
+     "stat": "listenRange",
+     "op": "flat",
+     "value": 2.5
+    }
+   ],
+   "icon": {
+    "glyph": "amulet",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "itm.base.ring_serrane",
+   "slot": "ring",
+   "minIlvl": 13,
+   "weight": 100,
+   "wtype": "ring",
+   "kind": "jewelry",
+   "tags": [
+    "jewelry"
+   ],
+   "implicit": [
+    {
+     "stat": "life",
+     "op": "inc",
+     "value": 0.035
+    }
+   ],
+   "icon": {
+    "glyph": "ring",
+    "elem": "brass"
+   }
+  },
+  {
+   "id": "itm.base.relic_serrane",
+   "slot": "relic",
+   "minIlvl": 13,
+   "weight": 100,
+   "wtype": "relic",
+   "kind": "relic",
+   "tags": [
+    "relic"
+   ],
+   "implicit": [
+    {
+     "stat": "resourceMax",
+     "op": "flat",
+     "value": 14
+    }
+   ],
+   "icon": {
+    "glyph": "relic",
+    "elem": "brass"
+   }
+  }
+ ]
+}

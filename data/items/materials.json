@@ -1,0 +1,221 @@
+{
+ "kind": "material",
+ "items": [
+  {
+   "id": "mat.limestone_dust",
+   "category": "common",
+   "source": "dust",
+   "minLevel": 1,
+   "stack": 999,
+   "value": 1,
+   "icon": {
+    "glyph": "material",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "mat.wind_lichen",
+   "category": "common",
+   "source": "plant",
+   "minLevel": 2,
+   "stack": 999,
+   "value": 1,
+   "icon": {
+    "glyph": "leaf",
+    "elem": "toxic"
+   }
+  },
+  {
+   "id": "mat.bellflower",
+   "category": "uncommon",
+   "source": "plant",
+   "minLevel": 6,
+   "stack": 999,
+   "value": 2,
+   "icon": {
+    "glyph": "flake",
+    "elem": "frost"
+   }
+  },
+  {
+   "id": "mat.brass_scrap",
+   "category": "common",
+   "source": "ore",
+   "minLevel": 3,
+   "stack": 999,
+   "value": 1,
+   "icon": {
+    "glyph": "material",
+    "elem": "brass"
+   }
+  },
+  {
+   "id": "mat.sonic_quartz",
+   "category": "uncommon",
+   "source": "ore",
+   "minLevel": 8,
+   "stack": 999,
+   "value": 2,
+   "icon": {
+    "glyph": "gem",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "mat.stalker_sinew",
+   "category": "common",
+   "source": "creature",
+   "minLevel": 3,
+   "stack": 999,
+   "value": 1,
+   "icon": {
+    "glyph": "chain",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "mat.brittle_tusk",
+   "category": "uncommon",
+   "source": "creature",
+   "minLevel": 5,
+   "stack": 999,
+   "value": 2,
+   "icon": {
+    "glyph": "spear",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "mat.drone_wing",
+   "category": "common",
+   "source": "creature",
+   "minLevel": 2,
+   "stack": 999,
+   "value": 1,
+   "icon": {
+    "glyph": "wing",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "mat.caustic_gland",
+   "category": "uncommon",
+   "source": "creature",
+   "minLevel": 5,
+   "stack": 999,
+   "value": 2,
+   "icon": {
+    "glyph": "drops",
+    "elem": "toxic"
+   }
+  },
+  {
+   "id": "mat.echo_silk",
+   "category": "uncommon",
+   "source": "creature",
+   "minLevel": 6,
+   "stack": 999,
+   "value": 2,
+   "icon": {
+    "glyph": "waves",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "mat.hollow_resin",
+   "category": "common",
+   "source": "creature",
+   "minLevel": 4,
+   "stack": 999,
+   "value": 1,
+   "icon": {
+    "glyph": "drops",
+    "elem": "hollow"
+   }
+  },
+  {
+   "id": "mat.serrane_filament",
+   "category": "rare",
+   "source": "dungeon",
+   "minLevel": 9,
+   "stack": 999,
+   "value": 5,
+   "icon": {
+    "glyph": "chain",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "mat.resonant_dust",
+   "category": "common",
+   "source": "salvage",
+   "minLevel": 1,
+   "stack": 999,
+   "value": 1,
+   "icon": {
+    "glyph": "material",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "mat.tuning_shard",
+   "category": "uncommon",
+   "source": "salvage",
+   "minLevel": 1,
+   "stack": 999,
+   "value": 2,
+   "icon": {
+    "glyph": "gem",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "mat.echo_core",
+   "category": "rare",
+   "source": "salvage",
+   "minLevel": 1,
+   "stack": 999,
+   "value": 5,
+   "icon": {
+    "glyph": "relic",
+    "elem": "brass"
+   }
+  },
+  {
+   "id": "mat.quarry_heart",
+   "category": "boss",
+   "source": "boss",
+   "minLevel": 10,
+   "stack": 999,
+   "value": 12,
+   "icon": {
+    "glyph": "relic",
+    "elem": "hollow"
+   }
+  },
+  {
+   "id": "mat.precentor_larynx",
+   "category": "boss",
+   "source": "boss",
+   "minLevel": 10,
+   "stack": 999,
+   "value": 12,
+   "icon": {
+    "glyph": "voice",
+    "elem": "hollow"
+   }
+  },
+  {
+   "id": "mat.silent_petal",
+   "category": "rare",
+   "source": "secret",
+   "minLevel": 12,
+   "stack": 999,
+   "value": 5,
+   "icon": {
+    "glyph": "leaf",
+    "elem": "frost"
+   }
+  }
+ ]
+}

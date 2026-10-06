@@ -1,0 +1,578 @@
+{
+ "kind": "ability",
+ "items": [
+  {
+   "id": "abl.prism.shard",
+   "owner": "cls.prismatist",
+   "slotType": "primary",
+   "tags": [
+    "attack",
+    "spell",
+    "projectile",
+    "refract",
+    "basic"
+   ],
+   "icon": {
+    "glyph": "prism",
+    "elem": "fire"
+   },
+   "aim": "direction",
+   "range": 14,
+   "gain": {
+    "perCast": 4
+   },
+   "cast": {
+    "windup": 0.14,
+    "recover": 0.2,
+    "cancelAt": 0.4,
+    "moveFactor": 0.6
+   },
+   "effects": [
+    {
+     "op": "projectile",
+     "speed": 19,
+     "radius": 0.4,
+     "range": 14,
+     "model": "bolt",
+     "cycle": [
+      "fire",
+      "frost",
+      "shock"
+     ],
+     "hit": [
+      {
+       "op": "damage",
+       "cycle": [
+        "fire",
+        "frost",
+        "shock"
+       ],
+       "coef": 1.0,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "cycleStatus": [
+        "st.burning",
+        "st.chilled",
+        "st.shocked"
+       ],
+       "chance": 0.3,
+       "coef": 0.8,
+       "build": 35
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 25,
+    "shake": 0.05,
+    "anim": "cast",
+    "sfx": "shard"
+   }
+  },
+  {
+   "id": "abl.prism.broken_beam",
+   "owner": "cls.prismatist",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "spell",
+    "beam",
+    "shock",
+    "area"
+   ],
+   "icon": {
+    "glyph": "beam",
+    "elem": "shock"
+   },
+   "tone": "mid",
+   "aim": "direction",
+   "range": 11,
+   "cooldown": 3,
+   "cast": {
+    "windup": 0.18,
+    "recover": 0.3,
+    "moveFactor": 0.3,
+    "cancelAt": 0.4
+   },
+   "channel": {
+    "interval": 0.2,
+    "maxDuration": 3,
+    "gainPerTick": 2.2,
+    "effects": [
+     {
+      "op": "area",
+      "shape": "line",
+      "length": 11,
+      "width": 1.3,
+      "origin": "self",
+      "hit": [
+       {
+        "op": "damage",
+        "type": "shock",
+        "coef": 0.58,
+        "scaling": "spell"
+       },
+       {
+        "op": "status",
+        "id": "st.shocked",
+        "chance": 0.18,
+        "duration": 3
+       }
+      ]
+     }
+    ]
+   },
+   "effects": [],
+   "fx": {
+    "hitstop": 0,
+    "shake": 0.04,
+    "anim": "cast",
+    "sfx": "beam"
+   }
+  },
+  {
+   "id": "abl.prism.nova",
+   "owner": "cls.prismatist",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "spell",
+    "area",
+    "fire",
+    "nova"
+   ],
+   "icon": {
+    "glyph": "nova",
+    "elem": "fire"
+   },
+   "tone": "mid",
+   "aim": "self",
+   "range": 5.5,
+   "cooldown": 5,
+   "gain": {
+    "perCast": 10
+   },
+   "cast": {
+    "windup": 0.25,
+    "recover": 0.35,
+    "moveFactor": 0.2
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 5.6,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "fire",
+       "coef": 2.0,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.burning",
+       "chance": 0.6,
+       "coef": 0.9
+      },
+      {
+       "op": "knockback",
+       "force": 1.4
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 55,
+    "shake": 0.28,
+    "anim": "cast",
+    "sfx": "nova"
+   }
+  },
+  {
+   "id": "abl.prism.ice_needle",
+   "owner": "cls.prismatist",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "spell",
+    "projectile",
+    "frost",
+    "pierce"
+   ],
+   "icon": {
+    "glyph": "spear",
+    "elem": "frost"
+   },
+   "tone": "high",
+   "aim": "direction",
+   "range": 15,
+   "cooldown": 2.2,
+   "gain": {
+    "perCast": 8
+   },
+   "cast": {
+    "windup": 0.2,
+    "recover": 0.28,
+    "moveFactor": 0.4
+   },
+   "effects": [
+    {
+     "op": "projectile",
+     "speed": 30,
+     "radius": 0.45,
+     "range": 15,
+     "pierce": 5,
+     "model": "bolt",
+     "color": "#9fe8ff",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "frost",
+       "coef": 1.9,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.chilled",
+       "chance": 1,
+       "build": 55
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 35,
+    "shake": 0.1,
+    "anim": "cast",
+    "sfx": "needle"
+   }
+  },
+  {
+   "id": "abl.prism.refract",
+   "owner": "cls.prismatist",
+   "slotType": "dodge",
+   "tags": [
+    "movement",
+    "dodge",
+    "spell"
+   ],
+   "icon": {
+    "glyph": "roll",
+    "elem": "sonic"
+   },
+   "aim": "direction",
+   "range": 7,
+   "charges": 1,
+   "cooldown": 1.6,
+   "cast": {
+    "windup": 0,
+    "recover": 0.1,
+    "noSpeedScale": true
+   },
+   "effects": [
+    {
+     "op": "blink",
+     "distance": 7,
+     "iframes": true,
+     "invuln": 0.4,
+     "onDepart": [
+      {
+       "op": "area",
+       "shape": "circle",
+       "radius": 2.4,
+       "hit": [
+        {
+         "op": "damage",
+         "type": "sonic",
+         "coef": 0.6,
+         "scaling": "spell"
+        },
+        {
+         "op": "knockback",
+         "force": 1.0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "sfx": "blink"
+   }
+  },
+  {
+   "id": "abl.prism.dome",
+   "owner": "cls.prismatist",
+   "slotType": "skill",
+   "tags": [
+    "buff",
+    "defense",
+    "spell",
+    "shield"
+   ],
+   "icon": {
+    "glyph": "dome",
+    "elem": "frost"
+   },
+   "tone": "low",
+   "aim": "self",
+   "cooldown": 14,
+   "gain": {
+    "perCast": -28
+   },
+   "cast": {
+    "windup": 0.2,
+    "recover": 0.3,
+    "moveFactor": 0.5
+   },
+   "effects": [
+    {
+     "op": "shield",
+     "pct": 0.32,
+     "duration": 7
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 3.4,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "status",
+       "id": "st.slowed",
+       "duration": 2.5
+      },
+      {
+       "op": "knockback",
+       "force": 1.2
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 0,
+    "shake": 0.1,
+    "anim": "brace",
+    "sfx": "dome"
+   }
+  },
+  {
+   "id": "abl.prism.prism_storm",
+   "owner": "cls.prismatist",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "spell",
+    "area",
+    "orbit",
+    "shock",
+    "summon"
+   ],
+   "icon": {
+    "glyph": "orbit",
+    "elem": "shock"
+   },
+   "tone": "mid",
+   "aim": "self",
+   "cooldown": 12,
+   "gain": {
+    "perCast": 12
+   },
+   "cast": {
+    "windup": 0.25,
+    "recover": 0.3,
+    "moveFactor": 0.6
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "ring",
+     "inner": 2.0,
+     "radius": 4.0,
+     "origin": "self",
+     "follow": true,
+     "duration": 7,
+     "tick": 0.35,
+     "spin": 2.4,
+     "kind": "orbit_bells",
+     "color": "shock",
+     "max": 1,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "shock",
+       "coef": 0.58,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.shocked",
+       "chance": 0.25,
+       "duration": 3
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 10,
+    "shake": 0.05,
+    "anim": "summon",
+    "sfx": "orbit"
+   }
+  },
+  {
+   "id": "abl.prism.cascade",
+   "owner": "cls.prismatist",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "spell",
+    "area",
+    "zone",
+    "fire",
+    "frost",
+    "shock"
+   ],
+   "icon": {
+    "glyph": "storm",
+    "elem": "fire"
+   },
+   "tone": "low",
+   "aim": "ground",
+   "range": 13,
+   "cooldown": 9,
+   "gain": {
+    "perCast": 14
+   },
+   "cast": {
+    "windup": 0.3,
+    "recover": 0.35,
+    "moveFactor": 0.4
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 4.4,
+     "origin": "aim",
+     "duration": 4.2,
+     "tick": 0.5,
+     "kind": "cascade",
+     "color": "sonic",
+     "hit": [
+      {
+       "op": "damage",
+       "cycle": [
+        "fire",
+        "frost",
+        "shock"
+       ],
+       "coef": 0.85,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "cycleStatus": [
+        "st.burning",
+        "st.chilled",
+        "st.shocked"
+       ],
+       "chance": 0.5,
+       "coef": 0.8,
+       "build": 30
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 10,
+    "shake": 0.12,
+    "anim": "cast",
+    "sfx": "cascade"
+   }
+  },
+  {
+   "id": "abl.prism.fracture",
+   "owner": "cls.prismatist",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "spell",
+    "area",
+    "sonic",
+    "ultimate"
+   ],
+   "icon": {
+    "glyph": "fracture",
+    "elem": "sonic"
+   },
+   "tone": "high",
+   "aim": "ground",
+   "range": 12,
+   "cooldown": 20,
+   "gain": {
+    "perCast": 24
+   },
+   "cast": {
+    "windup": 0.35,
+    "recover": 0.4,
+    "moveFactor": 0.2
+   },
+   "telegraph": {
+    "shape": "circle",
+    "radius": 5.2,
+    "at": "aim",
+    "benign": true
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 5.2,
+     "origin": "aim",
+     "hit": [
+      {
+       "op": "status",
+       "id": "st.marked",
+       "duration": 4
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 5.2,
+     "origin": "aim",
+     "delay": 1.1,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "coef": 6.0,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.dissonance",
+       "stacks": 3
+      },
+      {
+       "op": "knockback",
+       "force": 2
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 95,
+    "shake": 0.55,
+    "anim": "cast",
+    "sfx": "fracture"
+   }
+  }
+ ]
+}

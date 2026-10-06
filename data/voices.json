@@ -1,0 +1,68 @@
+{
+ "kind": "voice",
+ "items": [
+  {
+   "id": "voc.stalker_leap",
+   "ability": "abl.voice.stalker_leap",
+   "source": "enm.cliff_stalker",
+   "icon": {
+    "glyph": "leap",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "voc.cantor_volley",
+   "ability": "abl.voice.cantor_volley",
+   "source": "enm.cracked_cantor",
+   "icon": {
+    "glyph": "waves",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "voc.wailer_call",
+   "ability": "abl.voice.wailer_call",
+   "source": "enm.wailer",
+   "icon": {
+    "glyph": "voice",
+    "elem": "hollow"
+   }
+  },
+  {
+   "id": "voc.sacristan_mend",
+   "ability": "abl.voice.sacristan_mend",
+   "source": "enm.hollow_sacristan",
+   "icon": {
+    "glyph": "leaf",
+    "elem": "heal"
+   }
+  },
+  {
+   "id": "voc.bellringer_toll",
+   "ability": "abl.voice.bellringer_toll",
+   "source": "enm.mute_bellringer",
+   "icon": {
+    "glyph": "alarm",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "voc.brannoch_quake",
+   "ability": "abl.voice.brannoch_quake",
+   "source": "boss.brannoch",
+   "icon": {
+    "glyph": "ram",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "voc.ildra_note",
+   "ability": "abl.voice.ildra_note",
+   "source": "boss.ildra",
+   "icon": {
+    "glyph": "bellcrown",
+    "elem": "hollow"
+   }
+  }
+ ]
+}

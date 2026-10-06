@@ -1,0 +1,40 @@
+{
+ "kind": "ability",
+ "items": [
+  {
+   "id": "abl.talent.retort",
+   "slotType": "talent",
+   "tags": [
+    "attack",
+    "area",
+    "sonic"
+   ],
+   "aim": "self",
+   "range": 4.5,
+   "cast": {
+    "windup": 0,
+    "recover": 0
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.5,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "coef": 1.6,
+       "scaling": "weapon"
+      },
+      {
+       "op": "knockback",
+       "force": 2.4
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "ability",
+  "items": [
+    { "id": "abl.enm.sentinel_fist", "slotType": "enemyBasic", "tags": ["attack", "melee", "physical"], "aim": "direction", "range": 2.8, "cooldown": 2.6,
+      "cast": { "windup": 0.85, "recover": 0.7 },
+      "effects": [{ "op": "area", "shape": "arc", "radius": 2.8, "angle": 100, "hit": [{ "op": "damage", "type": "physical", "scaling": "pct", "pct": 0.1 }, { "op": "knockback", "force": 1.8 }] }],
+      "fx": { "sfx": "heavy_hit", "anim": "smash" } },
+    { "id": "abl.enm.sentinel_stomp", "slotType": "enemy", "tags": ["attack", "area", "physical"], "aim": "self", "range": 4.5, "cooldown": 9, "ai": { "maxRange": 4.2, "weight": 2 },
+      "cast": { "windup": 1.0, "recover": 0.7 },
+      "telegraph": { "shape": "circle", "radius": 4.6 },
+      "effects": [{ "op": "area", "shape": "circle", "radius": 4.6, "hit": [{ "op": "damage", "type": "physical", "scaling": "pct", "pct": 0.11 }, { "op": "status", "id": "st.slowed", "duration": 2.5 }] }],
+      "fx": { "sfx": "stomp", "anim": "stomp" } },
+    { "id": "abl.enm.turret_beam", "slotType": "enemyBasic", "tags": ["attack", "projectile", "shock"], "aim": "direction", "range": 16, "cooldown": 2.4,
+      "cast": { "windup": 0.75, "recover": 0.4, "turnRate": 3 },
+      "telegraph": { "shape": "line", "length": 16, "width": 0.9 },
+      "effects": [{ "op": "projectile", "speed": 22, "radius": 0.4, "range": 16, "model": "beam", "color": "#7fe3ff", "hit": [{ "op": "damage", "type": "shock", "scaling": "pct", "pct": 0.075 }, { "op": "status", "id": "st.shocked", "chance": 0.3 }] }],
+      "fx": { "sfx": "zap", "anim": "fire" } },
+    { "id": "abl.enm.spider_snare", "slotType": "enemy", "tags": ["attack", "trap", "physical"], "aim": "ground", "range": 11, "cooldown": 4.5, "ai": { "trap": true, "minRange": 3, "maxRange": 11, "needsLos": false },
+      "cast": { "windup": 0.5, "recover": 0.4 },
+      "telegraph": { "shape": "circle", "radius": 1.6, "at": "aim" },
+      "effects": [{ "op": "zone", "shape": "circle", "radius": 1.5, "origin": "aim", "duration": 22, "arm": 0.8, "trigger": "proximity", "once": true, "kind": "snare", "max": 3, "color": "danger",
+        "hit": [{ "op": "damage", "type": "physical", "scaling": "pct", "pct": 0.05 }, { "op": "status", "id": "st.rooted", "duration": 1.6 }] }],
+      "fx": { "sfx": "snare_set", "anim": "lob" } },
+    { "id": "abl.enm.spider_wire", "slotType": "enemyBasic", "tags": ["attack", "projectile", "physical"], "aim": "direction", "range": 10, "cooldown": 2.6,
+      "cast": { "windup": 0.55, "recover": 0.4 },
+      "effects": [{ "op": "projectile", "speed": 15, "radius": 0.28, "range": 10, "model": "wire", "color": "#d9a24a", "hit": [{ "op": "damage", "type": "physical", "scaling": "pct", "pct": 0.04 }, { "op": "status", "id": "st.slowed", "chance": 0.6, "duration": 2 }] }],
+      "fx": { "sfx": "wire", "anim": "cast" } },
+    { "id": "abl.enm.reaper_spin", "slotType": "enemyBasic", "tags": ["attack", "area", "physical", "hazard"], "aim": "self", "range": 1.9, "cooldown": 1.2,
+      "cast": { "windup": 0.2, "recover": 0.2, "noSpeedScale": true, "moveFactor": 1 },
+      "effects": [{ "op": "area", "shape": "circle", "radius": 1.8, "hit": [{ "op": "damage", "type": "physical", "scaling": "pct", "pct": 0.09 }, { "op": "knockback", "force": 1.6 }, { "op": "status", "id": "st.bleeding", "chance": 0.5, "coef": 0.6 }] }],
+      "fx": { "sfx": "saw", "anim": "spin" } }
+  ]
+}

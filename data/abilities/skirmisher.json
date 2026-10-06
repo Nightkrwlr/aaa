@@ -1,0 +1,661 @@
+{
+ "kind": "ability",
+ "items": [
+  {
+   "id": "abl.skir.claw",
+   "owner": "cls.skirmisher",
+   "slotType": "primary",
+   "tags": [
+    "attack",
+    "melee",
+    "physical",
+    "basic",
+    "area"
+   ],
+   "icon": {
+    "glyph": "blades",
+    "elem": "physical"
+   },
+   "aim": "direction",
+   "range": 2.6,
+   "cast": {
+    "windup": 0.1,
+    "recover": 0.17,
+    "cancelAt": 0.4,
+    "moveFactor": 0.35
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "arc",
+     "radius": 2.6,
+     "angle": 100,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 0.72,
+       "scaling": "weapon"
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "arc",
+     "radius": 2.6,
+     "angle": 100,
+     "origin": "self",
+     "delay": 0.07,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 0.72,
+       "scaling": "weapon"
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 22,
+    "shake": 0.05,
+    "anim": "swing_h",
+    "sfx": "slash"
+   }
+  },
+  {
+   "id": "abl.skir.rending_leap",
+   "owner": "cls.skirmisher",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "melee",
+    "movement",
+    "physical",
+    "dash"
+   ],
+   "icon": {
+    "glyph": "leap",
+    "elem": "physical"
+   },
+   "tone": "high",
+   "aim": "direction",
+   "range": 8,
+   "cooldown": 6,
+   "gain": {
+    "perCast": 2
+   },
+   "cast": {
+    "windup": 0.1,
+    "recover": 0.2,
+    "noSpeedScale": true
+   },
+   "effects": [
+    {
+     "op": "dash",
+     "distance": 7,
+     "duration": 0.32,
+     "radius": 1.2,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.5,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.8,
+       "coef": 1.0
+      }
+     ],
+     "onEnd": [
+      {
+       "op": "area",
+       "shape": "circle",
+       "radius": 2.4,
+       "origin": "self",
+       "hit": [
+        {
+         "op": "damage",
+         "type": "physical",
+         "coef": 0.8,
+         "scaling": "weapon"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 40,
+    "shake": 0.18,
+    "anim": "leap",
+    "sfx": "leap"
+   }
+  },
+  {
+   "id": "abl.skir.twin_knives",
+   "owner": "cls.skirmisher",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "projectile",
+    "physical"
+   ],
+   "icon": {
+    "glyph": "blades",
+    "elem": "physical"
+   },
+   "tone": "high",
+   "aim": "direction",
+   "range": 11,
+   "cooldown": 1.1,
+   "cost": {
+    "res": "ritmo",
+    "amount": 1
+   },
+   "cast": {
+    "windup": 0.12,
+    "recover": 0.2,
+    "moveFactor": 0.7
+   },
+   "effects": [
+    {
+     "op": "projectile",
+     "count": 3,
+     "spread": 28,
+     "speed": 24,
+     "radius": 0.3,
+     "range": 11,
+     "model": "wire",
+     "color": "#cfd6dc",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 0.95,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.2,
+       "coef": 0.7
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 18,
+    "shake": 0.04,
+    "anim": "throw",
+    "sfx": "knife"
+   }
+  },
+  {
+   "id": "abl.skir.slide",
+   "owner": "cls.skirmisher",
+   "slotType": "dodge",
+   "tags": [
+    "movement",
+    "dodge"
+   ],
+   "icon": {
+    "glyph": "roll",
+    "elem": "physical"
+   },
+   "aim": "direction",
+   "range": 6.5,
+   "charges": 1,
+   "cooldown": 1.4,
+   "cast": {
+    "windup": 0,
+    "recover": 0.1,
+    "noSpeedScale": true
+   },
+   "effects": [
+    {
+     "op": "dash",
+     "distance": 6.4,
+     "duration": 0.28,
+     "iframes": true
+    }
+   ],
+   "fx": {
+    "sfx": "dodge",
+    "anim": "roll"
+   }
+  },
+  {
+   "id": "abl.skir.smoke",
+   "owner": "cls.skirmisher",
+   "slotType": "skill",
+   "tags": [
+    "buff",
+    "defense",
+    "zone"
+   ],
+   "icon": {
+    "glyph": "smoke",
+    "elem": "physical"
+   },
+   "tone": "low",
+   "aim": "self",
+   "cooldown": 14,
+   "cast": {
+    "windup": 0.15,
+    "recover": 0.25,
+    "moveFactor": 0.7
+   },
+   "effects": [
+    {
+     "op": "buff",
+     "status": "st.cloaked",
+     "duration": 4
+    },
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "duration": 5,
+     "tick": 0.5,
+     "kind": "smoke",
+     "color": "physical",
+     "auraStatus": "st.slowed",
+     "hit": []
+    }
+   ],
+   "fx": {
+    "hitstop": 0,
+    "anim": "brace",
+    "sfx": "smoke"
+   }
+  },
+  {
+   "id": "abl.skir.bleeding_cut",
+   "owner": "cls.skirmisher",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "melee",
+    "physical",
+    "bleed"
+   ],
+   "icon": {
+    "glyph": "drops",
+    "elem": "physical"
+   },
+   "tone": "low",
+   "aim": "direction",
+   "range": 3,
+   "cooldown": 2.5,
+   "cost": {
+    "res": "ritmo",
+    "amount": 3
+   },
+   "cast": {
+    "windup": 0.2,
+    "recover": 0.3,
+    "moveFactor": 0.15
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "arc",
+     "radius": 3,
+     "angle": 110,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 2.3,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 1,
+       "coef": 1.3,
+       "stacks": 2
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 55,
+    "shake": 0.2,
+    "anim": "stab",
+    "sfx": "cut"
+   }
+  },
+  {
+   "id": "abl.skir.rope_trap",
+   "owner": "cls.skirmisher",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "trap",
+    "physical",
+    "zone"
+   ],
+   "icon": {
+    "glyph": "trap",
+    "elem": "physical"
+   },
+   "tone": "mid",
+   "aim": "ground",
+   "range": 10,
+   "cooldown": 7,
+   "cast": {
+    "windup": 0.2,
+    "recover": 0.25,
+    "moveFactor": 0.4
+   },
+   "effects": [
+    {
+     "op": "zone",
+     "shape": "circle",
+     "radius": 1.8,
+     "origin": "aim",
+     "duration": 18,
+     "arm": 0.6,
+     "trigger": "proximity",
+     "once": true,
+     "kind": "snare",
+     "max": 3,
+     "color": "physical",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.8,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.rooted",
+       "duration": 2
+      },
+      {
+       "op": "status",
+       "id": "st.vulnerable",
+       "duration": 4
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 0,
+    "anim": "throw",
+    "sfx": "snare_set"
+   }
+  },
+  {
+   "id": "abl.skir.leaf_dance",
+   "owner": "cls.skirmisher",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "melee",
+    "area",
+    "physical",
+    "spin"
+   ],
+   "icon": {
+    "glyph": "spin",
+    "elem": "physical"
+   },
+   "tone": "mid",
+   "aim": "self",
+   "range": 3.2,
+   "cooldown": 5,
+   "cost": {
+    "res": "ritmo",
+    "amount": 3
+   },
+   "cast": {
+    "windup": 0.12,
+    "recover": 0.25,
+    "moveFactor": 0.75
+   },
+   "channel": {
+    "interval": 0.22,
+    "maxDuration": 2.2,
+    "effects": [
+     {
+      "op": "area",
+      "shape": "circle",
+      "radius": 3.2,
+      "origin": "self",
+      "hit": [
+       {
+        "op": "damage",
+        "type": "physical",
+        "coef": 0.62,
+        "scaling": "weapon"
+       }
+      ]
+     }
+    ]
+   },
+   "effects": [],
+   "fx": {
+    "hitstop": 10,
+    "shake": 0.04,
+    "anim": "spin",
+    "sfx": "spin"
+   }
+  },
+  {
+   "id": "abl.skir.final_cadence",
+   "owner": "cls.skirmisher",
+   "slotType": "skill",
+   "tags": [
+    "attack",
+    "melee",
+    "area",
+    "physical",
+    "ultimate",
+    "flurry"
+   ],
+   "icon": {
+    "glyph": "flurry",
+    "elem": "physical"
+   },
+   "tone": "high",
+   "aim": "self",
+   "range": 4.2,
+   "cooldown": 16,
+   "cost": {
+    "res": "ritmo",
+    "amount": 8
+   },
+   "cast": {
+    "windup": 0.15,
+    "recover": 0.4,
+    "moveFactor": 0.0
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "delay": 0.0,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 0.95,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.3,
+       "coef": 0.7
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "delay": 0.1,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.0,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.3,
+       "coef": 0.7
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "delay": 0.2,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.05,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.3,
+       "coef": 0.7
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "delay": 0.3,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.1,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.3,
+       "coef": 0.7
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "delay": 0.4,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.15,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.3,
+       "coef": 0.7
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "delay": 0.5,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.2,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.3,
+       "coef": 0.7
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "delay": 0.6,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.25,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.3,
+       "coef": 0.7
+      }
+     ]
+    },
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 4.2,
+     "origin": "self",
+     "delay": 0.7,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 1.3,
+       "scaling": "weapon"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 0.3,
+       "coef": 0.7
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 25,
+    "shake": 0.18,
+    "anim": "spin",
+    "sfx": "flurry"
+   }
+  }
+ ]
+}

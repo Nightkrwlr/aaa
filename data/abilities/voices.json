@@ -1,0 +1,359 @@
+{
+ "kind": "ability",
+ "items": [
+  {
+   "id": "abl.voice.stalker_leap",
+   "slotType": "voice",
+   "tags": [
+    "voice",
+    "attack",
+    "movement",
+    "physical"
+   ],
+   "aim": "direction",
+   "range": 8,
+   "cast": {
+    "windup": 0.1,
+    "recover": 0.2,
+    "noSpeedScale": true
+   },
+   "effects": [
+    {
+     "op": "dash",
+     "distance": 7.5,
+     "duration": 0.3,
+     "radius": 1.3,
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 2.0,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.bleeding",
+       "chance": 1,
+       "coef": 1.0
+      }
+     ],
+     "onEnd": [
+      {
+       "op": "area",
+       "shape": "circle",
+       "radius": 2.8,
+       "origin": "self",
+       "hit": [
+        {
+         "op": "damage",
+         "type": "physical",
+         "coef": 1.2,
+         "scaling": "spell"
+        },
+        {
+         "op": "knockback",
+         "force": 1.4
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 30,
+    "shake": 0.15,
+    "anim": "cast",
+    "sfx": "voice"
+   },
+   "icon": {
+    "glyph": "leap",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "abl.voice.cantor_volley",
+   "slotType": "voice",
+   "tags": [
+    "voice",
+    "attack",
+    "projectile",
+    "sonic"
+   ],
+   "aim": "direction",
+   "range": 12,
+   "cast": {
+    "windup": 0.2,
+    "recover": 0.3,
+    "moveFactor": 0.3
+   },
+   "effects": [
+    {
+     "op": "projectile",
+     "count": 3,
+     "spread": 34,
+     "speed": 16,
+     "radius": 0.4,
+     "range": 12,
+     "model": "note",
+     "color": "#b79cff",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "sonic",
+       "coef": 2.2,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.dissonance",
+       "chance": 0.6
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 30,
+    "shake": 0.15,
+    "anim": "cast",
+    "sfx": "voice"
+   },
+   "icon": {
+    "glyph": "waves",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "abl.voice.wailer_call",
+   "slotType": "voice",
+   "tags": [
+    "voice",
+    "summon",
+    "hollow"
+   ],
+   "aim": "self",
+   "range": 3,
+   "cast": {
+    "windup": 0.2,
+    "recover": 0.3,
+    "moveFactor": 0.3
+   },
+   "effects": [
+    {
+     "op": "summon",
+     "enemy": "enm.hollow_chorister",
+     "count": 2,
+     "max": 4,
+     "radius": 2.2,
+     "lifetime": 12,
+     "tier": "minion",
+     "ring": true,
+     "inheritStats": true
+    }
+   ],
+   "fx": {
+    "hitstop": 30,
+    "shake": 0.15,
+    "anim": "cast",
+    "sfx": "voice"
+   },
+   "icon": {
+    "glyph": "voice",
+    "elem": "hollow"
+   }
+  },
+  {
+   "id": "abl.voice.sacristan_mend",
+   "slotType": "voice",
+   "tags": [
+    "voice",
+    "heal"
+   ],
+   "aim": "self",
+   "range": 1,
+   "cast": {
+    "windup": 0.2,
+    "recover": 0.3,
+    "moveFactor": 0.3
+   },
+   "effects": [
+    {
+     "op": "heal",
+     "target": "self",
+     "pct": 0.3
+    },
+    {
+     "op": "cleanse"
+    }
+   ],
+   "fx": {
+    "hitstop": 30,
+    "shake": 0.15,
+    "anim": "cast",
+    "sfx": "voice"
+   },
+   "icon": {
+    "glyph": "leaf",
+    "elem": "heal"
+   }
+  },
+  {
+   "id": "abl.voice.bellringer_toll",
+   "slotType": "voice",
+   "tags": [
+    "voice",
+    "attack",
+    "area",
+    "sonic",
+    "pull"
+   ],
+   "aim": "self",
+   "range": 8,
+   "cast": {
+    "windup": 0.2,
+    "recover": 0.3,
+    "moveFactor": 0.3
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 8,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "pull",
+       "force": 5
+      },
+      {
+       "op": "damage",
+       "type": "sonic",
+       "coef": 1.4,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.slowed",
+       "duration": 3
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 30,
+    "shake": 0.15,
+    "anim": "cast",
+    "sfx": "voice"
+   },
+   "icon": {
+    "glyph": "alarm",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "abl.voice.brannoch_quake",
+   "slotType": "voice",
+   "tags": [
+    "voice",
+    "attack",
+    "area",
+    "slam"
+   ],
+   "aim": "direction",
+   "range": 11,
+   "cast": {
+    "windup": 0.35,
+    "recover": 0.4,
+    "moveFactor": 0
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "line",
+     "length": 11,
+     "width": 3.2,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "physical",
+       "coef": 4.0,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.stunned",
+       "duration": 1.2
+      },
+      {
+       "op": "knockback",
+       "force": 2
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 80,
+    "shake": 0.5,
+    "anim": "slam",
+    "sfx": "quake"
+   },
+   "icon": {
+    "glyph": "ram",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "abl.voice.ildra_note",
+   "slotType": "voice",
+   "tags": [
+    "voice",
+    "attack",
+    "area",
+    "hollow"
+   ],
+   "aim": "self",
+   "range": 7.5,
+   "cast": {
+    "windup": 0.3,
+    "recover": 0.4,
+    "moveFactor": 0.2
+   },
+   "effects": [
+    {
+     "op": "area",
+     "shape": "circle",
+     "radius": 7.5,
+     "origin": "self",
+     "hit": [
+      {
+       "op": "damage",
+       "type": "hollow",
+       "coef": 3.0,
+       "scaling": "spell"
+      },
+      {
+       "op": "status",
+       "id": "st.stunned",
+       "duration": 1.6
+      },
+      {
+       "op": "status",
+       "id": "st.silenced",
+       "duration": 3
+      }
+     ]
+    }
+   ],
+   "fx": {
+    "hitstop": 70,
+    "shake": 0.4,
+    "anim": "toll",
+    "sfx": "note_big"
+   },
+   "icon": {
+    "glyph": "bellcrown",
+    "elem": "hollow"
+   }
+  }
+ ]
+}

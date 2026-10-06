@@ -43,12 +43,13 @@ export class AiSystem {
     if (!ai.inited) { ai.inited = true; brain.init?.(e, w, tk); }
     ai.stateT += dt;
     e.intent = null;
+    ai.dt = dt;
+    if (brain.tick) brain.tick(e, w, dt, tk, this);
     if (e.ctl.stunned || e.dash) return;
     if (e.ctl.rooted) { tk.faceTarget(e, ai.target, dt); }
 
     // perception
     this.perceive(e, dt);
-    if (brain.tick) brain.tick(e, w, dt, tk, this);
 
     switch (ai.state) {
       case 'idle': this.sIdle(e, dt, brain); break;
@@ -78,6 +79,7 @@ export class AiSystem {
     const diffAi = w.balance.d.enemyDamage.difficultyAi[w.difficulty] ?? 1;
     let range = (cfg.aggroRange ?? 13) * (0.9 + 0.1 * diffAi);
     if (pl.ctl.cloaked) range *= 0.25;
+    if (pl.flags.has('cloakWalk')) range *= 0.7;
     if (e.hidden) range = Math.min(range, cfg.ambushRange ?? 5);
     const d2 = dist2(e.x, e.z, pl.x, pl.z);
     const sees = d2 < range * range && (ai.sightT = (ai.sightT ?? 0) + dt) >= 0;

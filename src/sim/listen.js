@@ -66,6 +66,7 @@ export class ListenSystem {
       if (o.dead || !o.hidden) continue;
       if (Math.hypot(o.x - e.x, o.z - e.z) <= range * 0.6) { o.revealedHit = true; o.revealedUntil = w.time + 4; revealed.push(o); }
     }
+    w.loot?.captureVoices(e);
     w.events.emit('listen:pulse', { entity: e, range, revealed });
   }
 

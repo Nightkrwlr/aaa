@@ -105,6 +105,8 @@ export class AbilityRuntime {
     };
     if (e.team === 'player') e.yaw = yaw;
     e.cast = cast;
+    if (ab._cycle === undefined) ab._cycle = JSON.stringify(ab.effects ?? []).includes('"cycle"') || JSON.stringify(ab.channel ?? {}).includes('"cycle"');
+    if (ab._cycle) cast.cycleBase = e.cycleN = (e.cycleN ?? 0) + 1;
     if (ab.tone && e.cadenceEnabled) cast.chord = this.cadence.onCast(e, ab, cast);
     w.metrics.casts++;
     w.events.emit('cast:start', { entity: e, ab, cast });
@@ -182,6 +184,7 @@ export class AbilityRuntime {
         c.chanT -= ch.interval;
         if (ch.costPerTick && !this.w.resources.canAfford(e, ch.costPerTick)) { c.phase = 'recover'; c.t = 0; break; }
         if (ch.costPerTick) this.w.resources.spend(e, ch.costPerTick);
+        c.pulses++; c.tickNo = c.pulses;
         this.#runEffects(e, c, ch.effects ?? c.ab.effects);
         if (ch.gainPerTick) this.w.resources.gain(e, ch.gainPerTick, 'channel');
       }
@@ -215,6 +218,23 @@ export class AbilityRuntime {
     for (let i = ts.length - 1; i >= 0; i--) if (this.w.time >= ts[i].at) { const t = ts.splice(i, 1)[0]; try { t.fn(); } catch (err) { log.error('timer failed', err); } }
   }
 
+  /** run an ability's effects right now (death bursts, triggers, items) — no gating, no cost */
+  castImmediate(e, id, x = e.x, z = e.z, extra = {}) {
+    const ab = this.resolve(e, id);
+    if (!ab) return false;
+    const yaw = Math.atan2(x - e.x, z - e.z) || e.yaw;
+    const c = { ab, id, t: 0, phase: 'recover', aimX: x, aimZ: z, yaw, hitSet: new Set(), extraMore: extra.extraMore ?? 0, areaMult: 1, hitBudget: 6, targetUid: null, chord: null };
+    this.#runEffects(e, c, ab.effects);
+    return true;
+  }
+
+  /** run raw effects (triggers) as if from an ability with no cost */
+  runInline(e, effects, x = e.x, z = e.z, tags = []) {
+    const ab = { id: 'inline', tags: ['attack', ...tags], effects, slotType: 'inline' };
+    const c = { ab, id: 'inline', t: 0, phase: 'recover', aimX: x, aimZ: z, yaw: Math.atan2(x - e.x, z - e.z) || e.yaw, hitSet: new Set(), extraMore: 0, areaMult: 1, hitBudget: 6, targetUid: null, chord: null };
+    this.#runEffects(e, c, effects);
+  }
+
   // ───────────────────────── helpers used by effects
   origin(e, c, eff) {
     switch (eff.origin ?? 'self') {
@@ -230,20 +250,22 @@ export class AbilityRuntime {
     for (const op of ops) {
       switch (op.op) {
         case 'damage': {
-          const res = this.w.hit(e, target, op, c.ab, { extraMore: c.extraMore + (o.extraMore ?? 0), damageMult: o.damageMult });
-          if (res) { last = res; landed = true; if (c.ab.gain?.perHit && c.hitBudget > 0) { c.hitBudget--; this.w.resources.gain(e, c.ab.gain.perHit, 'abilityHit'); } }
+          const eff = op.cycle ? { ...op, type: op.cycle[((c.cycleBase ?? 0) + (o.tick ?? 0)) % op.cycle.length] } : op;
+          const res = this.w.hit(e, target, eff, c.ab, { extraMore: c.extraMore + (o.extraMore ?? 0), damageMult: o.damageMult });
+          if (res) { last = res; landed = true; if (e.flags.has('triadMarks') && this.w.status.has(e, 'st.tuned')) this.w.status.apply(target, 'st.marked', { source: e, duration: 5, silent: true }); if (c.ab.gain?.perHit && c.hitBudget > 0) { c.hitBudget--; this.w.resources.gain(e, c.ab.gain.perHit, 'abilityHit'); } }
           break;
         }
         case 'status': {
           if (target.dead) break;
           const chance = (op.chance ?? 1) + (op.chance !== undefined && e.team === 'player' ? e.stats.get('statusChance', c.ab.tags, e.flags) : 0);
           if (chance < 1 && this.w.rng.next() >= chance) break;
-          const def = this.w.registry.get(op.id);
+          const sid = op.cycleStatus ? op.cycleStatus[((c.cycleBase ?? 0) + (o.tick ?? 0)) % op.cycleStatus.length] : op.id;
+          const def = this.w.registry.get(sid);
           if (!def) break;
           const snap = last?.base ?? (def.behavior === 'dot' ? this.w.dmg.roll(e, { type: def.damageType, coef: op.coef ?? 1, scaling: op.scaling }, c.ab.tags, this.w.rng, { noCrit: true }).amount : 0);
           const pot = (op.potency ?? 1) * (e.team === 'player' ? e.stats.get('statusPotency', c.ab.tags, e.flags) : 1);
           const dm = (e.team === 'player' ? e.stats.get('statusDuration', c.ab.tags, e.flags) : 1);
-          this.w.status.apply(target, op.id, { source: e, snapshot: snap, potency: pot, durMult: dm, duration: op.duration, build: op.build, stacks: op.stacks });
+          this.w.status.apply(target, sid, { source: e, snapshot: snap, potency: pot, durMult: dm, duration: op.duration, build: op.build, stacks: op.stacks });
           break;
         }
         case 'knockback': {
@@ -253,6 +275,7 @@ export class AbilityRuntime {
         }
         case 'pull': { const org = o.origin ?? { x: e.x, z: e.z }; this.w.pull(target, org.x, org.z, op.force ?? 3); break; }
         case 'heal': this.w.heal(target, op.pct ? target.hpMax * op.pct : op.amount ?? 0, e); break;
+        case 'lifeSelf': this.w.heal(e, e.hpMax * (op.pct ?? 0.02), e); break;
         case 'resource': this.w.resources.gain(e, op.amount, 'hitop'); break;
         case 'cleanse': this.w.status.clear(target, (d) => d.tags?.includes('ailment') || d.tags?.includes('curse')); break;
         case 'taunt': if (target.ai) { target.ai.target = e; target.ai.tauntUntil = this.w.time + (op.duration ?? 3); } break;
@@ -274,7 +297,7 @@ export class AbilityRuntime {
     const p = {
       uid: this.projUid++, x: ox, z: oz, yaw, vx: Math.sin(yaw) * speed, vz: Math.cos(yaw) * speed, speed, radius: (eff.radius ?? 0.35) * 1,
       range: (eff.range ?? 16), travelled: 0, pierce, chain, homing: eff.homing ?? 0, team: e.team, source: e, ab: c.ab, cast: c,
-      hit: eff.hit ?? [], onHit: eff.onHit ?? null, onEnd: eff.onEnd ?? null, hitSet: new Set(), extraMore: c.extraMore, model: eff.model ?? 'bolt', color: eff.color, gravity: eff.arc ?? 0,
+      hit: eff.hit ?? [], onHit: eff.onHit ?? null, onEnd: eff.onEnd ?? null, hitSet: new Set(), extraMore: c.extraMore, model: eff.model ?? 'bolt', color: eff.color, element: eff.cycle ? eff.cycle[(c.cycleBase ?? 0) % eff.cycle.length] : null, gravity: eff.arc ?? 0,
       age: 0, lifetime: eff.lifetime ?? 6, sticky: eff.sticky, wallPass: eff.wallPass, targetPoint: eff.arc ? { x: c.aimX, z: c.aimZ } : null, from: { x: ox, z: oz }, dead: false, bounce: eff.bounce ?? 0,
     };
     if (eff.arc) { // lobbed: flies to aim point in fixed time
@@ -360,8 +383,11 @@ export class AbilityRuntime {
     d.t += dt;
     const step = Math.min(d.speed * dt, d.dist - d.travelled);
     const sx = d.dx * step, sz = d.dz * step;
-    const blocked = this.w.nav.moveCircle(e, sx, sz, e.radius);
-    d.travelled += step;
+    const px = e.x, pz = e.z;
+    this.w.nav.moveCircle(e, sx, sz, e.radius);
+    const moved = Math.hypot(e.x - px, e.z - pz);
+    d.travelled += moved;
+    d.stuck = moved < step * 0.35 ? (d.stuck ?? 0) + 1 : 0;
     e.vx = d.dx * d.speed; e.vz = d.dz * d.speed;
     if (d.hit?.length) {
       for (const t of this.hostiles(e, e.x, e.z, d.radius ?? 1.2)) {
@@ -370,7 +396,7 @@ export class AbilityRuntime {
         this.applyHit(e, d.cast, t, d.hit, { origin: { x: e.x - d.dx, z: e.z - d.dz } });
       }
     }
-    if (d.travelled >= d.dist - 0.01 || d.t >= d.dur * 1.5 || (blocked && step < 0.02)) this.#endDash(e);
+    if (d.travelled >= d.dist - 0.01 || d.t >= d.dur * 1.5 || d.stuck >= 2) this.#endDash(e);
   }
   #endDash(e) {
     const d = e.dash;
@@ -464,7 +490,8 @@ const EFFECTS = {
     const targets = eff.target === 'allies' ? w.queryCircle(e.x, e.z, eff.radius ?? 8, (a) => a.team === e.team && !a.dead) : [e];
     for (const t of targets) {
       if (eff.excludeSelf && t === e) continue;
-      const amt = eff.pct ? t.hpMax * eff.pct : (eff.amount ?? 0);
+      let amt = eff.pct ? t.hpMax * eff.pct : (eff.amount ?? 0);
+      if (c.ab.slotType === 'consumable') amt *= e.stats.get('potionEfficiency') * (e.potionMult ?? 1);
       w.heal(t, amt, e);
     }
   },
@@ -499,7 +526,7 @@ const EFFECTS = {
       uid: rt.projUid++, x: o.x, z: o.z, yaw: c.yaw, shape: eff.shape ?? 'circle', radius: (eff.radius ?? 3) * scale, angle: eff.angle, inner: eff.inner, length: eff.length, width: eff.width,
       duration: eff.duration ?? 4, t: 0, tick: eff.tick ?? 0.5, tickT: eff.firstTick ?? (eff.tick ?? 0.5), team: e.team, source: e, ab: c.ab, cast: c, hit: eff.hit ?? [], allyHit: eff.allyHit ?? null,
       follow: !!eff.follow, color: eff.color ?? 'danger', kind: eff.kind ?? 'zone', arm: eff.arm ?? 0, trigger: eff.trigger, once: !!eff.once, orbit: eff.orbit ?? 0, auraStatus: eff.auraStatus,
-      extraMore: c.extraMore, benign: !!eff.benign, fx: eff.fx, onExpire: eff.onExpire, dead: false, id: eff.id ?? null, spin: eff.spin ?? 0,
+      extraMore: c.extraMore, tickCount: 0, benign: !!eff.benign, fx: eff.fx, onExpire: eff.onExpire, dead: false, id: eff.id ?? null, spin: eff.spin ?? 0,
     };
     if (eff.max) {
       const mine = rt.w.zones.filter((q) => q.source === e && q.ab.id === c.ab.id && !q.dead);
@@ -526,6 +553,10 @@ const EFFECTS = {
   voiceCharge(rt, e, c, eff) { if (e.voices) e.voices.charges = Math.min(e.voices.max, e.voices.charges + (eff.amount ?? 1)); },
 
   telegraphOnly() { /* visual-only marker; the client reads cast state */ },
+
+  cleanse(rt, e) { rt.w.status.clear(e, (d) => d.tags?.includes('ailment') || d.tags?.includes('curse')); },
+
+  suicide(rt, e) { e.noLoot = true; e.noXp = true; rt.w.kill(e, null); },
 
   spawnObject(rt, e, c, eff) {
     const w = rt.w;
@@ -572,9 +603,10 @@ AbilityRuntime.prototype.updateZones = function updateZones(dt) {
     if (z.tickT <= 0 && (z.hit.length || z.allyHit)) {
       z.tickT += z.tick;
       z.cast.hitBudget = 3;
+      const tickNo = z.tickCount++;
       for (const t of w.queryCircle(z.x, z.z, z.radius + 1, (o) => !o.dead && !o.untargetable)) {
         if (!shapeContains(shape, z.x, z.z, z.yaw, t.x, t.z, t.radius)) continue;
-        if (w.isHostile({ team: z.team }, t)) this.applyHit(z.source, z.cast, t, z.hit, { origin: { x: z.x, z: z.z }, extraMore: z.extraMore });
+        if (w.isHostile({ team: z.team }, t)) this.applyHit(z.source, z.cast, t, z.hit, { origin: { x: z.x, z: z.z }, extraMore: z.extraMore, tick: tickNo });
         else if (z.allyHit && t.team === z.team) this.applyHit(z.source, z.cast, t, z.allyHit, { origin: { x: z.x, z: z.z } });
       }
     }
@@ -605,6 +637,7 @@ export function applyPatch(ab, p) {
     case 'removeTag': ab.tags = ab.tags.filter((t) => ![].concat(p.value).includes(t)); break;
     case 'replaceEffects': ab.effects = clone(p.value); break;
     case 'setTone': ab.tone = p.value; break;
+    case 'convertDamage': convertDamage(ab.effects, p.to); if (ab.channel) convertDamage(ab.channel.effects, p.to); break;
     default: throw new Error(`unknown patch op ${p.op}`);
   }
 }
@@ -616,4 +649,11 @@ function resolveSelectors(ab, path) {
     if (i < 0) throw new Error(`selector ${m} not found`);
     return `${arrPath}.${i}`;
   });
+}
+
+function convertDamage(node, to) {
+  if (Array.isArray(node)) { for (const n of node) convertDamage(n, to); return; }
+  if (!node || typeof node !== 'object') return;
+  if (node.op === 'damage') { node.type = to; delete node.cycle; }
+  for (const k of Object.keys(node)) if (typeof node[k] === 'object') convertDamage(node[k], to);
 }

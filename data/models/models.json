@@ -1,0 +1,435 @@
+{
+ "kind": "model",
+ "items": [
+  {
+   "id": "mdl.dummy",
+   "tpl": "dummy",
+   "p": {}
+  },
+  {
+   "id": "mdl.belfry",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.05,
+    "bulk": 1.25,
+    "cloth": "#7a2f2a",
+    "trim": "#d9a24a",
+    "tabard": "#e8dcc0",
+    "shoulders": "#d9a24a",
+    "head": "helm",
+    "legs": "#3a3438",
+    "weaponR": "bell_hammer",
+    "hangBell": true,
+    "skin": "#c9a688"
+   }
+  },
+  {
+   "id": "mdl.prismatist",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.0,
+    "bulk": 0.9,
+    "cloth": "#2f6a78",
+    "trim": "#e8f4f8",
+    "cloak": "#dfeff2",
+    "head": "hood",
+    "legs": "#2a4650",
+    "weaponR": "staff",
+    "orbit": 3,
+    "glow": "#7fe3ff",
+    "skin": "#d9c3a8"
+   }
+  },
+  {
+   "id": "mdl.skirmisher",
+   "tpl": "biped",
+   "p": {
+    "scale": 0.98,
+    "bulk": 0.85,
+    "cloth": "#3a4638",
+    "trim": "#e0803a",
+    "head": "scarf",
+    "scarf": "#e0803a",
+    "weaponR": "blade",
+    "weaponL": "blade",
+    "scarfTail": true,
+    "legs": "#2a2e2a",
+    "skin": "#c9a688"
+   }
+  },
+  {
+   "id": "mdl.cliff_stalker",
+   "tpl": "quadruped",
+   "p": {
+    "scale": 0.95,
+    "color": "#7c6e5c",
+    "belly": "#b9ad94",
+    "horns": true,
+    "spikes": true,
+    "glow": "#7fe3ff",
+    "glowVeins": true
+   }
+  },
+  {
+   "id": "mdl.crackhide_boar",
+   "tpl": "quadruped",
+   "p": {
+    "scale": 1.35,
+    "color": "#6d5a48",
+    "belly": "#a28c6c",
+    "tusks": true,
+    "spikes": true,
+    "spikeColor": "#cdbf9f",
+    "glow": "#ff9a4a",
+    "glowVeins": true
+   }
+  },
+  {
+   "id": "mdl.drone",
+   "tpl": "swarm",
+   "p": {
+    "scale": 1.0,
+    "color": "#6a7a50",
+    "glow": "#7fe3ff"
+   }
+  },
+  {
+   "id": "mdl.spitter",
+   "tpl": "quadruped",
+   "p": {
+    "scale": 1.05,
+    "color": "#6f8a54",
+    "belly": "#c4d79a",
+    "glow": "#b6ff4a",
+    "glowVeins": true,
+    "spikes": true,
+    "spikeColor": "#a8d060"
+   }
+  },
+  {
+   "id": "mdl.burrower",
+   "tpl": "burrower",
+   "p": {
+    "scale": 1.0,
+    "color": "#7a6a58",
+    "glow": "#7fe3ff"
+   }
+  },
+  {
+   "id": "mdl.cocoon",
+   "tpl": "cocoon",
+   "p": {
+    "scale": 1.0,
+    "color": "#c7b7dc",
+    "glow": "#7fe3ff"
+   }
+  },
+  {
+   "id": "mdl.wisp",
+   "tpl": "floater",
+   "p": {
+    "scale": 0.95,
+    "glow": "#c58cff",
+    "color": "#e6dcf6",
+    "wings": true,
+    "tendrils": 4
+   }
+  },
+  {
+   "id": "mdl.hollow_chorister",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.0,
+    "bulk": 0.95,
+    "cloth": "#8a7fa8",
+    "trim": "#b79cff",
+    "skin": "#c3bccd",
+    "head": "hollow",
+    "glow": "#b79cff",
+    "chestGlow": true,
+    "legs": "#5a5470"
+   }
+  },
+  {
+   "id": "mdl.hollow_shieldbearer",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.1,
+    "bulk": 1.35,
+    "cloth": "#6f6688",
+    "trim": "#b88a3e",
+    "skin": "#c3bccd",
+    "head": "helm",
+    "weaponL": "shield",
+    "weaponR": "club",
+    "metal": "#8a7a68",
+    "glow": "#b79cff",
+    "chestGlow": true,
+    "legs": "#4a4560"
+   }
+  },
+  {
+   "id": "mdl.cracked_cantor",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.08,
+    "height": 1.9,
+    "bulk": 0.8,
+    "cloth": "#9a8fba",
+    "cloak": "#b6acd2",
+    "skin": "#c3bccd",
+    "head": "hollow",
+    "glow": "#d7c4ff",
+    "chestGlow": true,
+    "legs": "#6a6288"
+   }
+  },
+  {
+   "id": "mdl.sacristan",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.05,
+    "bulk": 0.9,
+    "cloth": "#cfd8c6",
+    "trim": "#6dff9a",
+    "cloak": "#cfd8c6",
+    "head": "hood",
+    "weaponR": "staff",
+    "glow": "#6dff9a",
+    "skin": "#c3bccd"
+   }
+  },
+  {
+   "id": "mdl.wailer",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.15,
+    "bulk": 0.8,
+    "cloth": "#4e4468",
+    "cloak": "#3a3052",
+    "skin": "#c3bccd",
+    "head": "hollow",
+    "glow": "#8a6fd0",
+    "chestGlow": true,
+    "hover": true,
+    "legs": "#3a3052"
+   }
+  },
+  {
+   "id": "mdl.bellringer",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.25,
+    "bulk": 1.4,
+    "cloth": "#6a5a48",
+    "trim": "#d9a24a",
+    "shoulders": "#b88a3e",
+    "head": "bell",
+    "weaponR": "handbell",
+    "skin": "#c3bccd",
+    "legs": "#3a3430",
+    "metal": "#d9a24a"
+   }
+  },
+  {
+   "id": "mdl.penitent",
+   "tpl": "biped",
+   "p": {
+    "scale": 0.95,
+    "bulk": 0.9,
+    "cloth": "#5a3a30",
+    "trim": "#ff7a2a",
+    "skin": "#c3bccd",
+    "head": "hollow",
+    "glow": "#ff7a2a",
+    "chestGlow": true,
+    "legs": "#3a2a26"
+   }
+  },
+  {
+   "id": "mdl.whisperer",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.0,
+    "bulk": 0.78,
+    "cloth": "#2a2a3a",
+    "trim": "#8a6fd0",
+    "head": "hood",
+    "weaponR": "blade",
+    "weaponL": "blade",
+    "glow": "#b79cff",
+    "skin": "#c3bccd",
+    "legs": "#1e1e2a"
+   }
+  },
+  {
+   "id": "mdl.sentinel",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.4,
+    "bulk": 1.7,
+    "cloth": "#b88a3e",
+    "trim": "#8a6428",
+    "skin": "#8a7a58",
+    "head": "helm",
+    "weaponR": "great_hammer",
+    "legs": "#6d6458",
+    "shoulders": "#d9a24a",
+    "glow": "#7fe3ff",
+    "metal": "#6d6458"
+   }
+  },
+  {
+   "id": "mdl.turret",
+   "tpl": "turret",
+   "p": {
+    "scale": 1.0,
+    "color": "#b88a3e",
+    "glow": "#7fe3ff"
+   }
+  },
+  {
+   "id": "mdl.spider",
+   "tpl": "crawler",
+   "p": {
+    "scale": 1.0,
+    "color": "#9a7a46",
+    "glow": "#ff9a4a",
+    "metal": 0.6
+   }
+  },
+  {
+   "id": "mdl.reaper",
+   "tpl": "reaper",
+   "p": {
+    "scale": 1.0
+   }
+  },
+  {
+   "id": "mdl.brannoch",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.9,
+    "bulk": 1.55,
+    "cloth": "#5a4e42",
+    "trim": "#8a7a68",
+    "shoulders": "#b88a3e",
+    "head": "helm",
+    "weaponR": "great_hammer",
+    "skin": "#b0a89c",
+    "legs": "#3a342e",
+    "glow": "#b79cff",
+    "chestGlow": true,
+    "metal": "#7c7468",
+    "hangBell": true
+   }
+  },
+  {
+   "id": "mdl.ildra",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.3,
+    "height": 1.9,
+    "bulk": 0.85,
+    "cloth": "#e2dcef",
+    "trim": "#b79cff",
+    "cloak": "#d8d0ec",
+    "skin": "#d3cbe0",
+    "head": "crown",
+    "glow": "#b79cff",
+    "chestGlow": true,
+    "hover": true,
+    "orbit": 5,
+    "legs": "#cfc8e0"
+   }
+  },
+  {
+   "id": "mdl.npc_orrel",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.05,
+    "bulk": 1.2,
+    "cloth": "#6a7a8a",
+    "trim": "#d9a24a",
+    "tabard": "#d9a24a",
+    "head": "helm",
+    "weaponR": "staff",
+    "glow": "#d9a24a",
+    "skin": "#c9a688",
+    "legs": "#3a4250"
+   }
+  },
+  {
+   "id": "mdl.npc_hesk",
+   "tpl": "biped",
+   "p": {
+    "scale": 0.98,
+    "bulk": 1.0,
+    "cloth": "#7a5a3a",
+    "trim": "#7fe3ff",
+    "head": "scarf",
+    "scarf": "#d9a24a",
+    "hangBell": true,
+    "skin": "#b8906a",
+    "legs": "#4a3a2a"
+   }
+  },
+  {
+   "id": "mdl.npc_sil",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.0,
+    "bulk": 0.85,
+    "cloth": "#ebe7dc",
+    "cloak": "#ebe7dc",
+    "trim": "#9fb4c9",
+    "head": "hood",
+    "skin": "#d9c3a8",
+    "legs": "#cfcabd"
+   }
+  },
+  {
+   "id": "mdl.npc_maeve",
+   "tpl": "biped",
+   "p": {
+    "scale": 0.95,
+    "bulk": 1.2,
+    "cloth": "#a8553a",
+    "trim": "#e8dcc0",
+    "head": "scarf",
+    "scarf": "#e8dcc0",
+    "skin": "#c9a688",
+    "legs": "#5a3a2a"
+   }
+  },
+  {
+   "id": "mdl.npc_tarn",
+   "tpl": "biped",
+   "p": {
+    "scale": 0.86,
+    "bulk": 0.85,
+    "cloth": "#5a7a5a",
+    "trim": "#d9a24a",
+    "head": "scarf",
+    "scarf": "#8aa070",
+    "skin": "#c9a688",
+    "legs": "#3a4a3a"
+   }
+  },
+  {
+   "id": "mdl.echo_decoy",
+   "tpl": "biped",
+   "p": {
+    "scale": 1.0,
+    "bulk": 1.0,
+    "cloth": "#7fe3ff",
+    "skin": "#bfeaff",
+    "trim": "#ffffff",
+    "head": "hood",
+    "glow": "#7fe3ff",
+    "hover": true,
+    "legs": "#7fe3ff"
+   }
+  }
+ ]
+}

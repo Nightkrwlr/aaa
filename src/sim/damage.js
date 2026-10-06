@@ -19,6 +19,7 @@ export class DamageModel {
   /** base damage before modifiers */
   scalingBase(source, eff) {
     const sc = eff.scaling ?? (source.team === 'player' ? 'weapon' : 'pct');
+    if (source.owner && (sc === 'weapon' || sc === 'spell')) source = source.owner;
     const coef = eff.coef ?? 1;
     switch (sc) {
       case 'weapon': return (source.weaponHit ?? this.bal.weaponHit(source.level ?? 1) * 0.6) * coef;

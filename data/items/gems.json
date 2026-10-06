@@ -1,0 +1,902 @@
+{
+ "kind": "gem",
+ "items": [
+  {
+   "id": "gem.sonic_1",
+   "stone": "sonic",
+   "quality": 1,
+   "mult": 1,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.06,
+      "tags": [
+       "sonic"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.sonic",
+      "op": "flat",
+      "value": 0.05
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.04,
+      "tags": [
+       "sonic"
+      ]
+     }
+    ]
+   },
+   "minLevel": 1,
+   "icon": {
+    "glyph": "gem",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "gem.sonic_2",
+   "stone": "sonic",
+   "quality": 2,
+   "mult": 1.8,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.108,
+      "tags": [
+       "sonic"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.sonic",
+      "op": "flat",
+      "value": 0.09
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.072,
+      "tags": [
+       "sonic"
+      ]
+     }
+    ]
+   },
+   "minLevel": 10,
+   "icon": {
+    "glyph": "gem",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "gem.sonic_3",
+   "stone": "sonic",
+   "quality": 3,
+   "mult": 3.0,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.18,
+      "tags": [
+       "sonic"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.sonic",
+      "op": "flat",
+      "value": 0.15
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.12,
+      "tags": [
+       "sonic"
+      ]
+     }
+    ]
+   },
+   "minLevel": 20,
+   "icon": {
+    "glyph": "gem",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "gem.ember_1",
+   "stone": "ember",
+   "quality": 1,
+   "mult": 1,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.06,
+      "tags": [
+       "fire"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.fire",
+      "op": "flat",
+      "value": 0.05
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.04,
+      "tags": [
+       "fire"
+      ]
+     }
+    ]
+   },
+   "minLevel": 1,
+   "icon": {
+    "glyph": "gem",
+    "elem": "fire"
+   }
+  },
+  {
+   "id": "gem.ember_2",
+   "stone": "ember",
+   "quality": 2,
+   "mult": 1.8,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.108,
+      "tags": [
+       "fire"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.fire",
+      "op": "flat",
+      "value": 0.09
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.072,
+      "tags": [
+       "fire"
+      ]
+     }
+    ]
+   },
+   "minLevel": 10,
+   "icon": {
+    "glyph": "gem",
+    "elem": "fire"
+   }
+  },
+  {
+   "id": "gem.ember_3",
+   "stone": "ember",
+   "quality": 3,
+   "mult": 3.0,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.18,
+      "tags": [
+       "fire"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.fire",
+      "op": "flat",
+      "value": 0.15
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.12,
+      "tags": [
+       "fire"
+      ]
+     }
+    ]
+   },
+   "minLevel": 20,
+   "icon": {
+    "glyph": "gem",
+    "elem": "fire"
+   }
+  },
+  {
+   "id": "gem.rime_1",
+   "stone": "rime",
+   "quality": 1,
+   "mult": 1,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.06,
+      "tags": [
+       "frost"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.frost",
+      "op": "flat",
+      "value": 0.05
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.04,
+      "tags": [
+       "frost"
+      ]
+     }
+    ]
+   },
+   "minLevel": 1,
+   "icon": {
+    "glyph": "gem",
+    "elem": "frost"
+   }
+  },
+  {
+   "id": "gem.rime_2",
+   "stone": "rime",
+   "quality": 2,
+   "mult": 1.8,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.108,
+      "tags": [
+       "frost"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.frost",
+      "op": "flat",
+      "value": 0.09
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.072,
+      "tags": [
+       "frost"
+      ]
+     }
+    ]
+   },
+   "minLevel": 10,
+   "icon": {
+    "glyph": "gem",
+    "elem": "frost"
+   }
+  },
+  {
+   "id": "gem.rime_3",
+   "stone": "rime",
+   "quality": 3,
+   "mult": 3.0,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.18,
+      "tags": [
+       "frost"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.frost",
+      "op": "flat",
+      "value": 0.15
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.12,
+      "tags": [
+       "frost"
+      ]
+     }
+    ]
+   },
+   "minLevel": 20,
+   "icon": {
+    "glyph": "gem",
+    "elem": "frost"
+   }
+  },
+  {
+   "id": "gem.spark_1",
+   "stone": "spark",
+   "quality": 1,
+   "mult": 1,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.06,
+      "tags": [
+       "shock"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.shock",
+      "op": "flat",
+      "value": 0.05
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.04,
+      "tags": [
+       "shock"
+      ]
+     }
+    ]
+   },
+   "minLevel": 1,
+   "icon": {
+    "glyph": "gem",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "gem.spark_2",
+   "stone": "spark",
+   "quality": 2,
+   "mult": 1.8,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.108,
+      "tags": [
+       "shock"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.shock",
+      "op": "flat",
+      "value": 0.09
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.072,
+      "tags": [
+       "shock"
+      ]
+     }
+    ]
+   },
+   "minLevel": 10,
+   "icon": {
+    "glyph": "gem",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "gem.spark_3",
+   "stone": "spark",
+   "quality": 3,
+   "mult": 3.0,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.18,
+      "tags": [
+       "shock"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.shock",
+      "op": "flat",
+      "value": 0.15
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.12,
+      "tags": [
+       "shock"
+      ]
+     }
+    ]
+   },
+   "minLevel": 20,
+   "icon": {
+    "glyph": "gem",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "gem.venom_1",
+   "stone": "venom",
+   "quality": 1,
+   "mult": 1,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.06,
+      "tags": [
+       "toxic"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.toxic",
+      "op": "flat",
+      "value": 0.05
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "statusChance",
+      "op": "flat",
+      "value": 0.03
+     }
+    ]
+   },
+   "minLevel": 1,
+   "icon": {
+    "glyph": "gem",
+    "elem": "toxic"
+   }
+  },
+  {
+   "id": "gem.venom_2",
+   "stone": "venom",
+   "quality": 2,
+   "mult": 1.8,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.108,
+      "tags": [
+       "toxic"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.toxic",
+      "op": "flat",
+      "value": 0.09
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "statusChance",
+      "op": "flat",
+      "value": 0.054
+     }
+    ]
+   },
+   "minLevel": 10,
+   "icon": {
+    "glyph": "gem",
+    "elem": "toxic"
+   }
+  },
+  {
+   "id": "gem.venom_3",
+   "stone": "venom",
+   "quality": 3,
+   "mult": 3.0,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "damage",
+      "op": "inc",
+      "value": 0.18,
+      "tags": [
+       "toxic"
+      ]
+     }
+    ],
+    "armor": [
+     {
+      "stat": "res.toxic",
+      "op": "flat",
+      "value": 0.15
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "statusChance",
+      "op": "flat",
+      "value": 0.09
+     }
+    ]
+   },
+   "minLevel": 20,
+   "icon": {
+    "glyph": "gem",
+    "elem": "toxic"
+   }
+  },
+  {
+   "id": "gem.vigor_1",
+   "stone": "vigor",
+   "quality": 1,
+   "mult": 1,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "lifeOnHit",
+      "op": "flat",
+      "value": 1.0
+     }
+    ],
+    "armor": [
+     {
+      "stat": "life",
+      "op": "inc",
+      "value": 0.03
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "life",
+      "op": "inc",
+      "value": 0.03
+     }
+    ]
+   },
+   "minLevel": 1,
+   "icon": {
+    "glyph": "gem",
+    "elem": "heal"
+   }
+  },
+  {
+   "id": "gem.vigor_2",
+   "stone": "vigor",
+   "quality": 2,
+   "mult": 1.8,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "lifeOnHit",
+      "op": "flat",
+      "value": 1.8
+     }
+    ],
+    "armor": [
+     {
+      "stat": "life",
+      "op": "inc",
+      "value": 0.054
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "life",
+      "op": "inc",
+      "value": 0.054
+     }
+    ]
+   },
+   "minLevel": 10,
+   "icon": {
+    "glyph": "gem",
+    "elem": "heal"
+   }
+  },
+  {
+   "id": "gem.vigor_3",
+   "stone": "vigor",
+   "quality": 3,
+   "mult": 3.0,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "lifeOnHit",
+      "op": "flat",
+      "value": 3.0
+     }
+    ],
+    "armor": [
+     {
+      "stat": "life",
+      "op": "inc",
+      "value": 0.09
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "life",
+      "op": "inc",
+      "value": 0.09
+     }
+    ]
+   },
+   "minLevel": 20,
+   "icon": {
+    "glyph": "gem",
+    "elem": "heal"
+   }
+  },
+  {
+   "id": "gem.bulwark_1",
+   "stone": "bulwark",
+   "quality": 1,
+   "mult": 1,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "critMult",
+      "op": "flat",
+      "value": 0.08
+     }
+    ],
+    "armor": [
+     {
+      "stat": "armor",
+      "op": "inc",
+      "value": 0.06
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "armor",
+      "op": "inc",
+      "value": 0.05
+     }
+    ]
+   },
+   "minLevel": 1,
+   "icon": {
+    "glyph": "gem",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "gem.bulwark_2",
+   "stone": "bulwark",
+   "quality": 2,
+   "mult": 1.8,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "critMult",
+      "op": "flat",
+      "value": 0.144
+     }
+    ],
+    "armor": [
+     {
+      "stat": "armor",
+      "op": "inc",
+      "value": 0.108
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "armor",
+      "op": "inc",
+      "value": 0.09
+     }
+    ]
+   },
+   "minLevel": 10,
+   "icon": {
+    "glyph": "gem",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "gem.bulwark_3",
+   "stone": "bulwark",
+   "quality": 3,
+   "mult": 3.0,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "critMult",
+      "op": "flat",
+      "value": 0.24
+     }
+    ],
+    "armor": [
+     {
+      "stat": "armor",
+      "op": "inc",
+      "value": 0.18
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "armor",
+      "op": "inc",
+      "value": 0.15
+     }
+    ]
+   },
+   "minLevel": 20,
+   "icon": {
+    "glyph": "gem",
+    "elem": "physical"
+   }
+  },
+  {
+   "id": "gem.echo_1",
+   "stone": "echo",
+   "quality": 1,
+   "mult": 1,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "chord.triadDmg",
+      "op": "flat",
+      "value": 0.02
+     }
+    ],
+    "armor": [
+     {
+      "stat": "cooldownRate",
+      "op": "inc",
+      "value": 0.02
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "chord.window",
+      "op": "flat",
+      "value": 0.2
+     }
+    ]
+   },
+   "minLevel": 1,
+   "icon": {
+    "glyph": "gem",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "gem.echo_2",
+   "stone": "echo",
+   "quality": 2,
+   "mult": 1.8,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "chord.triadDmg",
+      "op": "flat",
+      "value": 0.036
+     }
+    ],
+    "armor": [
+     {
+      "stat": "cooldownRate",
+      "op": "inc",
+      "value": 0.036
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "chord.window",
+      "op": "flat",
+      "value": 0.36
+     }
+    ]
+   },
+   "minLevel": 10,
+   "icon": {
+    "glyph": "gem",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "gem.echo_3",
+   "stone": "echo",
+   "quality": 3,
+   "mult": 3.0,
+   "effects": {
+    "weapon": [
+     {
+      "stat": "chord.triadDmg",
+      "op": "flat",
+      "value": 0.06
+     }
+    ],
+    "armor": [
+     {
+      "stat": "cooldownRate",
+      "op": "inc",
+      "value": 0.06
+     }
+    ],
+    "jewelry": [
+     {
+      "stat": "chord.window",
+      "op": "flat",
+      "value": 0.6
+     }
+    ]
+   },
+   "minLevel": 20,
+   "icon": {
+    "glyph": "gem",
+    "elem": "sonic"
+   }
+  }
+ ]
+}

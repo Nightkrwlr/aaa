@@ -1,0 +1,226 @@
+{
+ "kind": "ability",
+ "items": [
+  {
+   "id": "abl.con.potion_mend",
+   "slotType": "consumable",
+   "tags": [
+    "consumable",
+    "heal"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0,
+    "recover": 0.1
+   },
+   "effects": [
+    {
+     "op": "heal",
+     "target": "self",
+     "pct": 0.38
+    }
+   ],
+   "fx": {
+    "sfx": "drink",
+    "anim": "drink"
+   },
+   "icon": {
+    "glyph": "potion",
+    "elem": "heal"
+   }
+  },
+  {
+   "id": "abl.con.potion_trickle",
+   "slotType": "consumable",
+   "tags": [
+    "consumable",
+    "heal"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0,
+    "recover": 0.1
+   },
+   "effects": [
+    {
+     "op": "status",
+     "id": "st.potion_trickle"
+    }
+   ],
+   "fx": {
+    "sfx": "drink",
+    "anim": "drink"
+   },
+   "icon": {
+    "glyph": "potion",
+    "elem": "heal"
+   }
+  },
+  {
+   "id": "abl.con.potion_ward",
+   "slotType": "consumable",
+   "tags": [
+    "consumable",
+    "defense"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0,
+    "recover": 0.1
+   },
+   "effects": [
+    {
+     "op": "shield",
+     "pct": 0.25,
+     "duration": 10
+    }
+   ],
+   "fx": {
+    "sfx": "drink",
+    "anim": "drink"
+   },
+   "icon": {
+    "glyph": "shield",
+    "elem": "brass"
+   }
+  },
+  {
+   "id": "abl.con.potion_resist",
+   "slotType": "consumable",
+   "tags": [
+    "consumable",
+    "defense"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0,
+    "recover": 0.1
+   },
+   "effects": [
+    {
+     "op": "status",
+     "id": "st.potion_resist"
+    }
+   ],
+   "fx": {
+    "sfx": "drink",
+    "anim": "drink"
+   },
+   "icon": {
+    "glyph": "flake",
+    "elem": "frost"
+   }
+  },
+  {
+   "id": "abl.con.potion_haste",
+   "slotType": "consumable",
+   "tags": [
+    "consumable",
+    "buff"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0,
+    "recover": 0.1
+   },
+   "effects": [
+    {
+     "op": "status",
+     "id": "st.potion_haste"
+    }
+   ],
+   "fx": {
+    "sfx": "drink",
+    "anim": "drink"
+   },
+   "icon": {
+    "glyph": "wing",
+    "elem": "shock"
+   }
+  },
+  {
+   "id": "abl.con.antidote",
+   "slotType": "consumable",
+   "tags": [
+    "consumable",
+    "cleanse"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0,
+    "recover": 0.1
+   },
+   "effects": [
+    {
+     "op": "cleanse"
+    },
+    {
+     "op": "status",
+     "id": "st.antidote_immune"
+    }
+   ],
+   "fx": {
+    "sfx": "drink",
+    "anim": "drink"
+   },
+   "icon": {
+    "glyph": "leaf",
+    "elem": "toxic"
+   }
+  },
+  {
+   "id": "abl.con.infusion_listen",
+   "slotType": "consumable",
+   "tags": [
+    "consumable",
+    "exploration"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0,
+    "recover": 0.1
+   },
+   "effects": [
+    {
+     "op": "status",
+     "id": "st.listen_boost"
+    }
+   ],
+   "fx": {
+    "sfx": "drink",
+    "anim": "drink"
+   },
+   "icon": {
+    "glyph": "ear",
+    "elem": "sonic"
+   }
+  },
+  {
+   "id": "abl.con.salve_focus",
+   "slotType": "consumable",
+   "tags": [
+    "consumable",
+    "resource"
+   ],
+   "aim": "self",
+   "cast": {
+    "windup": 0,
+    "recover": 0.1
+   },
+   "effects": [
+    {
+     "op": "resource",
+     "amount": 50
+    }
+   ],
+   "fx": {
+    "sfx": "drink",
+    "anim": "drink"
+   },
+   "icon": {
+    "glyph": "drops",
+    "elem": "sonic"
+   }
+  }
+ ]
+}

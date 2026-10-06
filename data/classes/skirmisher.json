@@ -1,0 +1,86 @@
+{
+ "kind": "class",
+ "items": [
+  {
+   "id": "cls.skirmisher",
+   "model": "mdl.skirmisher",
+   "color": "#e0803a",
+   "resource": {
+    "id": "ritmo",
+    "max": 10,
+    "start": 0,
+    "decay": {
+     "delay": 2.4,
+     "rate": 0.9
+    },
+    "onHit": 0.4,
+    "onHurt": -2,
+    "onDodge": 2,
+    "onPerfectDodge": 4,
+    "moveGainDist": 8,
+    "moveGain": 1,
+    "perStack": [
+     {
+      "stat": "moveSpeed",
+      "op": "more",
+      "group": "ritmo",
+      "value": 0.04
+     },
+     {
+      "stat": "actionSpeed",
+      "op": "more",
+      "group": "ritmo",
+      "value": 0.03
+     }
+    ]
+   },
+   "profile": {
+    "life": 0.95,
+    "armor": 0.5,
+    "res": {},
+    "moveSpeed": 5.9,
+    "weaponKinds": [
+     "light"
+    ],
+    "unarmedMult": 0.6
+   },
+   "loadout": {
+    "primary": "abl.skir.claw",
+    "s1": "abl.skir.twin_knives",
+    "dodge": "abl.skir.slide"
+   },
+   "unlocks": [
+    {
+     "level": 1,
+     "ability": "abl.skir.twin_knives"
+    },
+    {
+     "level": 2,
+     "ability": "abl.skir.rending_leap"
+    },
+    {
+     "level": 3,
+     "ability": "abl.skir.bleeding_cut"
+    },
+    {
+     "level": 4,
+     "ability": "abl.skir.smoke"
+    },
+    {
+     "level": 6,
+     "ability": "abl.skir.rope_trap"
+    },
+    {
+     "level": 8,
+     "ability": "abl.skir.leaf_dance"
+    },
+    {
+     "level": 10,
+     "ability": "abl.skir.final_cadence"
+    }
+   ],
+   "talentTree": "tree.skirmisher",
+   "startingWeapon": "itm.base.twin_blades_worn"
+  }
+ ]
+}

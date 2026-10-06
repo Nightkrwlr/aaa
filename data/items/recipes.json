@@ -1,0 +1,312 @@
+{
+ "kind": "recipe",
+ "items": [
+  {
+   "id": "rcp.potion_mend",
+   "category": "alchemy",
+   "inputs": {
+    "mat.wind_lichen": 2,
+    "mat.limestone_dust": 1
+   },
+   "chimes": 4,
+   "output": {
+    "type": "refill",
+    "belt": 2
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.potion_trickle",
+   "category": "alchemy",
+   "inputs": {
+    "mat.wind_lichen": 2,
+    "mat.bellflower": 1
+   },
+   "chimes": 6,
+   "output": {
+    "type": "consumable",
+    "id": "con.potion_trickle",
+    "count": 2
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.potion_ward",
+   "category": "alchemy",
+   "inputs": {
+    "mat.brass_scrap": 2,
+    "mat.echo_silk": 1
+   },
+   "chimes": 8,
+   "output": {
+    "type": "consumable",
+    "id": "con.potion_ward",
+    "count": 2
+   },
+   "minProf": 2
+  },
+  {
+   "id": "rcp.potion_resist",
+   "category": "alchemy",
+   "inputs": {
+    "mat.caustic_gland": 1,
+    "mat.bellflower": 2
+   },
+   "chimes": 9,
+   "output": {
+    "type": "consumable",
+    "id": "con.potion_resist",
+    "count": 2
+   },
+   "minProf": 2
+  },
+  {
+   "id": "rcp.potion_haste",
+   "category": "alchemy",
+   "inputs": {
+    "mat.drone_wing": 3,
+    "mat.wind_lichen": 1
+   },
+   "chimes": 7,
+   "output": {
+    "type": "consumable",
+    "id": "con.potion_haste",
+    "count": 2
+   },
+   "minProf": 2
+  },
+  {
+   "id": "rcp.antidote",
+   "category": "alchemy",
+   "inputs": {
+    "mat.hollow_resin": 2,
+    "mat.wind_lichen": 2
+   },
+   "chimes": 6,
+   "output": {
+    "type": "consumable",
+    "id": "con.antidote",
+    "count": 2
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.infusion_listen",
+   "category": "alchemy",
+   "inputs": {
+    "mat.sonic_quartz": 1,
+    "mat.bellflower": 2
+   },
+   "chimes": 14,
+   "output": {
+    "type": "consumable",
+    "id": "con.infusion_listen",
+    "count": 1
+   },
+   "minProf": 3
+  },
+  {
+   "id": "rcp.salve_focus",
+   "category": "alchemy",
+   "inputs": {
+    "mat.echo_silk": 2,
+    "mat.hollow_resin": 1
+   },
+   "chimes": 10,
+   "output": {
+    "type": "consumable",
+    "id": "con.salve_focus",
+    "count": 2
+   },
+   "minProf": 2
+  },
+  {
+   "id": "rcp.gem_sonic",
+   "category": "runes",
+   "inputs": {
+    "mat.sonic_quartz": 2,
+    "mat.limestone_dust": 2
+   },
+   "chimes": 12,
+   "output": {
+    "type": "gem",
+    "id": "gem.sonic_1"
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.gem_ember",
+   "category": "runes",
+   "inputs": {
+    "mat.sonic_quartz": 2,
+    "mat.limestone_dust": 2
+   },
+   "chimes": 12,
+   "output": {
+    "type": "gem",
+    "id": "gem.ember_1"
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.gem_rime",
+   "category": "runes",
+   "inputs": {
+    "mat.sonic_quartz": 2,
+    "mat.limestone_dust": 2
+   },
+   "chimes": 12,
+   "output": {
+    "type": "gem",
+    "id": "gem.rime_1"
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.gem_spark",
+   "category": "runes",
+   "inputs": {
+    "mat.sonic_quartz": 2,
+    "mat.limestone_dust": 2
+   },
+   "chimes": 12,
+   "output": {
+    "type": "gem",
+    "id": "gem.spark_1"
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.gem_venom",
+   "category": "runes",
+   "inputs": {
+    "mat.sonic_quartz": 2,
+    "mat.limestone_dust": 2
+   },
+   "chimes": 12,
+   "output": {
+    "type": "gem",
+    "id": "gem.venom_1"
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.gem_vigor",
+   "category": "runes",
+   "inputs": {
+    "mat.sonic_quartz": 2,
+    "mat.limestone_dust": 2
+   },
+   "chimes": 12,
+   "output": {
+    "type": "gem",
+    "id": "gem.vigor_1"
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.gem_bulwark",
+   "category": "runes",
+   "inputs": {
+    "mat.sonic_quartz": 2,
+    "mat.limestone_dust": 2
+   },
+   "chimes": 12,
+   "output": {
+    "type": "gem",
+    "id": "gem.bulwark_1"
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.gem_echo",
+   "category": "runes",
+   "inputs": {
+    "mat.sonic_quartz": 2,
+    "mat.limestone_dust": 2
+   },
+   "chimes": 12,
+   "output": {
+    "type": "gem",
+    "id": "gem.echo_1"
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.gem_combine",
+   "category": "runes",
+   "inputs": {},
+   "chimes": 20,
+   "output": {
+    "type": "gem_fuse",
+    "count": 3
+   },
+   "minProf": 2
+  },
+  {
+   "id": "rcp.forge_weapon",
+   "category": "forge",
+   "inputs": {
+    "mat.brass_scrap": 6,
+    "mat.serrane_filament": 2,
+    "mat.quarry_heart": 1
+   },
+   "chimes": 60,
+   "output": {
+    "type": "item",
+    "slot": "weapon",
+    "rarity": "attuned",
+    "focus": true
+   },
+   "minProf": 2
+  },
+  {
+   "id": "rcp.forge_armor",
+   "category": "forge",
+   "inputs": {
+    "mat.brass_scrap": 5,
+    "mat.stalker_sinew": 3,
+    "mat.serrane_filament": 1
+   },
+   "chimes": 40,
+   "output": {
+    "type": "item",
+    "slot": "armor",
+    "rarity": "fine",
+    "focus": true
+   },
+   "minProf": 1
+  },
+  {
+   "id": "rcp.forge_jewelry",
+   "category": "forge",
+   "inputs": {
+    "mat.echo_silk": 3,
+    "mat.sonic_quartz": 2,
+    "mat.precentor_larynx": 1
+   },
+   "chimes": 50,
+   "output": {
+    "type": "item",
+    "slot": "jewelry",
+    "rarity": "attuned",
+    "focus": true
+   },
+   "minProf": 3
+  },
+  {
+   "id": "rcp.transmute",
+   "category": "forge",
+   "inputs": {
+    "mat.resonant_dust": 10
+   },
+   "chimes": 12,
+   "output": {
+    "type": "material",
+    "id": "mat.tuning_shard",
+    "count": 1
+   },
+   "minProf": 1
+  }
+ ]
+}

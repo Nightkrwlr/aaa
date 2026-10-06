@@ -1,0 +1,1409 @@
+{
+ "kind": "zone",
+ "items": [
+  {
+   "id": "zone.calvarre_lower",
+   "region": "reg.calvarre",
+   "size": [
+    160,
+    160
+   ],
+   "origin": [
+    -80,
+    -80
+   ],
+   "cell": 1,
+   "levelRange": [
+    1,
+    7
+   ],
+   "seed": "calvarre-lower-v1",
+   "ambient": {
+    "sky": [
+     "#f2c88a",
+     "#9cc0d8",
+     "#5d7fa8"
+    ],
+    "fog": "#b8c4cf",
+    "fogDensity": 0.011,
+    "sun": "#ffd9a0",
+    "sunDir": [
+     -0.55,
+     0.62,
+     -0.45
+    ],
+    "hemi": [
+     "#cfe3ff",
+     "#6b5a48"
+    ],
+    "music": "mus.calvarre"
+   },
+   "terrain": {
+    "base": 0,
+    "noiseAmp": 0.55,
+    "noiseScale": 0.045,
+    "plateaus": [
+     {
+      "id": "orrel",
+      "shape": "ellipse",
+      "c": [
+       0,
+       -30
+      ],
+      "r": [
+       24,
+       17
+      ],
+      "h": 6,
+      "feather": 2.2
+     },
+     {
+      "id": "overlook",
+      "shape": "ellipse",
+      "c": [
+       45,
+       -58
+      ],
+      "r": [
+       19,
+       15
+      ],
+      "h": 14,
+      "feather": 2.0
+     },
+     {
+      "id": "windharps",
+      "shape": "ellipse",
+      "c": [
+       -46,
+       -38
+      ],
+      "r": [
+       23,
+       19
+      ],
+      "h": 3,
+      "feather": 2.4
+     },
+     {
+      "id": "quarry",
+      "shape": "ellipse",
+      "c": [
+       50,
+       4
+      ],
+      "r": [
+       29,
+       25
+      ],
+      "h": -3.5,
+      "feather": 2.0
+     },
+     {
+      "id": "choir",
+      "shape": "ellipse",
+      "c": [
+       5,
+       60
+      ],
+      "r": [
+       21,
+       15
+      ],
+      "h": -2.0,
+      "feather": 1.8
+     },
+     {
+      "id": "cliffs_east",
+      "shape": "ellipse",
+      "c": [
+       101,
+       14
+      ],
+      "r": [
+       24,
+       40
+      ],
+      "h": 18,
+      "feather": 4
+     },
+     {
+      "id": "cliffs_west",
+      "shape": "ellipse",
+      "c": [
+       -90,
+       -5
+      ],
+      "r": [
+       18,
+       70
+      ],
+      "h": 16,
+      "feather": 4
+     },
+     {
+      "id": "cliffs_south",
+      "shape": "ellipse",
+      "c": [
+       -10,
+       100
+      ],
+      "r": [
+       60,
+       22
+      ],
+      "h": 12,
+      "feather": 4
+     }
+    ],
+    "ramps": [
+     {
+      "id": "bell_a",
+      "points": [
+       [
+        -60,
+        50,
+        0
+       ],
+       [
+        -45,
+        35,
+        0.3
+       ],
+       [
+        -30,
+        20,
+        1.2
+       ],
+       [
+        -15,
+        2,
+        3.5
+       ],
+       [
+        -4,
+        -14,
+        6
+       ]
+      ],
+      "width": 5.5
+     },
+     {
+      "id": "to_quarry",
+      "points": [
+       [
+        14,
+        -28,
+        6
+       ],
+       [
+        26,
+        -18,
+        3
+       ],
+       [
+        37,
+        -9,
+        -0.5
+       ],
+       [
+        45,
+        0,
+        -3.5
+       ]
+      ],
+      "width": 5.5
+     },
+     {
+      "id": "to_overlook",
+      "points": [
+       [
+        12,
+        -40,
+        6
+       ],
+       [
+        24,
+        -50,
+        9
+       ],
+       [
+        36,
+        -57,
+        13
+       ],
+       [
+        42,
+        -58,
+        14
+       ]
+      ],
+      "width": 4.5
+     },
+     {
+      "id": "to_windharps",
+      "points": [
+       [
+        -14,
+        -30,
+        6
+       ],
+       [
+        -24,
+        -33,
+        4.5
+       ],
+       [
+        -33,
+        -36,
+        3
+       ]
+      ],
+      "width": 5
+     },
+     {
+      "id": "to_choir",
+      "points": [
+       [
+        -14,
+        6,
+        3.5
+       ],
+       [
+        -6,
+        28,
+        0.5
+       ],
+       [
+        2,
+        44,
+        -0.5
+       ],
+       [
+        5,
+        52,
+        -2
+       ]
+      ],
+      "width": 5.5
+     },
+     {
+      "id": "start_pad",
+      "points": [
+       [
+        -64,
+        52,
+        0
+       ],
+       [
+        -58,
+        48,
+        0
+       ]
+      ],
+      "width": 9
+     }
+    ],
+    "paths": [
+     {
+      "id": "main",
+      "points": [
+       [
+        -60,
+        50
+       ],
+       [
+        -45,
+        35
+       ],
+       [
+        -30,
+        20
+       ],
+       [
+        -15,
+        2
+       ],
+       [
+        -4,
+        -14
+       ],
+       [
+        0,
+        -26
+       ]
+      ],
+      "width": 2.6,
+      "color": "#cdbb92"
+     },
+     {
+      "id": "quarry",
+      "points": [
+       [
+        14,
+        -28
+       ],
+       [
+        26,
+        -18
+       ],
+       [
+        37,
+        -9
+       ],
+       [
+        45,
+        0
+       ]
+      ],
+      "width": 2.4,
+      "color": "#c2b08a"
+     },
+     {
+      "id": "overlook",
+      "points": [
+       [
+        12,
+        -40
+       ],
+       [
+        24,
+        -50
+       ],
+       [
+        36,
+        -57
+       ],
+       [
+        42,
+        -58
+       ]
+      ],
+      "width": 2.2,
+      "color": "#cdbb92"
+     },
+     {
+      "id": "windharps",
+      "points": [
+       [
+        -14,
+        -30
+       ],
+       [
+        -24,
+        -33
+       ],
+       [
+        -33,
+        -36
+       ]
+      ],
+      "width": 2.2,
+      "color": "#cdbb92"
+     },
+     {
+      "id": "choir",
+      "points": [
+       [
+        -14,
+        6
+       ],
+       [
+        -6,
+        28
+       ],
+       [
+        2,
+        44
+       ],
+       [
+        5,
+        52
+       ]
+      ],
+      "width": 2.6,
+      "color": "#d6c7a2"
+     }
+    ]
+   },
+   "areas": [
+    {
+     "id": "area.latency",
+     "c": [
+      -60,
+      50
+     ],
+     "r": [
+      13,
+      11
+     ],
+     "biome": "limestone_dawn",
+     "music": "explore",
+     "safe": false
+    },
+    {
+     "id": "area.bell_path",
+     "c": [
+      -30,
+      20
+     ],
+     "r": [
+      30,
+      22
+     ],
+     "biome": "limestone_dawn",
+     "music": "explore"
+    },
+    {
+     "id": "area.orrel",
+     "c": [
+      0,
+      -30
+     ],
+     "r": [
+      22,
+      15
+     ],
+     "biome": "settlement",
+     "music": "town",
+     "safe": true
+    },
+    {
+     "id": "area.windharps",
+     "c": [
+      -46,
+      -38
+     ],
+     "r": [
+      22,
+      18
+     ],
+     "biome": "windharp",
+     "music": "mystery"
+    },
+    {
+     "id": "area.quarry",
+     "c": [
+      50,
+      4
+     ],
+     "r": [
+      28,
+      24
+     ],
+     "biome": "quarry",
+     "music": "tense"
+    },
+    {
+     "id": "area.overlook",
+     "c": [
+      45,
+      -58
+     ],
+     "r": [
+      18,
+      14
+     ],
+     "biome": "overlook",
+     "music": "mystery"
+    },
+    {
+     "id": "area.empty_choir",
+     "c": [
+      5,
+      60
+     ],
+     "r": [
+      20,
+      14
+     ],
+     "biome": "choir",
+     "music": "tense"
+    }
+   ],
+   "props": [
+    {
+     "kind": "rock",
+     "area": "area.bell_path",
+     "count": 38,
+     "scale": [
+      0.5,
+      1.25
+     ],
+     "block": true
+    },
+    {
+     "kind": "pine",
+     "area": "area.bell_path",
+     "count": 34,
+     "scale": [
+      0.9,
+      1.5
+     ],
+     "block": true
+    },
+    {
+     "kind": "shrub",
+     "area": "area.bell_path",
+     "count": 80,
+     "scale": [
+      0.6,
+      1.2
+     ]
+    },
+    {
+     "kind": "grass",
+     "area": "area.bell_path",
+     "count": 260,
+     "scale": [
+      0.8,
+      1.3
+     ]
+    },
+    {
+     "kind": "rock",
+     "area": "area.latency",
+     "count": 20,
+     "scale": [
+      0.5,
+      1.25
+     ],
+     "block": true
+    },
+    {
+     "kind": "grass",
+     "area": "area.latency",
+     "count": 90,
+     "scale": [
+      0.8,
+      1.2
+     ]
+    },
+    {
+     "kind": "ruin_wall",
+     "area": "area.latency",
+     "count": 7,
+     "scale": [
+      1,
+      1.4
+     ],
+     "block": true
+    },
+    {
+     "kind": "rock",
+     "area": "area.orrel",
+     "count": 14,
+     "scale": [
+      0.5,
+      1.25
+     ],
+     "block": true,
+     "avoid": [
+      "settlement_core"
+     ]
+    },
+    {
+     "kind": "pine",
+     "area": "area.orrel",
+     "count": 10,
+     "scale": [
+      0.9,
+      1.4
+     ],
+     "block": true,
+     "avoid": [
+      "settlement_core"
+     ]
+    },
+    {
+     "kind": "grass",
+     "area": "area.orrel",
+     "count": 60,
+     "scale": [
+      0.8,
+      1.2
+     ],
+     "avoid": [
+      "settlement_core"
+     ]
+    },
+    {
+     "kind": "windharp",
+     "area": "area.windharps",
+     "count": 9,
+     "scale": [
+      1.0,
+      1.6
+     ],
+     "block": true
+    },
+    {
+     "kind": "ruin_wall",
+     "area": "area.windharps",
+     "count": 9,
+     "scale": [
+      1,
+      1.5
+     ],
+     "block": true
+    },
+    {
+     "kind": "rock",
+     "area": "area.windharps",
+     "count": 22,
+     "scale": [
+      0.5,
+      1.25
+     ],
+     "block": true
+    },
+    {
+     "kind": "shrub",
+     "area": "area.windharps",
+     "count": 50,
+     "scale": [
+      0.6,
+      1.1
+     ]
+    },
+    {
+     "kind": "grass",
+     "area": "area.windharps",
+     "count": 120,
+     "scale": [
+      0.8,
+      1.3
+     ]
+    },
+    {
+     "kind": "rock",
+     "area": "area.quarry",
+     "count": 30,
+     "scale": [
+      0.5,
+      1.25
+     ],
+     "block": true
+    },
+    {
+     "kind": "pillar",
+     "area": "area.quarry",
+     "count": 12,
+     "scale": [
+      1,
+      1.4
+     ],
+     "block": true
+    },
+    {
+     "kind": "crate",
+     "area": "area.quarry",
+     "count": 10,
+     "scale": [
+      0.8,
+      1.1
+     ],
+     "block": true
+    },
+    {
+     "kind": "rock",
+     "area": "area.overlook",
+     "count": 16,
+     "scale": [
+      0.5,
+      1.25
+     ],
+     "block": true
+    },
+    {
+     "kind": "windharp",
+     "area": "area.overlook",
+     "count": 4,
+     "scale": [
+      1.2,
+      1.7
+     ],
+     "block": true
+    },
+    {
+     "kind": "grass",
+     "area": "area.overlook",
+     "count": 80,
+     "scale": [
+      0.8,
+      1.2
+     ]
+    },
+    {
+     "kind": "pillar",
+     "area": "area.empty_choir",
+     "count": 12,
+     "scale": [
+      1.1,
+      1.5
+     ],
+     "block": true,
+     "ring": 17
+    },
+    {
+     "kind": "rock",
+     "area": "area.empty_choir",
+     "count": 10,
+     "scale": [
+      0.5,
+      1.25
+     ],
+     "block": true,
+     "avoid": [
+      "arena"
+     ]
+    },
+    {
+     "kind": "rock",
+     "area": "world_edge",
+     "count": 120,
+     "scale": [
+      0.5,
+      1.25
+     ],
+     "block": true
+    }
+   ],
+   "pois": [
+    {
+     "id": "poi.latency_chamber",
+     "type": "start",
+     "pos": [
+      -60,
+      50
+     ],
+     "area": "area.latency"
+    },
+    {
+     "id": "poi.voice_cylinder_1",
+     "type": "lore",
+     "pos": [
+      -56,
+      46
+     ],
+     "lore": "lore.cylinder_awakening"
+    },
+    {
+     "id": "wp.latency",
+     "type": "waypoint",
+     "pos": [
+      -62,
+      53
+     ],
+     "name": "wp.latency"
+    },
+    {
+     "id": "wp.orrel",
+     "type": "waypoint",
+     "pos": [
+      2,
+      -22
+     ],
+     "name": "wp.orrel"
+    },
+    {
+     "id": "wp.quarry",
+     "type": "waypoint",
+     "pos": [
+      36,
+      -8
+     ],
+     "name": "wp.quarry"
+    },
+    {
+     "id": "wp.overlook",
+     "type": "waypoint",
+     "pos": [
+      40,
+      -57
+     ],
+     "name": "wp.overlook"
+    },
+    {
+     "id": "wp.choir",
+     "type": "waypoint",
+     "pos": [
+      2,
+      40
+     ],
+     "name": "wp.choir"
+    },
+    {
+     "id": "poi.settlement_core",
+     "type": "area_mark",
+     "pos": [
+      0,
+      -30
+     ],
+     "r": 14
+    },
+    {
+     "id": "poi.dungeon_crypt",
+     "type": "dungeon",
+     "pos": [
+      72.5,
+      10
+     ],
+     "dungeon": "dgn.crypt_resonance",
+     "level": 5
+    },
+    {
+     "id": "poi.boss_arena",
+     "type": "arena",
+     "pos": [
+      5,
+      62
+     ],
+     "r": 15
+    },
+    {
+     "id": "poi.brannoch_arena",
+     "type": "arena",
+     "pos": [
+      48,
+      6
+     ],
+     "r": 12
+    },
+    {
+     "id": "poi.station_forge",
+     "type": "station",
+     "pos": [
+      -8,
+      -35
+     ],
+     "station": "forge"
+    },
+    {
+     "id": "poi.station_alchemy",
+     "type": "station",
+     "pos": [
+      8,
+      -37
+     ],
+     "station": "alchemy"
+    },
+    {
+     "id": "poi.stash",
+     "type": "stash",
+     "pos": [
+      4,
+      -26
+     ]
+    },
+    {
+     "id": "poi.glyph_1",
+     "type": "glyph",
+     "pos": [
+      50,
+      -64
+     ],
+     "glyph": 1,
+     "hidden": true
+    },
+    {
+     "id": "poi.bellgate",
+     "type": "gate",
+     "pos": [
+      1,
+      41
+     ],
+     "gate": "gate.choir_door"
+    },
+    {
+     "id": "poi.tarn_cave",
+     "type": "npc_spot",
+     "pos": [
+      -58,
+      -34
+     ]
+    }
+   ],
+   "landmarks": [
+    {
+     "id": "lm.broken_canticle",
+     "pos": [
+      -8,
+      -118
+     ],
+     "kind": "canticle"
+    }
+   ],
+   "npcs": [
+    {
+     "id": "npc.orrel",
+     "pos": [
+      -2,
+      -33
+     ],
+     "yaw": 2.6
+    },
+    {
+     "id": "npc.hesk",
+     "pos": [
+      -9,
+      -33
+     ],
+     "yaw": 1.2
+    },
+    {
+     "id": "npc.sil",
+     "pos": [
+      -15,
+      -43
+     ],
+     "yaw": 0.6
+    },
+    {
+     "id": "npc.maeve",
+     "pos": [
+      9,
+      -35
+     ],
+     "yaw": -1.2
+    }
+   ],
+   "spawns": [
+    {
+     "id": "sp.bp_1",
+     "area": "area.bell_path",
+     "pos": [
+      -40,
+      33
+     ],
+     "template": "enc.first_blood",
+     "level": 1
+    },
+    {
+     "id": "sp.bp_2",
+     "area": "area.bell_path",
+     "pos": [
+      -30,
+      17
+     ],
+     "template": "enc.hollow_walkers",
+     "level": 2
+    },
+    {
+     "id": "sp.bp_3",
+     "area": "area.bell_path",
+     "pos": [
+      -19,
+      4
+     ],
+     "template": "enc.spit_and_shamble",
+     "level": 2
+    },
+    {
+     "id": "sp.bp_amb",
+     "area": "area.bell_path",
+     "pos": [
+      -9,
+      -8
+     ],
+     "enemies": [
+      {
+       "id": "enm.echo_burrower",
+       "hidden": true
+      }
+     ],
+     "level": 3
+    },
+    {
+     "id": "sp.bp_4",
+     "area": "area.bell_path",
+     "pos": [
+      -34,
+      40
+     ],
+     "template": "enc.stalker_pack",
+     "level": 2,
+     "rare": 0.5
+    },
+    {
+     "id": "sp.wh_1",
+     "area": "area.windharps",
+     "pos": [
+      -46,
+      -38
+     ],
+     "template": "enc.wisp_garden",
+     "level": 3
+    },
+    {
+     "id": "sp.wh_2",
+     "area": "area.windharps",
+     "pos": [
+      -54,
+      -30
+     ],
+     "template": "enc.hollow_walkers",
+     "level": 3
+    },
+    {
+     "id": "sp.wh_3",
+     "area": "area.windharps",
+     "pos": [
+      -38,
+      -46
+     ],
+     "template": "enc.whispers_in_wind",
+     "level": 4
+    },
+    {
+     "id": "sp.qr_1",
+     "area": "area.quarry",
+     "pos": [
+      42,
+      12
+     ],
+     "template": "enc.fortified_line",
+     "level": 4
+    },
+    {
+     "id": "sp.qr_2",
+     "area": "area.quarry",
+     "pos": [
+      58,
+      -8
+     ],
+     "template": "enc.bull_run",
+     "level": 4
+    },
+    {
+     "id": "sp.qr_3",
+     "area": "area.quarry",
+     "pos": [
+      36,
+      2
+     ],
+     "template": "enc.bell_and_blast",
+     "level": 5
+    },
+    {
+     "id": "sp.qr_4",
+     "area": "area.quarry",
+     "pos": [
+      62,
+      18
+     ],
+     "template": "enc.construct_guard",
+     "level": 5
+    },
+    {
+     "id": "sp.qr_gear",
+     "area": "area.quarry",
+     "pos": [
+      48,
+      22
+     ],
+     "enemies": [
+      {
+       "id": "enm.reaper_gear",
+       "track": [
+        [
+         0,
+         0
+        ],
+        [
+         10,
+         0
+        ]
+       ]
+      }
+     ],
+     "level": 5
+    },
+    {
+     "id": "sp.ov_1",
+     "area": "area.overlook",
+     "pos": [
+      40,
+      -56
+     ],
+     "template": "enc.whispers_in_wind",
+     "level": 5
+    },
+    {
+     "id": "sp.ov_2",
+     "area": "area.overlook",
+     "pos": [
+      52,
+      -60
+     ],
+     "template": "enc.summoner_court",
+     "level": 5,
+     "rare": 0.6
+    },
+    {
+     "id": "sp.ec_1",
+     "area": "area.empty_choir",
+     "pos": [
+      -2,
+      50
+     ],
+     "template": "enc.hollow_walkers",
+     "level": 5
+    },
+    {
+     "id": "sp.ec_2",
+     "area": "area.empty_choir",
+     "pos": [
+      16,
+      50
+     ],
+     "template": "enc.summoner_court",
+     "level": 6
+    }
+   ],
+   "bosses": [
+    {
+     "id": "sp.brannoch",
+     "boss": "boss.brannoch",
+     "pos": [
+      48,
+      6
+     ],
+     "level": 5
+    },
+    {
+     "id": "sp.ildra",
+     "boss": "boss.ildra",
+     "pos": [
+      5,
+      66
+     ],
+     "level": 7,
+     "gate": "gate.choir_door"
+    }
+   ],
+   "resources": [
+    {
+     "id": "res.wind_lichen",
+     "mat": "mat.wind_lichen",
+     "area": "area.bell_path",
+     "count": 14,
+     "needs": null
+    },
+    {
+     "id": "res.bellflower",
+     "mat": "mat.bellflower",
+     "area": "area.windharps",
+     "count": 8,
+     "needs": "weather:windstorm"
+    },
+    {
+     "id": "res.sonic_quartz",
+     "mat": "mat.sonic_quartz",
+     "area": "area.quarry",
+     "count": 7,
+     "needs": "listen"
+    },
+    {
+     "id": "res.limestone",
+     "mat": "mat.limestone_dust",
+     "area": "area.overlook",
+     "count": 8,
+     "needs": null
+    },
+    {
+     "id": "res.brass_vein",
+     "mat": "mat.brass_scrap",
+     "area": "area.quarry",
+     "count": 6,
+     "needs": null
+    }
+   ],
+   "events": [
+    "evt.stranded_scout",
+    "evt.hollow_procession",
+    "evt.windstorm_surge"
+   ],
+   "weather": {
+    "pool": [
+     "calm",
+     "calm",
+     "mist",
+     "windstorm"
+    ],
+    "minSeconds": 240,
+    "maxSeconds": 480
+   },
+   "structures": [
+    {
+     "kind": "hall",
+     "pos": [
+      -2,
+      -39
+     ],
+     "yaw": 0
+    },
+    {
+     "kind": "hut",
+     "pos": [
+      -10,
+      -39
+     ],
+     "yaw": 0.2
+    },
+    {
+     "kind": "tent",
+     "pos": [
+      6,
+      -41
+     ],
+     "yaw": -0.3
+    },
+    {
+     "kind": "hut",
+     "pos": [
+      -19,
+      -29
+     ],
+     "yaw": 1.5
+    },
+    {
+     "kind": "hut",
+     "pos": [
+      19,
+      -35
+     ],
+     "yaw": -1.5
+    },
+    {
+     "kind": "hut",
+     "pos": [
+      -18,
+      -40
+     ],
+     "yaw": -0.6
+    },
+    {
+     "kind": "forge",
+     "pos": [
+      -8,
+      -34
+     ],
+     "yaw": 0.6
+    },
+    {
+     "kind": "alchemy_table",
+     "pos": [
+      8,
+      -35
+     ],
+     "yaw": -0.4
+    },
+    {
+     "kind": "stash_chest",
+     "pos": [
+      4,
+      -26
+     ],
+     "yaw": 0
+    },
+    {
+     "kind": "bell_post",
+     "pos": [
+      0,
+      -30
+     ],
+     "yaw": 0
+    },
+    {
+     "kind": "lantern",
+     "pos": [
+      -6,
+      -24
+     ],
+     "yaw": 0
+    },
+    {
+     "kind": "lantern",
+     "pos": [
+      6,
+      -24
+     ],
+     "yaw": 0
+    },
+    {
+     "kind": "lantern",
+     "pos": [
+      0,
+      -20
+     ],
+     "yaw": 0
+    },
+    {
+     "kind": "banner",
+     "pos": [
+      -6,
+      -32
+     ],
+     "yaw": 0.4
+    },
+    {
+     "kind": "banner",
+     "pos": [
+      7,
+      -32
+     ],
+     "yaw": -0.4
+    },
+    {
+     "kind": "cylinder",
+     "pos": [
+      -56,
+      46
+     ],
+     "yaw": 0.8
+    },
+    {
+     "kind": "mural",
+     "pos": [
+      -65,
+      46
+     ],
+     "yaw": 1.2
+    },
+    {
+     "kind": "gate_door",
+     "pos": [
+      1,
+      41
+     ],
+     "yaw": 0
+    },
+    {
+     "kind": "statue_nomouth",
+     "pos": [
+      -18,
+      -45
+     ],
+     "yaw": 0.3
+    },
+    {
+     "kind": "statue_nomouth",
+     "pos": [
+      22,
+      -6
+     ],
+     "yaw": 2.6
+    },
+    {
+     "kind": "cave_mouth",
+     "pos": [
+      76.5,
+      10
+     ],
+     "yaw": -1.5708
+    }
+   ]
+  }
+ ]
+}

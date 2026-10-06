@@ -59,10 +59,28 @@ export function createEnemy(world, defId, x, z, opts = {}) {
   else if (tier === 'boss') e.ccImmune = ['stunned', 'frozen'];
   e.kbResist = def.kbResist ?? (tier === 'boss' ? 1 : tier === 'miniboss' ? 0.7 : 0);
   e.abilityIds = (def.abilities ?? []).slice();
-  e.ai = { brain: def.ai?.brain ?? 'melee', cfg: def.ai ?? {}, state: 'idle', stateT: 0, home: { x, z }, target: null, lastSeen: null, path: null, pathT: 0, memory: {} };
+  e.ai = { brain: def.ai?.brain ?? 'melee', cfg: { ...(def.ai ?? {}) }, state: 'idle', stateT: 0, home: { x, z }, target: null, lastSeen: null, path: null, pathT: 0, memory: {} };
   e.xpValue = bal.xpFor(level, tier, level);
-  e.hidden = !!opts.hidden;
+  e.hidden = !!opts.hidden || !!def.hidden;
+  if (e.hidden) { e.untargetable = true; e.hiddenFromAi = true; }
+  if (def.noSeparate) e.noSeparate = true;
+  if (def.shield) e.damageGate = frontalGate(def.shield);
   e.modifiers = opts.modifiers ?? [];
   syncLife(e, true);
   return e;
+}
+
+/** frontal shield: hits arriving inside the arc are reduced (sonic partially pierces) */
+function frontalGate(cfg) {
+  const half = (cfg.arc ?? 140) * Math.PI / 360;
+  return function gate(dmg, { source, type }) {
+    if (!source) return dmg;
+    let d = Math.atan2(source.x - this.x, source.z - this.z) - this.yaw;
+    while (d > Math.PI) d -= 2 * Math.PI;
+    while (d < -Math.PI) d += 2 * Math.PI;
+    if (Math.abs(d) > half) return dmg;
+    const reduce = cfg.reduce * (type === 'sonic' ? 1 - (cfg.sonicPierce ?? 0) : 1);
+    this.shieldHit = true;
+    return Math.max(1, Math.round(dmg * (1 - reduce)));
+  };
 }

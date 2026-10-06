@@ -1,0 +1,109 @@
+{
+ "kind": "consumable",
+ "items": [
+  {
+   "id": "con.potion_mend",
+   "group": "belt",
+   "stack": 1,
+   "cooldown": 1.2,
+   "ability": "abl.con.potion_mend",
+   "icon": {
+    "glyph": "potion",
+    "elem": "heal"
+   },
+   "value": 8,
+   "minLevel": 1
+  },
+  {
+   "id": "con.potion_trickle",
+   "group": "potion",
+   "stack": 20,
+   "cooldown": 1.2,
+   "ability": "abl.con.potion_trickle",
+   "icon": {
+    "glyph": "potion",
+    "elem": "heal"
+   },
+   "value": 8,
+   "minLevel": 1
+  },
+  {
+   "id": "con.potion_ward",
+   "group": "potion",
+   "stack": 20,
+   "cooldown": 1.2,
+   "ability": "abl.con.potion_ward",
+   "icon": {
+    "glyph": "shield",
+    "elem": "brass"
+   },
+   "value": 8,
+   "minLevel": 1
+  },
+  {
+   "id": "con.potion_resist",
+   "group": "potion",
+   "stack": 20,
+   "cooldown": 1.2,
+   "ability": "abl.con.potion_resist",
+   "icon": {
+    "glyph": "flake",
+    "elem": "frost"
+   },
+   "value": 8,
+   "minLevel": 1
+  },
+  {
+   "id": "con.potion_haste",
+   "group": "potion",
+   "stack": 20,
+   "cooldown": 1.2,
+   "ability": "abl.con.potion_haste",
+   "icon": {
+    "glyph": "wing",
+    "elem": "shock"
+   },
+   "value": 8,
+   "minLevel": 1
+  },
+  {
+   "id": "con.antidote",
+   "group": "potion",
+   "stack": 20,
+   "cooldown": 1.2,
+   "ability": "abl.con.antidote",
+   "icon": {
+    "glyph": "leaf",
+    "elem": "toxic"
+   },
+   "value": 8,
+   "minLevel": 1
+  },
+  {
+   "id": "con.infusion_listen",
+   "group": "explore",
+   "stack": 5,
+   "cooldown": 1.2,
+   "ability": "abl.con.infusion_listen",
+   "icon": {
+    "glyph": "ear",
+    "elem": "sonic"
+   },
+   "value": 8,
+   "minLevel": 3
+  },
+  {
+   "id": "con.salve_focus",
+   "group": "potion",
+   "stack": 10,
+   "cooldown": 1.2,
+   "ability": "abl.con.salve_focus",
+   "icon": {
+    "glyph": "drops",
+    "elem": "sonic"
+   },
+   "value": 8,
+   "minLevel": 4
+  }
+ ]
+}

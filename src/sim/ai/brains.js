@@ -6,6 +6,19 @@ import { angleTo, TAU } from '../../core/math.js';
 
 const speedOf = (e) => e.ai.cfg.speedMult ?? 1;
 
+/** closest distance (body-to-body slack included) at which the enemy's shortest melee ability connects */
+function meleeReach(e, w) {
+  if (e.ai.reach) return e.ai.reach;
+  let r = 99;
+  for (const id of e.abilityIds) {
+    const ab = w.registry.get(id);
+    if (ab && ab.tags?.includes('melee') && ab.slotType !== 'enemy' ) r = Math.min(r, ab.range ?? 2);
+  }
+  if (r === 99) r = e.ai.cfg.attackRange ?? 2.2;
+  e.ai.reach = r - 0.2;
+  return e.ai.reach;
+}
+
 /** common: pick & cast an ability if possible; returns true if casting started */
 function attackIfPossible(e, w, tk, t, d, filter) {
   if (e.cast || (e.ai.nextActionT ?? 0) > w.time) return false;
@@ -35,7 +48,7 @@ export const BRAINS = {
       if (lowHpRetreat(e, w, sys)) return;
       ai.dt = dt;
       const d = tk.dist(e, t);
-      const reach = (ai.cfg.attackRange ?? 2.2) + t.radius;
+      const reach = meleeReach(e, w) + t.radius;
       if (e.cast) { if (e.cast.phase === 'windup') tk.faceTarget(e, t, dt, 2); return; }
       const maxTok = ai.cfg.tokens ?? (3 + (w.difficulty === 'chorister' ? 1 : 0) + (w.difficulty === 'maestro' ? 2 : 0));
       const near = d < 7;
@@ -46,7 +59,7 @@ export const BRAINS = {
         return;
       }
       sys.set(e, d < reach + 0.5 ? 'attack' : 'chase');
-      if (d <= reach + 0.3) { if (attackIfPossible(e, w, tk, t, d)) return; tk.faceTarget(e, t, dt); if (d < reach * 0.6) tk.moveAway(e, t.x, t.z, 0.5); else tk.strafe(e, t, ai.dir, 0.35); }
+      if (d <= reach) { if (attackIfPossible(e, w, tk, t, d)) return; tk.faceTarget(e, t, dt); if (d < reach * 0.55) tk.moveAway(e, t.x, t.z, 0.5); else tk.strafe(e, t, ai.dir, 0.35); }
       else tk.followTo(sys, e, t.x, t.z, speedOf(e), dt);
     },
   },
@@ -242,8 +255,8 @@ export const BRAINS = {
       if (e.cast) { if (e.cast.phase === 'windup') tk.faceTarget(e, t, dt, 1.5); return; }
       // protect: nearest ranged ally
       const prot = ai.cfg.protect ? tk.alliesNear(w, e, 16, (o) => (o.role ?? []).some((r) => ['artillery', 'ranged', 'support'].includes(r))).sort((a, b) => tk.dist(a, t) - tk.dist(b, t))[0] : null;
-      const reach = (ai.cfg.attackRange ?? 2.4) + t.radius;
-      if (d <= reach + 0.2 && attackIfPossible(e, w, tk, t, d)) return;
+      const reach = meleeReach(e, w) + t.radius;
+      if (d <= reach && attackIfPossible(e, w, tk, t, d)) return;
       if (prot && d > reach + 3) {
         // stand 2.5 m in front of the protectee toward the player
         const vx = t.x - prot.x, vz = t.z - prot.z, l = Math.hypot(vx, vz) || 1;
@@ -352,5 +365,14 @@ export const BRAINS = {
       tk.followTo(sys, e, behind.x, behind.z, 1.2, dt);
     },
   },
+};
+BRAINS.decoy = {
+  init(e) { e.noSeparate = true; },
+  tick(e, w) {
+    if (w.time < (e.ai.tauntT ?? 0)) return;
+    e.ai.tauntT = w.time + 0.8;
+    for (const o of w.queryCircle(e.x, e.z, 9, (x) => w.isHostile(e, x) && x.ai)) { o.ai.target = e; o.ai.tauntUntil = w.time + 1.2; }
+  },
+  engage() {},
 };
 BRAINS.boss = BRAINS.melee; // replaced at runtime by bosses/ scripts when they register
