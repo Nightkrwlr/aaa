@@ -20,6 +20,31 @@ function Sx() {
 }
 
 
+// Haz de luz del botín: geometría compartida y un material por color (degradado vertical + borde suave en el shader, HDR)
+var ckBeamGeo = null,
+  ckBeamMats = new Map();
+function ckLootBeam(color, height, radius) {
+  ckBeamGeo || ((ckBeamGeo = new ni(0.3, 1, 1, 14, 1, !0)), ckBeamGeo.translate(0, 0.5, 0));
+  let m = ckBeamMats.get(color);
+  m ||
+    ((m = new wn({
+      uniforms: { uCol: { value: new Ee(color).multiplyScalar(2.1) }, uT: CkFxTime },
+      vertexShader: `varying vec2 vUv; varying float vE; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.0); vE = abs(dot(normalize(normalMatrix * normal), normalize(-mv.xyz))); gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `uniform vec3 uCol; uniform float uT; varying vec2 vUv; varying float vE;
+        void main(){ float y = vUv.y; float a = pow(1.0 - y, 1.7) * smoothstep(0.0, 0.06, y) * pow(vE, 1.4);
+          a *= 0.8 + 0.2 * sin(y * 16.0 - uT * 2.6); gl_FragColor = vec4(uCol * (0.6 + 0.8 * (1.0 - y)), a * 0.62); }`,
+      transparent: !0,
+      blending: en,
+      depthWrite: !1,
+      toneMapped: !1,
+      fog: !1,
+    })),
+    ckBeamMats.set(color, m));
+  let t = new Ge(ckBeamGeo, m);
+  return (t.scale.set(radius, height, radius), (t.renderOrder = 6), (t.frustumCulled = !1), t);
+}
+
+
 // ════════ [509] FunctionDeclaration Nt (1113 bytes) ════════
 function Nt(n, e, t, i = {}) {
   let s = Q() * 6.28,
@@ -62,13 +87,16 @@ function Nt(n, e, t, i = {}) {
     }
     let c = n === "item" ? r.item.r : n === "chip" ? r.chip.t || 1 : 0,
       d = n === "item" || n === "chip" ? 1.5 + c * 1.2 : 1.6,
-      h = new Ge(
-        new ni(0.06 + c * 0.03, 0.2, d, 8, 1, !0),
-        new vt({ color: l, transparent: !0, opacity: 0.35, blending: en, depthWrite: !1, toneMapped: !1 }),
-      );
-    h.position.y = d / 2;
+      h = ckLootBeam(l, d, 0.16 + c * 0.025);
     let f = new Ve();
-    (f.add(o), f.add(h), f.position.set(e, 0, t), (r.mesh = f), (r.model = o), (r.col = l), x.R.scene.add(f));
+    ((r.rar = n === "item" || n === "chip" ? c : n === "qi" ? 3 : 2),
+      f.add(o),
+      f.add(h),
+      f.position.set(e, 0, t),
+      (r.mesh = f),
+      (r.model = o),
+      (r.col = l),
+      x.R.scene.add(f));
   }
   return (x.pickups.push(r), r);
 }
@@ -214,10 +242,16 @@ function gp(n) {
       (r.mesh && x.R.scene.remove(r.mesh), (x.pickups[a] = x.pickups[x.pickups.length - 1]), x.pickups.pop());
       continue;
     }
-    let f = Math.sin(r.t * 4 + a) * 0.08;
-    if (r.mesh)
-      (r.mesh.position.set(r.x, 0, r.z), (r.model.position.y = r.y + 0.25 + f), (r.model.rotation.y += n * 1.5));
-    else if (r.k === "xp") {
+    let f = Math.sin(r.t * 3 + a) * 0.1;
+    if (r.mesh) {
+      // levitación y giro suaves; halo en el suelo del color de la rareza, con pulsos y destellos en las altas
+      (r.mesh.position.set(r.x, 0, r.z), (r.model.position.y = r.y + 0.32 + f), (r.model.rotation.y += n * 1.3));
+      let u = r.rar || 0,
+        p = 0.82 + 0.18 * Math.sin(r.t * 3 + a);
+      (i.halo(r.x, r.z, 0.55 + u * 0.1, r.col, (0.42 + u * 0.09) * p, 2),
+        u >= 2 && r.t > 0.4 && i.pulse(r.x, r.z, 0.7 + u * 0.12, r.col, 0.55, (r.t * 0.6 + a * 0.37) % 1),
+        u >= 3 && Q() < n * 4 && i.burst(r.x + (Q() - 0.5) * 0.5, r.y + 0.1, r.z + (Q() - 0.5) * 0.5, 1, { color: r.col, speed: 0.3, life: 1, size: 0.12, size1: 0.02, up: 1, upMin: 0.6, drag: 1.2, jit: 0.05 }));
+    } else if (r.k === "xp") {
       let u = r.val > 30;
       i.drawOrb(r.x, r.y + f, r.z, u ? 0.17 : 0.11, u ? 4251903 : 5308304);
     } else

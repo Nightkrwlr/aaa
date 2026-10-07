@@ -86,6 +86,15 @@ const GLSL_FINAL = /* glsl */`
   if (chDis < 0.1) outgoingLight += uDisC * ((1.0 - chDis / 0.1) * 3.2);
 }`;
 
+// teñido por matiz/traje del juego (idéntico al de Jf original)
+const TINT = /* glsl */`{ vec3 c = diffuseColor.rgb;
+          float Y = dot(c, vec3(0.299, 0.587, 0.114)); float I = dot(c, vec3(0.596, -0.274, -0.322)); float Q = dot(c, vec3(0.211, -0.523, 0.312));
+          float h = atan(Q, I) + uHue; float ch = sqrt(I * I + Q * Q) * uSat; Y *= uVal; I = ch * cos(h); Q = ch * sin(h);
+          diffuseColor.rgb = max(vec3(0.0), vec3(Y + 0.956 * I + 0.621 * Q, Y - 0.272 * I - 0.647 * Q, Y - 1.106 * I + 1.703 * Q));
+          vec3 d = diffuseColor.rgb; vec3 g = sqrt(d); float mx = max(g.r, max(g.g, g.b)), mn = min(g.r, min(g.g, g.b)); float sa = mx > 0.001 ? (mx - mn) / mx : 0.0; float lu = dot(g, vec3(0.299, 0.587, 0.114));
+          float k = (1.0 - smoothstep(0.10, 0.20, sa)) * smoothstep(0.40, 0.52, lu) * uSuitOn;
+          diffuseColor.rgb = mix(d, uSuit * (lu / 0.6) * (lu / 0.6) * 1.15, k); }`;
+
 /**
  * Parche de material de personaje. `recolor` es el teñido por matiz/traje del juego (se conserva tal cual: lo usan
  * también los props del mundo vía Jf sin `fx`). Con `fx` añade las capas de legibilidad y estados.
@@ -96,11 +105,13 @@ export function patchCharMaterial(mat, recolor, fx) {
   mat.userData.rc = recolor || null;
   mat.onBeforeCompile = function (t, r) {
     prev && prev.call(this, t, r);
-    t.uniforms.uHue = { value: e.hue || 0 };
-    t.uniforms.uSat = { value: e.sat ?? 1 };
-    t.uniforms.uVal = { value: e.val ?? 1 };
-    t.uniforms.uSuit = { value: new Color(e.suit ?? 0xffffff) };
-    t.uniforms.uSuitOn = { value: e.suit != null ? 1 : 0 };
+    if (recolor) {
+      t.uniforms.uHue = { value: e.hue || 0 };
+      t.uniforms.uSat = { value: e.sat ?? 1 };
+      t.uniforms.uVal = { value: e.val ?? 1 };
+      t.uniforms.uSuit = { value: new Color(e.suit ?? 0xffffff) };
+      t.uniforms.uSuitOn = { value: e.suit != null ? 1 : 0 };
+    }
     if (fx) {
       t.uniforms.uCfA = fx.uCfA; t.uniforms.uCfB = fx.uCfB; t.uniforms.uRimC = fx.uRimC;
       t.uniforms.uAuraC = fx.uAuraC; t.uniforms.uDisC = fx.uDisC; t.uniforms.uCharT = charClock;
@@ -110,20 +121,15 @@ export function patchCharMaterial(mat, recolor, fx) {
     }
     let f = t.fragmentShader
       .replace('#include <common>', `#include <common>
-uniform float uHue; uniform float uSat; uniform float uVal; uniform vec3 uSuit; uniform float uSuitOn;${fx ? GLSL_DECL : ''}`);
-    // el teñido del juego, intacto
+${recolor ? 'uniform float uHue; uniform float uSat; uniform float uVal; uniform vec3 uSuit; uniform float uSuitOn;' : ''}${fx ? GLSL_DECL : ''}`);
+    // el teñido del juego, intacto (solo si hay recoloreo)
     f = f.replace('#include <map_fragment>', `#include <map_fragment>${fx ? GLSL_DISSOLVE : ''}
-        { vec3 c = diffuseColor.rgb;
-          float Y = dot(c, vec3(0.299, 0.587, 0.114)); float I = dot(c, vec3(0.596, -0.274, -0.322)); float Q = dot(c, vec3(0.211, -0.523, 0.312));
-          float h = atan(Q, I) + uHue; float ch = sqrt(I * I + Q * Q) * uSat; Y *= uVal; I = ch * cos(h); Q = ch * sin(h);
-          diffuseColor.rgb = max(vec3(0.0), vec3(Y + 0.956 * I + 0.621 * Q, Y - 0.272 * I - 0.647 * Q, Y - 1.106 * I + 1.703 * Q));
-          vec3 d = diffuseColor.rgb; vec3 g = sqrt(d); float mx = max(g.r, max(g.g, g.b)), mn = min(g.r, min(g.g, g.b)); float sa = mx > 0.001 ? (mx - mn) / mx : 0.0; float lu = dot(g, vec3(0.299, 0.587, 0.114));
-          float k = (1.0 - smoothstep(0.10, 0.20, sa)) * smoothstep(0.40, 0.52, lu) * uSuitOn;
-          diffuseColor.rgb = mix(d, uSuit * (lu / 0.6) * (lu / 0.6) * 1.15, k); }`);
+        ${recolor ? TINT : ''}`);
     if (fx) f = f.replace('#include <opaque_fragment>', `${GLSL_FINAL}\n#include <opaque_fragment>`);
     t.fragmentShader = f;
   };
-  mat.customProgramCacheKey = () => (fx ? 'rc3ch' : 'rc2');
+  const key = (fx ? 'rc3ch' : 'rc2') + (recolor ? 't' : 'n');
+  mat.customProgramCacheKey = () => key;
   mat.needsUpdate = true;
   return mat;
 }
@@ -154,7 +160,7 @@ export function rimMaterial(src, rimHex = 0x9fd8ff, rimK = 0.5, auraHex = 0, aur
   const prevKey = src.customProgramCacheKey ? src.customProgramCacheKey.call(src) : '';
   patchCharMaterial(m, null, staticFx(rimHex, rimK, auraHex, auraK));
   // el parche previo (si lo hay) forma parte de la clave del programa
-  m.customProgramCacheKey = () => 'rc3ch|' + prevKey;
+  m.customProgramCacheKey = () => 'rc3chn|' + prevKey;
   _rimMats.set(key, m);
   return m;
 }

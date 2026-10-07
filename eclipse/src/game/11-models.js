@@ -180,7 +180,7 @@ function Eo(n = {}) {
     recoil: 0,
     armed: !n.unarmed,
   };
-  return (Rw(k, k.armed), k);
+  return (CkRimRig(e, 10409215, 0.45, 0, 0, S), Rw(k, k.armed), k);
 }
 
 
@@ -525,6 +525,7 @@ function Ng(n, e) {
     );
     ((u.rotation.x = -Math.PI / 2), (u.position.y = 0.05), u.scale.set(1.6, 1.6, 1), s.add(u), (c.ring = u));
   }
+  CkRimRig(s, CkRimFam[n.fam] ?? 10409215, 0.5, e || 0, e ? 0.55 : 0, c.shadow);
   for (let u of c.meshes) u.userData.mat = u.material;
   return c;
 }

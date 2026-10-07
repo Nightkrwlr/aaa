@@ -317,10 +317,10 @@ function hs(n, e, t = {}) {
                   ? "#c8a0ff"
                   : "#ffffff";
     a
-      ? x.fx.text(n.x, 1.6 * n.scale + 0.4, n.z, dx(i) + "!", r, 19, { crit: !0 })
+      ? x.fx.text(n.x, 1.6 * n.scale + 0.4, n.z, dx(i) + "!", r, 25, { crit: !0, life: 1.1, vy: 2.2 })
       : ((n._dmgAcc = (n._dmgAcc || 0) + i),
         (x.time - (n._dmgT || -9) >= 0.22 || n.hp <= 0) &&
-          (x.fx.text(n.x, 1.6 * n.scale + 0.4, n.z, dx(n._dmgAcc), r, t.burnTick || t.poisonTick ? 11 : 13, {
+          (x.fx.text(n.x, 1.6 * n.scale + 0.4, n.z, dx(n._dmgAcc), r, t.burnTick || t.poisonTick ? 12 : 15, {
             crit: !1,
           }),
           (n._dmgAcc = 0),
