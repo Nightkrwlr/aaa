@@ -1,4 +1,5 @@
 import './mobile.css';
+import './panels.css';
 import { Device, watchDevice } from './device.js';
 import { TouchControls } from './touchControls.js';
 import { mobileMenu, touchSettings } from './mobileMenu.js';

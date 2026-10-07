@@ -114,7 +114,7 @@ export function inventory(game, ui) {
         }
         right.append(acts);
       }
-    } else right.append(h('div', { class: 'hint-card' }, t('ui.inv_hint')));
+    } else right.append(h('div', { class: 'hint-card' }, document.documentElement.classList.contains('touch') ? t('ui.inv_hint_touch') : t('ui.inv_hint')));
     // potion belt
     right.append(h('div', { class: 'belt' }, h('b', {}, t('hud.potion')), ` ${C.potion.charges}/${C.potion.max}`, ' ', button(t('ui.use'), () => { S.usePotion(); render(); }, { cls: 'small' })));
     el.append(head, h('div', { class: 'inv-cols' }, left, center, right));

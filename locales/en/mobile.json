@@ -45,5 +45,6 @@
  "hint.storage": "Your browser may delete this site's data if you do not use it for days. Install it or export your save from the main menu.",
  "hint.gl_lost": "Recovering graphics…",
  "mm.install": "Install the game",
- "mm.install_ios": "Share → “Add to Home Screen”: fullscreen, and your save stays safe."
+ "mm.install_ios": "Share → “Add to Home Screen”: fullscreen, and your save stays safe.",
+ "ui.inv_hint_touch": "Tap for details · double-tap to equip · long-press: quick equip · hold and drag to rearrange"
 }

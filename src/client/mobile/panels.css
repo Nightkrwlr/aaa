@@ -1,0 +1,77 @@
+/* ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   Panels on a phone. The desktop panels were laid out for a mouse and a 1080p window; a landscape phone is ~900×400 css px
+   and the thumb is the cursor. Everything here is scoped by `html.phone` / `html.touch`, so desktop never changes.
+   Rule of thumb: nothing a player needs in a fight sits below the fold, every control is ≥ 40 px, columns scroll on their own.
+   ─────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+/* the world behind a panel must not show through it (tracker, minimap bubbles…) and nothing should look "selected" without a keyboard */
+html.phone .panel { background: #0c0f16; }
+html.touch .panel :focus, html.touch .panel :focus-visible { outline: none; box-shadow: none; }
+html.touch .panel button:focus-visible { box-shadow: none; }
+
+/* every control a thumb has to hit */
+html.phone .panel button, html.phone .panel select, html.phone .panel input[type="search"], html.phone .panel input[type="text"] { min-height: 40px; }
+html.phone .panel .btn.small { min-height: 34px; }
+html.phone .panel .tabs { gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 4px 0 8px; }
+html.phone .panel .tabs::-webkit-scrollbar { display: none; }
+html.phone .panel .tab { white-space: nowrap; padding: 0 14px; flex: none; }
+html.phone .panel-head { gap: 8px; margin-bottom: 4px; }
+html.phone .panel-head h2 { font-size: 17px; letter-spacing: 1.5px; min-width: 0; }
+html.phone .panel-head .x { min-width: 44px; min-height: 44px; }
+html.phone .panel h3 { font-size: 14px; margin: 8px 0 4px; }
+
+/* tooltips never sit under the finger: pinned to the top-right corner, and not at all where a detail card already says the same thing */
+html.touch .tooltip { left: auto !important; top: calc(var(--sat, 0px) + 8px) !important; right: calc(var(--sar, 0px) + 8px); bottom: auto; width: min(46vw, 340px); max-width: none; max-height: 66dvh; overflow-y: auto; pointer-events: none; z-index: 400; font-size: 13px; }
+html.touch body:has(.p-inventory:not(.hidden)) .tooltip, html.touch body:has(.p-craft:not(.hidden)) .tooltip { display: none !important; }
+
+/* ───────── inventory: equipment | bag | detail, each column scrolling on its own */
+html.phone .p-inventory { display: flex; flex-direction: column; overflow: hidden; }
+html.phone .p-inventory .panel-head { flex: none; }
+html.phone .p-inventory .chimes { font-size: 14px; white-space: nowrap; }
+html.phone .p-inventory .inv-cols { flex: 1; min-height: 0; display: grid; gap: 10px; }
+html.phone.landscape .p-inventory .inv-cols { grid-template-columns: 184px minmax(0, 1fr) 224px; }
+html.phone.portrait .p-inventory { overflow: auto; }
+html.phone.portrait .p-inventory .inv-cols { grid-template-columns: 1fr; grid-auto-rows: min-content; }
+html.phone.landscape .p-inventory .inv-left, html.phone.landscape .p-inventory .inv-center, html.phone.landscape .p-inventory .inv-right { overflow-y: auto; min-height: 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-right: 2px; }
+/* paper doll: three tiles a row inside the 184 px column */
+html.phone .p-inventory .equip .eq-row { gap: 4px; margin: 3px 0; }
+html.phone .p-inventory .equip .tile, html.phone .p-inventory .equip .empty { width: 54px !important; height: 54px !important; }
+html.phone .p-inventory .stats { font-size: 12px; margin-top: 6px; }
+/* bag: as many 46 px squares as fit, filling the column */
+html.phone .p-inventory .grid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 3px; margin: 4px 0; }
+html.phone .p-inventory .cell { width: auto; height: auto; aspect-ratio: 1; }
+html.phone .p-inventory .cell .tile, html.phone .p-inventory .cell .empty { width: 100% !important; height: 100% !important; }
+html.phone .p-inventory .tile svg { width: 100%; height: 100%; }
+/* tabs + filters + sorts in as few rows as possible */
+html.phone .p-inventory .toolbar { flex-wrap: nowrap; gap: 6px; }
+html.phone .p-inventory .toolbar input[type="search"] { flex: 1 1 70px; min-width: 0; }
+html.phone .p-inventory .toolbar select { flex: 0 1 84px; min-width: 0; padding: 4px; }
+html.phone .p-inventory .toolbar .chk { flex: none; font-size: 12px; white-space: nowrap; }
+html.phone .p-inventory .sorts { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 4px 0; }
+html.phone .p-inventory .sorts button { flex: none; min-height: 34px; padding: 0 10px; font-size: 12px; white-space: nowrap; }
+html.phone .p-inventory .inv-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* detail card + actions */
+html.phone .p-inventory .tt-card { font-size: 13px; }
+html.phone .p-inventory .hint-card { font-size: 12px; padding: 4px 2px; }
+html.phone .p-inventory .actions { gap: 6px; }
+html.phone .p-inventory .actions button { flex: 1 1 44%; min-height: 44px; }
+html.phone .p-inventory .belt { display: flex; align-items: center; gap: 8px; }
+
+/* ───────── talents: a head that fits one row-and-a-half, a tree/list that gets the rest */
+html.phone .p-talents { display: flex; flex-direction: column; overflow: hidden; }
+html.phone .p-talents .legend { display: none; }
+html.phone .p-talents .panel-head { flex: none; flex-wrap: wrap; row-gap: 4px; }
+html.phone .p-talents .panel-head h2 { flex: 1 1 140px; font-size: 15px; }
+html.phone .p-talents .panel-head input[type="search"] { flex: 1 1 110px; min-width: 0; max-width: 200px; }
+html.phone .p-talents .tal-root { flex: 1; min-height: 0; }
+html.phone .p-talents .tal-body { min-height: 0; }
+html.phone .p-talents .tal-canvas { min-height: 0; touch-action: none; }
+html.phone .p-talents .tal-list { overflow-y: auto; max-height: 100%; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+
+/* ───────── the other panels already fit; just keep their scrolling inside the panel and their rows tappable */
+html.phone .panel { overscroll-behavior: contain; }
+html.phone .p-skills .row, html.phone .p-quests button, html.phone .p-codex button { min-height: 40px; }
+html.phone .p-settings .row, html.phone .p-settings label.row { min-height: 44px; }
+html.phone .p-settings input[type="range"] { min-height: 32px; }
+html.phone .p-pause { padding-top: max(10px, var(--sat)); }
+html.phone .p-pause .menu button, html.phone .p-title .menu button { min-height: 46px; }

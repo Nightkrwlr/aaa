@@ -32,7 +32,7 @@ export class UIManager {
     p.open?.(data);
     this.#dual();
     this.g.audio?.ui('open');
-    queueMicrotask(() => { const f = p.el.querySelector('[autofocus], button:not(:disabled), input, select'); f?.focus?.({ preventScroll: true }); });
+    queueMicrotask(() => { const touch = document.documentElement.classList.contains('touch'); const f = p.el.querySelector(touch ? '[autofocus]:not(input), button:not(:disabled)' : '[autofocus], button:not(:disabled), input, select'); f?.focus?.({ preventScroll: true }); });   // a finger must never get a soft keyboard just because a panel opened
     return p;
   }
   close(id) {

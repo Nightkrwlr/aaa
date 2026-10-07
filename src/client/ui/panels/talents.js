@@ -146,7 +146,7 @@ export function talents(game, ui) {
   el.append(head, body);
   return {
     el, blocking: true,
-    open(d) { respecMode = !!d?.respec; mode = 'tree'; rebuildHead(); canvas.style.display = 'block'; list.style.display = 'none'; const hub = tree().node(tree().start); view = { x: -hub.pos[0] + 0, y: 90, k: 0.62 }; redraw(); setTimeout(redraw, 50); if (respecMode) game.toast(t('ui.respec_hint')); },
+    open(d) { respecMode = !!d?.respec; mode = document.documentElement.classList.contains('phone') ? 'list' : 'tree'; rebuildHead(); canvas.style.display = mode === 'tree' ? 'block' : 'none'; list.style.display = mode === 'list' ? 'block' : 'none'; if (mode === 'list') renderList(); const hub = tree().node(tree().start); view = { x: -hub.pos[0] + 0, y: 90, k: 0.62 }; redraw(); setTimeout(redraw, 50); if (respecMode) game.toast(t('ui.respec_hint')); },
     close() { ui.tip.hide(); },
     update() { if (ui.isOpen('talents') && mode === 'tree' && !raf) redraw(); },
   };
