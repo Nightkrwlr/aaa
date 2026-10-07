@@ -133,12 +133,27 @@ varying vec3 vWP; varying vec3 vWN;
 const FRAG_PARS = `
 varying vec3 vWP; varying vec3 vWN;
 uniform sampler2D tCtrl1; uniform sampler2D tCtrl2; uniform vec4 uRect;
-uniform vec3 uGrassA, uGrassB, uGrassDry, uDust, uPathA, uPathB, uRockA, uRockB, uRockC, uMoss, uQuarry, uChoir, uCobA, uCobB;
+uniform vec3 uGrassA, uGrassB, uGrassDry, uDust, uDustB, uPathA, uPathB, uRockA, uRockB, uRockC, uMoss, uQuarry, uChoir, uCobA, uCobB;
 uniform vec4 uBounds;  // x0, z0, x1, z1
 uniform float uFacet, uDetail;
 ${WORLD_GLSL.frag}
 float gRock; float gCloud;
 float h11(float n){ return fract(sin(n * 127.1) * 43758.5453); }
+vec3 flagstone(vec3 wp, out float joint){
+  vec2 q = mat2(0.94, -0.34, 0.34, 0.94) * wp.xz;
+  float H = 0.66; float row = floor(q.y / H);
+  float W = 1.05 + 0.55 * h11(row * 3.1 + 1.7);
+  float u = q.x / W + h11(row * 1.37) * 5.0;
+  float col = floor(u);
+  vec2 f = vec2(fract(u), fract(q.y / H));
+  float j = min(min(f.x, 1.0 - f.x) * W, min(f.y, 1.0 - f.y) * H);
+  joint = 1.0 - smoothstep(0.025, 0.075, j);
+  float v = h11(col * 7.3 + row * 13.1);
+  vec3 stone = mix(uCobA, uCobB, v * v) * (0.86 + 0.28 * texture2D(uNoise, q * 0.8 + v).b);
+  stone *= 0.84 + 0.16 * smoothstep(0.03, 0.16, j);
+  stone = mix(stone, stone * vec3(1.06, 1.02, 0.94), step(0.7, v));
+  return mix(stone, uCobB * 0.4, joint);
+}
 vec3 triN(vec3 wp, vec3 w, float s){ return texture2D(uNoise, wp.zy * s).rgb * w.x + texture2D(uNoise, wp.xz * s).rgb * w.y + texture2D(uNoise, wp.xy * s).rgb * w.z; }
 vec3 terrainAlbedo(vec3 wp, vec3 n, out float ao){
   vec2 cuv = (wp.xz - uRect.xy) * uRect.zw;
@@ -157,7 +172,10 @@ vec3 terrainAlbedo(vec3 wp, vec3 n, out float ao){
   grass = mix(grass, uGrassDry, smoothstep(0.55, 0.85, nM.r * 0.6 + nL.r * 0.5 - lush * 0.35));
   grass *= 0.88 + 0.24 * nS.r;
   grass *= 0.92 + 0.16 * mix(nF.r, nX.b, 0.5);
-  vec3 dust = mix(uDust, uDust * vec3(1.10, 1.04, 0.88), nM.r);
+  vec3 dust = mix(uDust, uDustB, smoothstep(0.32, 0.68, blotch + (nS.r - 0.5) * 0.3));
+  dust = mix(dust, dust * vec3(1.08, 1.0, 0.86), smoothstep(0.55, 0.9, nM.r));
+  float plate = texture2D(uNoise, wp.xz * 0.16 + 0.21).g;
+  dust *= 1.0 - (1.0 - smoothstep(0.16, 0.34, plate)) * 0.2 * smoothstep(0.3, 0.7, 1.0 - lush);
   dust *= 0.9 + 0.2 * nF.b;
   float dryAmt = smoothstep(0.34, 0.68, 1.0 - lush + (nM.r - 0.5) * 0.55 + (nS.r - 0.5) * 0.18);
   vec3 ground = mix(grass, dust, dryAmt);
@@ -171,15 +189,16 @@ vec3 terrainAlbedo(vec3 wp, vec3 n, out float ao){
   float strata = wp.y * 0.62 + tr1.r * 1.35 + (nM.r - 0.5) * 0.9;
   float band = floor(strata), fr = fract(strata);
   float bl = h11(band * 1.7 + 3.0);
-  vec3 rock = mix(uRockA, uRockB, bl);
-  rock = mix(rock, uRockC, smoothstep(0.78, 1.0, fr) * 0.55 + smoothstep(0.2, 0.0, fr) * 0.18 * (1.0 - bl));
+  vec3 rock = mix(uRockA, uRockB, bl * 0.9);
+  rock *= mix(0.66, 1.12, smoothstep(0.02, 0.55, fr));
+  rock = mix(rock, uRockC, smoothstep(0.86, 0.98, fr) * 0.6);
   rock *= 0.8 + 0.4 * tr2.b;
   float crack = 1.0 - smoothstep(0.22, 0.5, tr1.g);
   rock *= 1.0 - crack * 0.38;
   rock *= 0.9 + 0.2 * tr2.r;
   float rockMask = smoothstep(0.17, 0.33, slope + (tr1.r - 0.5) * 0.22 + (nS.r - 0.5) * 0.08);
   // rocky outcrops on flat ground in dry biomes
-  rockMask = max(rockMask, smoothstep(0.80, 0.95, nM.b * 0.5 + nL.g * 0.5 + (1.0 - lush) * 0.18) * (1.0 - path) * 0.55);
+  rockMask = max(rockMask, smoothstep(0.74, 0.9, nM.b * 0.5 + nL.g * 0.5 + (1.0 - lush) * 0.3) * (1.0 - path) * 0.6);
   // ledges: flat-ish rock tops carry moss / grass
   float ledge = rockMask * smoothstep(0.7, 0.97, n.y) ;
   rock = mix(rock, mix(uMoss, grass, 0.4), ledge * 0.7 * smoothstep(0.3, 0.7, lush + moss));
@@ -196,17 +215,13 @@ vec3 terrainAlbedo(vec3 wp, vec3 n, out float ao){
   float trim = smoothstep(0.12, 0.38, pw) * (1.0 - smoothstep(0.38, 0.62, pw));
   col *= 1.0 - trim * 0.12;
   col = mix(col, pcol, pathMask);
-  // ───── cobbles (plaza / waypoint pads): worley cells from the noise's cell channel
-  float cell = texture2D(uNoise, wp.xz * 0.34).g;
-  float cell2 = texture2D(uNoise, wp.xz * 0.34 + vec2(0.5, 0.25)).g;
-  float joint = smoothstep(0.30, 0.52, cell);
+  // ───── flagstone paving (plaza / waypoint pads): staggered slabs, per-slab tint, dark joints, soft bevel
+  float joint; vec3 flag = flagstone(wp, joint);
   float pm = smoothstep(0.38, 0.7, pave + (nS.r - 0.5) * 0.35) * (1.0 - rockMask);
-  float stoneId = floor(cell2 * 6.0);
-  vec3 cob = mix(uCobA, uCobB, h11(stoneId * 3.7 + floor(cell * 5.0)));
-  cob *= 0.86 + 0.26 * nF.r;
-  cob = mix(cob * 0.55, cob, joint);
-  col = mix(col, cob, pm * smoothstep(0.1, 0.4, joint + 0.35));
-  col = mix(col, cob, pm * 0.65);
+  col = mix(col, flag, pm);
+  // a soft rim of dirt/moss where paving meets the ground
+  float rim = smoothstep(0.2, 0.42, pave) * (1.0 - smoothstep(0.42, 0.7, pave));
+  col *= 1.0 - rim * 0.1;
   // contact shadow blobs painted by props (trees, rocks, buildings)
   col *= 1.0 - wear * 0.55;
   // ───── baked curvature AO / edge highlight
@@ -218,6 +233,8 @@ vec3 terrainAlbedo(vec3 wp, vec3 n, out float ao){
   float o = smoothstep(-2.0, 12.0, out_);
   col = mix(col, rock * vec3(0.92, 0.94, 1.0), o * 0.85);
   gRock = max(gRock, o * smoothstep(0.1, 0.25, slope));
+  col *= 1.0 - 0.2 * uWet;
+  col = mix(col, vec3(dot(col, vec3(0.3, 0.59, 0.11))), 0.12 * uWet);
   return col;
 }
 `;
@@ -227,9 +244,9 @@ function makeTerrainMaterial(maps, zone, q) {
   const b = zone.bounds;
   const U = {
     tCtrl1: { value: maps.t1 }, tCtrl2: { value: maps.t2 }, uRect: { value: maps.rect },
-    uGrassA: { value: C('#4f7a45') }, uGrassB: { value: C('#7e9c52') }, uGrassDry: { value: C('#a39a5c') }, uDust: { value: C('#c9bd9c') },
-    uPathA: { value: C('#bfa97e') }, uPathB: { value: C('#d9c9a2') }, uRockA: { value: C('#9a8f7c') }, uRockB: { value: C('#7b7263') }, uRockC: { value: C('#cfc3a8') },
-    uMoss: { value: C('#4b7048') }, uQuarry: { value: C('#b59468') }, uChoir: { value: C('#8d869c') }, uCobA: { value: C('#b7ab92') }, uCobB: { value: C('#8f8672') },
+    uGrassA: { value: C('#3f6a4a') }, uGrassB: { value: C('#86a45a') }, uGrassDry: { value: C('#a9a05a') }, uDust: { value: C('#c6b78e') }, uDustB: { value: C('#b3a98e') },
+    uPathA: { value: C('#b49b73') }, uPathB: { value: C('#d0bd94') }, uRockA: { value: C('#928775') }, uRockB: { value: C('#6d6556') }, uRockC: { value: C('#cbbfa0') },
+    uMoss: { value: C('#4d7549') }, uQuarry: { value: C('#b08e66') }, uChoir: { value: C('#807892') }, uCobA: { value: C('#a99d86') }, uCobB: { value: C('#7f7664') },
     uBounds: { value: new THREE.Vector4(b.x0, b.z0, b.x1, b.z1) }, uFacet: { value: 0.85 }, uDetail: { value: q?.detail ?? 1 },
   };
   m.userData.U = U;

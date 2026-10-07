@@ -95,7 +95,7 @@ export function stringMaterial() {
         vec3 p = position; float cx = -1.0 + aId * 0.25; p.x = cx + (p.x - cx) * w; p.z *= w;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }`,
     fragmentShader: `varying float vId; uniform float uTime; uniform float uGlow;
-      void main(){ float f = 0.6 + 0.4 * sin(uTime * 5.0 + vId * 2.3); gl_FragColor = vec4(vec3(0.45, 0.9, 1.0) * (1.2 + 1.6 * f) * (0.55 + 0.45 * uGlow), 1.0); }`,
+      void main(){ float f = 0.6 + 0.4 * sin(uTime * 5.0 + vId * 2.3); gl_FragColor = vec4(vec3(0.3, 0.75, 1.0) * (0.55 + 0.75 * f) * (0.55 + 0.45 * uGlow), 1.0); }`,
   }));
 }
 

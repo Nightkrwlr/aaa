@@ -71,6 +71,7 @@ export const WORLD = {
   uNoise: { value: null },
   uSunTint: { value: new THREE.Color('#ffd9a0') },
   uGlow: { value: 1.0 },       // lantern / window / resonance brightness multiplier (night = high)
+  uWet: { value: 0.0 },        // rain wetness 0..1 (darkens the ground)
 };
 
 /**
@@ -79,7 +80,7 @@ export const WORLD = {
  */
 export const WORLD_GLSL = {
   frag: `
-uniform float uTime; uniform vec4 uWind; uniform vec4 uCloud; uniform sampler2D uNoise; uniform vec3 uSunTint;
+uniform float uTime; uniform vec4 uWind; uniform vec4 uCloud; uniform sampler2D uNoise; uniform vec3 uSunTint; uniform float uWet;
 float cloudShade(vec3 wp){
   vec2 p = wp.xz * uCloud.w + vec2(uCloud.y, uCloud.z) * uTime;
   float n = texture2D(uNoise, p).r * 0.65 + texture2D(uNoise, p * 2.3 + 0.37).r * 0.35;
@@ -100,7 +101,7 @@ vec3 windOffset(vec3 base, float h, float phase){
 export function bindWorldUniforms(shader) {
   WORLD.uNoise.value ??= getNoiseTexture();
   shader.uniforms.uTime = WORLD.uTime; shader.uniforms.uWind = WORLD.uWind; shader.uniforms.uCloud = WORLD.uCloud;
-  shader.uniforms.uNoise = WORLD.uNoise; shader.uniforms.uSunTint = WORLD.uSunTint;
+  shader.uniforms.uNoise = WORLD.uNoise; shader.uniforms.uSunTint = WORLD.uSunTint; shader.uniforms.uWet = WORLD.uWet;
 }
 
 const H = (c) => new THREE.Color(c);
@@ -112,9 +113,9 @@ const H = (c) => new THREE.Color(c);
  */
 export const PRESETS = {
   dawn: {
-    sky: ['#3f5f93', '#a9b9c9', '#f0cfa0'], fog: '#aab9c9', density: 0.021, falloff: 0.055,
-    sun: '#ffd094', sunIntensity: 3.3, sunDir: [-0.62, 0.52, 0.30], hemi: ['#8fb0dd', '#6b5642'], hemiIntensity: 1.05,
-    exposure: 1.0, bloom: [0.55, 0.7, 1.05], sat: 1.14, contrast: 1.10, vignette: 0.36,
+    sky: ['#3f5f93', '#a9b9c9', '#f0cfa0'], fog: '#a8b8c8', density: 0.024, falloff: 0.055,
+    sun: '#ffd49c', sunIntensity: 2.9, sunDir: [-0.62, 0.52, 0.30], hemi: ['#9bb8e0', '#6e5a48'], hemiIntensity: 1.5,
+    exposure: 1.0, bloom: [0.4, 0.7, 1.1], sat: 1.06, contrast: 1.06, vignette: 0.36,
     shadowTint: [0.84, 0.97, 1.16], highTint: [1.10, 1.02, 0.88], lift: 0.012, cloud: 0.3, stars: 0, glow: 0.8, shafts: 0.5,
   },
   noon: {

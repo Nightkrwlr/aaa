@@ -4,6 +4,8 @@ import { buildDungeonMesh } from './dungeonMesh.js';
 import { buildTerrainMesh } from './terrainMesh.js';
 import { buildInstancedProps } from './props.js';
 import { buildStructure, buildCanticle } from './structures.js';
+import { buildDressing } from './dressing.js';
+import { AmbientFx } from './worldFx.js';
 import { buildSky, buildBackdrop } from './sky.js';
 import { resolveQuality } from './quality.js';
 import { PostFx } from './post.js';
@@ -59,7 +61,7 @@ export class Scene3D {
     this.hemi = new THREE.HemisphereLight('#8fb0dd', '#6b5642', 1.05);
     this.sun = new THREE.DirectionalLight('#ffd094', 3.3);
     this.sun.castShadow = true;
-    this.sun.shadow.bias = -0.0003; this.sun.shadow.normalBias = 0.035; this.sun.shadow.radius = 2.2;
+    this.sun.shadow.bias = -0.0003; this.sun.shadow.normalBias = 0.035; this.sun.shadow.radius = 3.0;
     const sc = this.sun.shadow.camera; sc.left = -30; sc.right = 30; sc.top = 30; sc.bottom = -30; sc.near = 1; sc.far = 190;
     this.rim = new THREE.DirectionalLight('#9fd8ff', 0.55); this.rim.castShadow = false;
     this.scene.add(this.hemi, this.sun, this.sun.target, this.rim, this.rim.target);
@@ -79,6 +81,7 @@ export class Scene3D {
     this.scene.background = a.fog.clone();
     this.renderer.setClearColor(a.fog);
     this.sky?.userData.apply?.(a);
+    this.ambient?.refresh?.();
     const u = this.post.u, hc = this.settings.highContrast ? 1.16 : 1;
     u.uExposure.value = a.exposure; u.uSat.value = a.sat; u.uContrast.value = a.contrast * hc; u.uVig.value = a.vignette; u.uLift.value = a.lift;
     u.uShadowTint.value.copy(a.shadowTint); u.uHighTint.value.copy(a.highTint);
@@ -122,7 +125,7 @@ export class Scene3D {
     this.scene.remove(this.content); disposeTree(this.content);
     this.terrain?.userData?.dispose?.();
     this.content = new THREE.Group(); this.content.name = 'content'; this.scene.add(this.content);
-    this.updaters = []; this.worldUpdaters = []; this.emitters = []; this.props = null; this.worldGroup = null; this.terrain = null; this.backdrop = null; this.canticle = null; this.dungeonMesh?.dispose?.(); this.dungeonMesh = null; this.windUniform = null; this.baseFog = null;
+    this.updaters = []; this.worldUpdaters = []; this.emitters = []; this.ambient = null; this.props = null; this.worldGroup = null; this.terrain = null; this.backdrop = null; this.canticle = null; this.dungeonMesh?.dispose?.(); this.dungeonMesh = null; this.windUniform = null; this.baseFog = null;
     this.sky = null;
     this.playerLight?.removeFromParent(); this.playerLight = null;
   }
@@ -163,6 +166,8 @@ export class Scene3D {
     this.terrain = buildTerrainMesh(zone, { fine: this.q.fine, detail: this.q.detail });
     this.content.add(this.terrain);
     this.#buildWorldContent(false);
+    this.ambient = new AmbientFx(this, zone);
+    this.ambient.refresh();
     // landmark
     for (const lm of zone.def.landmarks ?? []) {
       const c = buildCanticle();
@@ -206,6 +211,14 @@ export class Scene3D {
       obj.traverse((o) => { if (o.isPointLight) lights.push(o); });
       for (const o of lights) { const parent = o.parent; parent.remove(o); this.emitters.push({ light: o, obj: parent, local: o.position.clone(), base: o.intensity, root: obj, flicker: !!o.userData.flicker, owner: 'world' }); }
     }
+    // hand-authored set dressing per area (merged, a few draw calls each)
+    try {
+      const dr = buildDressing(zone, ctx);
+      root.add(dr.group);
+      for (const u of dr.updaters) this.worldUpdaters.push(u);
+      const dl = []; dr.group.traverse((o) => { if (o.isPointLight) dl.push(o); });
+      for (const o of dl) { const parent = o.parent; parent.remove(o); this.emitters.push({ light: o, obj: parent, local: o.position.clone(), base: o.intensity, root: parent, flicker: !!o.userData.flicker, owner: 'world' }); }
+    } catch (e) { log.warn('dressing failed', e); }
     this.worldGroup = root; this.content.add(root);
     this.worldReady.done = !!(this.wa.ready || this.wa.failed);
   }
@@ -241,6 +254,7 @@ export class Scene3D {
     for (const u of this.updaters) u(t);
     for (const u of this.worldUpdaters ?? []) u(t, focus);
     this.props?.update(focus.x, focus.z);
+    this.ambient?.update(t, focus, this.atm);
     updateGlow(WORLD.uGlow.value);
     // the sun follows the focus on a texel grid (no shadow shimmer); its frustum hugs what the camera can see
     const dist = this.camera.position.distanceTo(new THREE.Vector3(focus.x, focus.y, focus.z));

@@ -151,10 +151,11 @@ ${O.pat ? PAT_GLSL : ''}`);
 ${O.pat ? `{ vec4 sp = surfacePattern(vPat, vSurf, vWPk); diffuseColor.rgb *= sp.rgb; }` : ''}
 ${O.ao ? 'diffuseColor.rgb *= mix(uAOK, 1.0, smoothstep(0.0, uAOH, vLY));' : ''}
 ${O.detail > 0 ? 'diffuseColor.rgb *= 1.0 - uDetail + uDetail * 2.0 * texture2D(uNoise, vWPk.xz * 0.37 + vWPk.y * vec2(0.11, 0.17)).b;' : ''}`);
+    if (O.noFlip) fs = fs.replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace(/normal \*= faceDirection;/g, ''));
     if (O.cloud) fs = fs.replace('#include <opaque_fragment>', 'outgoingLight *= cloudShade(vWPk);\n#include <opaque_fragment>');
     shader.vertexShader = vs; shader.fragmentShader = fs;
   };
-  material.customProgramCacheKey = () => `wm|${O.fade ? 1 : 0}${O.wind ? 1 : 0}${O.windFlip ? 1 : 0}${O.pat ? 1 : 0}${O.ao ? 1 : 0}${O.detail > 0 ? 1 : 0}${O.cloud ? 1 : 0}`;
+  material.customProgramCacheKey = () => `wm|${O.fade ? 1 : 0}${O.wind ? 1 : 0}${O.windFlip ? 1 : 0}${O.pat ? 1 : 0}${O.ao ? 1 : 0}${O.detail > 0 ? 1 : 0}${O.cloud ? 1 : 0}${O.noFlip ? 1 : 0}`;
   return material;
 }
 
@@ -178,7 +179,7 @@ export function kitMaterial(o = {}) {
     flatShading: !!o.flat,
   });
   if (o.color) m.color.set(o.color);
-  patchWorldMaterial(m, { fade: o.fade !== false, wind: !!o.wind, windFlip: !!o.windFlip, swayInv: o.wind ? 1 / (o.swayHeight ?? 6) : 0.2, swayAmt: o.swayAmt ?? 1, ao: o.ao !== false, aoK: o.aoK ?? 0.58, aoH: o.aoH ?? 1.6, detail: o.detail ?? 0.1, cloud: true });
+  patchWorldMaterial(m, { noFlip: !!o.doubleSide, fade: o.fade !== false, wind: !!o.wind, windFlip: !!o.windFlip, swayInv: o.wind ? 1 / (o.swayHeight ?? 6) : 0.2, swayAmt: o.swayAmt ?? 1, ao: o.ao !== false, aoK: o.aoK ?? 0.58, aoH: o.aoH ?? 1.6, detail: o.detail ?? 0.1, cloud: true });
   m.userData.shared = true;
   return m;
 }

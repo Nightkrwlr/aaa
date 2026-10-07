@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import { Rng } from '../../core/rng.js';
 import { Field } from './field.js';
-import { kitMaterial, paintMaterial } from './worldMaterials.js';
+import { kitMaterial, paintMaterial, glowPaintMaterial } from './worldMaterials.js';
 import { Paint, PAT } from './paint.js';
 import { fbm2, vnoise } from './noiseTex.js';
 import { grassTuftGeo, fernGeo, flowerGeo, bushGeo, rockGeo, crystalGeo, logGeo, mushroomGeo, pineFallbackGeo } from './foliage.js';
@@ -61,7 +61,8 @@ export function buildInstancedProps(zone, ctx) {
   // ───────────────────────── geometries (procedural)
   const GRASS = [grassTuftGeo(1, { blades: 9, height: 0.44, radius: 0.15, width: 0.09 }), grassTuftGeo(2, { blades: 6, height: 0.3, radius: 0.1, width: 0.085 }), grassTuftGeo(3, { blades: 13, height: 0.62, radius: 0.22, width: 0.1 })];
   const FERN = [fernGeo(1, { leaves: 8, length: 0.95 }), fernGeo(2, { leaves: 6, length: 0.7 })];
-  const FLOWERS = { white: flowerGeo(1, '#f4f1e6', { size: 0.11 }), yellow: flowerGeo(2, '#f7d44c', { size: 0.1, center: '#c58a1f' }), violet: flowerGeo(3, '#a78bdc', { size: 0.11 }), pink: flowerGeo(4, '#f08aa8', { size: 0.1 }), cyan: flowerGeo(5, '#7fe3ff', { size: 0.12, petals: 6, height: 0.5, center: '#ffffff' }) };
+  const FLOWER = flowerGeo(1, '#ffffff', { size: 0.12, center: '#ffe9a0' });
+  const FLOWER_TINT = { white: C('#f4f1e6'), yellow: C('#f7d44c'), violet: C('#b79cf0'), pink: C('#f59ab4'), cyan: C('#8fe9ff') };
   const BUSH = [bushGeo(1, { radius: 0.62 }), bushGeo(2, { radius: 0.5, lumps: 3, hue: 0.02 }), bushGeo(3, { radius: 0.75, lumps: 5, hue: -0.02 })];
   const ROCK = [0, 1, 2, 3, 4, 5].map((i) => rockGeo(i + 1, { radius: 1, flat: 0.6 + (i % 3) * 0.12, detail: i % 2 ? 1 : 0, angular: 0.24 + (i % 3) * 0.06 }));
   const ROCK_COOL = [0, 1, 2].map((i) => rockGeo(i + 20, { radius: 1, flat: 0.62 + i * 0.1, base: '#8c869a', mossColor: '#6d7a6a', angular: 0.3 }));
@@ -170,18 +171,29 @@ export function buildInstancedProps(zone, ctx) {
       }
     }
     if (choir.length) {
-      const pipe = (h, broken, seed) => {
-        const g = new Paint(), rr = new Rng(`pipe${seed}`);
-        g.cyl(0.78, 0.9, 0.5, 12, { pos: [0, 0.25, 0], mat: 'limestoneDark', pat: PAT.stone, tile: 1 });
-        g.cyl(0.62, 0.7, h, 12, { pos: [0, 0.5 + h / 2, 0], mat: 'limestone', g: [0.05, 0.9], pat: PAT.stone });
-        for (let i = 0; i < 4; i++) g.cyl(0.68, 0.68, 0.14, 12, { pos: [0, 1.0 + (h - 1.2) * (i / 3.4), 0], mat: 'brass', g: [0.1, 0.7] });
-        if (broken) for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU, hh = rr.range(0.35, 1.1); g.box(0.34, hh, 0.22, { pos: [Math.sin(a) * 0.5, 0.5 + h + hh / 2 - 0.1, Math.cos(a) * 0.5], rot: [rr.range(-0.2, 0.2), a, rr.range(-0.2, 0.2)], mat: 'limestone', g: [0.1, 0.8] }); }
-        else g.cyl(0.66, 0.62, 0.3, 12, { pos: [0, 0.5 + h + 0.15, 0], mat: 'limestoneDark' });
-        return g.build();
+      // the Choir's organ: bundles of broken bronze-and-limestone pipes with glowing mouths (resonance still leaks out of them)
+      const bundle = (seed, heights, broken) => {
+        const g = new Paint(), gl = new Paint(), rr = new Rng(`pipe${seed}`);
+        g.cyl(1.25, 1.4, 0.55, 8, { pos: [0, 0.2, 0], mat: 'limestoneDark', pat: PAT.stone, g: [0.1, 0.9] });
+        g.cyl(1.05, 1.2, 0.3, 8, { pos: [0, 0.6, 0], mat: 'limestone', pat: PAT.stone });
+        const n = heights.length;
+        heights.forEach((h, i) => {
+          const a = (i / (n - 1 || 1) - 0.5) * 2.3, x = Math.sin(a) * 0.95, z = -Math.abs(Math.cos(a)) * 0.55 + 0.35, r = 0.27 + 0.05 * (h / 5), y0 = 0.7;
+          g.cone(r * 1.15, 0.6, 10, { pos: [x, y0 + 0.2, z], rot: [PI, 0, 0], mat: 'bronze', g: [0.1, 0.8] });
+          g.cyl(r, r, h, 10, { pos: [x, y0 + 0.5 + h / 2, z], mat: i % 2 ? 'brass' : 'bronze', g: [0.05, 0.95] });
+          for (const f of [0.28, 0.62]) g.cyl(r * 1.08, r * 1.08, 0.1, 10, { pos: [x, y0 + 0.5 + h * f, z], mat: 'limestoneLight', g: [0.1, 0.7] });
+          g.box(r * 1.2, h * 0.14, 0.1, { pos: [x, y0 + 0.5 + h * 0.2, z + r * 0.92], mat: 'void' });
+          g.box(r * 1.5, 0.07, 0.14, { pos: [x, y0 + 0.5 + h * 0.2 + h * 0.07, z + r * 0.98], mat: 'brass' });
+          if (broken && i % 2 === 1) for (let k = 0; k < 4; k++) { const a2 = (k / 4) * TAU; g.box(r * 0.5, rr.range(0.25, 0.7), 0.1, { pos: [x + Math.sin(a2) * r * 0.85, y0 + 0.5 + h + 0.1, z + Math.cos(a2) * r * 0.85], rot: [0, a2, rr.range(-0.2, 0.2)], mat: 'bronze' }); }
+          else { g.cyl(r * 1.1, r * 1.1, 0.12, 10, { pos: [x, y0 + 0.5 + h, z], mat: 'brass' }); gl.cyl(r * 0.78, r * 0.78, 0.04, 10, { pos: [x, y0 + 0.5 + h + 0.03, z], mat: 'glassCyan', g: [0.55, 1] }); }
+        });
+        return { solid: g.build(), glow: gl.build() };
       };
-      const variants = [pipe(4.6, false, 1), pipe(3.4, true, 2), pipe(5.8, true, 3), pipe(2.4, true, 4)], buckets = variants.map(() => []);
-      choir.forEach((p, i) => { const v = i % variants.length; buckets[v].push({ x: p.x, y: p.y - 0.1, z: p.z, ry: r0.range(0, TAU), sx: p.scale * 0.92, sy: p.scale * 0.92, sz: p.scale * 0.92 }); aoStamps.push({ x: p.x, z: p.z, r: 1.6, k: 0.6 }); });
-      variants.forEach((g, i) => add(g, paintMaterial(), buckets[i], { cast: true, name: 'pipe' }));
+      const sets = [bundle(1, [4.4, 5.8, 3.6, 5.0, 2.8], false), bundle(2, [3.0, 4.6, 2.4, 3.8], true), bundle(3, [5.4, 3.6, 4.8], false), bundle(4, [2.6, 3.4, 1.8, 2.8, 2.2], true)];
+      const buckets = sets.map(() => []);
+      choir.forEach((p, i) => { const v = i % sets.length; buckets[v].push({ x: p.x, y: p.y - 0.15, z: p.z, ry: Math.atan2(5 - p.x, 62 - p.z) + r0.range(-0.25, 0.25), sx: p.scale * 0.82, sy: p.scale * 0.82, sz: p.scale * 0.82 }); aoStamps.push({ x: p.x, z: p.z, r: 1.9, k: 0.6 }); });
+      const gm = glowPaintMaterial(2.0);
+      sets.forEach((st, i) => { add(st.solid, paintMaterial(), buckets[i], { cast: true, name: 'pipe' }); add(st.glow, gm, buckets[i], { name: 'pipeglow', receive: false }); });
     }
   }
 
@@ -291,7 +303,7 @@ export function buildInstancedProps(zone, ctx) {
   // 2c) grass tufts, ferns, pebbles, flowers, bushes on walkable, soft ground
   {
     const tufts = [[], [], []], ferns = [[], []], pebbles = [[], [], []], bushes = [[], [], []];
-    const flowers = { white: [], yellow: [], violet: [], pink: [], cyan: [] };
+    const flowers = [];
     const x0 = b.x0 + 2, x1 = b.x1 - 2, z0 = b.z0 + 2, z1 = b.z1 - 2;
     const grassA = C('#ffffff');
     // density-driven rejection sampling on a jittered grid (even coverage, no clumps of nothing)
@@ -352,7 +364,7 @@ export function buildInstancedProps(zone, ctx) {
         const a = rS.range(0, TAU), d = Math.sqrt(rS.next()) * rS.range(1.2, 3), x = cx + Math.sin(a) * d, z = cz + Math.cos(a) * d, s = sample(x, z);
         if (s.slope > 0.45 || s.path > 0.2 || s.pave > 0.15 || occ.hit(x, z, 0.25)) continue;
         const sc = rS.range(0.8, 1.3);
-        flowers[kind].push({ x, y: s.h - 0.02, z, ry: rS.range(0, TAU), sx: sc, sy: sc * rS.range(0.8, 1.25), sz: sc });
+        flowers.push({ x, y: s.h - 0.02, z, ry: rS.range(0, TAU), sx: sc, sy: sc * rS.range(0.8, 1.25), sz: sc, color: FLOWER_TINT[kind].clone().lerp(C('#ffffff'), 0.2).multiplyScalar(rS.range(0.9, 1.1)) });
       }
     }
     // soft bushes outside the sim's shrub list (settlement fringe, ruins, cliffs' foot)
@@ -365,12 +377,12 @@ export function buildInstancedProps(zone, ctx) {
       bushes[Math.floor(rS.next() * 3)].push({ x, y: s.h - 0.03, z, ry: rS.range(0, TAU), sx: sc, sy: sc * rS.range(0.8, 1.2), sz: sc, color: tint(rS.range(0.22, 0.3), 0.25, rS.range(0.85, 1.15)) });
     }
     const md = q.drawDist * 0.85;
-    tufts.forEach((l, i) => add(GRASS[i], foliageMat, l, { name: 'tuft', maxDist: md, cell: 16 }));
-    ferns.forEach((l, i) => add(FERN[i], foliageMat, l, { name: 'fern', maxDist: md, cell: 16 }));
-    pebbles.forEach((l, i) => add(PEBBLE[i], rockMat, l, { name: 'pebble', maxDist: md * 0.8, cell: 16 }));
-    for (const [k, l] of Object.entries(flowers)) add(FLOWERS[k], foliageMat, l, { name: `flower_${k}`, maxDist: md, cell: 16 });
-    bushes.forEach((l, i) => add(BUSH[i], bushMat, l, { name: 'bush2', maxDist: md, cell: 16 }));
-    stats.tufts = tufts.reduce((a, l) => a + l.length, 0); stats.flowers = Object.values(flowers).reduce((a, l) => a + l.length, 0);
+    tufts.forEach((l, i) => add(GRASS[i], foliageMat, l, { name: 'tuft', maxDist: md, cell: 28 }));
+    ferns.forEach((l, i) => add(FERN[i], foliageMat, l, { name: 'fern', maxDist: md, cell: 28 }));
+    pebbles.forEach((l, i) => add(PEBBLE[i], rockMat, l, { name: 'pebble', maxDist: md * 0.8, cell: 28 }));
+    add(FLOWER, foliageMat, flowers, { name: 'flower', maxDist: md, cell: 28 });
+    bushes.forEach((l, i) => add(BUSH[i], bushMat, l, { name: 'bush2', maxDist: md, cell: 28 }));
+    stats.tufts = tufts.reduce((a, l) => a + l.length, 0); stats.flowers = flowers.length;
   }
 
   // 2d) resonance quartz clusters + glowing mushrooms (accents that tie the look to the cyan resonance theme)

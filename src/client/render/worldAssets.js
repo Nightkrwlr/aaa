@@ -94,7 +94,7 @@ function recolorAtlas(baseTex, ops) {
 const VARIANTS = {
   graveyard: {
     forest: [{ c: 0, r: 1, dh: 96, sMul: 0.8, vMul: 0.78 }, { c: 1, r: 1, dh: 52, sMul: 0.82, vMul: 0.8 }],
-    pine: [{ c: 0, r: 1, dh: 100, sMul: 0.78, vMul: 0.74 }, { c: 1, r: 1, dh: 74, sMul: 0.78, vMul: 0.74 }],
+    pine: [{ c: 0, r: 1, dh: 118, sMul: 0.6, vMul: 0.52 }, { c: 1, r: 1, dh: 80, sMul: 0.62, vMul: 0.56 }],
     limestone: [{ c: 3, r: 0, setH: 38, hSpread: 8, sMin: 0.1, sMul: 1.6, vMul: 1.18 }, { c: 2, r: 0, setH: 36, sMin: 0.1, sMul: 1.4, vMul: 1.1 }, { c: 4, r: 0, setH: 40, sMin: 0.06, sMul: 1.2 }],
     violet: [{ c: 3, r: 0, setH: 258, sMin: 0.045, sMul: 0.6, vMul: 1.12 }],
   },

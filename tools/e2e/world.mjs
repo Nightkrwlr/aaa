@@ -8,7 +8,7 @@
 const OUT = process.env.SHOT_DIR ?? 'artifacts/shots';
 const ONLY = process.env.SHOTS ? process.env.SHOTS.split(',') : null;
 const HUD = process.env.HUD === '1', ENEMIES = process.env.ENEMIES === '1';
-const FRAMES = Number(process.env.FRAMES ?? 8);
+const FRAMES = Number(process.env.FRAMES ?? 3);
 
 // name, hero position, zoom, atmosphere, weather, camera yaw/pitch overrides (deg), settle frames
 const SHOTS = [

@@ -31,7 +31,7 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 /** a clump of tapered grass blades; normals point mostly up so blades light like the ground they grow from */
 export function grassTuftGeo(seed = 1, { blades = 9, height = 0.55, radius = 0.16, width = 0.075 } = {}) {
   const r = new Rng(`tuft${seed}`), s = new Soup();
-  const base = C('#58803f'), mid = C('#86ae55'), tip = C('#c6de84');
+  const base = C('#4d7640'), mid = C('#7da34f'), tip = C('#b4cd78');
   for (let i = 0; i < blades; i++) {
     const a = r.range(0, Math.PI * 2), d = Math.sqrt(r.next()) * radius;
     const ox = Math.sin(a) * d, oz = Math.cos(a) * d;

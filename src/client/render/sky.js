@@ -56,6 +56,9 @@ export function buildSky(atm) {
     u.uSunCol.value.copy(a.sun); u.uSun.value.copy(a.sunDir); u.uCloud.value = a.cloud; u.uStars.value = a.stars;
     u.uCloudCol.value.copy(a.sky[1]).lerp(new THREE.Color('#ffffff'), 0.55).lerp(a.sun, 0.12);
   };
+  let cur = atm;
+  mesh.userData.apply = ((orig) => (a) => { cur = a; orig(a); })(mesh.userData.apply);
+  mesh.userData.setFog = (c) => { m.uniforms.uHorizon.value.copy(c).lerp(cur.sky[2], 0.55); };
   mesh.userData.apply(atm);
   return mesh;
 }
