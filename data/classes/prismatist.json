@@ -55,23 +55,23 @@
      "ability": "abl.prism.nova"
     },
     {
-     "level": 2,
+     "level": 1,
      "ability": "abl.prism.ice_needle"
     },
     {
-     "level": 3,
+     "level": 2,
      "ability": "abl.prism.dome"
     },
     {
-     "level": 4,
+     "level": 3,
      "ability": "abl.prism.broken_beam"
     },
     {
-     "level": 6,
+     "level": 4,
      "ability": "abl.prism.cascade"
     },
     {
-     "level": 8,
+     "level": 6,
      "ability": "abl.prism.prism_storm"
     },
     {

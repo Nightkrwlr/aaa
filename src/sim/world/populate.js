@@ -25,7 +25,7 @@ export function populateZone(world, zone, { seed, difficulty, skip } = {}) {
     for (const m of list) {
       let x = sp.pos[0] + m.dx * c + m.dz * s, z = sp.pos[1] - m.dx * s + m.dz * c;
       if (!world.nav.isWalkable(x, z)) { const n = world.nav.nearestWalkable(x, z, 6); if (!n) continue; x = n.x; z = n.z; }
-      const e = world.spawnEnemy(m.id, x, z, { level: sp.level, yaw: yaw + Math.PI, hidden: m.hidden });
+      const e = world.spawnEnemy(m.id, x, z, { level: sp.level, yaw: yaw + Math.PI, hidden: m.hidden, elite: m.elite, eliteMods: m.eliteMods });
       e.group = tag; e.spawnId = sp.id;
       if (m.track) e.ai.cfg.track = m.track;
       group.enemies.push(e);

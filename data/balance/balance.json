@@ -106,6 +106,7 @@
    "xp": {
     "perStandardBase": 8,
     "perStandardExponent": 1.15,
+    "earlyKills": [5, 8, 11, 15, 18, 21, 24, 26, 28, 30],
     "killsPerLevelBase": 14,
     "killsPerLevelSlope": 1.6,
     "levelGapPenaltyStart": 4,
@@ -267,6 +268,7 @@
     "dailyRefillOnRest": true
    },
    "loot": {
+    "pity": {"untilLevel": 8, "firstAfterKills": 4, "everyKills": 6},
     "autoPickMaterials": true,
     "magnetRadius": 2.6,
     "itemLifetimeSeconds": 600

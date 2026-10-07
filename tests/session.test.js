@@ -89,3 +89,21 @@ test('fast travel & rest rules', () => {
   assert.equal(s.character.potion.charges, s.character.potion.max);
   assert.equal(s.player.hp, s.player.hpMax);
 });
+
+test('early loot pity: the first fights always pay out (a Fine weapon first, then a drop at least every 6 kills)', () => {
+  for (const seed of ['pity-a', 'pity-b', 'pity-c']) {
+    const s = makeSession({ seed });
+    s.world.rng.chance = () => false;                         // no natural drops: everything that appears comes from the pity timer
+    const items = () => s.loot.ground.filter((g) => g.kind === 'item');
+    const firstAtKill = [];
+    for (let k = 1; k <= 16; k++) {
+      const e = s.world.spawnEnemy('enm.hollow_chorister', s.player.x + 4, s.player.z + 4, { level: 1 });
+      const n0 = items().length; slay(s, e);
+      if (items().length > n0) firstAtKill.push(k);
+    }
+    assert.deepEqual(firstAtKill, [4, 10, 16], `${seed}: drops on kills 4, 10, 16`);
+    const first = items()[0].item;
+    assert.equal(s.registry.get(first.base).slot, 'weapon', 'the guaranteed first drop is a weapon');
+    assert.notEqual(first.rarity, 'common', 'and it is Fine or better');
+  }
+});

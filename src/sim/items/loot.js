@@ -55,6 +55,7 @@ export class LootSystem {
     this.w = world; this.factory = factory; this.getCtx = getCtx;
     this.ground = []; this.voiceEchoes = []; this.nextUid = 1;
     this.stats = { dropped: 0, hidden: 0, convertedChimes: 0 };
+    this.pity = { kills: 0, items: 0 };   // early-game generosity: drops arrive on a schedule instead of by luck (see onKill)
     world.hooks.onKill.push((e, killer) => this.onKill(e, killer));
   }
 
@@ -72,9 +73,29 @@ export class LootSystem {
     const ctx = this.context();
     const def = e.def ? { ...e.def, bossId: e.def.bossId } : null;
     const drops = rollDrops({ registry: this.w.registry, balance: this.w.balance, factory: this.factory, rng: this.w.rng, def, level: e.level, tier: e.tier, ctx });
+    this.#pity(drops, e, ctx);
     this.spawn(e.x, e.z, drops, ctx, e);
     // elite modifiers can add extra drop rolls
     if (e.eliteExtraDrops) for (let i = 0; i < e.eliteExtraDrops; i++) this.spawn(e.x, e.z, rollDrops({ registry: this.w.registry, balance: this.w.balance, factory: this.factory, rng: this.w.rng, def: null, level: e.level, tier: 'standard', ctx }), ctx, e);
+  }
+
+  /**
+   * Pity timer for the first levels: the very first fight rewards a Fine weapon (the first upgrade is the first "I got something!"),
+   * and afterwards a drop is guaranteed whenever a few kills in a row gave no item. Late game keeps pure chance.
+   */
+  #pity(drops, e, ctx) {
+    const cfg = this.w.balance.d.loot.pity;
+    if (!cfg || (ctx.playerLevel ?? 1) > cfg.untilLevel || e.tier === 'minion') return;
+    const P = this.pity;
+    if (drops.some((d) => d.type === 'item')) { P.kills = 0; P.items++; return; }
+    P.kills++;
+    if (P.kills < (P.items === 0 ? cfg.firstAfterKills : cfg.everyKills)) return;
+    const first = P.items === 0;
+    const item = this.factory.roll(this.w.rng, {
+      ilvl: e.level, slot: first ? 'weapon' : this.w.rng.weighted(Object.keys(SLOT_WEIGHTS), (k) => SLOT_WEIGHTS[k]), rarity: first ? 'fine' : undefined, bias: first ? 0.5 : 0.25,
+      tags: ctx.buildTags, classId: ctx.classId, lootFind: ctx.lootFind ?? 0, noUnique: true,
+    });
+    drops.push({ type: 'item', item }); P.kills = 0; P.items++;
   }
 
   spawn(x, z, drops, ctx = this.context(), src = null) {

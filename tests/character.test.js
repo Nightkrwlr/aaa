@@ -27,7 +27,7 @@ test('xp → level-ups unlock abilities and talent points', () => {
   ch.grantXp(w, e, bal.xpToNext(1) + bal.xpToNext(2) + 5);
   assert.equal(ch.level, 3);
   assert.equal(ups.length, 1);
-  assert.ok(ups[0].unlocks.includes('abl.belfry.chain_bell'));
+  assert.ok(ups[0].unlocks.includes('abl.belfry.bronze_ward') && ups[0].unlocks.includes('abl.belfry.slow_toll'), 'one new skill per early level');
   assert.equal(ch.talentPoints(), 2);
   assert.ok(e.hpMax > bal.playerBaseLife(1));
 });
@@ -192,4 +192,23 @@ test('talent budget: 1 point per level to the soft cap, then fewer — and the t
     const purchasable = ch.tree.nodes.size - 1;
     assert.ok(purchasable > bal.talentPointsAt(60) + 10, `${classId}: tree (${purchasable} nodes) must outgrow the level-60 budget so builds stay a choice`);
   }
+});
+
+test('opening kit: every class starts with two active skills bound and gains one per level up to 4', () => {
+  for (const cls of ['cls.belfry', 'cls.prismatist', 'cls.skirmisher']) {
+    const { ch } = setup(cls, 1);
+    ch.autoLoadout();
+    const bound = ['s1', 's2', 's3', 's4'].filter((s) => ch.loadout[s]);
+    assert.ok(bound.length >= 2, `${cls} starts with ${bound.length} bound skills`);
+    const n1 = ch.availableAbilities().length;
+    for (let L = 2; L <= 4; L++) { ch.level = L; assert.ok(ch.availableAbilities().length >= n1 + (L - 1), `${cls} should gain a skill by level ${L}`); }
+  }
+});
+
+test('early xp curve: a level every minute or two, joined smoothly to the long-game formula', () => {
+  const kills = Array.from({ length: 12 }, (_, i) => bal.killsForLevel(i + 1));
+  assert.deepEqual(kills.slice(0, 5), [5, 8, 11, 15, 18]);
+  for (let i = 1; i < kills.length; i++) assert.ok(kills[i] >= kills[i - 1], 'cost never drops as levels rise');
+  assert.ok(Math.abs(kills[10] - kills[9]) < 4, 'no cliff where the hand-tuned start meets the formula');
+  assert.ok(bal.xpToNext(1) < bal.xpToNext(2) && bal.xpToNext(2) < bal.xpToNext(3));
 });

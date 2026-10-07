@@ -70,10 +70,12 @@ export class Balance {
 
   /** XP */
   xpPerStandard(level) { const x = this.d.xp; return x.perStandardBase * this.P(level) ** x.perStandardExponent; }
-  xpToNext(level) {
+  /** kills of a standard enemy a level costs: a hand-tuned fast start (levels 1-10: a level every minute or two), then the long-game formula */
+  killsForLevel(level) {
     const x = this.d.xp;
-    return Math.round(this.xpPerStandard(level) * (x.killsPerLevelBase + x.killsPerLevelSlope * level));
+    return x.earlyKills?.[level - 1] ?? (x.killsPerLevelBase + x.killsPerLevelSlope * level);
   }
+  xpToNext(level) { return Math.round(this.xpPerStandard(level) * this.killsForLevel(level)); }
   /** cumulative xp required to reach `level` */
   xpTotalFor(level) { let s = 0; for (let l = 1; l < level; l++) s += this.xpToNext(l); return s; }
   xpFor(enemyLevel, tier, playerLevel) {

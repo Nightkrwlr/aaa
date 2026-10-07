@@ -49,27 +49,27 @@
      "ability": "abl.belfry.peal"
     },
     {
-     "level": 2,
+     "level": 1,
      "ability": "abl.belfry.chain_bell"
     },
     {
-     "level": 3,
+     "level": 2,
      "ability": "abl.belfry.bronze_ward"
     },
     {
-     "level": 4,
+     "level": 3,
      "ability": "abl.belfry.slow_toll"
     },
     {
-     "level": 5,
+     "level": 4,
      "ability": "abl.belfry.iron_charge"
     },
     {
-     "level": 6,
+     "level": 5,
      "ability": "abl.belfry.alarm"
     },
     {
-     "level": 8,
+     "level": 7,
      "ability": "abl.belfry.dueling_bells"
     },
     {

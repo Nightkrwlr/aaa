@@ -1082,7 +1082,7 @@
       12
      ],
      "template": "enc.fortified_line",
-     "level": 4
+     "level": 3
     },
     {
      "id": "sp.qr_2",
@@ -1092,7 +1092,7 @@
       -8
      ],
      "template": "enc.bull_run",
-     "level": 4
+     "level": 3
     },
     {
      "id": "sp.qr_3",
@@ -1102,7 +1102,7 @@
       2
      ],
      "template": "enc.bell_and_blast",
-     "level": 5
+     "level": 4
     },
     {
      "id": "sp.qr_4",
@@ -1112,7 +1112,7 @@
       18
      ],
      "template": "enc.construct_guard",
-     "level": 5
+     "level": 4
     },
     {
      "id": "sp.qr_gear",
@@ -1136,7 +1136,7 @@
        ]
       }
      ],
-     "level": 5
+     "level": 4
     },
     {
      "id": "sp.ov_1",
@@ -1178,6 +1178,82 @@
      ],
      "template": "enc.summoner_court",
      "level": 6
+    },
+    {
+     "id": "sp.bp_5",
+     "area": "area.bell_path",
+     "pos": [
+      -47,
+      26
+     ],
+     "template": "enc.first_blood",
+     "level": 1,
+     "rare": 0.85
+    },
+    {
+     "id": "sp.bp_6",
+     "area": "area.bell_path",
+     "pos": [
+      -25,
+      29
+     ],
+     "template": "enc.hollow_walkers",
+     "level": 2
+    },
+    {
+     "id": "sp.bp_7",
+     "area": "area.bell_path",
+     "pos": [
+      -12,
+      14
+     ],
+     "template": "enc.spit_and_shamble",
+     "level": 2
+    },
+    {
+     "id": "sp.or_1",
+     "area": "area.orrel",
+     "pos": [
+      18,
+      -16
+     ],
+     "template": "enc.hollow_walkers",
+     "level": 2
+    },
+    {
+     "id": "sp.or_elite",
+     "area": "area.quarry",
+     "pos": [
+      26,
+      -4
+     ],
+     "level": 3,
+     "enemies": [
+      {
+       "id": "enm.cracked_cantor",
+       "elite": true
+      },
+      {
+       "id": "enm.hollow_chorister"
+      },
+      {
+       "id": "enm.hollow_chorister"
+      },
+      {
+       "id": "enm.hollow_chorister"
+      }
+     ],
+     "note": "the first elite of the game: optional, readable, a guaranteed rare drop"
+    },
+    {
+     "id": "sp.qr_0",
+     "area": "area.quarry",
+     "pos": [
+      28,
+      12
+     ],
+     "template": "enc.spit_and_shamble",
+     "level": 3
     }
    ],
    "bosses": [

@@ -57,23 +57,23 @@
      "ability": "abl.skir.twin_knives"
     },
     {
-     "level": 2,
+     "level": 1,
      "ability": "abl.skir.rending_leap"
     },
     {
-     "level": 3,
+     "level": 2,
      "ability": "abl.skir.bleeding_cut"
     },
     {
-     "level": 4,
+     "level": 3,
      "ability": "abl.skir.smoke"
     },
     {
-     "level": 6,
+     "level": 4,
      "ability": "abl.skir.rope_trap"
     },
     {
-     "level": 8,
+     "level": 6,
      "ability": "abl.skir.leaf_dance"
     },
     {

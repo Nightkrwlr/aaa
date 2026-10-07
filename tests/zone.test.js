@@ -26,6 +26,9 @@ test('cliffs are blocked, ramps are walkable', () => {
   assert.ok(path, 'start → settlement path exists');
   const path2 = z.nav.findPath(2, -22, 36, -8);
   assert.ok(path2, 'settlement → quarry exists');
-  // direct line from the settlement plateau straight over the cliff into the quarry should NOT be a clear LOS
-  assert.equal(z.nav.los(30, -20, 50, 4, 0.3), false);
+  // direct lines from the settlement plateau straight over the cliff into the quarry must not all be clear: the drop is a wall, not a slope
+  // (which props happen to stand on a given line changes whenever spawns move, so the check is "some line is blocked", not one fixed line)
+  const lines = [[30, -20, 50, 4], [24, -30, 40, -14], [20, -24, 44, 2], [28, -34, 52, -10]];
+  assert.ok(lines.some(([a, b, c, d]) => z.nav.los(a, b, c, d, 0.3) === false), 'at least one straight line over the cliff is blocked');
+  assert.ok(z.heightAt(20, -24) - z.heightAt(44, 2) > 6, 'and the plateau really is much higher than the quarry floor');
 });
