@@ -3,8 +3,13 @@
  * uniformes que el juego ya conocía):
  *
  *   escena → (MSAA, destino HDR half-float) → [bloom] → pasada final
- *   pasada final: mapeo tonal filmic (Neutral/ACES) UNA sola vez, grade partido (sombras frías / luces cálidas),
+ *   pasada final: [FXAA] → mapeo tonal filmic (Neutral/ACES) UNA sola vez, grade partido (sombras frías / luces cálidas),
  *   viñeta, aberración cromática suave, daño (viñeta roja), grano y tramado triangular contra el banding.
+ *
+ * Antialiasing: con MSAA (escritorio, calidad alta/media) los bordes salen limpios del propio destino. En táctil el MSAA va a 0 (un destino
+ * half-float multimuestreado a la resolución de un móvil come demasiado ancho de banda), así que la pasada final aplica un FXAA ligero
+ * (Lottes, 5 muestras en píxeles sin borde y 9 en bordes) sobre el color HDR, decidiendo los bordes con una luma comprimida que se parece
+ * a la que verá el ojo tras el mapeo tonal.
  *
  * Por qué no EffectComposer: el mapeo tonal debe hacerse una vez, al final, para que todo ShaderMaterial del juego
  * (partículas, decals, rayos) quede mapeado igual sin saberlo, y el MSAA de la escena sale gratis en el destino.
@@ -24,7 +29,7 @@ precision highp float;
 varying vec2 vUv;
 uniform sampler2D tScene;
 uniform vec2 uRes;
-uniform float uExposure, uSat, uContrast, uVig, uLift, uTime, uHurt, uGrain, uTone, uCA, uTintA;
+uniform float uExposure, uSat, uContrast, uVig, uLift, uTime, uHurt, uGrain, uTone, uCA, uTintA, uFxaa;
 uniform vec3 uShadowTint, uHighTint, uTint;
 
 float luma(vec3 c){ return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
@@ -48,15 +53,43 @@ vec3 tNeutral(vec3 color){
 vec3 oetf(vec3 c){ return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
 float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 
+// FXAA ligero sobre HDR. La luma se comprime (c/(1+c) y raíz) para que un borde luz/sombra pese como lo hará en pantalla tras el tonemap.
+float lumC(vec3 c){ c *= uExposure; return sqrt(dot(c / (1.0 + c), vec3(0.299, 0.587, 0.114))); }
+vec3 fxaa(vec2 uv){
+  vec2 px = 1.0 / uRes;
+  vec3 rgbM = texture2D(tScene, uv).rgb;
+  vec3 rgbNW = texture2D(tScene, uv + vec2(-1.0, -1.0) * px).rgb;
+  vec3 rgbNE = texture2D(tScene, uv + vec2( 1.0, -1.0) * px).rgb;
+  vec3 rgbSW = texture2D(tScene, uv + vec2(-1.0,  1.0) * px).rgb;
+  vec3 rgbSE = texture2D(tScene, uv + vec2( 1.0,  1.0) * px).rgb;
+  float lM = lumC(rgbM), lNW = lumC(rgbNW), lNE = lumC(rgbNE), lSW = lumC(rgbSW), lSE = lumC(rgbSE);
+  float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE)));
+  float lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+  if (lMax - lMin < max(0.04, lMax * 0.125)) return rgbM;   // sin borde: una sola lectura útil, sin desenfoque
+  vec2 dir = vec2(-((lNW + lNE) - (lSW + lSE)), (lNW + lSW) - (lNE + lSE));
+  float dirReduce = max((lNW + lNE + lSW + lSE) * (0.25 * 0.125), 1.0 / 128.0);
+  dir = clamp(dir / (min(abs(dir.x), abs(dir.y)) + dirReduce), vec2(-8.0), vec2(8.0)) * px;
+  vec3 a = 0.5 * (texture2D(tScene, uv + dir * (1.0 / 3.0 - 0.5)).rgb + texture2D(tScene, uv + dir * (2.0 / 3.0 - 0.5)).rgb);
+  vec3 b = a * 0.5 + 0.25 * (texture2D(tScene, uv + dir * -0.5).rgb + texture2D(tScene, uv + dir * 0.5).rgb);
+  float lB = lumC(b);
+  return (lB < lMin || lB > lMax) ? a : b;
+}
+
 void main(){
   vec2 uv = vUv;
   vec2 q = uv - 0.5;
-  // aberración cromática radial (crece con el daño)
-  float ab = uCA + uHurt * 0.006;
   vec3 hdr;
-  hdr.r = texture2D(tScene, uv + q * ab).r;
-  hdr.g = texture2D(tScene, uv).g;
-  hdr.b = texture2D(tScene, uv - q * ab).b;
+  if (uFxaa > 0.5) {
+    hdr = fxaa(uv);
+    // con FXAA la aberración cromática de reposo (menos de un píxel) se omite; solo se pinta al recibir daño
+    if (uHurt > 0.02) { float ab = uCA + uHurt * 0.006; hdr.r = texture2D(tScene, uv + q * ab).r; hdr.b = texture2D(tScene, uv - q * ab).b; }
+  } else {
+    // aberración cromática radial (crece con el daño)
+    float ab = uCA + uHurt * 0.006;
+    hdr.r = texture2D(tScene, uv + q * ab).r;
+    hdr.g = texture2D(tScene, uv).g;
+    hdr.b = texture2D(tScene, uv - q * ab).b;
+  }
   hdr *= uExposure;
   // tinte de estado (visión nocturna, etc.) aplicado en lineal
   hdr = mix(hdr, hdr * uTint * 1.6 + uTint * 0.05, uTintA);
@@ -92,14 +125,14 @@ export class PostFx {
    */
   constructor(renderer, scene, camera) {
     this.r = renderer; this.scene = scene; this.camera = camera;
-    this.rt = null; this.w = 2; this.h = 2; this.samples = 4; this.bloomOn = true; this.hdr = false; this.msaa = 0; this.forceLDR = false;
+    this.rt = null; this.w = 2; this.h = 2; this.samples = 4; this.bloomOn = true; this.hdr = false; this.msaa = 0; this.forceLDR = false; this.fxaa = 'auto';
     this.material = new ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, depthTest: false, depthWrite: false,
       uniforms: {
         tScene: { value: null }, uRes: { value: new Vector2(2, 2) },
         uExposure: { value: 1 }, uSat: { value: 1.1 }, uContrast: { value: 1.08 }, uLift: { value: 0.01 }, uTone: { value: 0.55 },
         uVig: { value: 0.35 }, uHurt: { value: 0 }, uTime: { value: 0 }, uGrain: { value: 0.035 }, uCA: { value: 0.0012 },
-        uTint: { value: new Color(0, 0, 0) }, uTintA: { value: 0 },
+        uTint: { value: new Color(0, 0, 0) }, uTintA: { value: 0 }, uFxaa: { value: 0 },
         uShadowTint: { value: new Vector3(0.9, 0.98, 1.1) }, uHighTint: { value: new Vector3(1.06, 1.02, 0.92) },
       },
     });
@@ -110,8 +143,9 @@ export class PostFx {
     this.bloom.enabled = true;
   }
 
-  /** @param {{samples?:number, bloom?:boolean}} o */
+  /** @param {{samples?:number, bloom?:boolean, fxaa?:'auto'|boolean}} o — fxaa 'auto' (por defecto): activo si el destino no tiene MSAA y el bloom está encendido (táctil en calidad media/alta) */
   configure(o = {}) {
+    if (o.fxaa !== undefined) this.fxaa = o.fxaa;
     const samples = o.samples ?? this.samples;
     if (o.bloom !== undefined) this.bloom.enabled = this.bloomOn = !!o.bloom;
     if (samples !== this.samples || !this.rt) { this.samples = samples; this.#makeTarget(); }
@@ -161,6 +195,7 @@ export class PostFx {
     r.render(this.scene, this.camera);
     if (this.bloom.enabled && this.bloom.strength > 0.001) this.bloom.render(r, null, this.rt, 0, false);
     this.uniforms.tScene.value = this.rt.texture;
+    this.uniforms.uFxaa.value = (this.fxaa === 'auto' ? this.msaa === 0 && this.bloomOn : !!this.fxaa) ? 1 : 0;
     r.setRenderTarget(null);
     this.quad.render(r);
   }
