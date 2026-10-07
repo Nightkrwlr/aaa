@@ -294,8 +294,8 @@ var ws = new U(1, 1.32, 1).normalize(),
           this.wx.time,
           this.target.x,
           this.target.z,
-          this.quality === "high" ? Math.min(0.5, m.mist * (1 + tw * 1.2) * (1 - c * 0.6) * (1 + wo.rain * 0.5)) : 0,
-          c2.copy(c1).lerp(Cl_WHITE, 0.3).multiplyScalar(1.15),
+          this.quality === "high" ? Math.min(0.5, m.mist * (1 + tw * 1.2) * (1 - c * 0.6) * (1 - d * 0.55) * (1 + wo.rain * 0.5)) : 0,
+          c2.copy(c1).lerp(Cl_WHITE, 0.14).multiplyScalar(1.1),
           this.wx.uni.uWind.value,
         )));
       // fondo degradado: horizonte = niebla, cielo arriba; arrebol, estrellas y luna de noche (solo asoma fuera del terreno)
