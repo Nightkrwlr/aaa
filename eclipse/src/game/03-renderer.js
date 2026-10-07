@@ -171,9 +171,10 @@ var ws = new U(1, 1.32, 1).normalize(),
       let m = this.look,
         g = this.lookTgt,
         b = this.post.uniforms;
-      for (let y of ["density", "falloff", "sat", "contrast", "exposure", "vig", "lift"]) m[y] = ls(m[y], g[y], l);
+      for (let y of ["density", "falloff", "sat", "contrast", "exposure", "vig", "lift", "tone"]) m[y] = ls(m[y], g[y], l);
       for (let y of ["shadow", "high", "bloom"]) for (let v = 0; v < 3; v++) m[y][v] = ls(m[y][v], g[y][v], l);
       (b.uSat.value = m.sat),
+        (b.uTone.value = m.tone),
         (b.uContrast.value = m.contrast),
         (b.uLift.value = m.lift),
         b.uShadowTint.value.set(m.shadow[0], m.shadow[1], m.shadow[2]),

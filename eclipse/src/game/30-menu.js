@@ -19,7 +19,7 @@ function kb({ save: n, cloud: e, onContinue: t, onNew: i }) {
     ],
     c = (d = "main") => {
       if (d === "main") {
-        s.innerHTML = `<div class="mbox"><div class="logo"><span>Operaci\xF3n</span>Eclipse</div>
+        s.innerHTML = `<div class="mbox"><svg class="emblem" viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="emblemCorona" cx="50%" cy="50%" r="50%"><stop offset="58%" stop-color="#ffb347" stop-opacity="0"/><stop offset="76%" stop-color="#ffb347" stop-opacity=".85"/><stop offset="100%" stop-color="#ffb347" stop-opacity="0"/></radialGradient></defs><circle cx="60" cy="60" r="58" fill="url(#emblemCorona)"/><circle cx="60" cy="60" r="38" fill="#ffe2b0"/><circle cx="66" cy="55" r="37" fill="#070a14"/></svg><div class="logo"><span>Operaci\xF3n</span>Eclipse</div>
       <div class="tagline">El Enjambre cay\xF3 del cielo hace tres meses. Basti\xF3n es la \xFAltima posici\xF3n en pie. Eres el operador de fuerzas especiales que tiene que recuperar el continente, regi\xF3n a regi\xF3n.</div>
       <div class="mbtns">
         ${n ? `<button class="btn pri" id="mCont">Continuar \xB7 ${ke(n.name)} \xB7 ${vo(n.lvl)} nivel ${n.lvl}</button>` : ""}
