@@ -802,8 +802,12 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
           });
       }
     s(a, !1);
+    // Frente «props y decorado»: sprites (si los hubiera) → modelos GLB pintados → kit procedural; los acentos
+    // (sombra de contacto, charcos de luz, halos) se acumulan y se dibujan en 3 mallas instanciadas por chunk.
     let o = new tn(),
-      l = jg();
+      l = jg(),
+      acc = { blobs: [], pools: [], halos: [] };
+    PkInit();
     for (let d of t.values()) {
       let h = Yg(d.t);
       if (h.length) {
@@ -812,49 +816,12 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
       }
       let f = rx[d.t];
       if (f && f[0].some((g) => Ln.has(g))) {
-        this.modelProps(d, f, o);
+        PkModels(this, d, f, o, acc);
         continue;
       }
-      let u;
-      d.t === "cliffrock"
-        ? (u = {
-            g: eh([
-              J(Yn(0.75), d.pal.rock, { y: 0.4, sy: 1.3, jit: 0.35, seed: 3, vary: 0.15 }),
-              J(Yn(0.45), tt(d.pal.rock, 16777215, 0.1), { x: 0.4, y: 0.2, jit: 0.2, seed: 4 }),
-            ]),
-            e: null,
-            dim: 1,
-          })
-        : (u = Hx(d.t, d.pal, d.key));
-      let p = d.list.length,
-        m = (g, b, y) => {
-          let v = new ys(g, b, p);
-          (d.list.forEach((_, A) => {
-            (o.position.set(_.x, _.y || 0, _.z),
-              o.rotation.set(0, _.r || 0, 0),
-              o.scale.setScalar(_.s || 1),
-              o.updateMatrix(),
-              v.setMatrixAt(A, o.matrix));
-          }),
-            (v.instanceMatrix.needsUpdate = !0),
-            v.computeBoundingSphere(),
-            (v.castShadow = y),
-            (v.receiveShadow = !d.decor),
-            this.group.add(v));
-        };
-      if (u.g) {
-        let g = this.propMat();
-        if (wp.has(d.t)) {
-          u.g.boundingBox || u.g.computeBoundingBox();
-          let b = u.g.boundingBox.max.y;
-          this._vm || (this._vm = {});
-          let y = b.toFixed(1);
-          g = (c = this._vm)[y] || (c[y] = Ep(this.propMat().clone(), b, d.decor ? 0.12 : 0.05));
-        }
-        m(u.g, g, !d.decor);
-      }
-      u.e && m(u.e, this.glowMat(u.dim), !1);
+      PkProcedural(this, d, o, acc);
     }
+    PkAccents(this.group, acc, l);
   }
   modelProps(e, t, i) {
     let s = t[0].filter((c) => Ln.has(c)),

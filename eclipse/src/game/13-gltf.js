@@ -497,9 +497,7 @@ var rx = {
     generator: [["Roof_VentL", "Roof_VentR"], 1],
     crate: [["Pickup_Crate"], 0.9],
     crates: [["Pickup_Crate"], 1],
-    barrel: [["Pickup_Jar"], 1],
-    barrel_toxic: [["Pickup_Jar"], 1],
-    barrel_rad: [["Pickup_Jar"], 1],
+    // barriles: ahora los dibuja el kit procedural (Ie.barrel*): bandas, tapas y fugas emisivas que el modelo «tarro» no tenía
     tent: [["House_Cylinder"], 2.2, 2.4],
     pipe: [["MetalSupport", "Connector"], 1.4],
     tower: [["Roof_Antenna"], 4.2],

@@ -5,21 +5,38 @@ var Cg = new Map();
 
 
 // ════════ [357] FunctionDeclaration de (293 bytes) ════════
+// Materiales por tipo (opción k): rugosidad/metalicidad típicas. r y m explícitos mandan sobre el tipo.
+//   metal: acero pulido · paint: pintura brillante · rubber/cloth/stone: mates · glass: cristal oscuro y especular · emit: pantalla/luz
+var DeKinds = {
+  metal: { r: 0.36, m: 0.7 },
+  paint: { r: 0.48, m: 0.3 },
+  rubber: { r: 0.95, m: 0 },
+  cloth: { r: 0.92, m: 0 },
+  stone: { r: 0.9, m: 0.02 },
+  glass: { r: 0.08, m: 0.65 },
+  emit: { r: 0.5, m: 0 },
+};
 function de(n, e = {}) {
-  let t = n + "|" + (e.e ?? "") + "|" + (e.r ?? "") + "|" + (e.m ?? "") + "|" + (e.t ?? "") + "|" + (e.flat ?? 1),
+  let k = DeKinds[e.k] || {},
+    r = e.r ?? k.r ?? 0.75,
+    m = e.m ?? k.m ?? 0.1,
+    t = n + "|" + (e.e ?? "") + "|" + r + "|" + m + "|" + (e.t ?? "") + "|" + (e.flat ?? 1) + "|" + (e.ei ?? ""),
     i = Cg.get(t);
   return (
     i ||
       ((i = new Xt({
         color: n,
-        roughness: e.r ?? 0.75,
-        metalness: e.m ?? 0.1,
+        roughness: r,
+        metalness: m,
         flatShading: e.flat !== 0,
         emissive: e.e ?? 0,
         emissiveIntensity: e.ei ?? 1,
         transparent: !!e.t,
         opacity: e.t ?? 1,
       })),
+      // brillo especular donde toca: metal y superficies lisas reflejan un entorno falso (cielo/suelo) sin mapas de entorno;
+      // un emisivo HDR (ei > 1) deja de apagarse con la luz y alimenta el bloom
+      (m >= 0.25 || r <= 0.3) && PkGloss(i, { env: Math.min(1.2, 0.35 + m * 0.9 + (0.3 - Math.min(0.3, r))), rim: 0.12 }),
       Cg.set(t, i)),
     i
   );
