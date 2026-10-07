@@ -920,7 +920,7 @@ var PkWindAmp = {
   },
   // capa superior por bioma: [color, peso] — musgo, arena, nieve, ceniza… sobre las caras altas de rocas y suelo duro
   PkTop = {
-    valle: [6258492, 0.9], ciudad: [6978128, 0.55], desierto: [14924158, 0.85], marisma: [5143895, 0.9], tundra: [15922943, 1],
+    valle: [0x41632a, 0.8], ciudad: [6978128, 0.55], desierto: [14924158, 0.85], marisma: [0x3b5a3a, 0.8], tundra: [15922943, 1],
     complejo: [7101000, 0.35], caldera: [4866108, 0.7], yermo: [10120310, 0.65], colmena: [8540303, 0.85],
   };
 

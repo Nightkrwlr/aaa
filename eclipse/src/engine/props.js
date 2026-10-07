@@ -162,7 +162,7 @@ varying vec3 vMat; uniform float uRim, uEnv, uTopAmt, uWin, uGlow; uniform vec3 
 { // capa superior del bioma (musgo, arena, nieve…): pesa en las caras que miran arriba, conserva el AO horneado
   float tw = clamp(vMat.z * uTopAmt, 0.0, 1.0);
   float lu = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
-  diffuseColor.rgb = mix(diffuseColor.rgb, uTopCol * (0.5 + 1.1 * lu), tw);
+  diffuseColor.rgb = mix(diffuseColor.rgb, uTopCol * (0.4 + 1.0 * lu), tw);
 }
 float gWin = 0.0;
 if (uWin > 0.0) { gWin = smoothstep(0.02, 0.10, diffuseColor.b - diffuseColor.r) * smoothstep(0.03, 0.12, diffuseColor.g - diffuseColor.r) * step(0.12, diffuseColor.g); }`)
