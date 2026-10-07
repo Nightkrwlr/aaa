@@ -97,7 +97,7 @@ void main() {
 // ───────────────────────────────────────────────────────────────────────────────── partículas «motas» (polvo, nieve, ceniza, brasas, esporas)
 const MOTE_VERT = /* glsl */ `
 attribute vec4 aSeed; varying float vA; varying vec3 vCol;
-uniform float uDrift; uniform float uGust; uniform vec2 uWindDir; uniform float uNight; uniform vec3 uColor;
+uniform float uDrift; uniform float uGust; uniform float uBlob; uniform vec2 uWindDir; uniform float uNight; uniform vec3 uColor;
 ${BOX_GLSL}
 void main() {
   vec4 s = aSeed;
@@ -105,7 +105,7 @@ void main() {
   float edge, y, size, alpha = 1.0; vec2 drift; vec3 col = uColor;
 #if defined( M_DUST )
   // rachas: uDrift integra la velocidad del viento (que sube con la ráfaga), así el polvo acelera de verdad
-  float blob = step( 0.42, fract( s.w * 37.1 ) );
+  float blob = step( 1.0 - uBlob, fract( s.w * 37.1 ) ); // uBlob: fracción de bloques difusos (pocos al aire libre, ninguno en interiores)
   drift = uWindDir * uDrift * ( 0.55 + s.z * 0.9 ) + vec2( sin( uTime * 0.7 + s.x * 30.0 ), cos( uTime * 0.6 + s.y * 25.0 ) ) * 0.9;
   y = 0.1 + pow( s.z, 1.7 ) * uBox.z + sin( uTime * 0.9 + s.x * 40.0 ) * 0.25;
   size = mix( 0.06 + 0.07 * s.x, 1.3 + 2.4 * s.y, blob );
@@ -133,15 +133,15 @@ void main() {
   size = ( 0.08 + 0.1 * s.y ) * ( 1.0 - 0.45 * life );
   float flick = 0.65 + 0.35 * sin( uTime * ( 6.0 + 9.0 * s.x ) + s.y * 90.0 );
   alpha = smoothstep( 0.0, 0.06, life ) * ( 1.0 - smoothstep( 0.55, 1.0, life ) ) * flick;
-  col = mix( vec3( 1.0, 0.72, 0.24 ) * 3.6, vec3( 0.95, 0.16, 0.03 ) * 1.6, smoothstep( 0.05, 0.85, life ) );
+  col = mix( vec3( 1.0, 0.72, 0.24 ) * 2.1, vec3( 0.95, 0.16, 0.03 ) * 1.1, smoothstep( 0.05, 0.85, life ) );
 #else
   // esporas: flotan casi quietas y laten; de día apenas se notan, de noche son el foco de luz del bioma
   y = 0.3 + mod( s.z * uBox.z + uTime * ( 0.12 + 0.22 * s.x ), uBox.z );
   drift = uWind * uTime * 0.05 + vec2( sin( uTime * 0.45 + s.y * 30.0 ), cos( uTime * 0.38 + s.x * 20.0 ) ) * 1.1;
-  size = 0.14 + 0.2 * s.y;
+  size = 0.22 + 0.3 * s.y;
   float pulse = 0.5 + 0.5 * sin( uTime * ( 0.8 + 1.6 * s.x ) + s.y * 60.0 );
   alpha = ( 0.12 + 0.88 * uNight ) * ( 0.25 + 0.75 * pulse );
-  col *= 0.45 + 1.7 * uNight * pulse;
+  col *= 0.4 + 1.3 * uNight * pulse;
 #endif
   vec3 w = boxPos( s.xyz, drift, y, edge );
   vA = edge * alpha;
@@ -296,7 +296,7 @@ export class WeatherFx {
       const additive = type === 'embers' || type === 'spores' || type === 'snow';
       const m = new ShaderMaterial({
         transparent: true, depthWrite: false, fog: false, blending: additive ? AdditiveBlending : NormalBlending, defines: { [def]: '' },
-        uniforms: { ...common, uDrift: { value: 0 }, uGust: { value: 1 }, uWindDir: { value: new Vector2(0.8, 0.6) }, uNight: { value: 0 } },
+        uniforms: { ...common, uDrift: { value: 0 }, uGust: { value: 1 }, uWindDir: { value: new Vector2(0.8, 0.6) }, uNight: { value: 0 }, uBlob: { value: 0.3 } },
         vertexShader: MOTE_VERT, fragmentShader: MOTE_FRAG,
       });
       obj = new Points(g, m); this.mats[type] = m;
@@ -355,6 +355,8 @@ export class WeatherFx {
         }
         case 'dust': {
           u.uColor.value.setRGB(0.85, 0.68, 0.45).multiplyScalar(0.3 + 0.9 * L).lerp(ctx.sun, 0.15); u.uAmt.value = 1;
+          if (ctx.indoor) { u.uColor.value.multiplyScalar(0.55).lerp(fogC, 0.35); u.uAmt.value = 0.8; }
+          u.uBlob.value = ctx.indoor ? 0.05 : 0.3;
           u.uDrift.value = this.drift; u.uGust.value = this.gust; u.uWindDir.value.set(Math.cos(this.windAng), Math.sin(this.windAng));
           const gk = a * (0.25 + 0.75 * this.gust);
           fogMul += gk * 0.95; tint(gk * 0.34, 0.82, 0.64, 0.4, 0.25 + 0.75 * L); sunMul *= 1 - 0.25 * gk;
@@ -366,7 +368,7 @@ export class WeatherFx {
           break;
         }
         case 'ash': {
-          u.uColor.value.setRGB(0.62, 0.58, 0.55).multiplyScalar(0.4 + 0.6 * L); u.uAmt.value = 0.9;
+          u.uColor.value.setRGB(0.62, 0.58, 0.55).multiplyScalar(0.4 + 0.6 * L).lerp(fogC, 0.4); u.uAmt.value = 0.9;
           fogMul += a * 0.5; tint(a * 0.3, 0.55, 0.5, 0.46, 0.3 + 0.7 * L);
           break;
         }

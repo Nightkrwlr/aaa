@@ -233,6 +233,8 @@ var ws = new U(1, 1.32, 1).normalize(),
         this.sun.target.position.set(this.target.x, 0, this.target.z));
       // niebla / fondo: color base del bioma con la luz del momento, azul de noche, naranja en el arrebol y teñida por el clima
       c1.copy(this.envCur.fog).multiplyScalar(Math.max(0.03, h * 1 + 0.04));
+      let lum0 = c1.r * 0.3 + c1.g * 0.55 + c1.b * 0.15;
+      this.look.fogDesat > 0.01 && c1.lerp(c2.setRGB(lum0, lum0, lum0), this.look.fogDesat);
       c1.r *= 1 - d * 0.5;
       c1.g *= 1 - d * 0.28;
       c1.b *= 1 + d * 0.45;
@@ -246,7 +248,7 @@ var ws = new U(1, 1.32, 1).normalize(),
       let m = this.look,
         g = this.lookTgt,
         b = this.post.uniforms;
-      for (let y of ["density", "falloff", "sat", "contrast", "exposure", "vig", "lift", "tone", "mist"]) m[y] = ls(m[y], g[y], l);
+      for (let y of ["density", "falloff", "sat", "contrast", "exposure", "vig", "lift", "tone", "mist", "fogDesat"]) m[y] = ls(m[y], g[y], l);
       for (let y of ["shadow", "high", "bloom"]) for (let v = 0; v < 3; v++) m[y][v] = ls(m[y][v], g[y][v], l);
       let n = d * 0.65,
         rn = wo.rain;
@@ -282,6 +284,7 @@ var ws = new U(1, 1.32, 1).normalize(),
         pxPerUnit: (this.pxPerUnit || 20) * pr,
         night: d,
         dark: c,
+        indoor: !this.themeOutdoor,
         fog: c1,
         sun: this.sun.color,
         light: 0.2 + 0.8 * (1 - d * 0.75) * (1 - c),

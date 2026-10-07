@@ -70,7 +70,7 @@ export function installWorldFog() {
  *   exposure         ganancia previa al mapeo tonal   vig   viñeta base   tone  0 = Neutral (fiel al albedo) … 1 = ACES (más contraste)
  */
 export const DEFAULT_LOOK = {
-  density: 0.008, falloff: 0.05, bloom: [0.7, 0.55, 0.85], sat: 1.06, contrast: 1.14, exposure: 1.0, vig: 0.36, lift: 0.008, tone: 0.88, mist: 0,
+  density: 0.008, falloff: 0.05, bloom: [0.7, 0.55, 0.85], sat: 1.06, contrast: 1.14, exposure: 1.0, vig: 0.36, lift: 0.008, tone: 0.88, mist: 0, fogDesat: 0,
   shadow: [0.95, 0.98, 1.05], high: [1.04, 1.01, 0.95],
 };
 // Afinado en el laboratorio de grade (tools/scenarios/grade-lab.mjs): más contraste y sombras menos «lavadas» que el primer intento.
@@ -81,8 +81,8 @@ export const REGION_LOOK = {
   marisma:  { density: 0.018, falloff: 0.06, sat: 1.02, shadow: [0.88, 1.0, 1.06], high: [0.98, 1.06, 0.94], bloom: [0.7, 0.65, 0.8], vig: 0.42 },
   tundra:   { density: 0.011, sat: 1.0, contrast: 1.12, shadow: [0.86, 0.96, 1.16], high: [0.98, 1.02, 1.08], bloom: [0.55, 0.6, 0.9] },
   complejo: { density: 0.013, sat: 0.96, contrast: 1.16, shadow: [0.88, 0.98, 1.12], high: [1.0, 1.02, 1.04], bloom: [0.8, 0.55, 0.78], vig: 0.42 },
-  caldera:  { density: 0.015, sat: 1.14, contrast: 1.18, shadow: [0.95, 0.9, 1.04], high: [1.16, 0.96, 0.78], bloom: [1.0, 0.6, 0.7], vig: 0.42 },
-  yermo:    { density: 0.011, sat: 0.7, contrast: 1.15, shadow: [0.93, 0.96, 1.05], high: [1.03, 1.0, 0.95], bloom: [0.6, 0.6, 0.88] },
+  caldera:  { density: 0.015, sat: 1.14, contrast: 1.18, shadow: [0.95, 0.9, 1.04], high: [1.16, 0.96, 0.78], bloom: [0.85, 0.6, 0.74], vig: 0.42 },
+  yermo:    { density: 0.011, fogDesat: 0.55, sat: 0.62, contrast: 1.15, shadow: [0.93, 0.96, 1.05], high: [1.03, 1.0, 0.95], bloom: [0.6, 0.6, 0.88] },
   colmena:  { density: 0.016, falloff: 0.06, sat: 1.08, contrast: 1.16, exposure: 0.94, shadow: [0.94, 0.9, 1.14], high: [1.04, 0.99, 1.04], bloom: [0.62, 0.66, 0.82], vig: 0.44 },
 };
 
@@ -112,7 +112,7 @@ export const THEME_LOOK = {
  * caldera = brasas + ceniza (volcán), yermo = ceniza + polvo fino, complejo = chispas + polvo industrial.
  */
 export const REGION_WEATHER = {
-  caldera: { embers: 1, ash: 0.5 }, yermo: { ash: 0.85, dust: 0.3 }, complejo: { embers: 0.5, dust: 0.3 },
+  caldera: { embers: 1, ash: 0.35 }, yermo: { ash: 0.9, dust: 0.15 }, complejo: { embers: 0.5, dust: 0.3 },
 };
 /** clima de interior por tema (la intensidad la limita WeatherFx): partículas suaves que dan vida a las operaciones */
 export const THEME_WEATHER = {
