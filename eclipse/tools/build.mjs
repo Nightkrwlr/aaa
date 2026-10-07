@@ -21,6 +21,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const dev = args.includes('--dev');
 const outArg = args.includes('--out') ? args[args.indexOf('--out') + 1] : null;
+const titleArg = args.includes('--title') ? args[args.indexOf('--title') + 1] : null;   // p. ej. --title "Operación Eclipse Remasterizada" (nombre de la edición publicada)
 const outFile = path.resolve(ROOT, outArg ?? 'dist/eclipse.html');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
@@ -49,7 +50,8 @@ let js = res.outputFiles[0].text;
 js = js.replace(/<\/script/gi, '<\\/script');
 
 // 3) HTML
-const head = read('html/template.head.html');
+let head = read('html/template.head.html');
+if (titleArg) head = head.replace(/<title>.*?<\/title>/, `<title>${titleArg}</title>`);
 const split = head.indexOf('<body>\n') + '<body>\n'.length;
 const skeletonStart = head.slice(0, split);
 const fragmentHead = head.slice(split);
