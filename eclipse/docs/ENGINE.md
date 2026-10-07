@@ -45,6 +45,8 @@ Ficheros: `src/engine/atmosphere.js` (mirada, ciclo, fondo), `src/engine/weather
 | ash | copos que caen y vuelcan (alfa oscilante) | velo grisáceo |
 | spores | esporas que laten; casi invisibles de día, luminosas de noche (verde-turquesa; violeta en colmena/gruta) | bloom extra de noche |
 - Qué clima lleva cada región: el dato `De[i].weather` manda (ciudad lluvia, desierto polvo, marisma y colmena esporas, tundra nieve), salvo donde `REGION_WEATHER` (atmosphere.js) lo amplía para la dirección de arte: **caldera = brasas + ceniza**, **yermo = ceniza + polvo fino**, **complejo = chispas + polvo**. `WeatherFx.setTarget` acepta un nombre o un mapa `{tipo: intensidad}`; el tinte de niebla lo pone el clima más intenso.
+- Dust: pocos bloques difusos al aire libre (`uBlob` 0,3) y ninguno en interiores (0,05, color más oscuro, mezclado con la niebla), para que las operaciones no se llenen de discos claros.
+- `REGION_LOOK.fogDesat` (0..1) desatura la niebla/fondo de la región (el yermo la lleva a gris-marrón); `mist` es la niebla de suelo (`high`).
 - Todo es GPU: cada tipo es **un** `Points`/`LineSegments` (la lluvia suma un quad instanciado para las salpicaduras) cuya posición sale del tiempo en el vertex shader. La caja de partículas está alineada con la cámara (ancho × fondo × alto de la vista) y envuelve en torno al objetivo, así que casi todo cae dentro de pantalla y queda anclado al mundo. El tamaño de punto se calcula en px de dispositivo a partir de `pxPerUnit` (cámara ortográfica).
 - Cada tipo mezcla su intensidad a ~0,55/s (cruzar de región no da saltos); los teletransportes la fijan al instante. Densidad por calidad: `high` 100 %, `medium` 62 %, `low` 34 % (las partículas se recortan por rango, sin huecos). Las mallas se crean al primer uso.
 - Las partículas por CPU de `World.update` (polen, luciérnagas) solo quedan en regiones sin clima (valle, complejo).
@@ -58,3 +60,9 @@ Ficheros: `src/engine/atmosphere.js` (mirada, ciclo, fondo), `src/engine/weather
 
 ### Zonas oscuras y operaciones
 `setRegionEnv` identifica el tema de la operación por identidad en `Zi` y aplica `THEME_LOOK` (grade, niebla, bloom por tema) y `THEME_WEATHER` (polvo en búnker/fábrica/ruinas, esporas en gruta/colmena/alcantarilla, brasas en magma, cristales en caverna). La luz ambiente sigue siendo el hemisferio (enmascarado por `uDarkMap`), no una `AmbientLight`, para no romper las zonas oscuras.
+
+### Guiones de prueba del frente
+`tools/scenarios/clima-escenas.mjs` (valle día/tarde/alba/noche/linterna, ciudad, desierto, tundra, caldera, yermo, marisma y colmena de noche; `ESCENAS=a,b PERF=1 SETTLE=n`) y `tools/scenarios/clima-ops.mjs` (entra en N operaciones desde el panel de despliegue y escribe el tema). Misma semilla (`--seed 1`) para comparar con el baseline.
+
+### Presupuesto
+Cada tipo de clima es 1 llamada de dibujo (la lluvia suma 1 de salpicaduras); en reposo (región sin clima) no cuesta nada: las mallas se crean al primer uso y se ocultan con intensidad 0. La niebla de suelo es 1 llamada solo en `high`, el fondo degradado 1 y el cono de la linterna 1 (solo con la linterna encendida).
