@@ -7,7 +7,7 @@
  *    estándar: fogColor, fogNear (= densidad base) y fogFar (= caída con la altura).
  *  - REGION_LOOK: densidad de niebla, grade y bloom por región. Se mezclan con los colores que el juego ya definía por región.
  */
-import { Color, ShaderChunk, Vector3 } from 'three';
+import { Color, Mesh, PlaneGeometry, ShaderChunk, ShaderMaterial, Vector3 } from 'three';
 
 /** objeto de niebla comprendido por los chunks parcheados (Three lo ve como una Fog lineal: isFog, color, near, far) */
 export class WorldFog {
@@ -70,7 +70,7 @@ export function installWorldFog() {
  *   exposure         ganancia previa al mapeo tonal   vig   viñeta base   tone  0 = Neutral (fiel al albedo) … 1 = ACES (más contraste)
  */
 export const DEFAULT_LOOK = {
-  density: 0.008, falloff: 0.05, bloom: [0.7, 0.55, 0.85], sat: 1.06, contrast: 1.14, exposure: 1.0, vig: 0.36, lift: 0.008, tone: 0.88,
+  density: 0.008, falloff: 0.05, bloom: [0.7, 0.55, 0.85], sat: 1.06, contrast: 1.14, exposure: 1.0, vig: 0.36, lift: 0.008, tone: 0.88, mist: 0,
   shadow: [0.95, 0.98, 1.05], high: [1.04, 1.01, 0.95],
 };
 // Afinado en el laboratorio de grade (tools/scenarios/grade-lab.mjs): más contraste y sombras menos «lavadas» que el primer intento.
@@ -91,4 +91,87 @@ export function lookFor(key) {
   const l = { ...DEFAULT_LOOK, ...(REGION_LOOK[key] ?? {}) };
   l.bloom = [...l.bloom]; l.shadow = [...l.shadow]; l.high = [...l.high];
   return l;
+}
+
+/** «mirada» de las operaciones (interiores) por tema: se mezcla sobre DEFAULT_LOOK; la luz ambiente (hemisferio) sale del color de cielo/niebla del tema */
+export const THEME_LOOK = {
+  ruinas:       { density: 0.016, sat: 0.92, contrast: 1.14, shadow: [0.92, 0.97, 1.06], high: [1.04, 1.01, 0.94], bloom: [0.65, 0.6, 0.85] },
+  bunker:       { density: 0.020, sat: 0.9, contrast: 1.18, shadow: [0.88, 1.02, 1.0], high: [0.98, 1.04, 0.96], bloom: [0.8, 0.5, 0.8], vig: 0.5 },
+  laboratorio:  { density: 0.012, sat: 0.9, contrast: 1.1, shadow: [0.9, 1.0, 1.12], high: [0.98, 1.03, 1.06], bloom: [0.95, 0.55, 0.72], vig: 0.42 },
+  fabrica:      { density: 0.019, sat: 0.98, contrast: 1.16, shadow: [0.98, 0.94, 0.98], high: [1.1, 1.0, 0.86], bloom: [0.8, 0.55, 0.78], vig: 0.48 },
+  caverna:      { density: 0.017, sat: 1.0, contrast: 1.14, shadow: [0.84, 0.96, 1.2], high: [0.96, 1.03, 1.1], bloom: [0.9, 0.6, 0.75], vig: 0.46 },
+  magma:        { density: 0.018, sat: 1.14, contrast: 1.2, shadow: [0.98, 0.88, 1.0], high: [1.16, 0.94, 0.78], bloom: [1.1, 0.6, 0.65], vig: 0.48 },
+  sotano:       { density: 0.020, sat: 0.9, contrast: 1.16, shadow: [0.9, 0.98, 1.06], high: [1.02, 1.0, 0.92], bloom: [0.7, 0.55, 0.8], vig: 0.5 },
+  planta:       { density: 0.014, sat: 0.94, contrast: 1.12, shadow: [0.93, 0.99, 1.06], high: [1.04, 1.02, 0.96], bloom: [0.7, 0.55, 0.82], vig: 0.42 },
+  alcantarilla: { density: 0.022, falloff: 0.06, sat: 0.96, contrast: 1.16, shadow: [0.88, 1.04, 0.98], high: [0.98, 1.06, 0.88], bloom: [0.7, 0.6, 0.8], vig: 0.5 },
+  gruta:        { density: 0.020, falloff: 0.06, sat: 1.04, contrast: 1.14, shadow: [0.86, 1.02, 1.1], high: [0.96, 1.08, 1.02], bloom: [0.9, 0.65, 0.74], vig: 0.48 },
+  colmena:      { density: 0.021, falloff: 0.06, sat: 1.14, contrast: 1.16, shadow: [0.94, 0.86, 1.2], high: [1.06, 0.96, 1.08], bloom: [1.0, 0.7, 0.7], vig: 0.5 },
+};
+/** clima de interior por tema (la intensidad la limita WeatherFx): partículas suaves que dan vida a las operaciones */
+export const THEME_WEATHER = {
+  ruinas: ['dust', 0.5], bunker: ['dust', 0.35], fabrica: ['dust', 0.5], caverna: ['snow', 0.45], magma: ['embers', 0.7],
+  alcantarilla: ['spores', 0.3], gruta: ['spores', 0.7], colmena: ['spores', 0.85], laboratorio: ['dust', 0.2],
+};
+export function lookForTheme(theme) {
+  const l = { ...DEFAULT_LOOK, ...(THEME_LOOK[theme] ?? {}) };
+  l.bloom = [...l.bloom]; l.shadow = [...l.shadow]; l.high = [...l.high];
+  return l;
+}
+
+/**
+ * Ciclo día/noche como función pura del reloj del juego (0..1; la noche del juego es 0,6‥0,97, con rampas 0,6‥0,66 y 0,92‥0,97).
+ * El «horizonte» del sol cae en mitad de cada rampa, así que el atardecer coincide con el encendido de las farolas.
+ *   el   elevación del sol (seno): 1 mediodía … 0 horizonte … -1 medianoche (la luna)
+ *   twi  luz rasante/arrebol: 1 con el sol en el horizonte, se apaga en ~30 s de juego a cada lado
+ *   u    recorrido del sol por el cielo 0..1 (mañana → tarde); q recorrido de la luna 0..1
+ */
+const SUN_RISE = 0.945, SUN_SET = 0.63;
+const DAY_LEN = (SUN_SET - SUN_RISE + 1) % 1;
+export function dayState(t, out = {}) {
+  const p = (((t - SUN_RISE) % 1) + 1) % 1;
+  if (p < DAY_LEN) { const u = p / DAY_LEN; out.el = Math.sin(Math.PI * u); out.u = u; out.q = 0; }
+  else { const q = (p - DAY_LEN) / (1 - DAY_LEN); out.el = -Math.sin(Math.PI * q); out.u = 1; out.q = q; }
+  const k = out.el / 0.34;
+  out.twi = Math.exp(-k * k);
+  return out;
+}
+
+/**
+ * Fondo degradado a pantalla completa (una sola malla, sin textura): horizonte de niebla abajo, cielo arriba, resplandor del sol bajo,
+ * estrellas y luna de noche. Solo se ve donde no hay terreno (bordes del mapa, vacío de las mazmorras); se dibuja el primero y sin profundidad.
+ */
+export class SkyBackdrop {
+  constructor() {
+    this.material = new ShaderMaterial({
+      depthTest: false, depthWrite: false, fog: false,
+      uniforms: {
+        uFog: { value: new Color() }, uTop: { value: new Color() }, uGlowCol: { value: new Color(1, 0.5, 0.2) },
+        uGlow: { value: 0 }, uStar: { value: 0 }, uTime: { value: 0 }, uAspect: { value: 1.78 }, uMoonCol: { value: new Color(0.62, 0.74, 1.0) },
+      },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4( position.xy, 1.0, 1.0 ); }',
+      fragmentShader: /* glsl */ `
+varying vec2 vUv; uniform vec3 uFog, uTop, uGlowCol, uMoonCol; uniform float uGlow, uStar, uTime, uAspect;
+float h21( vec2 p ) { p = fract( p * vec2( 123.34, 456.21 ) ); p += dot( p, p + 45.32 ); return fract( p.x * p.y ); }
+void main() {
+  float y = vUv.y;
+  vec3 c = mix( uFog, uTop, smoothstep( 0.0, 1.0, y ) * 0.9 );
+  // resplandor del sol bajo: el sol queda detrás y a la izquierda de la cámara isométrica
+  vec2 dg = ( vUv - vec2( 0.26, 0.86 ) ) * vec2( uAspect, 1.0 );
+  c += uGlowCol * uGlow * ( exp( - dot( dg, dg ) * 2.6 ) + 0.35 * exp( - abs( y - 0.55 ) * 5.0 ) );
+  if ( uStar > 0.01 ) {
+    vec2 g = vUv * vec2( uAspect, 1.0 ) * 64.0; vec2 id = floor( g );
+    float r = h21( id ); vec2 o = ( vec2( h21( id + 7.1 ), h21( id + 3.3 ) ) - 0.5 ) * 0.6;
+    float st = step( 0.982, r ) * smoothstep( 0.32, 0.0, length( fract( g ) - 0.5 - o ) );
+    st *= 0.55 + 0.45 * sin( uTime * ( 0.8 + r * 3.0 ) + r * 80.0 );
+    c += vec3( 0.75, 0.88, 1.0 ) * st * 1.6 * uStar * smoothstep( 0.1, 0.7, y );
+    vec2 md = ( vUv - vec2( 0.76, 0.82 ) ) * vec2( uAspect, 1.0 ); float mr = length( md );
+    float shade = smoothstep( 0.05, 0.046, mr ) * ( 0.85 + 0.15 * h21( floor( md * 90.0 ) ) );
+    c += uMoonCol * ( shade * 1.7 + exp( - mr * mr * 520.0 ) * 0.5 + exp( - mr * mr * 60.0 ) * 0.14 ) * uStar;
+  }
+  gl_FragColor = vec4( c, 1.0 );
+}`,
+    });
+    this.mesh = new Mesh(new PlaneGeometry(2, 2), this.material);
+    this.mesh.frustumCulled = false; this.mesh.renderOrder = -1000; this.mesh.name = 'SkyBackdrop';
+  }
 }

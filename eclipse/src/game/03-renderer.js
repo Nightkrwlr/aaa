@@ -3,6 +3,9 @@
 // Reescrito sobre el motor de SUNDERCHOIR (src/engine/post.js + atmosphere.js):
 //   · escena → destino HDR half-float con MSAA → bloom → pasada final (mapeo tonal filmic + grade + viñeta + grano)
 //   · niebla de ALTURA con velo cálido (en vez de niebla lineal) y «mirada» (grade/niebla/bloom) por región
+// Frente «clima y luz»: ciclo día/noche rico (sol rasante y cálido al amanecer/atardecer, luna azulada, farolas que se encienden con
+// el atardecer), clima por GPU por región (lluvia, polvo, nieve, brasas, ceniza, esporas), fondo degradado, niebla de suelo (high),
+// cono visible de la linterna y «mirada» por tema en las operaciones. Todo cuelga de este rig; x.R.* no cambia.
 // La API pública que usa el resto del juego se conserva: x.R.{r, scene, camera, target, env, bloom, finalPass.uniforms,
 // setQuality, setZoom, setRegionEnv, addShake, flashLight, update, adapt, render, project, unproject, resize, flash, pLight}.
 
@@ -21,6 +24,12 @@ var ws = new U(1, 1.32, 1).normalize(),
         installWorldFog(),
         (this.scene = new qc()),
         (this.scene.fog = new WorldFog(10469320, 0.01, 0.05)),
+        ClWet(), // suelo mojado (lluvia): parche de chunks de luz, antes de compilar ningún material
+        (this.sky = new ClSky()),
+        this.scene.add(this.sky.mesh),
+        (this.wx = new ClWeather(this.scene)),
+        (this.mist = new ClMist(this.scene)),
+        (this.cone = new ClCone(this.scene)),
         (this.viewH = 23),
         (this.camera = new $i(-10, 10, 10, -10, 1, 220)),
         (this.target = new U()),
@@ -62,7 +71,15 @@ var ws = new U(1, 1.32, 1).normalize(),
         (this.finalPass = { uniforms: this.post.uniforms }),
         (this.look = lookFor("valle")),
         (this.lookTgt = lookFor("valle")),
-        (this.env = { hemiI: 1.1, sunI: 2.4, dark: 0, night: 0 }),
+        (this.env = { hemiI: 1.1, sunI: 2.4, dark: 0, night: 0, twi: 0, sunEl: 1, wet: 0, rain: 0 }),
+        (this.regionKey = "valle"),
+        (this.themeOutdoor = !0),
+        (this.sunDir = new U(-0.46, 0.85, -0.25).normalize()),
+        (this.lightDir = new U().copy(this.sunDir)),
+        (this._tmpDir = new U()),
+        (this._c1 = new Ee()),
+        (this._c2 = new Ee()),
+        (this._wind2 = new Se(0.8, 0.5)),
         (this.envCur = { sky: new Ee(12574975), gnd: new Ee(4872746), sun: new Ee(16773848), fog: new Ee(10469320) }),
         (this.envTgt = { sky: new Ee(), gnd: new Ee(), sun: new Ee(), fog: new Ee(), sunI: 2.4 }),
         this.setQuality("high"),
@@ -82,6 +99,7 @@ var ws = new U(1, 1.32, 1).normalize(),
         this.sun.shadow.mapSize.set(t ? 2048 : 1024, t ? 2048 : 1024),
         this.sun.shadow.map && (this.sun.shadow.map.dispose(), (this.sun.shadow.map = null)),
         this.post.configure({ samples: i ? 0 : t ? 4 : this.touch ? 0 : 2, bloom: !i }),
+        this.wx.setQuality(e),
         this.scene.traverse((s) => {
           s.material && (Array.isArray(s.material) ? s.material : [s.material]).forEach((a) => (a.needsUpdate = !0));
         }),
@@ -109,19 +127,35 @@ var ws = new U(1, 1.32, 1).normalize(),
     setZoom(e) {
       ((this.viewH = qe(e, 15, 34)), this.resize());
     }
+    // clave del tema de la operación en curso (interiores): se busca por identidad en Zi, que vive en 09-regions
+    themeKey() {
+      let m = x.map && x.map.themeObj;
+      if (!m) return null;
+      for (let k in Zi) if (Zi[k] === m) return k;
+      return null;
+    }
     setRegionEnv(e, t = !1) {
+      let th = e.key ? null : this.themeKey(),
+        key = e.key || th || "valle";
       (this.envTgt.sky.setHex(e.sky),
         this.envTgt.gnd.setHex(e.hemiG),
         this.envTgt.sun.setHex(e.sun),
         this.envTgt.fog.setHex(e.fog),
         (this.envTgt.sunI = e.sunI),
-        (this.lookTgt = lookFor(e.key)),
+        (this.regionKey = key),
+        (this.themeOutdoor = th ? !!(x.map.themeObj && x.map.themeObj.outdoor) : !0),
+        (this.lookTgt = th ? ClThemeLook(th) : lookFor(e.key)),
         t &&
           (this.envCur.sky.copy(this.envTgt.sky),
           this.envCur.gnd.copy(this.envTgt.gnd),
           this.envCur.sun.copy(this.envTgt.sun),
           this.envCur.fog.copy(this.envTgt.fog),
-          (this.look = lookFor(e.key))));
+          (this.look = th ? ClThemeLook(th) : lookFor(e.key))));
+      // clima de la región (De[i].weather) o, en interiores, el del tema; cruza con suavidad salvo en teletransportes
+      let w = e.weather || null,
+        k = 1;
+      th && ClThemeWx[th] && ((w = ClThemeWx[th][0]), (k = ClThemeWx[th][1]));
+      this.wx.setTarget(w, k, t);
     }
     addShake(e) {
       this.shake = Math.min(1.2, this.shake + e);
@@ -154,43 +188,131 @@ var ws = new U(1, 1.32, 1).normalize(),
         this.envCur.fog.lerp(this.envTgt.fog, l),
         (this.env.dark = ls(this.env.dark, s, 1 - Math.exp(-e * 3))),
         (this.env.night = ls(this.env.night, a, 1 - Math.exp(-e * 0.8))));
-      let c = this.env.dark,
-        d = this.env.night,
-        h = (1 - c) * (1 - d * 0.6);
-      (this.hemi.color.copy(this.envCur.sky).lerp(xw, d * 0.7),
-        this.hemi.groundColor.copy(this.envCur.gnd),
-        (this.hemi.intensity = 0.04 + 1.05 * h + d * (1 - c) * 0.1),
-        this.sun.color.copy(this.envCur.sun).lerp(bw, d),
-        (this.sun.intensity = this.envTgt.sunI * (1 - c) * (1 - d * 0.7)),
-        this.sun.position.set(this.target.x - 26, 48, this.target.z - 14),
-        this.sun.target.position.set(this.target.x, 0, this.target.z),
-        this.scene.fog.color.copy(this.envCur.fog).multiplyScalar(Math.max(0.03, h * 1 + 0.04)),
+      // ── ciclo día/noche: x.sunEl / x.twi / x.sunU los calcula World.update; en interiores el sol no pinta nada ──
+      let world = x.mode === "world",
+        sunEl = world ? (x.sunEl ?? 1) : 1,
+        twiT = world ? (x.twi ?? 0) : 0,
+        en = this.env;
+      ((en.sunEl = sunEl), (en.twi = ls(en.twi, twiT, 1 - Math.exp(-e * 1.4))));
+      let c = en.dark,
+        d = en.night,
+        tw = en.twi * (1 - c),
+        h = (1 - c) * (1 - d * 0.6),
+        wo = this.wx.out,
+        c1 = this._c1,
+        c2 = this._c2;
+      // luz de hemisferio: cielo azulado de noche, melocotón en el arrebol; el suelo devuelve un violeta cálido al atardecer
+      (this.hemi.color.copy(this.envCur.sky).lerp(xw, d * 0.7).lerp(Cl_DUSK_SKY, tw * 0.42),
+        this.hemi.groundColor.copy(this.envCur.gnd).lerp(Cl_NIGHT_GND, d * 0.5).lerp(Cl_DUSK_GND, tw * 0.4));
+      wo.warm > 0.01 &&
+        this.hemi.groundColor.lerp(Cl_EMBER, wo.warm * (0.32 + 0.1 * Math.sin(this.post.uniforms.uTime.value * 7.3 + Math.sin(this.post.uniforms.uTime.value * 2.1) * 3)));
+      this.hemi.intensity = 0.04 + 1.05 * h + d * (1 - c) * 0.22 + this.wx.bolt * 1.5;
+      // sol (día) y luna (noche) comparten UNA luz con sombras: el sol baja, se enrojece y alarga las sombras; la luna entra por
+      // el otro lado cuando el sol ya no aporta (el salto de dirección ocurre con la intensidad casi a cero y se suaviza)
+      let up = Cl_smooth(0, 0.2, sunEl) * (0.55 + 0.45 * Cl_smooth(0.1, 0.6, sunEl)),
+        sunI = this.envTgt.sunI * (1 - c) * up * wo.sunMul,
+        moonI = 0.78 * d * (1 - c),
+        warm = tw * Cl_smooth(-0.25, 0.08, sunEl) * 0.85,
+        elev = ((20 + 38 * Math.pow(Math.max(sunEl, 0), 0.75)) * Math.PI) / 180,
+        az = -2.45 + ((world ? (x.sunU ?? 0.5) : 0.5) - 0.5) * 1.1;
+      this._tmpDir.set(Math.cos(az) * Math.cos(elev), Math.sin(elev), Math.sin(az) * Math.cos(elev));
+      if (moonI > sunI) {
+        let ma = -1.31 + (x.moonQ ?? 0.5) * 0.5 - 0.25;
+        this._tmpDir.set(Math.cos(ma) * 0.67, 0.74, Math.sin(ma) * 0.67);
+      }
+      (this.lightDir.lerp(this._tmpDir, 1 - Math.exp(-e * 3)).normalize(),
+        this.sun.color.copy(this.envCur.sun).lerp(Cl_WARM_SUN, warm).lerp(Cl_MOON, moonI / (sunI + moonI + 1e-3)),
+        (this.sun.intensity = sunI + moonI),
+        this.sun.position.set(
+          this.target.x + this.lightDir.x * 56.1,
+          this.lightDir.y * 56.1,
+          this.target.z + this.lightDir.z * 56.1,
+        ),
+        this.sun.target.position.set(this.target.x, 0, this.target.z));
+      // niebla / fondo: color base del bioma con la luz del momento, azul de noche, naranja en el arrebol y teñida por el clima
+      c1.copy(this.envCur.fog).multiplyScalar(Math.max(0.03, h * 1 + 0.04));
+      c1.r *= 1 - d * 0.5;
+      c1.g *= 1 - d * 0.28;
+      c1.b *= 1 + d * 0.45;
+      let lum = c1.r * 0.3 + c1.g * 0.55 + c1.b * 0.15;
+      (tw > 0.01 && c1.lerp(c2.setRGB(1.0, 0.5, 0.26).multiplyScalar(Math.max(lum, 0.05) * 1.5), tw * 0.5),
+        wo.tintAmt > 0.01 && c1.lerp(wo.tint, wo.tintAmt),
+        this.scene.fog.color.copy(c1),
         (!this.scene.background || !this.scene.background.isColor) && (this.scene.background = new Ee()),
-        this.scene.background.copy(this.scene.fog.color));
+        this.scene.background.copy(c1));
       // «mirada» de la región: grade, niebla y bloom se acercan a la meta con suavidad (cruzar de bioma no da un salto)
       let m = this.look,
         g = this.lookTgt,
         b = this.post.uniforms;
-      for (let y of ["density", "falloff", "sat", "contrast", "exposure", "vig", "lift", "tone"]) m[y] = ls(m[y], g[y], l);
+      for (let y of ["density", "falloff", "sat", "contrast", "exposure", "vig", "lift", "tone", "mist"]) m[y] = ls(m[y], g[y], l);
       for (let y of ["shadow", "high", "bloom"]) for (let v = 0; v < 3; v++) m[y][v] = ls(m[y][v], g[y][v], l);
-      (b.uSat.value = m.sat),
+      let n = d * 0.65,
+        rn = wo.rain;
+      (b.uSat.value = m.sat * (1 - d * 0.1 + tw * 0.12 - rn * 0.1)),
         (b.uTone.value = m.tone),
         (b.uContrast.value = m.contrast),
         (b.uLift.value = m.lift),
-        b.uShadowTint.value.set(m.shadow[0], m.shadow[1], m.shadow[2]),
-        b.uHighTint.value.set(m.high[0], m.high[1], m.high[2]),
-        (b.uExposure.value = m.exposure * (1.15 + c * 0.25)),
+        // sombras frías y luces cálidas; de noche todo vira al azul y en el arrebol las sombras se vuelven malva y las luces ámbar
+        b.uShadowTint.value
+          .set(m.shadow[0], m.shadow[1], m.shadow[2])
+          .lerp(Cl_NIGHT_SH, n)
+          .lerp(Cl_DUSK_SH, tw * 0.55),
+        b.uHighTint.value
+          .set(m.high[0], m.high[1], m.high[2])
+          .lerp(Cl_NIGHT_HI, d * 0.55)
+          .lerp(Cl_DUSK_HI, tw * 0.65),
+        (b.uExposure.value = m.exposure * (1.15 + c * 0.25) * (1 + d * 0.14) * (1 - 0.06 * rn) * (1 + this.wx.bolt * 0.3)),
         (b.uVig.value = m.vig + c * 0.5 + d * 0.25),
-        (this.scene.fog.density = m.density * (1 + c * 0.6 + d * 0.3)),
+        (this.scene.fog.density = m.density * (1 + c * 0.6 + d * 0.3 + tw * 0.35) * wo.fogMul),
         (this.scene.fog.falloff = m.falloff),
-        (this.bloom.strength = m.bloom[0] * (1 + d * 0.5)),
+        (this.bloom.strength = m.bloom[0] * (1 + d * 0.5 + tw * 0.3 + wo.warm * 0.4 + wo.spores * d * 0.3)),
         (this.bloom.radius = m.bloom[1]),
         (this.bloom.threshold = m.bloom[2]);
+      b.uTime.value = (b.uTime.value + e) % 100;
+      // suelo mojado: la lluvia lo oscurece y lo pule en todos los materiales con luces (uDarkInfo.w, ver weather.js)
+      (go.uDarkInfo.value.w = ls(go.uDarkInfo.value.w, wo.wet, 1 - Math.exp(-e * 0.6))), (en.wet = go.uDarkInfo.value.w), (en.rain = rn);
+      // clima por GPU alrededor del objetivo
+      let pr = this.r.getPixelRatio();
+      (this.wx.update(e, {
+        x: this.target.x,
+        z: this.target.z,
+        camera: this.camera,
+        pxPerUnit: (this.pxPerUnit || 20) * pr,
+        night: d,
+        dark: c,
+        fog: c1,
+        sun: this.sun.color,
+        light: 0.2 + 0.8 * (1 - d * 0.75) * (1 - c),
+        sporeColor: this.regionKey === "colmena" || this.regionKey === "gruta" ? Cl_SPORE_V : Cl_SPORE_T,
+      }),
+        (this.mist.update(
+          this.wx.time,
+          this.target.x,
+          this.target.z,
+          this.quality === "high" ? Math.min(0.5, m.mist * (1 + tw * 1.2) * (1 - c * 0.6) * (1 + wo.rain * 0.5)) : 0,
+          c2.copy(c1).lerp(Cl_WHITE, 0.3).multiplyScalar(1.15),
+          this.wx.uni.uWind.value,
+        )));
+      // fondo degradado: horizonte = niebla, cielo arriba; arrebol, estrellas y luna de noche (solo asoma fuera del terreno)
+      let sk = this.sky.material.uniforms;
+      (sk.uFog.value.copy(c1),
+        sk.uTop.value
+          .copy(this.themeOutdoor ? this.envCur.sky : c1)
+          .multiplyScalar(this.themeOutdoor ? Math.max(0.05, h * 0.62 + 0.03) : 0.45)
+          .lerp(Cl_NIGHT_TOP, d * 0.8 * (this.themeOutdoor ? 1 : 0.3))
+          .lerp(Cl_DUSK_TOP, tw * 0.5),
+        (sk.uGlow.value = tw * 0.7 * (1 - c)),
+        (sk.uStar.value = this.themeOutdoor ? d * (1 - c) * (1 - rn * 0.8) : 0),
+        (sk.uTime.value = b.uTime.value),
+        (sk.uAspect.value = (this.w || 16) / (this.h || 9)),
+        sk.uGlowCol.value.copy(Cl_WARM_SUN));
       for (let f of this.pool)
         f.userData.life > 0 &&
           ((f.userData.life -= e),
           (f.intensity = f.userData.life > 0 ? f.userData.base * (f.userData.life / f.userData.max) : 0));
-      b.uTime.value = (b.uTime.value + e) % 100;
+      // cono visible de la linterna (los datos de la luz los fija mS() en 32-boot antes de cada update)
+      let fl = this.flash;
+      this.cone.update(e, b.uTime.value, fl.position, fl.target.position, fl.intensity > 0.5, Math.min(1, Math.max(d * 0.9, c)), fl.distance * 0.6);
     }
     adapt(e) {
       if (((this._ft += (e - this._ft) * 0.05), (this._dynT += e), this._dynT < 2.5 || (devicePixelRatio || 1) <= 1))
@@ -218,4 +340,20 @@ var ws = new U(1, 1.32, 1).normalize(),
   vg = new U(),
   gw = new U(),
   xw = new Ee(3162218),
-  bw = new Ee(7377104);
+  bw = new Ee(7377104),
+  Cl_smooth = (n, e, t) => ((t = Math.min(1, Math.max(0, (t - n) / (e - n)))), t * t * (3 - 2 * t)),
+  Cl_DUSK_SKY = new Ee(1.0, 0.62, 0.5),
+  Cl_DUSK_GND = new Ee(0.34, 0.18, 0.26),
+  Cl_NIGHT_GND = new Ee(0.03, 0.05, 0.11),
+  Cl_DUSK_TOP = new Ee(0.3, 0.12, 0.28),
+  Cl_NIGHT_TOP = new Ee(0.008, 0.02, 0.07),
+  Cl_WARM_SUN = new Ee(1.0, 0.42, 0.12),
+  Cl_MOON = new Ee(0.46, 0.6, 1.0),
+  Cl_EMBER = new Ee(0.9, 0.3, 0.06),
+  Cl_WHITE = new Ee(1, 1, 1),
+  Cl_NIGHT_SH = new U(0.78, 0.92, 1.3),
+  Cl_NIGHT_HI = new U(0.86, 0.98, 1.2),
+  Cl_DUSK_SH = new U(0.94, 0.86, 1.18),
+  Cl_DUSK_HI = new U(1.22, 0.95, 0.74),
+  Cl_SPORE_T = new Ee(0.35, 1.0, 0.72),
+  Cl_SPORE_V = new Ee(0.85, 0.42, 1.0);
