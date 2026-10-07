@@ -16,3 +16,5 @@ coverage/
 # Operación Eclipse: salidas de build
 /eclipse/.build/
 /eclipse/dist/
+/node_modules
+/eclipse/node_modules

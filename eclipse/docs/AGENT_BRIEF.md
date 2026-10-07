@@ -19,7 +19,7 @@ node tools/build.mjs --out dist/eclipse.html   # build minificado   (--dev: sin 
 node tools/shot.mjs --scenario tools/scenarios/<guion>.mjs --out <dir> --tag <etiqueta> [--seed 1] [--dpr 1] [--quality high|medium|low]
 node tools/montage.mjs --dir <dir> --a antes --b despues --names n1,n2
 ```
-- **Capturas y salidas fuera del repo**: guárdalas en `/tmp/eclipse-shots/<frente>/` (nunca las incluyas en un commit; `dist/` y `.build/` ya están ignorados). Para iterar rápido: `--quality medium --size 960x540` (MSAA 2×); la comprobación final, en `high` y 1280x720.
+- **Capturas y salidas fuera del repo**: guárdalas en `/tmp/claude-0/-home-user-aaa/3b641f7c-91e0-5f65-bdba-08dc578ec535/scratchpad/eclipse/shots/<frente>/` (nunca las incluyas en un commit; `dist/` y `.build/` ya están ignorados). Para iterar rápido: `--quality medium --size 960x540` (MSAA 2×); la comprobación final, en `high` y 1280x720.
 - **Baseline** (el aspecto original, para comparar): `/tmp/claude-0/-home-user-aaa/3b641f7c-91e0-5f65-bdba-08dc578ec535/scratchpad/eclipse/baseline/eclipse.baseline.html`. Capturas del original por región en `…/scratchpad/eclipse/audit/orig-v-*.png`.
 - GL por **software** (SwiftShader, sin GPU): un fotograma tarda ≈ 0,3-1 s. **Un solo navegador a la vez**, guiones cortos (una región, una hora), `timeout` en cada ejecución (≤ 280 s en primer plano; lo largo, en segundo plano). Máquina de 4 núcleos compartida con otros agentes.
 - **Ahorra contexto**: mira como mucho ~12-15 imágenes en total; usa `montage.mjs` (antes | después en una sola imagen) y recortes en lugar de capturas sueltas; no vuelques logs enormes.
@@ -34,7 +34,7 @@ node tools/montage.mjs --dir <dir> --a antes --b despues --names n1,n2
 5. Móvil: sin trabajo por fotograma que escale con el mapa; sin asignaciones por fotograma en bucles calientes (reutiliza vectores/arrays).
 6. Código: comentarios en **español**, breves, que expliquen el *por qué*. Funciones nuevas con nombres legibles; no renombres en masa los identificadores minificados existentes.
 7. `node tools/build.mjs` y el humo (`node tools/shot.mjs --scenario tools/scenarios/smoke.mjs`) deben seguir pasando sin errores de consola.
-8. Commits en tu rama (el worktree ya está en una): mensaje en español, descriptivo, terminado con estas dos líneas exactas:
+8. **Nunca `git add -A`** (arrastraría enlaces simbólicos y capturas): añade solo tus ficheros (`git add eclipse/src eclipse/tools/scenarios/<tuyos> …`). Commits en tu rama (el worktree ya está en una): mensaje en español, descriptivo, terminado con estas dos líneas exactas:
 ```
 Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01DF6dV4pEcgw6Ze1HF6yf9s
