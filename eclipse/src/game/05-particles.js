@@ -21,6 +21,8 @@ var Ad = class {
         (this.s0 = new Float32Array(t)),
         (this.s1 = new Float32Array(t)),
         (this.c0 = new Float32Array(t * 3)),
+        // color final: la partícula pasa de c0 a c1 durante su vida (bola de fuego blanco-amarilla → rojo oscuro)
+        (this.c1 = new Float32Array(t * 3)),
         (this.mat = new wn({
           uniforms: { map: { value: cr() }, uScale: { value: 30 } },
           vertexShader: `attribute float size; attribute float alpha; attribute vec3 color; varying vec3 vC; varying float vA; uniform float uScale;
@@ -38,7 +40,7 @@ var Ad = class {
         (this.geo = s),
         e.add(this.points));
     }
-    add(e, t, i, s, a, r, o, l, c, d, h, f, u = 0, p = 0) {
+    add(e, t, i, s, a, r, o, l, c, d, h, f, u = 0, p = 0, d1 = d, h1 = h, f1 = f) {
       if (this.n >= this.cap) return;
       let m = this.n++;
       ((this.pos[m * 3] = e),
@@ -54,6 +56,9 @@ var Ad = class {
         (this.c0[m * 3] = d),
         (this.c0[m * 3 + 1] = h),
         (this.c0[m * 3 + 2] = f),
+        (this.c1[m * 3] = d1),
+        (this.c1[m * 3 + 1] = h1),
+        (this.c1[m * 3 + 2] = f1),
         (this.grav[m] = u),
         (this.drag[m] = p));
     }
@@ -80,9 +85,9 @@ var Ad = class {
             (this.vel[t * 3 + 2] *= 0.6)),
           (this.size[t] = this.s0[t] + (this.s1[t] - this.s0[t]) * i),
           (this.alpha[t] = Math.min(1, (1 - i) * 1.6)),
-          (this.col[t * 3] = this.c0[t * 3]),
-          (this.col[t * 3 + 1] = this.c0[t * 3 + 1]),
-          (this.col[t * 3 + 2] = this.c0[t * 3 + 2]),
+          (this.col[t * 3] = this.c0[t * 3] + (this.c1[t * 3] - this.c0[t * 3]) * i),
+          (this.col[t * 3 + 1] = this.c0[t * 3 + 1] + (this.c1[t * 3 + 1] - this.c0[t * 3 + 1]) * i),
+          (this.col[t * 3 + 2] = this.c0[t * 3 + 2] + (this.c1[t * 3 + 2] - this.c0[t * 3 + 2]) * i),
           t++);
       }
       if ((this.geo.setDrawRange(0, this.n), !(this.n === 0 && this._lastN === 0))) {
@@ -95,7 +100,7 @@ var Ad = class {
     }
     swap(e, t) {
       if (e !== t) {
-        for (let i of [this.pos, this.vel, this.c0]) for (let s = 0; s < 3; s++) i[e * 3 + s] = i[t * 3 + s];
+        for (let i of [this.pos, this.vel, this.c0, this.c1]) for (let s = 0; s < 3; s++) i[e * 3 + s] = i[t * 3 + s];
         for (let i of [this.life, this.max, this.s0, this.s1, this.grav, this.drag]) i[e] = i[t];
       }
     }

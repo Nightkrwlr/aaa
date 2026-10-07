@@ -320,3 +320,6 @@ function Ax() {
   x.pickups.length = 0;
 }
 
+
+// Gancho de depuración (capturas de botín): generar objetos y chips con rareza elegida.
+window.__loot = { Nt, us, xi };
