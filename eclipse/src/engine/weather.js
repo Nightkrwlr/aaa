@@ -141,7 +141,7 @@ void main() {
   size = 0.22 + 0.3 * s.y;
   float pulse = 0.5 + 0.5 * sin( uTime * ( 0.8 + 1.6 * s.x ) + s.y * 60.0 );
   alpha = ( 0.12 + 0.88 * uNight ) * ( 0.25 + 0.75 * pulse );
-  col *= 0.4 + 1.3 * uNight * pulse;
+  col *= 0.35 + 0.85 * uNight * pulse;
 #endif
   vec3 w = boxPos( s.xyz, drift, y, edge );
   vA = edge * alpha;
