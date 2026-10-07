@@ -79,7 +79,7 @@ void main() {
   vec2 r = vec2( fract( sin( dot( s.xy + cyc * 0.173, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ), fract( sin( dot( s.yx + cyc * 0.311, vec2( 39.346, 11.135 ) ) ) * 24634.6345 ) );
   float edge;
   vec3 c = boxPos( vec3( r, 0.0 ), vec2( 0.0 ), 0.06, edge );
-  float rad = ( 0.16 + 0.95 * ph ) * ( 0.65 + 0.55 * s.z );
+  float rad = ( 0.07 + 0.36 * ph ) * ( 0.7 + 0.6 * s.z );
   vec3 w = c + vec3( position.x, 0.0, position.z ) * 2.0 * rad;
   vPh = ph; vA = edge;
   gl_Position = projectionMatrix * viewMatrix * vec4( w, 1.0 );
@@ -91,7 +91,7 @@ void main() {
   if ( d > 1.0 ) discard;
   float ring = smoothstep( 0.2, 0.0, abs( d - 0.8 ) ) * ( 1.0 - vPh );
   float core = ( 1.0 - smoothstep( 0.0, 0.4, d ) ) * ( 1.0 - smoothstep( 0.0, 0.3, vPh ) );
-  gl_FragColor = vec4( uColor, ( ring * 0.7 + core * 0.8 ) * vA * uAmt * 0.6 );
+  gl_FragColor = vec4( uColor, ( ring * 0.55 + core * 0.6 ) * vA * uAmt * 0.5 );
 }`;
 
 // ───────────────────────────────────────────────────────────────────────────────── partículas «motas» (polvo, nieve, ceniza, brasas, esporas)
@@ -283,7 +283,7 @@ export class WeatherFx {
       const m = new ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: common, vertexShader: RAIN_VERT, fragmentShader: RAIN_FRAG });
       obj = new LineSegments(g, m); this.mats[type] = m;
       // salpicaduras
-      const ns = 900, pg = new PlaneGeometry(1, 1); pg.rotateX(-Math.PI / 2);
+      const ns = 520, pg = new PlaneGeometry(1, 1); pg.rotateX(-Math.PI / 2);
       const ig = new InstancedBufferGeometry(); ig.index = pg.index; ig.setAttribute('position', pg.getAttribute('position')); ig.setAttribute('uv', pg.getAttribute('uv'));
       ig.setAttribute('aSeed', new InstancedBufferAttribute(seedBuffer(ns), 4)); ig.instanceCount = ns;
       const sm = new ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: { ...common, uBox: { value: new Vector4(40, 50, 1, 1) }, uColor: { value: new Color(1, 1, 1) }, uAmt: { value: 1 } }, vertexShader: SPLASH_VERT, fragmentShader: SPLASH_FRAG });
@@ -347,8 +347,8 @@ export class WeatherFx {
             su.uBox.value.set(viewW + 8, (viewH) / CAM_EL + 8, 1, Math.min(1, a * this.cap * (this.quality === 'low' ? 0.5 : 1)));
             su.uColor.value.copy(u.uColor.value).multiplyScalar(1.3); su.uAmt.value = 1;
           }
-          fogMul += a * 0.85; tintAmt = Math.max(tintAmt, a * 0.45); this._tint.setRGB(0.56, 0.62, 0.7).multiplyScalar(0.3 + 0.7 * L);
-          sunMul *= 1 - 0.5 * a; wet = Math.max(wet, a);
+          fogMul += a * 0.3; tintAmt = Math.max(tintAmt, a * 0.2); this._tint.setRGB(0.56, 0.62, 0.7).multiplyScalar(0.3 + 0.7 * L);
+          sunMul *= 1 - 0.38 * a; wet = Math.max(wet, a);
           break;
         }
         case 'dust': {

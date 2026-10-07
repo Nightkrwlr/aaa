@@ -129,9 +129,11 @@ var ws = new U(1, 1.32, 1).normalize(),
     }
     // clave del tema de la operación en curso (interiores): se busca por identidad en Zi, que vive en 09-regions
     themeKey() {
-      let m = x.map && x.map.themeObj;
-      if (!m) return null;
-      for (let k in Zi) if (Zi[k] === m) return k;
+      let m = x.map;
+      if (!m || !m.themeObj && !m.theme) return null;
+      // el mapa de la operación guarda la clave del tema (h.theme); la identidad de themeObj es el plan B
+      if (m.theme && Zi[m.theme]) return m.theme;
+      for (let k in Zi) if (Zi[k] === m.themeObj) return k;
       return null;
     }
     setRegionEnv(e, t = !1) {
