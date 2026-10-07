@@ -83,7 +83,7 @@ export const REGION_LOOK = {
   complejo: { density: 0.013, sat: 0.96, contrast: 1.16, shadow: [0.88, 0.98, 1.12], high: [1.0, 1.02, 1.04], bloom: [0.8, 0.55, 0.78], vig: 0.42 },
   caldera:  { density: 0.015, sat: 1.14, contrast: 1.18, shadow: [0.95, 0.9, 1.04], high: [1.16, 0.96, 0.78], bloom: [1.0, 0.6, 0.7], vig: 0.42 },
   yermo:    { density: 0.011, sat: 0.7, contrast: 1.15, shadow: [0.93, 0.96, 1.05], high: [1.03, 1.0, 0.95], bloom: [0.6, 0.6, 0.88] },
-  colmena:  { density: 0.016, falloff: 0.06, sat: 1.12, contrast: 1.14, shadow: [0.94, 0.88, 1.18], high: [1.04, 0.98, 1.06], bloom: [0.9, 0.7, 0.72], vig: 0.44 },
+  colmena:  { density: 0.016, falloff: 0.06, sat: 1.08, contrast: 1.16, exposure: 0.94, shadow: [0.94, 0.9, 1.14], high: [1.04, 0.99, 1.04], bloom: [0.62, 0.66, 0.82], vig: 0.44 },
 };
 
 /** copia profunda: el renderer mezcla estos números en sitio al cruzar de bioma, así que no deben compartir arrays con las constantes */

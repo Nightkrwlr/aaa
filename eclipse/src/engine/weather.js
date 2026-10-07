@@ -138,10 +138,10 @@ void main() {
   // esporas: flotan casi quietas y laten; de día apenas se notan, de noche son el foco de luz del bioma
   y = 0.3 + mod( s.z * uBox.z + uTime * ( 0.12 + 0.22 * s.x ), uBox.z );
   drift = uWind * uTime * 0.05 + vec2( sin( uTime * 0.45 + s.y * 30.0 ), cos( uTime * 0.38 + s.x * 20.0 ) ) * 1.1;
-  size = 0.1 + 0.17 * s.y;
+  size = 0.14 + 0.2 * s.y;
   float pulse = 0.5 + 0.5 * sin( uTime * ( 0.8 + 1.6 * s.x ) + s.y * 60.0 );
   alpha = ( 0.12 + 0.88 * uNight ) * ( 0.25 + 0.75 * pulse );
-  col *= 0.5 + 3.0 * uNight * pulse;
+  col *= 0.45 + 1.7 * uNight * pulse;
 #endif
   vec3 w = boxPos( s.xyz, drift, y, edge );
   vA = edge * alpha;
@@ -154,7 +154,7 @@ varying float vA; varying vec3 vCol; uniform float uAmt;
 void main() {
   vec2 c = gl_PointCoord - 0.5; float d = length( c ) * 2.0;
   if ( d > 1.0 ) discard;
-  float a = 1.0 - d; a *= a;
+  float a = 1.0 - d * d; a *= a; // núcleo suave: a pocos píxeles se lee como un destello redondo, no como un cuadrado
 #if defined( M_EMBER ) || defined( M_SPORE ) || defined( M_SNOW )
   gl_FragColor = vec4( vCol * ( 0.6 + 0.9 * a ), a * vA * uAmt );
 #else
