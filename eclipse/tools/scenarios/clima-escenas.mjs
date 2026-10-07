@@ -7,7 +7,7 @@ export const ESCENAS = [
   // [nombre, región, hora, linterna]
   ['valle-dia', 'valle', 0.30], ['ciudad', 'ciudad', 0.30], ['desierto', 'desierto', 0.30], ['tundra', 'tundra', 0.30],
   ['caldera', 'caldera', 0.30], ['yermo', 'yermo', 0.30],
-  ['valle-tarde', 'valle', 0.57], ['valle-alba', 'valle', 0.99],
+  ['valle-tarde', 'valle', 0.60], ['valle-alba', 'valle', 0.99],
   ['valle-noche', 'valle', 0.80], ['marisma-noche', 'marisma', 0.80], ['colmena-noche', 'colmena', 0.80],
   ['valle-linterna', 'valle', 0.80, true],
 ];

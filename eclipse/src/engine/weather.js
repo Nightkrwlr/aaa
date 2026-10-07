@@ -115,7 +115,7 @@ void main() {
   float sp = 1.1 + 1.3 * s.x;
   y = uBox.z - mod( s.z * uBox.z + uTime * sp, uBox.z );
   drift = uWind * uTime * 0.18 * ( 0.5 + s.y ) + vec2( sin( uTime * 0.8 + s.y * 30.0 ), cos( uTime * 0.7 + s.x * 20.0 ) ) * 0.7;
-  size = 0.07 + 0.09 * s.y;
+  size = 0.09 + 0.11 * s.y;
   float k = fract( s.w * 13.37 );
   float tw = step( 0.84, k ) * pow( max( 0.0, sin( uTime * ( 1.3 + k * 2.5 ) + k * 90.0 ) ), 14.0 );
   alpha = 0.55 + tw * 4.0; size *= 1.0 + tw * 2.2;
@@ -123,14 +123,14 @@ void main() {
   float sp = 0.55 + 0.75 * s.x;
   y = uBox.z - mod( s.z * uBox.z + uTime * sp, uBox.z );
   drift = uWind * uTime * 0.3 * ( 0.4 + s.y ) + vec2( sin( uTime * 0.6 + s.y * 33.0 ), cos( uTime * 0.5 + s.x * 21.0 ) ) * 1.3;
-  size = 0.07 + 0.13 * s.x;
-  alpha = ( 0.4 + 0.6 * abs( sin( uTime * ( 1.4 + 3.0 * s.y ) + s.x * 50.0 ) ) ) * 0.75;
+  size = 0.1 + 0.2 * s.x;
+  alpha = ( 0.45 + 0.55 * abs( sin( uTime * ( 1.4 + 3.0 * s.y ) + s.x * 50.0 ) ) ) * 0.95;
   col *= mix( 0.35, 1.25, s.y );
 #elif defined( M_EMBER )
   float life = fract( s.z + uTime * ( 0.07 + 0.09 * s.x ) );
   y = life * uBox.z;
   drift = uWind * uTime * 0.2 + vec2( sin( uTime * 1.3 + s.y * 40.0 + y * 0.6 ), cos( uTime * 1.1 + s.x * 33.0 + y * 0.5 ) ) * ( 0.35 + 1.1 * life );
-  size = ( 0.05 + 0.08 * s.y ) * ( 1.0 - 0.45 * life );
+  size = ( 0.08 + 0.1 * s.y ) * ( 1.0 - 0.45 * life );
   float flick = 0.65 + 0.35 * sin( uTime * ( 6.0 + 9.0 * s.x ) + s.y * 90.0 );
   alpha = smoothstep( 0.0, 0.06, life ) * ( 1.0 - smoothstep( 0.55, 1.0, life ) ) * flick;
   col = mix( vec3( 1.0, 0.72, 0.24 ) * 3.6, vec3( 0.95, 0.16, 0.03 ) * 1.6, smoothstep( 0.05, 0.85, life ) );
@@ -202,7 +202,7 @@ float wetHash( vec2 p ) { p = fract( p * vec2( 123.34, 456.21 ) ); p += dot( p, 
 float wetNoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); f = f * f * ( 3.0 - 2.0 * f );
   return mix( mix( wetHash( i ), wetHash( i + vec2( 1.0, 0.0 ) ), f.x ), mix( wetHash( i + vec2( 0.0, 1.0 ) ), wetHash( i + vec2( 1.0, 1.0 ) ), f.x ), f.y ); }
 float wetMask( vec3 worldN ) { return smoothstep( 0.5, 0.92, worldN.y ); }
-float wetPuddle( vec2 p ) { return smoothstep( 0.42, 0.68, wetNoise( p * 0.33 ) * 0.65 + wetNoise( p * 1.1 + 3.0 ) * 0.35 ); }
+float wetPuddle( vec2 p ) { return smoothstep( 0.3, 0.85, wetNoise( p * 0.27 ) * 0.7 + wetNoise( p * 0.9 + 3.0 ) * 0.3 ); }
 `;
   S.lights_physical_fragment += /* glsl */ `
 {
@@ -355,7 +355,7 @@ export class WeatherFx {
           u.uColor.value.setRGB(0.85, 0.68, 0.45).multiplyScalar(0.3 + 0.9 * L).lerp(ctx.sun, 0.15); u.uAmt.value = 1;
           u.uDrift.value = this.drift; u.uGust.value = this.gust; u.uWindDir.value.set(Math.cos(this.windAng), Math.sin(this.windAng));
           const gk = a * (0.25 + 0.75 * this.gust);
-          fogMul += gk * 1.5; tintAmt = Math.max(tintAmt, gk * 0.5); this._tint.setRGB(0.82, 0.64, 0.4).multiplyScalar(0.25 + 0.75 * L); sunMul *= 1 - 0.25 * gk;
+          fogMul += gk * 0.95; tintAmt = Math.max(tintAmt, gk * 0.34); this._tint.setRGB(0.82, 0.64, 0.4).multiplyScalar(0.25 + 0.75 * L); sunMul *= 1 - 0.25 * gk;
           break;
         }
         case 'snow': {
@@ -443,7 +443,7 @@ export class FlashCone {
     this.mesh.position.copy(from);
     this.mesh.lookAt(to);
     this.mesh.scale.set(L * 0.5, L * 0.5, L);
-    this.material.uniforms.uAmt.value = this.k * (0.1 + 0.34 * strength);
+    this.material.uniforms.uAmt.value = this.k * (0.06 + 0.22 * strength);
     this.material.uniforms.uTime.value = time;
   }
 }

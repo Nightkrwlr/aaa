@@ -208,13 +208,13 @@ var ws = new U(1, 1.32, 1).normalize(),
         this.hemi.groundColor.copy(this.envCur.gnd).lerp(Cl_NIGHT_GND, d * 0.5).lerp(Cl_DUSK_GND, tw * 0.4));
       wo.warm > 0.01 &&
         this.hemi.groundColor.lerp(Cl_EMBER, wo.warm * (0.32 + 0.1 * Math.sin(this.post.uniforms.uTime.value * 7.3 + Math.sin(this.post.uniforms.uTime.value * 2.1) * 3)));
-      this.hemi.intensity = 0.04 + 1.05 * h + d * (1 - c) * 0.22 + this.wx.bolt * 1.5;
+      this.hemi.intensity = 0.04 + 1.05 * h + d * (1 - c) * 0.15 + this.wx.bolt * 1.5;
       // sol (día) y luna (noche) comparten UNA luz con sombras: el sol baja, se enrojece y alarga las sombras; la luna entra por
       // el otro lado cuando el sol ya no aporta (el salto de dirección ocurre con la intensidad casi a cero y se suaviza)
       let up = Cl_smooth(0, 0.2, sunEl) * (0.55 + 0.45 * Cl_smooth(0.1, 0.6, sunEl)),
         sunI = this.envTgt.sunI * (1 - c) * up * wo.sunMul,
-        moonI = 0.78 * d * (1 - c),
-        warm = tw * Cl_smooth(-0.25, 0.08, sunEl) * 0.85,
+        moonI = 0.56 * d * (1 - c),
+        warm = tw * Cl_smooth(-0.25, 0.08, sunEl),
         elev = ((20 + 38 * Math.pow(Math.max(sunEl, 0), 0.75)) * Math.PI) / 180,
         az = -2.45 + ((world ? (x.sunU ?? 0.5) : 0.5) - 0.5) * 1.1;
       this._tmpDir.set(Math.cos(az) * Math.cos(elev), Math.sin(elev), Math.sin(az) * Math.cos(elev));
@@ -237,7 +237,7 @@ var ws = new U(1, 1.32, 1).normalize(),
       c1.g *= 1 - d * 0.28;
       c1.b *= 1 + d * 0.45;
       let lum = c1.r * 0.3 + c1.g * 0.55 + c1.b * 0.15;
-      (tw > 0.01 && c1.lerp(c2.setRGB(1.0, 0.5, 0.26).multiplyScalar(Math.max(lum, 0.05) * 1.5), tw * 0.5),
+      (tw > 0.01 && c1.lerp(c2.setRGB(1.0, 0.5, 0.26).multiplyScalar(Math.max(lum, 0.05) * 1.5), tw * 0.62),
         wo.tintAmt > 0.01 && c1.lerp(wo.tint, wo.tintAmt),
         this.scene.fog.color.copy(c1),
         (!this.scene.background || !this.scene.background.isColor) && (this.scene.background = new Ee()),
@@ -250,7 +250,7 @@ var ws = new U(1, 1.32, 1).normalize(),
       for (let y of ["shadow", "high", "bloom"]) for (let v = 0; v < 3; v++) m[y][v] = ls(m[y][v], g[y][v], l);
       let n = d * 0.65,
         rn = wo.rain;
-      (b.uSat.value = m.sat * (1 - d * 0.1 + tw * 0.12 - rn * 0.1)),
+      (b.uSat.value = m.sat * (1 - d * 0.1 + tw * 0.18 - rn * 0.1)),
         (b.uTone.value = m.tone),
         (b.uContrast.value = m.contrast),
         (b.uLift.value = m.lift),
@@ -262,7 +262,7 @@ var ws = new U(1, 1.32, 1).normalize(),
         b.uHighTint.value
           .set(m.high[0], m.high[1], m.high[2])
           .lerp(Cl_NIGHT_HI, d * 0.55)
-          .lerp(Cl_DUSK_HI, tw * 0.65),
+          .lerp(Cl_DUSK_HI, tw * 0.85),
         (b.uExposure.value = m.exposure * (1.15 + c * 0.25) * (1 + d * 0.14) * (1 - 0.06 * rn) * (1 + this.wx.bolt * 0.3)),
         (b.uVig.value = m.vig + c * 0.5 + d * 0.25),
         (this.scene.fog.density = m.density * (1 + c * 0.6 + d * 0.3 + tw * 0.35) * wo.fogMul),
