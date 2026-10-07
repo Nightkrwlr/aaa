@@ -4,7 +4,7 @@
  * usage: node tools/mobile-shot.mjs [script=tools/e2e/mobile.mjs] [--device pixel7|iphone14|se|small|tablet] [--portrait] [--dpr 1] [--query "e2e=1&..."]
  * --dpr overrides the device pixel ratio (layout is in CSS px, so dpr 1 is a much cheaper software-GL run with the same checks)
  * The script receives { page, cdp, touch, wait, shot, logs, device, size } — `touch` drives real CDP touch events (multi-touch aware):
- *   touch.down(id,x,y) · touch.move(id,x,y) · touch.up(id) · touch.tap(x,y) · touch.drag(id,[x0,y0],[x1,y1],steps)
+ *   touch.down(id,x,y) · touch.move(id,x,y) · touch.up(id) · touch.tap(x,y) · touch.doubleTap(x,y) · touch.drag(id,[x0,y0],[x1,y1],steps)
  */
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
@@ -41,11 +41,15 @@ const cdp = await ctx.newCDPSession(page);
 const pts = new Map();
 const send = (type, timestamp) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: [...pts.values()].map((p) => ({ x: p.x, y: p.y, id: p.id, radiusX: 8, radiusY: 8, force: 0.6 })), ...(timestamp ? { timestamp } : {}) });
 const touch = {
+  clock: 0,
   async down(id, x, y) { pts.set(id, { id, x, y }); await send('touchStart'); },
   async move(id, x, y) { const p = pts.get(id); if (!p) return; p.x = x; p.y = y; await send('touchMove'); },
   async up(id) { pts.delete(id); await send('touchEnd'); },
   // taps carry explicit event times (50 ms apart) so a slow software-GL frame cannot stretch them into long presses
-  async tap(x, y, id = 90) { const t = Date.now() / 1000; pts.set(id, { id, x, y }); await send('touchStart', t); pts.delete(id); await send('touchEnd', t + 0.05); },
+  // `after` (seconds) chains a tap onto the previous one on the event clock, however long the software renderer took to get here
+  async tap(x, y, id = 90, after = null) { const t = after != null && touch.clock ? touch.clock + after : Date.now() / 1000; touch.clock = t + 0.05; pts.set(id, { id, x, y }); await send('touchStart', t); pts.delete(id); await send('touchEnd', t + 0.05); },
+  // two taps 140 ms apart on the *event* clock, however slowly the software renderer lets the CDP calls through
+  async doubleTap(x, y, id = 91) { const t = Date.now() / 1000; for (const d of [0, 0.14]) { pts.set(id, { id, x, y }); await send('touchStart', t + d); pts.delete(id); await send('touchEnd', t + d + 0.05); } },
   async drag(id, [x0, y0], [x1, y1], steps = 8) { await touch.down(id, x0, y0); for (let i = 1; i <= steps; i++) await touch.move(id, x0 + (x1 - x0) * i / steps, y0 + (y1 - y0) * i / steps); },
 };
 

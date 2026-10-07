@@ -1,5 +1,6 @@
 import { t } from '../../core/i18n.js';
 import { toggleFullscreen, isFullscreen } from './lifecycle.js';
+import { Device } from './device.js';
 
 /**
  * Two small touch-first panels registered into the UIManager:
@@ -25,6 +26,16 @@ const ICONS = {
 const svg = (k) => `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
 const div = (cls, html = '') => { const d = document.createElement('div'); if (cls) d.className = cls; d.innerHTML = html; return d; };
 
+/** "install the game" card: Chrome gets a real prompt button, iOS gets the two-step recipe (it has no prompt API). Nothing when already installed. */
+function installCard(game) {
+  if (Device.standalone) return null;
+  const lc = game.mobile?.lifecycle, canPrompt = !!lc?.installEvent;
+  if (!canPrompt && !Device.ios) return null;
+  const c = div('mm-install', `<span><b>${t('mm.install')}</b> · ${canPrompt ? t('hint.install_android') : t('mm.install_ios')}</span>`);
+  if (canPrompt) { const b = document.createElement('button'); b.type = 'button'; b.className = 'primary'; b.textContent = t('hint.install_btn'); b.onclick = () => lc.installEvent.prompt?.(); c.append(b); }
+  return c;
+}
+
 export function mobileMenu(game, ui) {
   const el = div('mmenu');
   const tiles = [['inventory', 'inventory'], ['skills', 'skills'], ['talents', 'talents'], ['quests', 'quests'], ['map', 'map'], ['codex', 'codex'], ['craft', 'craft'], ['settings', 'settings']];
@@ -46,7 +57,8 @@ export function mobileMenu(game, ui) {
     mk('pause', t('mm.pause'), () => { ui.close('mmenu'); ui.open('pause'); });
     mk('touch', t('mm.touch'), () => { ui.close('mmenu'); ui.open('mset'); });
     if (document.fullscreenEnabled || document.webkitFullscreenEnabled) mk('fs', isFullscreen() ? t('mm.exit_fullscreen') : t('mm.fullscreen'), () => { toggleFullscreen(); ui.close('mmenu'); });
-    el.append(head, grid, row);
+    const ins = installCard(game);
+    el.append(head, grid, row, ...(ins ? [ins] : []));
   };
   return { el, blocking: true, open: render, close() {} };
 }

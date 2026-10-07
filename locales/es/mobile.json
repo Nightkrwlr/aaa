@@ -43,5 +43,7 @@
  "hint.resume": "Partida en pausa",
  "hint.resume_tap": "Toca para continuar",
  "hint.storage": "Tu navegador puede borrar los datos del sitio si no lo usas durante días. Instálalo o exporta tu partida desde el menú principal.",
- "hint.gl_lost": "Recuperando los gráficos…"
+ "hint.gl_lost": "Recuperando los gráficos…",
+ "mm.install": "Instalar el juego",
+ "mm.install_ios": "Compartir → «Añadir a pantalla de inicio»: pantalla completa y tu partida a salvo."
 }

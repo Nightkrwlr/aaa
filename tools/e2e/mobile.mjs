@@ -92,11 +92,12 @@ export default async function ({ page, touch, wait, shot, logs, device, size }) 
   await ev(() => { const g = window.__game, w = g.world, p = g.player; for (const e of w.entities) if (e.team === 'enemy' && !e.dead) { e.x = p.x + 5; e.z = p.z + 1; break; } });
   await wait(300);
   const en = await ev(() => { const g = window.__game; const e = g.world.entities.find((x) => x.team === 'enemy' && !x.dead); const q = g.scene3d.project(e.x, e.y + 0.9, e.z); return { x: q.x, y: q.y, uid: e.uid }; });
-  // the order can be consumed within the 500 ms (the enemy dies, the attack lands): watch every frame instead of sampling once
-  await ev((u) => { window.__seen = false; window.__hp0 = window.__game.world.entities.find((x) => x.uid === u)?.hp; window.__watch = setInterval(() => { const g = window.__game; if (g.player.cmd.attackTarget === u || g.hoverEnemy?.uid === u) window.__seen = true; }, 8); }, en.uid);
+  // by now a whole horde is around the hero, so the finger may land on a neighbour of the enemy we placed: any enemy targeted proves the tap works.
+  // The order can also be consumed within the 500 ms (the enemy dies), so watch every frame instead of sampling once.
+  await ev(() => { window.__seen = false; window.__watch = setInterval(() => { const g = window.__game, id = g.player.cmd.attackTarget, e = id != null ? g.world.entities.find((x) => x.uid === id) : null; if ((e && e.team === 'enemy') || g.hoverEnemy) window.__seen = true; }, 8); });
   await touch.tap(en.x, en.y); await wait(500);
-  const tapped = await ev((u) => { clearInterval(window.__watch); const e = window.__game.world.entities.find((x) => x.uid === u); return { seen: window.__seen, hurt: !e || e.dead || e.hp < window.__hp0 }; }, en.uid);
-  check('tap on an enemy targets it', tapped.seen || tapped.hurt, JSON.stringify(tapped));
+  const tapped = await ev(() => { clearInterval(window.__watch); return { seen: window.__seen }; });
+  check('tap on an enemy targets it', tapped.seen, JSON.stringify(tapped));
   const z0 = await ev(() => window.__game.rig.zoomTarget);
   const py = size.height * 0.2;
   await touch.down(5, size.width * 0.47, py); await touch.down(6, size.width * 0.53, py);

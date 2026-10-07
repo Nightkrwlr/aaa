@@ -99,24 +99,11 @@ export function installLifecycle(game, { isTouch = () => Device.touchFirst } = {
   // ── storage persistence (survives low-disk eviction; does not stop iOS' 7-day rule unless installed)
   const requestPersist = async () => { try { if (navigator.storage?.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch { /* ignore */ } };
 
-  // ── install prompt (Android/desktop Chrome) + iOS "Add to Home Screen" hint
+  // ── install: Chrome hands us an install prompt we keep for the ☰ menu card; nothing pops up in the middle of a fight
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; });
   window.addEventListener('appinstalled', () => { installEvent = null; mark('install'); });
-  const hintsLater = () => {
-    if (!isTouch() || Device.standalone) return;
-    if (Device.portrait && Device.phone && !seen('rotate')) { mark('rotate'); showHint(t('hint.rotate'), { actions: [[t('hint.dismiss')]], ttl: 9000, id: 'rotate' }); return; }
-    if (seen('install')) return;
-    if (installEvent) { mark('install'); showHint(t('hint.install_android'), { actions: [[t('hint.install_btn'), () => installEvent?.prompt?.()], [t('hint.dismiss')]], id: 'install' }); }
-    else if (Device.ios) { mark('install'); showHint(`${t('hint.install_ios')}<br><small>${t('hint.storage')}</small>`, { actions: [[t('hint.dismiss')]], id: 'install' }); }
-  };
-  // after a few minutes of play — never in the player's face during the first fight
-  let started = 0;
-  const poll = setInterval(() => {
-    if (game.state === 'playing' && game.session) { started ||= performance.now(); if (performance.now() - started > 150000 && !game.ui.blocking) { hintsLater(); clearInterval(poll); } }
-    else started = 0;
-  }, 5000);
-  // first time on a portrait phone: suggest landscape right away (small, once)
-  setTimeout(() => { if (isTouch() && Device.portrait && Device.phone && !seen('rotate') && game.state === 'playing') { mark('rotate'); showHint(t('hint.rotate'), { actions: [[t('hint.dismiss')]], ttl: 9000, id: 'rotate' }); } }, 12000);
+  // first time on a portrait phone: suggest landscape once, small and non-blocking
+  setTimeout(() => { if (isTouch() && Device.portrait && Device.phone && !seen('rotate') && game.state === 'playing') { mark('rotate'); showHint(t('hint.rotate'), { ttl: 8000, id: 'rotate' }); } }, 12000);
 
   return { acquireWakeLock: acquire, requestPersist, get installEvent() { return installEvent; } };
 }

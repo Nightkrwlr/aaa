@@ -58,10 +58,12 @@ export function relax(btns, rect, { iterations = 260, gap = 6, spring = 0.06, re
 export function metrics(W, H, scale = 1) {
   const short = Math.min(W, H);
   const u = Math.max(0.78, Math.min(1.4, short / 390)) * scale;
+  // the screen may be tiny, a thumb is not: every touch target keeps a floor (44 px is the platform guideline for small buttons)
+  const px = (base, floor) => Math.max(floor, Math.round(base * u));
   return {
     u,
-    attack: Math.round(82 * u), skill: Math.round(54 * u), dodge: Math.round(56 * u), small: Math.round(44 * u),
-    stick: Math.round(60 * u), menu: Math.round(44 * u), margin: Math.round(14 * u),
+    attack: px(82, 68), skill: px(54, 46), dodge: px(56, 48), small: px(44, 44),
+    stick: Math.round(60 * u), menu: px(44, 44), margin: Math.round(14 * u),
   };
 }
 

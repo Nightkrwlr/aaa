@@ -33,7 +33,7 @@ for (const [name, W, H] of SCREENS) {
 test('metrics scale with the short side and the user setting', () => {
   const a = metrics(844, 390, 1), b = metrics(844, 390, 1.2), c = metrics(640, 300, 1);
   assert.ok(b.attack > a.attack && c.attack < a.attack);
-  assert.ok(c.skill >= 40, 'small screens keep skill buttons tappable');
+  assert.ok(c.skill >= 46 && c.dodge >= 48 && c.small >= 44 && c.menu >= 44 && c.attack >= 68, `small screens keep every touch target above the floor: ${JSON.stringify(c)}`);
 });
 
 test('fewer unlocked skills still produce a clean layout', () => {

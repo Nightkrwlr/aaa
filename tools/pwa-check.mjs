@@ -47,9 +47,9 @@ if (man) {
 }
 
 // ── 2/3. first online visit: SW installs, core precached, models cached by the preloader
-await page.goto(`${origin}/?e2e=1`);
+await page.goto(`${origin}/?e2e=1&sw=1`);
 await page.waitForFunction(() => window.__game?.running, null, { timeout: 120000 }).catch(() => logs.push('boot timeout'));
-const swState = await page.evaluate(async () => { const reg = await navigator.serviceWorker?.ready; return reg ? { scope: reg.scope, active: !!reg.active } : null; }).catch(() => null);
+const swState = await page.evaluate(async () => { if (!navigator.serviceWorker) return null; const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((r) => setTimeout(() => r(null), 60000))]); return reg ? { scope: reg.scope, active: !!reg.active } : null; }).catch(() => null);
 check('service worker registered and active', !!swState?.active, JSON.stringify(swState));
 await page.waitForFunction(() => window.__game?.assetState ? (window.__game.assetState.ready || window.__game.assetState.failed) : true, null, { timeout: 180000 }).catch(() => {});
 await page.waitForTimeout(1500);
@@ -68,7 +68,7 @@ check('3D models cached for offline play (cache-first)', !art || (assets && asse
 
 // ── 4. offline reload still plays
 await ctx.setOffline(true);
-await page.goto(`${origin}/?e2e=1&autostart=belfry&seed=offline`, { waitUntil: 'domcontentloaded' }).catch((e) => logs.push(`offline goto: ${e.message}`));
+await page.goto(`${origin}/?e2e=1&sw=1&autostart=belfry&seed=offline`, { waitUntil: 'domcontentloaded' }).catch((e) => logs.push(`offline goto: ${e.message}`));
 const booted = await page.waitForFunction(() => window.__game?.running && window.__game.state === 'playing', null, { timeout: 120000 }).then(() => true).catch(() => false);
 check('offline: the game boots and starts a run from the cache', booted);
 if (booted) {

@@ -62,7 +62,8 @@ export class PerfGovernor {
 
   #sample(dtMs, now) {
     const g = this.g;
-    if (document.hidden || g.fixedDt || g.state !== 'playing' || g.rebuilding || g.fade > 0.05) { this.samples.length = 0; this.t0 = 0; return; }
+    if (document.hidden || g.fixedDt || g.state !== 'playing' || g.rebuilding || g.fade > 0.05) { this.samples.length = 0; this.t0 = 0; this.warmUntil = now + 6000; return; }
+    if (now < (this.warmUntil ?? 0)) { this.samples.length = 0; return; }   // first seconds after loading: shader compiles and texture uploads are not the steady state
     if (dtMs > 500) return;                       // a stall (tab switch, GC) is not a measurement
     this.samples.push(dtMs); if (this.samples.length > 600) this.samples.shift();
     this.timer += dtMs; if (this.timer < 1000) return; this.timer = 0;
@@ -87,14 +88,14 @@ export class PerfGovernor {
 }
 
 /** first-run defaults for phones: pick a sensible preset by device class so the very first frame is already smooth */
-export function mobileDefaults(settings) {
+export function mobileDefaults(settings, { keepQuality = false } = {}) {
   if (settings.perfInit) return false;
   settings.perfInit = true;
   if (Device.touchFirst) {
-    settings.quality = Device.perfClass();
-    settings.renderScale = 1;
+    if (!keepQuality) { settings.quality = Device.perfClass(); settings.renderScale = 1; }
     settings.touchControls = 'auto';
-    settings.uiScale = Device.phone ? 1 : 1;
+    // a phone screen is small: bring the camera in so the hero and the enemies are readable without pinching (15 = closest, 38 = widest)
+    settings.cameraZoom = Device.phone ? 22 : 27;
   }
   return true;
 }
