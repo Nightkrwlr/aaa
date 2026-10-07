@@ -27,6 +27,10 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 // 1) fragmentos → entrada única
 const gameDir = path.join(ROOT, 'src/game');
 const order = JSON.parse(fs.readFileSync(path.join(gameDir, '_order.json'), 'utf8'));
+// cada frente puede aportar sus imports en src/game/_prelude.<frente>.js (se incluyen tras _prelude.js, en orden alfabético):
+// así los agentes no se pisan en el mismo fichero
+const extraPreludes = fs.readdirSync(gameDir).filter((f) => /^_prelude\..+\.js$/.test(f)).sort();
+order.splice(1, 0, ...extraPreludes.filter((f) => !order.includes(f)));
 let entry = '';
 for (const f of order) entry += `\n// ═══ ${f} ═══\n` + fs.readFileSync(path.join(gameDir, f), 'utf8');
 fs.mkdirSync(path.join(ROOT, '.build'), { recursive: true });
@@ -38,6 +42,7 @@ const t0 = Date.now();
 const res = await build({
   entryPoints: [entryPath], bundle: true, write: false, format: 'iife', platform: 'browser', target: ['es2020'],
   minify: !dev, legalComments: 'none', logLevel: 'warning', treeShaking: true,
+  alias: { '@engine': path.join(ROOT, 'src/engine') },
   define: { 'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production') },
 });
 let js = res.outputFiles[0].text;

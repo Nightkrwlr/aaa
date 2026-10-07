@@ -34,6 +34,12 @@ npm run balance                 # simulador de equilibrio
 npm run e2e                     # navegador real (Chromium + Playwright)
 ```
 
+## Operación Eclipse (`eclipse/`)
+Segundo juego del repositorio: el shooter isométrico **Operación Eclipse**, reconstruido a partir de su artefacto publicado y mejorado con el motor gráfico de SUNDERCHOIR (post-proceso HDR con MSAA, niebla de altura, grade por bioma, terreno pintado, clima, FX…). Es un proyecto independiente (three r160, su propio `package.json`): ver [eclipse/README.md](eclipse/README.md), [eclipse/docs/ENGINE.md](eclipse/docs/ENGINE.md) y [eclipse/docs/ART_DIRECTION.md](eclipse/docs/ART_DIRECTION.md).
+```bash
+cd eclipse && npm install && npm run build     # dist/eclipse.html
+```
+
 ## Documentación
 | Documento | Contenido |
 |---|---|

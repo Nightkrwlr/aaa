@@ -14,6 +14,10 @@ import { GLTFLoader as Id } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder as nx } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as ix } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
+// ── motor gráfico (src/engine): post-proceso HDR y atmósfera ──────────────────────────────
+import { PostFx } from '@engine/post.js';
+import { WorldFog, installWorldFog, lookFor } from '@engine/atmosphere.js';
+
 // constantes numéricas/cadena de Three usadas por el juego (se copian por valor)
 const Bu = 2,
   Hu = 6,

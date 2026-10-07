@@ -36,7 +36,8 @@ function pi(n) {
 
 
 // ════════ [301] VariableDeclaration Lt,Q,Rt (79 bytes) ════════
-var Lt = pi((Date.now() ^ (Math.random() * 1e9)) >>> 0),
+// la semilla puede fijarse desde fuera (window.__SEED) para capturas y pruebas reproducibles
+var Lt = pi(window.__SEED != null ? window.__SEED >>> 0 : (Date.now() ^ (Math.random() * 1e9)) >>> 0),
   Q = () => Lt(),
   Rt = (n, e) => Lt.int(n, e);
 

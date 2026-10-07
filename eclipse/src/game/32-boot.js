@@ -488,6 +488,13 @@ window.__dbg = {
 };
 
 
+// ════════ ganchos añadidos por el proyecto (no estaban en el original) ════════
+window.__De = De;
+window.__regionCenter = (key) => {
+  const r = De.find((q) => q.key === key);
+  return r ? { x: (r.gx + 0.5) * qt, z: (r.gz + 0.5) * qt, id: r.id } : null;
+};
+
 // ════════ [754] ExpressionStatement ExpressionStatement (5 bytes) ════════
 uS();
 

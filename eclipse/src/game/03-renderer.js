@@ -1,48 +1,26 @@
-// 03-renderer.js — Renderer rig (vd): WebGLRenderer, luces, composer, grade final, cámara isométrica
+// 03-renderer.js — Renderer rig (vd): WebGLRenderer, luces, cámara isométrica y tubería de post-proceso.
+//
+// Reescrito sobre el motor de SUNDERCHOIR (src/engine/post.js + atmosphere.js):
+//   · escena → destino HDR half-float con MSAA → bloom → pasada final (mapeo tonal filmic + grade + viñeta + grano)
+//   · niebla de ALTURA con velo cálido (en vez de niebla lineal) y «mirada» (grade/niebla/bloom) por región
+// La API pública que usa el resto del juego se conserva: x.R.{r, scene, camera, target, env, bloom, finalPass.uniforms,
+// setQuality, setZoom, setRegionEnv, addShake, flashLight, update, adapt, render, project, unproject, resize, flash, pLight}.
 
-// ════════ [316] VariableDeclaration ws,yl,mw,vd,vg,gw,xw,bw (7281 bytes) ════════
 var ws = new U(1, 1.32, 1).normalize(),
   yl = 70,
-  mw = {
-    uniforms: {
-      tDiffuse: { value: null },
-      uVig: { value: 0.35 },
-      uHurt: { value: 0 },
-      uTint: { value: new Ee(0, 0, 0) },
-      uTintA: { value: 0 },
-      uTime: { value: 0 },
-      uGrain: { value: 0.035 },
-    },
-    vertexShader:
-      "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-    fragmentShader: `uniform sampler2D tDiffuse; uniform float uVig; uniform float uHurt; uniform vec3 uTint; uniform float uTintA; uniform float uTime; uniform float uGrain; varying vec2 vUv;
-  float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
-  void main(){ vec2 c=vUv-0.5; float d=length(c);
-    float ab = 0.0015 + uHurt*0.006;
-    vec3 col; col.r = texture2D(tDiffuse, vUv + c*ab).r; col.g = texture2D(tDiffuse, vUv).g; col.b = texture2D(tDiffuse, vUv - c*ab).b;
-    col = mix(col, col*uTint*1.6 + uTint*0.05, uTintA);
-    float v = smoothstep(0.85, 0.25, d*(1.0+uVig));
-    // gradaci\xF3n de color: un poco m\xE1s de contraste y saturaci\xF3n
-    float lum = dot(col, vec3(0.299, 0.587, 0.114));
-    col = mix(vec3(lum), col, 1.12);
-    col = (col - 0.5) * 1.06 + 0.5;
-    col = max(col, vec3(0.0));
-    col *= mix(1.0, v, 0.9);
-    col = mix(col, vec3(0.55,0.0,0.02), uHurt * smoothstep(0.25,0.75,d));
-    col += (h(vUv*1000.0 + uTime) - 0.5) * uGrain;
-    gl_FragColor = vec4(col, 1.0); }`,
-  },
   vd = class {
     constructor(e) {
       ((this.canvas = e), (this.quality = "high"), (this.dynScale = 1), (this._ft = 1 / 60), (this._dynT = 0));
+      // MSAA lo da el destino HDR de PostFx; el canvas no necesita antialias propio
       let t = (this.r = new al({ canvas: e, antialias: !1, powerPreference: "high-performance" }));
       ((t.outputColorSpace = Pt),
-        (t.toneMapping = gl),
-        (t.toneMappingExposure = 1.15),
+        (t.toneMapping = 0), // el mapeo tonal lo hace la pasada final, una sola vez
+        (t.toneMappingExposure = 1),
         (t.shadowMap.enabled = !0),
         (t.shadowMap.type = Bu),
+        installWorldFog(),
         (this.scene = new qc()),
-        (this.scene.fog = new Vc(10469320, yl + 6, yl + 48)),
+        (this.scene.fog = new WorldFog(10469320, 0.01, 0.05)),
         (this.viewH = 23),
         (this.camera = new $i(-10, 10, 10, -10, 1, 220)),
         (this.target = new U()),
@@ -78,19 +56,21 @@ var ws = new U(1, 1.32, 1).normalize(),
         let a = new $s(16777215, 0, 8, 1.8);
         ((a.userData = { life: 0, max: 0, base: 0 }), this.scene.add(a), this.pool.push(a));
       }
-      ((this.composer = new md(t)),
-        (this.renderPass = new gd(this.scene, this.camera)),
-        (this.bloom = new mo(new Se(512, 512), 0.75, 0.55, 0.82)),
-        (this.finalPass = new po(mw)),
-        this.composer.addPass(this.renderPass),
-        this.composer.addPass(this.bloom),
-        this.composer.addPass(new xd()),
-        this.composer.addPass(this.finalPass),
+      // post-proceso (motor): HDR + MSAA + bloom + grade final. `finalPass` y `bloom` conservan el nombre que usa el juego.
+      ((this.post = new PostFx(t, this.scene, this.camera)),
+        (this.bloom = this.post.bloom),
+        (this.finalPass = { uniforms: this.post.uniforms }),
+        (this.look = lookFor("valle")),
+        (this.lookTgt = lookFor("valle")),
         (this.env = { hemiI: 1.1, sunI: 2.4, dark: 0, night: 0 }),
         (this.envCur = { sky: new Ee(12574975), gnd: new Ee(4872746), sun: new Ee(16773848), fog: new Ee(10469320) }),
         (this.envTgt = { sky: new Ee(), gnd: new Ee(), sun: new Ee(), fog: new Ee(), sunI: 2.4 }),
-        this.resize(),
+        this.setQuality("high"),
         addEventListener("resize", () => this.resize()));
+    }
+    // true en móviles/tabletas: el MSAA y la resolución se recortan para no ahogar la GPU
+    get touch() {
+      return "ontouchstart" in window || matchMedia("(pointer: coarse)").matches;
     }
     setQuality(e) {
       this.quality = e;
@@ -101,7 +81,7 @@ var ws = new U(1, 1.32, 1).normalize(),
         (this.flash.castShadow = t),
         this.sun.shadow.mapSize.set(t ? 2048 : 1024, t ? 2048 : 1024),
         this.sun.shadow.map && (this.sun.shadow.map.dispose(), (this.sun.shadow.map = null)),
-        (this.bloom.enabled = !i),
+        this.post.configure({ samples: i ? 0 : t ? 4 : this.touch ? 0 : 2, bloom: !i }),
         this.scene.traverse((s) => {
           s.material && (Array.isArray(s.material) ? s.material : [s.material]).forEach((a) => (a.needsUpdate = !0));
         }),
@@ -115,13 +95,7 @@ var ws = new U(1, 1.32, 1).normalize(),
           Math.min(devicePixelRatio || 1, this.quality === "high" ? 2 : this.quality === "medium" ? 1.5 : 1) *
             (this.dynScale || 1),
         );
-      (this.r.setPixelRatio(i),
-        this.r.setSize(e, t, !1),
-        this.composer.setPixelRatio(i),
-        this.composer.setSize(e, t),
-        this.bloom.resolution.set(e / 2, t / 2),
-        (this.w = e),
-        (this.h = t));
+      (this.r.setPixelRatio(i), this.r.setSize(e, t, !1), this.post.setSize(e, t), (this.w = e), (this.h = t));
       let s = e / t,
         a = document.body.classList.contains("touch"),
         r = s < 0.8 ? this.viewH * (a ? 1.05 : 1.25) : a && t < 560 ? this.viewH * 0.72 : this.viewH;
@@ -141,11 +115,13 @@ var ws = new U(1, 1.32, 1).normalize(),
         this.envTgt.sun.setHex(e.sun),
         this.envTgt.fog.setHex(e.fog),
         (this.envTgt.sunI = e.sunI),
+        (this.lookTgt = lookFor(e.key)),
         t &&
           (this.envCur.sky.copy(this.envTgt.sky),
           this.envCur.gnd.copy(this.envTgt.gnd),
           this.envCur.sun.copy(this.envTgt.sun),
-          this.envCur.fog.copy(this.envTgt.fog)));
+          this.envCur.fog.copy(this.envTgt.fog),
+          (this.look = lookFor(e.key))));
     }
     addShake(e) {
       this.shake = Math.min(1.2, this.shake + e);
@@ -190,14 +166,30 @@ var ws = new U(1, 1.32, 1).normalize(),
         this.sun.target.position.set(this.target.x, 0, this.target.z),
         this.scene.fog.color.copy(this.envCur.fog).multiplyScalar(Math.max(0.03, h * 1 + 0.04)),
         (!this.scene.background || !this.scene.background.isColor) && (this.scene.background = new Ee()),
-        this.scene.background.copy(this.scene.fog.color),
-        (this.r.toneMappingExposure = 1.15 + c * 0.25));
+        this.scene.background.copy(this.scene.fog.color));
+      // «mirada» de la región: grade, niebla y bloom se acercan a la meta con suavidad (cruzar de bioma no da un salto)
+      let m = this.look,
+        g = this.lookTgt,
+        b = this.post.uniforms;
+      for (let y of ["density", "falloff", "sat", "contrast", "exposure", "vig", "lift"]) m[y] = ls(m[y], g[y], l);
+      for (let y of ["shadow", "high", "bloom"]) for (let v = 0; v < 3; v++) m[y][v] = ls(m[y][v], g[y][v], l);
+      (b.uSat.value = m.sat),
+        (b.uContrast.value = m.contrast),
+        (b.uLift.value = m.lift),
+        b.uShadowTint.value.set(m.shadow[0], m.shadow[1], m.shadow[2]),
+        b.uHighTint.value.set(m.high[0], m.high[1], m.high[2]),
+        (b.uExposure.value = m.exposure * (1.15 + c * 0.25)),
+        (b.uVig.value = m.vig + c * 0.5 + d * 0.25),
+        (this.scene.fog.density = m.density * (1 + c * 0.6 + d * 0.3)),
+        (this.scene.fog.falloff = m.falloff),
+        (this.bloom.strength = m.bloom[0] * (1 + d * 0.5)),
+        (this.bloom.radius = m.bloom[1]),
+        (this.bloom.threshold = m.bloom[2]);
       for (let f of this.pool)
         f.userData.life > 0 &&
           ((f.userData.life -= e),
           (f.intensity = f.userData.life > 0 ? f.userData.base * (f.userData.life / f.userData.max) : 0));
-      ((this.finalPass.uniforms.uTime.value = (this.finalPass.uniforms.uTime.value + e) % 100),
-        (this.finalPass.uniforms.uVig.value = 0.35 + c * 0.5 + d * 0.25));
+      b.uTime.value = (b.uTime.value + e) % 100;
     }
     adapt(e) {
       if (((this._ft += (e - this._ft) * 0.05), (this._dynT += e), this._dynT < 2.5 || (devicePixelRatio || 1) <= 1))
@@ -209,7 +201,7 @@ var ws = new U(1, 1.32, 1).normalize(),
         t !== this.dynScale && ((this.dynScale = t), (this._dynT = 0), this.resize()));
     }
     render() {
-      this.quality === "low" && !this.bloom.enabled ? this.composer.render() : this.composer.render();
+      this.post.render();
     }
     project(e, t, i, s) {
       let a = vg.set(e, t, i).project(this.camera);
@@ -226,4 +218,3 @@ var ws = new U(1, 1.32, 1).normalize(),
   gw = new U(),
   xw = new Ee(3162218),
   bw = new Ee(7377104);
-
