@@ -505,11 +505,16 @@ var VE = 42,
         i.time = (i.time + e / 960) % 1;
         let r = i.time;
         x.night = r > 0.6 && r < 0.97 ? qe(Math.min((r - 0.6) / 0.06, (0.97 - r) / 0.05), 0, 1) : 0;
-      } else x.night = 0;
+        // ciclo visual (no afecta a la jugabilidad): elevación del sol, arrebol y recorrido de sol/luna para el renderer
+        let ds = ClDay(r, x.dayState || (x.dayState = {}));
+        ((x.sunEl = ds.el), (x.twi = ds.twi), (x.sunU = ds.u), (x.moonQ = ds.q));
+      } else ((x.night = 0), (x.sunEl = 1), (x.twi = 0), (x.sunU = 0.5), (x.moonQ = 0));
       if (x.mode === "world" && !x.inDark) {
         let r = De[x.regionId]?.key,
-          o = r === "valle" || r === "marisma" || r === "colmena";
-        if (Q() < e * (o ? 7 : 2.5)) {
+          o = r === "valle";
+        // partículas ambientales por CPU solo donde la región no tiene clima propio (valle: polen y luciérnagas; complejo: polvo);
+        // el resto (lluvia, polvo, nieve, brasas, ceniza, esporas) las pinta la GPU en WeatherFx, sin coste por partícula
+        if (!De[x.regionId]?.weather && Q() < e * (o ? 7 : 2.5)) {
           let l = Q() * 6.28,
             c = 3 + Q() * 12,
             d = t.x + Math.cos(l) * c,
