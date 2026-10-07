@@ -24,6 +24,16 @@
 | **Botón «atrás» del sistema** | abre la pausa (no te saca del juego) |
 | **Pulsación larga / doble toque / mantener y arrastrar en paneles** | clic derecho / doble clic / arrastrar y soltar (inventario, equipo…) |
 
+### Paneles en el teléfono
+Los paneles de escritorio no se encogen: en teléfono tienen **su propia maquetación** (`src/client/mobile/panels.css`, acotada por `html.phone`):
+- **Mochila** (apaisado): tres columnas que se desplazan por separado — equipo · mochila (casillas de 46 px que rellenan la columna) · detalle del objeto con sus acciones (≥ 44 px). El *tooltip* flotante no existe en táctil: el detalle del objeto seleccionado ocupa su lugar.
+- **Talentos**: el lienzo con zoom/arrastre sigue disponible (arrastre con un dedo, pellizco con dos, **doble toque para confirmar** un talento), pero en teléfono se abre por defecto la **lista accesible** (buscable), que es lo cómodo con el pulgar.
+- Pestañas con desplazamiento horizontal, controles ≥ 40 px, columnas con `overscroll-behavior: contain`, nada de foco visible sin teclado.
+- Los textos de ayuda cambian de vocabulario (dedo / teclado): ver `locales/*/hints.json`.
+
+### Tutorial invisible
+`src/client/hints.js` (≈ 100 líneas): ocho pistas de una sola vez («mueve el stick», «mantén el botón de ataque», «arrastra una habilidad para apuntar»…) que aparecen **cuando surge la situación** (primer enemigo cerca, primer botín en el suelo, primer nivel…), con el vocabulario táctil o de teclado según el dispositivo, y desaparecen solas o en cuanto el jugador hace lo que se le pide. No bloquean la entrada, no se repiten (se recuerdan en `localStorage`) y nunca hay dos a la vez.
+
 Ajustes (☰ → *Controles táctiles*): mostrar controles (auto/siempre/nunca), esquema (joystick o tocar para moverse), tamaño y opacidad de los botones, **modo zurdo**, Escucha por toque o mantenida, línea de apuntado, vibración, modo de rendimiento (automático / ahorro de batería 30 fps / fluido 60 fps) y resolución de render.
 
 Dispositivos híbridos (portátil táctil): los controles táctiles aparecen cuando se toca la pantalla y se ocultan cuando se vuelve a mover un ratón.
@@ -71,6 +81,7 @@ Añadir un botón: añade su `id` a `SLOTS` en `layout.js` (anillo/ángulo prefe
 - `node tools/mobile-shot.mjs [--device pixel7|iphone14|se|small|tablet] [--portrait]`: abre el juego en un Chromium **emulando móvil** (UA, DPR, `hasTouch`, áreas seguras) y lo maneja con **eventos táctiles reales multitáctiles** (CDP). Comprueba: modo táctil, auditoría de botones (tamaño ≥ 40 px, dentro de pantalla, sin solapes), joystick, ataque mantenido con auto-apuntado, toque/arrastre/cancelación de habilidades, esquiva, toque en enemigos, pellizco, botón de interacción, menú y paneles dentro de la pantalla, autoguardado y pausa al pasar a segundo plano, botón atrás, pérdida y recuperación de contexto WebGL.
 - `node tools/mobile-shot.mjs tools/e2e/mobile-menus.mjs --device pixel7 --query "e2e=1&fixed=1&quality=low"`: **los primeros cinco minutos de alguien que no conoce el juego**: título → nueva partida → clase → comenzar → jugando → ☰ → pausa, todo con toques reales (nada de teclado ni ratón). Comprueba que cada botón cabe en pantalla (o se alcanza deslizando el dedo), mide ≥ 44 px y que no hay scroll horizontal.
 - `--dpr 1` en cualquiera de los anteriores: la maquetación es en px CSS, así que una pasada a DPR 1 comprueba lo mismo con ~7× menos relleno de píxeles en el renderizador por software (imprescindible en una máquina con pocos núcleos).
+- `tools/e2e/mobile-panels.mjs`, `mobile-canvas.mjs`, `mobile-looks.mjs`: los paneles con toques reales (mochila, talentos con lienzo y lista, tooltips, doble toque), el puente táctil→ratón de los lienzos y una galería de capturas de todos los paneles en teléfono (`artifacts/shots/look_*.png`, para mirarlas con ojos, no solo con aserciones).
 - `node --test tests/mobile.test.js`: la maquetación de botones en 9 tamaños de pantalla (apaisado, vertical, tablet) × zurdo/diestro.
 - `node tools/perf-probe.mjs --preset low,medium,high [--strict]`: **presupuesto de render** por preset y escenario (asentamiento tranquilo · campo abierto · campo con 16 enemigos): llamadas de dibujo, triángulos, programas, texturas, mallas con esqueleto, luces y casters de sombra. Son proxies independientes de la GPU de lo que paga un móvil; `--strict` falla si un preset supera su tope (`low` ≤ 220 llamadas y 260 k triángulos). Los `ms` salen del renderizador por software: solo sirven para comparar dos ejecuciones entre sí.
 
@@ -92,5 +103,5 @@ Añadir un botón: añade su `id` a `SLOTS` en `layout.js` (anillo/ángulo prefe
 
 ## 8. Limitaciones conocidas
 - La vibración no existe en iOS (Safari no implementa `navigator.vibrate`).
-- Los paneles de escritorio se muestran a pantalla completa en teléfonos; el contenido de algunos (talentos, mapa) sigue siendo denso y se maneja con arrastre/pellizco.
+- Los paneles pequeños (misiones, códice, ajustes…) son los de escritorio a pantalla completa con controles de 40 px; mochila y talentos tienen maquetación propia. El mapa sigue siendo un lienzo que se maneja con arrastre/pellizco.
 - El modo vertical es jugable pero **el horizontal es el recomendado** (el juego lo sugiere una vez).

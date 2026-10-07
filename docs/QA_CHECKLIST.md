@@ -74,7 +74,17 @@ Antes de cada entrega/versión además: `npm run fuzz:dungeons -- 250`, `npm run
 - ✅ `npm run balance`: bandas de DPS del kit, TTK por tier, rendimiento de botín, **guardia con código de salida** (estado y avisos conocidos: [BALANCE.md](BALANCE.md) §7).
 - 👁 Playtest de 10 min por clase: ¿hay una build trivialmente superior? ¿una habilidad que nadie usa?
 
-## 11. Plantilla de informe de bug
+## 11. Aceptación visual (regla: nada se da por bueno solo porque los tests estén en verde)
+- 👁 **Mirar las capturas.** Cada cambio de arte/iluminación/UI se revisa con ojos críticos antes de decir que está hecho: `tools/e2e/dungeon-look.mjs` (3 familias × sala intermedia / jefe / puzle), `tools/e2e/world-shot.mjs` (exteriores), `tools/e2e/chars*.mjs` (personajes y animación), `tools/e2e/mobile-looks.mjs` (todos los paneles en teléfono), `tools/e2e/keyart.mjs` (portada). Se juzga: ¿se lee el peligro? ¿se ve al héroe y a los enemigos sobre el fondo? ¿hay zonas quemadas u oscuras? ¿parece un producto o una maqueta?
+- ✅ **Presupuesto de render** por preset y escenario (`tools/perf-probe.mjs --strict`): llamadas de dibujo, triángulos, programas y texturas. Un cambio de arte que lo rompe se rechaza o se compensa.
+- ✅ **Primeros diez minutos** medidos con un bot (`tools/pacing-sim.mjs`): nivel 2, primera mejora de equipo, primera habilidad nueva, primer jefe… en los tiempos del GDD.
+- 👁 Los mismos diez minutos jugados por una persona que no conoce el juego, en teléfono, sin tutorial hablado: ¿entiende qué hacer sin leer?
+
+## 12. Móvil
+- ✅ Maquetación de botones en 9 tamaños de pantalla (`tests/mobile.test.js`); controles, menús, paneles y lienzos con toques reales multitáctiles (`tools/mobile-shot.mjs` + `tools/e2e/mobile*.mjs`); PWA (`tools/pwa-check.mjs --mobile`).
+- 👁 En un teléfono real (lista de 5 minutos en [MOBILE.md](MOBILE.md) §7): rendimiento, ergonomía del pulgar, Safari iOS, notch/isla dinámica.
+
+## 13. Plantilla de informe de bug
 ```
 Título corto · Versión/commit · Navegador/GPU · Semilla (nueva partida / código de mazmorra)
 Pasos exactos · Esperado · Observado · Captura/vídeo · Guardado adjunto (menú principal → Importar/Exportar)

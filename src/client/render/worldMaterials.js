@@ -27,6 +27,9 @@ export const PALETTE = [
   ['bone', '#f2ead8', '#bbb098'], ['rock', '#b2a68e', '#6c6250'], ['rockViolet', '#a29ab0', '#5b556c'], ['rockWarm', '#c4a888', '#74583f'],
   ['glassCyan', '#cffaff', '#5cc4e6'], ['glowWarm', '#fff2c8', '#ffb050'], ['ember', '#ffc050', '#e5481a'], ['white', '#ffffff', '#c9c9c9'],
   ['water', '#8fd0e0', '#3f7f9a'], ['earth', '#a08462', '#5e4932'], ['grassBase', '#7fa856', '#3f6a3a'], ['void', '#2a2438', '#0e0b16'],
+  // dungeons (appended: indices of the swatches above must never move)
+  ['crystal', '#7ff0ff', '#1a8fcf'], ['crystalViolet', '#cba6ff', '#6a3fc4'], ['mushGlow', '#a8ffc8', '#2bbf7a'], ['caveRock', '#b3a698', '#544b43'],
+  ['caveViolet', '#a698b8', '#4d4460'], ['caveDark', '#7a736b', '#2f2b27'], ['hazard', '#ffd24a', '#c98a10'], ['rune', '#c0a8ff', '#6a4fd0'],
 ];
 const PAL_COLS = 16, PAL_ROWS = 8;
 const palIndex = new Map(PALETTE.map((p, i) => [p[0], i]));
@@ -101,9 +104,14 @@ vec4 surfacePattern(float pat, vec2 s, vec3 wp){
   } else if (pat < 5.5) {                            // thatch: long streaks down the slope
     float c = hsh(vec2(floor(s.x * 9.0), 1.0)); float st = 0.5 + 0.5 * sin(s.y * 5.0 + c * 30.0);
     r.rgb = vec3(0.84 + 0.2 * c + 0.1 * st);
-  } else {                                           // rough rock face
+  } else if (pat < 6.5) {                            // rough rock face
     float a = hsh(floor(s * 3.0)); float b = hsh(floor(s * 11.0) + 3.0);
     r.rgb = vec3(0.88 + 0.12 * a + 0.1 * b);
+  } else {                                           // cave wall: blotches at three scales over sediment strata and a few cracks
+    float a = hsh(floor(s * 2.2)); float b = hsh(floor(s * 7.0) + 3.0); float c = hsh(floor(s * 19.0) + 8.0);
+    float strata = 0.5 + 0.5 * sin(s.y * 6.5 + hsh(vec2(floor(s.x * 0.7), 4.0)) * 6.28 + sin(s.x * 1.3) * 1.3);
+    float crack = smoothstep(0.93, 0.985, abs(fract(s.x * 0.45 + sin(s.y * 1.7) * 0.4 + a) - 0.5) * 2.0);
+    r.rgb = vec3(0.74 + 0.15 * a + 0.1 * b + 0.06 * c + 0.12 * strata) * (1.0 - 0.28 * crack);
   }
   return r;
 }`;
@@ -162,11 +170,11 @@ ${O.detail > 0 ? 'diffuseColor.rgb *= 1.0 - uDetail + uDetail * 2.0 * texture2D(
 const cache = new Map();
 /** painted procedural surfaces: palette atlas (+ optional patterns) */
 export function paintMaterial(o = {}) {
-  const key = `paint|${o.pat === false ? 0 : 1}|${o.fade === false ? 0 : 1}|${o.rough ?? 0.84}|${o.side ?? 0}`;
+  const key = `paint|${o.pat === false ? 0 : 1}|${o.fade === false ? 0 : 1}|${o.rough ?? 0.84}|${o.side ?? 0}|${o.vc ? 1 : 0}|${o.cloud === false ? 0 : 1}|${o.ao === false ? 0 : 1}|${o.detail ?? ''}`;
   let m = cache.get(key);
   if (!m) {
-    m = new THREE.MeshStandardMaterial({ map: getPaletteAtlas(), roughness: o.rough ?? 0.84, metalness: 0, side: o.side ?? THREE.FrontSide });
-    patchWorldMaterial(m, { pat: o.pat !== false, fade: o.fade !== false, ao: true, aoK: 0.7, aoH: 1.3, detail: 0.07 });
+    m = new THREE.MeshStandardMaterial({ map: getPaletteAtlas(), roughness: o.rough ?? 0.84, metalness: 0, side: o.side ?? THREE.FrontSide, vertexColors: !!o.vc });
+    patchWorldMaterial(m, { pat: o.pat !== false, fade: o.fade !== false, ao: o.ao !== false, aoK: 0.7, aoH: 1.3, detail: o.detail ?? 0.07, cloud: o.cloud !== false });
     m.userData.shared = true; cache.set(key, m);
   }
   return m;
@@ -179,7 +187,7 @@ export function kitMaterial(o = {}) {
     flatShading: !!o.flat,
   });
   if (o.color) m.color.set(o.color);
-  patchWorldMaterial(m, { noFlip: !!o.doubleSide, fade: o.fade !== false, wind: !!o.wind, windFlip: !!o.windFlip, swayInv: o.wind ? 1 / (o.swayHeight ?? 6) : 0.2, swayAmt: o.swayAmt ?? 1, ao: o.ao !== false, aoK: o.aoK ?? 0.58, aoH: o.aoH ?? 1.6, detail: o.detail ?? 0.1, cloud: true });
+  patchWorldMaterial(m, { noFlip: !!o.doubleSide, fade: o.fade !== false, wind: !!o.wind, windFlip: !!o.windFlip, swayInv: o.wind ? 1 / (o.swayHeight ?? 6) : 0.2, swayAmt: o.swayAmt ?? 1, ao: o.ao !== false, aoK: o.aoK ?? 0.58, aoH: o.aoH ?? 1.6, detail: o.detail ?? 0.1, cloud: o.cloud !== false });
   m.userData.shared = true;
   return m;
 }

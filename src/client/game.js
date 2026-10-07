@@ -500,7 +500,7 @@ export class Game {
       const k = n.t / n.life, a = Math.min(1, n.t / 0.14), b = a - 1;
       const pop = a < 1 ? 0.5 + 0.5 * (1 + 2.7 * b * b * b + 1.7 * b * b) * (n.crit ? 1.25 : 1) : 1;        // ease-out-back: punches in with a little overshoot
       const drift = Math.sin(n.seed * 6.283) * 16 * Math.min(1, n.t * 2.5);
-      o.text(sp.x + drift, sp.y, n.text, { size: Math.round(17 * n.scale * pop), color: n.color, alpha: Math.min(1, (1 - k) * 2.4), stroke: n.crit ? '#5a2a00' : '#000' });
+      o.text(sp.x + drift, sp.y, n.text, { size: Math.round(17 * n.scale * pop * (this.input.touchMode ? 0.82 : 1)), color: n.color, alpha: Math.min(1, (1 - k) * 2.4), stroke: n.crit ? '#5a2a00' : '#000' });
     }
     for (const e of w.entities) {
       if (e.dead || e.team !== 'enemy' || (e.hidden && e.untargetable) || e.isHazard) continue;

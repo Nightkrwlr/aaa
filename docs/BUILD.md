@@ -3,7 +3,7 @@
 ## Requisitos
 - Node.js ≥ 20 (probado con 22) y npm.
 - Navegador con WebGL2 (Chrome/Edge/Firefox/Safari recientes). Para E2E: Playwright + Chromium (`npx playwright install chromium`; en este entorno ya viene preinstalado).
-- **Sin assets externos**: modelos, texturas, sonido y música son procedurales; no hay descargas ni licencias que gestionar (ver [ASSET_LICENSES.md](ASSET_LICENSES.md)).
+- **Arte importado (CC0)**: personajes, armas y props son glTF de KayKit en `public/assets/models/**` (≈ 13 MB), generados por `node tools/assets/build-assets.mjs` a partir de los packs originales; el sonido y la música siguen siendo procedurales. Procedencia y licencias: [ASSET_LICENSES.md](ASSET_LICENSES.md).
 
 ## Comandos
 | Comando | Qué hace |
@@ -13,12 +13,17 @@
 | `npm run build` | build de producción en `dist/` (herramientas de desarrollo **excluidas**, sin sourcemaps) |
 | `npm run build:dev` | build con herramientas de desarrollo y sourcemaps |
 | `npm run preview` | sirve `dist/` |
-| `npm test` | 72 tests de simulación (Node, sin navegador) |
+| `npm test` | 90 tests (simulación + maquetación móvil + fusión de mallas, Node, sin navegador) |
 | `npm run validate` | validador de datos (referencias, esquemas, locales ES/EN, zona, mazmorras de muestra) |
 | `node tools/check-ui-keys.mjs` | toda clave `t('…')` del cliente existe en ES y EN |
 | `npm run fuzz:dungeons -- 250` | generación masiva de mazmorras: 250 semillas × 3 familias (= 750), tamaños y objetivos rotados; cada semilla debe validar (`--ascii` dibuja el mapa) |
 | `npm run balance` | simulador de equilibrio (`-- --quick` para humo; ver [BALANCE.md](BALANCE.md)) |
 | `npm run e2e` | E2E con navegador real: `-- --suite play|panels|dungeon|tour|combat|all` |
+| `node tools/perf-probe.mjs [--strict]` | presupuesto de render (llamadas de dibujo, triángulos, programas…) por preset y escenario; ver [MOBILE.md](MOBILE.md) §7 |
+| `node tools/pacing-sim.mjs` | simula los primeros diez minutos con un bot y mide hitos (nivel 2, primer objeto, primera mejora…) frente a los objetivos de [BALANCE.md](BALANCE.md) |
+| `node tools/mobile-shot.mjs [script] --device pixel7\|iphone14\|se\|small\|tablet [--portrait] [--dpr 1]` | juego emulado como móvil con toques reales (multitáctil por CDP) |
+| `node tools/pwa-check.mjs [--mobile]` | comprueba el service worker, la instalación y el modo sin conexión sobre el build |
+| `SHOT_DIR=… DNG=crypt,cavern,facility SPOTS=mid,boss node tools/shot.mjs out.png --script tools/e2e/dungeon-look.mjs --query "e2e=1&autostart=belfry&fixed=1&quality=high"` | mira las mazmorras: una captura por familia y sala |
 | `node tools/shot.mjs out.png [--script f.mjs] [--query "e2e=1&autostart=belfry"]` | captura de pantalla / script de Playwright contra el juego |
 
 Cadena de integración recomendada antes de cada commit:
@@ -55,7 +60,7 @@ data/        contenido JSON (ver DATA_SCHEMA.md)          locales/{es,en}/   tex
 src/core/    Rng, EventBus, Registry, i18n, logger        src/sim/           simulación pura (Node-safe)
 src/client/  render, UI, input, audio, bucle              tests/             node:test (72)
 tools/       validate, balance, fuzz, e2e, shot           docs/              documentación
-public/      (vacío: sin assets)                          artifacts/         (git-ignored) capturas E2E
+public/      assets glTF (KayKit CC0), iconos, PWA         artifacts/         (git-ignored) capturas E2E
 ```
 
 ## Empaquetado de escritorio / móvil

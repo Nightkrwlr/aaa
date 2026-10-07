@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { fadeUniforms, disposeTree } from './kit.js';
-import { buildDungeonMesh } from './dungeonMesh.js';
+import { buildDungeonMesh, applyDungeonAtmosphere, dungeonTorchColor } from './dungeonMesh.js';
 import { buildTerrainMesh } from './terrainMesh.js';
 import { buildInstancedProps } from './props.js';
 import { buildStructure, buildCanticle } from './structures.js';
@@ -130,22 +130,20 @@ export class Scene3D {
     this.playerLight?.removeFromParent(); this.playerLight = null;
   }
 
-  /** light the scene like a dungeon: dark cool ambient, dense fog, a torch that follows the player */
+  /** light the scene like a dungeon: cool moonlit ambient, thin fog, baked torch pools + a warm torch that follows the player */
   loadDungeon(session, family) {
     this.clearContent();
-    const lt = family.light, mult = session.dungeon.d.content.lightMult ?? 1;
+    this.dungeonArgs = [session, family];
+    const mult = session.dungeon.d.content.lightMult ?? 1;
     this.zone = { heightAt: () => 0, def: { ambient: {} } };
-    const a = resolveAtmosphere('night');
-    a.fog.set(lt.fog); a.density = lt.fogDensity * (mult < 1 ? 1.25 : 1); a.falloff = 0;
-    a.hemiSky.set(lt.ambient); a.hemiGround.set('#10131a'); a.hemiIntensity = 1.2 * mult;
-    a.sun.set('#8aa0c8'); a.sunIntensity = 0.55; a.sunDir.set(-0.4, 1, -0.3).normalize();
-    a.exposure = 1.0; a.sat = 1.12; a.contrast = 1.12; a.vignette = 0.5; a.stars = 0; a.glow = 1.3; a.bloom = [0.55, 0.75, 1.0];
-    this.setAtmosphere(a);
+    this.setAtmosphere(applyDungeonAtmosphere(resolveAtmosphere('night'), family, mult));
     this.sky = null;
-    this.dungeonMesh = buildDungeonMesh(session.dungeon.d, family, { session, addEmitter: (o, l, f) => this.addEmitter(o, l, f) });
+    this.dungeonMesh = buildDungeonMesh(session.dungeon.d, family, { session, wa: this.wa, addEmitter: (o, l, f) => this.addEmitter(o, l, f) });
     this.content.add(this.dungeonMesh.root);
-    this.playerLight = new THREE.PointLight(lt.torch, 9 * mult, 15, 1.6); this.scene.add(this.playerLight);
+    this.playerLight = new THREE.PointLight(dungeonTorchColor(family), 9 * mult, 15, 1.6); this.scene.add(this.playerLight);
     this.#assignLights();
+    // entered before the kit finished downloading: rebuild once with the real props (doors that already opened are mirrored again by the game loop)
+    if (!this.dungeonMesh.kitUsed && !this.wa.failed) this.wa.load().then(() => { if (this.dungeonMesh && !this.dungeonMesh.kitUsed && this.wa.ready && this.dungeonArgs) this.loadDungeon(...this.dungeonArgs); });
     return this.dungeonMesh;
   }
 
@@ -268,7 +266,7 @@ export class Scene3D {
     this.rim.position.set(focus.x + 6, focus.y + 22, focus.z - 60);
     this.#updateLights(new THREE.Vector3(focus.x, focus.y, focus.z));
     if (this.playerLight) { this.playerLight.position.set(focus.x, focus.y + 2.6, focus.z); this.playerLight.intensity += ((9 + Math.sin(t * 9) * 0.5) * (this.dungeonMesh ? 1 : 0) - this.playerLight.intensity) * 0.2; }
-    this.dungeonMesh?.update(t);
+    this.dungeonMesh?.update(t, focus);
     const u = this.post.u;
     u.uListen.value += (listenAmt - u.uListen.value) * Math.min(1, dt * 6); u.uFlash.value = this.settings.reduceFlashes ? Math.min(flash, 0.12) : flash; u.uHurt.value = hurt;
   }

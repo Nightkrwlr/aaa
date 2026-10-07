@@ -157,7 +157,7 @@ export class WorldAssets {
 
   /** shared kit material for a group/variant; wind options make it sway (trees, banners) */
   material(group, variant = 'base', o = {}) {
-    const key = `${group}/${variant}|${o.wind ? `w${o.swayHeight ?? 6}${o.windFlip ? 'f' : ''}${o.swayAmt ?? ''}` : ''}|${o.aoK ?? ''}|${o.fade === false ? 'nf' : ''}`;
+    const key = `${group}/${variant}|${o.wind ? `w${o.swayHeight ?? 6}${o.windFlip ? 'f' : ''}${o.swayAmt ?? ''}` : ''}|${o.aoK ?? ''}|${o.fade === false ? 'nf' : ''}|${o.cloud === false ? 'nc' : ''}|${o.vertexColors ? 'vc' : ''}`;
     let m = this.mats.get(key);
     if (!m) {
       const map = this.atlasFor(group, variant); if (!map) return null;

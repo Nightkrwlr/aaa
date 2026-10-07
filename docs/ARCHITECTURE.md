@@ -62,14 +62,26 @@ Reglas de dependencia (se comprueban por convención y por los tests headless):
 Dos buses: `world.events` (combate, VFX, audio) y `session.events` (historia/UI: `kill`, `boss`, `quest:*`, `ui:open`, `toast`, `area`, `dungeon:*`, `autosave`…). Las misiones, diálogos y puertas solo hablan por `session.events` + `checkCond` (condiciones declarativas: `flag`, `quest`, `item`, `killed`, `secret`, `weather`, `mode`…).
 
 ## 7. Renderizado (cliente)
-Three.js 0.186, **todo procedural** (sin assets externos). `Scene3D` (compositor con bloom + gradación + shader de Escucha) · terreno por heightfield · props instanciados con balanceo de viento · estructuras por primitivas · **desvanecimiento por oclusión** (dither cámara→jugador) · `EntityViews` (modelos con *roles de articulación* para poder sustituir por glTF) · `Vfx` + `GroundFx` (telégrafos como decals por forma) · `DungeonMesh` (suelo fusionado + muros instanciados + puertas/props/luces) · presupuesto de luces dinámicas por calidad.
-Presets: low / medium / high / ultra (sombras, resolución, partículas, luces, bloom).
+Three.js 0.186. Arte **importado y pintado**: personajes/props glTF de KayKit (CC0, `public/assets/**`) + arquitectura y terreno pintados por código. Cada pieza vive en `src/client/render/`:
+| Módulo | Qué hace |
+|---|---|
+| `scene3d.js` | compositor: luces, atmósfera, presupuesto de luces puntuales, carga de zona/mazmorra, `PostFx` |
+| `post.js` | postproceso propio: escena → objetivo HDR (MSAA) → bloom/AO opcionales → gradación fílmica (viñeta, grano, filtros de Escucha/daño); degrada a LDR si el móvil no soporta HDR |
+| `atmosphere.js` | atmósferas como datos (alba/mediodía/ocaso/noche/niebla/lluvia), niebla exponencial **con altura** y dispersión del sol, uniformes compartidos (viento, sombras de nubes, brillo) |
+| `paint.js` + `worldMaterials.js` | constructor de mallas "pintadas": cada parte elige una muestra de la paleta (degradado claro→oscuro) y un patrón analítico (sillería, teja, tablón, yeso, roca, estratos) que el *shader* dibuja nítido a cualquier distancia; colores de vértice opcionales para luz horneada |
+| `worldAssets.js` | piezas KayKit horneadas como geometrías instanciables + variantes de atlas recoloreadas (pino verde, caliza cálida) |
+| `terrainMesh.js` · `foliage.js` · `props.js` · `structures.js` · `dressing.js` | exterior: terreno por *heightfield* con detalle, vegetación con viento, props instanciados, edificios y ambientación por zona |
+| `dungeonMesh.js` | mazmorras: suelo, muros (zócalo, cornisa, roca que se desvanece), puertas y props en *chunks* de 16×16 casillas; **luz horneada** en color de vértice (AO + charcos de antorchas/cristales/lámparas), llamas instanciadas + halos aditivos, motas de polvo; ver [ART_BIBLE.md](ART_BIBLE.md) §7 |
+| `charFactory.js` · `charAnim.js` · `charProps.js` · `creatures.js` · `stylekit.js` · `entityViews.js` · `mergeStatic.js` | personajes KayKit con rig compartido, máquina de animación sincronizada con la fase de lanzamiento de la sim, armas, bestias/constructos propios y vistas de entidad (barras, estados, reacciones); `mergeStatic` funde las mallas inmóviles de cada modelo para ahorrar llamadas de dibujo |
+| `vfx.js` · `groundFx.js` · `particles.js` | números de daño fusionados, golpes, botín con rareza, pilar de subida de nivel; telégrafos como decals por forma |
+| `quality.js` | presets low / medium / high / ultra (sombras, resolución, MSAA, bloom, AO, partículas, luces, distancia de dibujo) |
+Capa móvil: `src/client/mobile/*` (ver [MOBILE.md](MOBILE.md)), con un gobernador de rendimiento que sube/baja la calidad solo. **Desvanecimiento por oclusión** (dither cámara→jugador) en todos los materiales del mundo. Presupuestos medibles con `tools/perf-probe.mjs`.
 
 ## 8. Extensibilidad (cómo crecer sin tocar el núcleo)
 - Nueva habilidad/enemigo/objeto/quest/región = **archivos de datos** + claves de texto (ver [CONTENT_GUIDE.md](CONTENT_GUIDE.md)).
 - Nueva mecánica = nuevo `op` en `abilities.js` (`EFFECTS`), nuevo *brain* en `ai/brains.js`, nuevo tipo de puzle en `puzzles/` (`generate/solve/State`), nueva condición en `state.js:checkCond`, nuevo efecto narrativo en `effects.js`.
 - Nueva clase = `data/classes/*.json` + árbol de talentos + habilidades + modelo; el resto del sistema es genérico (recurso configurable por datos).
-- Modelos: `data/models/models.json` describe plantilla + parámetros; para arte real basta un cargador glTF que respete los nombres de articulación (`rig` en `models.js`).
+- Arte: un modelo glTF nuevo se añade al pipeline `tools/assets/build-assets.mjs` (→ `manifest.json`), se registra su licencia en `ASSET_LICENSES.md` y se referencia por `grupo/id` desde `charFactory.js` / `worldAssets.js` (`KIT_LIST`). Las criaturas propias viven en `creatures.js`.
 
 ## 9. Qué se probó y cómo
-Ver [QA_CHECKLIST.md](QA_CHECKLIST.md) y [TDD.md](TDD.md). Resumen: 72 tests de node (combate, estadísticas, IA, jefes, ítems, personajes, puzles, zona, sesión, historia completa, guardado), fuzz de mazmorras (750 semillas válidas), validador de datos (referencias cruzadas + paridad ES/EN), simulador de balance, y E2E con navegador real (`tools/e2e/*.mjs`).
+Ver [QA_CHECKLIST.md](QA_CHECKLIST.md) y [TDD.md](TDD.md). Resumen: 90 tests de node (combate, estadísticas, IA, jefes, ítems, personajes, puzles, zona, sesión, historia completa, guardado, maquetación móvil, fusión de mallas, navegación en mazmorras), fuzz de mazmorras (750 semillas válidas), validador de datos (referencias cruzadas + paridad ES/EN), simuladores de balance y de ritmo, sonda de presupuesto de render, y E2E con navegador real, de escritorio y de móvil emulado (`tools/e2e/*.mjs`).

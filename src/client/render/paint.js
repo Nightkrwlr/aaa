@@ -12,13 +12,15 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { palette, paletteUV } from './worldMaterials.js';
 
-export const PAT = { none: 0, stone: 1, tile: 2, plank: 3, plaster: 4, thatch: 5, rock: 6 };
+export const PAT = { none: 0, stone: 1, tile: 2, plank: 3, plaster: 4, thatch: 5, rock: 6, strata: 7 };
 
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _p = new THREE.Vector3(), _s = new THREE.Vector3(), _n = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3();
 const _uv = [0, 0];
+const ONE = [1, 1, 1], QT = [0.3, 0.3, 0.3, 0.3], QS = [[0, 0], [1, 0], [1, 1], [0, 1]], QI = [0, 1, 2, 0, 2, 3];
 
 export class Paint {
-  constructor() { this.P = []; this.N = []; this.T = []; this.S = []; this.A = []; this.count = 0; }
+  /** @param {{colors?: boolean}} o `colors` adds a per-vertex colour attribute (baked lighting / tint) that multiplies the swatch */
+  constructor(o = {}) { this.P = []; this.N = []; this.T = []; this.S = []; this.A = []; this.C = o.colors ? [] : null; this.count = 0; }
 
   /**
    * add an arbitrary geometry.
@@ -56,6 +58,7 @@ export class Paint {
         this.T.push(_uv[0], _uv[1]); this.S.push(su * tile, sv * tile); this.A.push(pat);
         _b.copy(_a).applyMatrix4(_m); this.P.push(_b.x, _b.y, _b.z);
         _c.fromBufferAttribute(nor, i + k).applyMatrix3(nm).normalize(); this.N.push(_c.x, _c.y, _c.z);
+        if (this.C) { const k3 = o.col ?? ONE; this.C.push(k3[0], k3[1], k3[2]); }
       }
     }
     this.count += n;
@@ -102,10 +105,47 @@ export class Paint {
       _a.set(other.P[i], other.P[i + 1], other.P[i + 2]).applyMatrix4(_m); this.P.push(_a.x, _a.y, _a.z);
       _b.set(other.N[i], other.N[i + 1], other.N[i + 2]).applyMatrix3(nm).normalize(); this.N.push(_b.x, _b.y, _b.z);
     }
-    this.T.push(...other.T); this.S.push(...other.S); this.A.push(...other.A); this.count += other.count;
+    for (const v of other.T) this.T.push(v); for (const v of other.S) this.S.push(v); for (const v of other.A) this.A.push(v);
+    if (this.C) { if (other.C) for (const v of other.C) this.C.push(v); else for (let i = 0; i < other.P.length; i++) this.C.push(1); }
+    this.count += other.count;
   }
   /** merge another Paint, placed at pos / yaw */
   merge(other, pos, yaw) { this.#merge(other, pos, yaw); return this; }
+
+
+  /**
+   * one flat quad from four corners, counter-clockwise as seen from the FRONT (the side the normal points to).
+   * o: mat, pat, tile, t:[t0..t3] gradient position per corner (0 = light top … 1 = dark bottom), s:[[u,v]×4] surface coordinates
+   * in metres (world-space coordinates keep a pattern continuous across neighbouring quads), col:[r,g,b] colour multiplier.
+   */
+  quad(p, o = {}) {
+    const [p0, p1, p3] = [p[0], p[1], p[3]];
+    const e1x = p1[0] - p0[0], e1y = p1[1] - p0[1], e1z = p1[2] - p0[2], e2x = p3[0] - p0[0], e2y = p3[1] - p0[1], e2z = p3[2] - p0[2];
+    let nx = e1y * e2z - e1z * e2y, ny = e1z * e2x - e1x * e2z, nz = e1x * e2y - e1y * e2x;
+    const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl;
+    const sw = palette(o.mat ?? 'limestone'), t = o.t ?? QT, s = o.s ?? QS, pat = o.pat ?? 0, tile = o.tile ?? 1, col = o.col ?? ONE;
+    for (let k = 0; k < 6; k++) {
+      const i = QI[k], q = p[i];
+      paletteUV(sw, t[i], _uv);
+      this.T.push(_uv[0], _uv[1]); this.S.push(s[i][0] * tile, s[i][1] * tile); this.A.push(pat);
+      this.P.push(q[0], q[1], q[2]); this.N.push(nx, ny, nz);
+      if (this.C) this.C.push(col[0], col[1], col[2]);
+    }
+    this.count += 6;
+    return this;
+  }
+
+  /** multiply every vertex colour by fn(x, y, z, nx, ny, nz, out[r,g,b]) — the hook baked lighting uses (needs `colors: true`) */
+  colorize(fn) {
+    if (!this.C) throw new Error('Paint.colorize needs new Paint({ colors: true })');
+    const out = [1, 1, 1];
+    for (let i = 0, n = this.P.length / 3; i < n; i++) {
+      out[0] = out[1] = out[2] = 1;
+      fn(this.P[i * 3], this.P[i * 3 + 1], this.P[i * 3 + 2], this.N[i * 3], this.N[i * 3 + 1], this.N[i * 3 + 2], out);
+      this.C[i * 3] *= out[0]; this.C[i * 3 + 1] *= out[1]; this.C[i * 3 + 2] *= out[2];
+    }
+    return this;
+  }
 
   /** an arch-topped stone frame (opening w × h with a semicircular head) extruded `depth`, `border` thick */
   archFrame(w, h, depth, border, o = {}) {
@@ -126,6 +166,7 @@ export class Paint {
     g.setAttribute('uv', new THREE.Float32BufferAttribute(this.T, 2));
     g.setAttribute('aSurf', new THREE.Float32BufferAttribute(this.S, 2));
     g.setAttribute('aPat', new THREE.Float32BufferAttribute(this.A, 1));
+    if (this.C) g.setAttribute('color', new THREE.Float32BufferAttribute(this.C, 3));
     g.computeBoundingSphere(); g.computeBoundingBox();
     return g;
   }

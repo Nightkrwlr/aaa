@@ -49,18 +49,17 @@ Cada arquetipo se identifica por silueta a 45°:
 | Grande (Brannoch) | ×2 altura, masa en un solo lado (martillo/cadena) |
 Todos mantienen un único **color de acento** por rol (tanque = latón, artillero = violeta, soporte = verde pálido, asesino = rojo oscuro, controlador = cian).
 
-## 6. Modelos: especificación de reemplazo (placeholders de calidad)
-Los modelos del slice son **procedurales** (`data/models/*.json` → `src/client/render/modelBuilder.js`). Para sustituirlos por glTF/GLB:
-- **Escala**: 1 unidad = 1 m. Jugador ≈ 1,75 m; enemigo pequeño 0,5–1 m; grande 3–4 m.
-- **Origen/pivote**: en los pies, centrado, +Z al frente.
-- **Jerarquía de huesos/nodos obligatoria**: `root`, `body`, `head`, `armL`, `armR`, `legL`, `legR`, `weapon` (socket mano), `fxMuzzle` (socket de proyectil), `fxChest`, `fxHead` (aura), `fxGround`.
-- **Clips**: `idle, walk, run, attack1..3, cast, hit, death, dodge, interact, special1..3`.
-- **Nomenclatura**: `chr_<class>_<variant>.glb`, `enm_<id>.glb`, `prp_<id>.glb`, `tile_<family>_<id>.glb`.
-- **Triángulos**: héroe ≤ 12 k, enemigo común ≤ 4 k, jefe ≤ 25 k, prop ≤ 1,5 k (instanciable).
-Registro de procedencia: `ASSET_LICENSES.md`.
+## 6. Modelos y arte importado
+**Estado real:** personajes, armas, props de mazmorra y cementerio son glTF **KayKit (CC0)** importados con `tools/assets/build-assets.mjs` (→ `public/assets/models/**`, procedencia en `ASSET_LICENSES.md`); las bestias y constructos propios (que el pack no trae) se construyen en `src/client/render/creatures.js` con el mismo lenguaje visual (primitivas con degradado vertical, `stylekit.js`). La arquitectura (suelos, muros, tejados, arcos) es **pintada**: `paint.js` + `worldMaterials.js` (paleta de muestras con degradado + patrones analíticos de sillería, teja, tablón, yeso, roca).
+- **Escala**: 1 unidad = 1 m. Héroe ≈ 1,75 m; enemigo pequeño 0,5–1 m; grande 3–4 m.
+- **Personajes**: rig KayKit (huesos `handslot.r/.l`, `head`…); la máquina de estados de animación (`charAnim.js`) escruta los clips a la fase de lanzamiento de la sim.
+- **Presupuestos** (medidos con `tools/perf-probe.mjs`, ver MOBILE.md): `low` ≤ 220 llamadas de dibujo / 260 k triángulos; `medium` ≤ 380 / 450 k; `high` ≤ 650 / 900 k. Las mallas estáticas de un modelo se funden (`mergeStatic.js`).
+- Nuevo arte: respetar la paleta (§2), añadir su licencia a `ASSET_LICENSES.md` y pasar la sonda de render.
 
 ## 7. Iluminación
-Una luz direccional baja y cálida (alba) + hemisférica fría; **puntos de interés iluminados** (braseros, cuarzos) con luz dinámica limitada (≤6 simultáneas) y *emissive* falso para el resto. Las zonas importantes se señalan por **contraste de luz y color**, nunca con flechas.
+**Superficie:** una luz direccional + hemisférica por escena (`atmosphere.js`: albor / mediodía / ocaso / noche / niebla / lluvia) y un postproceso HDR propio (`post.js`: bloom, AO opcional, gradación fílmica con viñeta, grano y filtros de Escucha/daño).
+**Mazmorras:** la luz se **hornea en los colores de vértice** (`dungeonMesh.js`): oclusión ambiental donde la piedra toca el suelo + un charco cálido o frío alrededor de cada antorcha, brasero, cristal o lámpara — fuentes ilimitadas a coste cero en ejecución. Las más cercanas al jugador además reciben luz puntual real (presupuesto `lights` por preset) y el jugador porta su propia antorcha. Las llamas son una malla instanciada con halos aditivos (el brillo existe también sin bloom, en `low`). Cada familia tiene su humor (cripta fría con antorchas ámbar, gruta violeta-cian con cristales, instalación gris con lámparas) y su antorcha del jugador.
+Las zonas importantes se señalan por **contraste de luz y color**, nunca con flechas.
 
 ## 8. Capas del entorno
 Foreground (arbustos altos semitransparentes que se difuminan), zona jugable (suelo claro y legible), background (acantilados, acueductos), distancia (silueta del **Cántico Roto**, landmark visible desde casi toda la Terraza), clima (niebla/vendavales con partículas), fauna ambiental (aves de piedra, polillas de cuarzo).

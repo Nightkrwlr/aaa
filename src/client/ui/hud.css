@@ -1,0 +1,87 @@
+/* ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   HUD finish — brass-and-glass orbs, bevelled skill slots, ornate boss bar, quest tracker with a parchment edge.
+   Everything is scoped under #hud so it layers on ui.css (and mobile.css, which hides the bottom cluster on touch devices).
+   Sizes are driven by the same custom properties as before (--hud-scale), colours by the :root tokens.
+   ─────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+/* ───────── orbs: glass sphere in a brass ring, liquid with a living surface */
+#hud .orb { width: 120px; height: 120px; border: 0; background: radial-gradient(circle at 50% 40%, #11151d, #05070a 75%); box-shadow: 0 0 0 2px #000, 0 8px 26px rgba(0, 0, 0, .7), inset 0 0 26px rgba(0, 0, 0, .85); }
+#hud .orb::before {                                      /* the brass ring: a conic sweep gives it a metallic turn */
+  content: ''; position: absolute; inset: 0; border-radius: 50%; z-index: 4; pointer-events: none;
+  background: conic-gradient(from 200deg, #f6dfa6, #b98a3c 14%, #5b3f14 30%, #d9a24a 48%, #fbe9b8 58%, #8a6428 74%, #4a3414 88%, #f6dfa6);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px)); mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+}
+#hud .orb::after {                                       /* glass: a soft highlight top-left and a darker belly */
+  content: ''; position: absolute; inset: 6px; border-radius: 50%; z-index: 3; pointer-events: none;
+  background: radial-gradient(ellipse 60% 38% at 34% 16%, rgba(255, 255, 255, .42), rgba(255, 255, 255, 0) 70%), radial-gradient(circle at 50% 118%, rgba(0, 0, 0, .5), rgba(0, 0, 0, 0) 58%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+}
+#hud .orb .fill { z-index: 1; }
+#hud .orb .fill::before {                                /* meniscus */
+  content: ''; position: absolute; left: -12%; right: -12%; top: -7px; height: 14px; border-radius: 50%; animation: orb-wave 3.4s ease-in-out infinite;
+  background: radial-gradient(ellipse at 50% 60%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 70%);
+}
+#hud .orb.life .fill::before { background-color: #ff8f7a; } #hud .orb.res .fill::before { background-color: #8fd4ff; }
+#hud .orb.res.toll .fill::before { background-color: #ffe0a0; } #hud .orb.res.fulgor .fill::before { background-color: #ffd890; } #hud .orb.res.ritmo .fill::before { background-color: #c8ffc0; }
+@keyframes orb-wave { 0%, 100% { transform: translateX(-5%) scaleY(1); } 50% { transform: translateX(5%) scaleY(1.25); } }
+#hud .orb .txt { z-index: 5; font-size: 14px; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+#hud .orb.life.low { animation: orb-low .9s ease-in-out infinite; }
+@keyframes orb-low { 0%, 100% { box-shadow: 0 0 0 2px #000, 0 8px 26px rgba(0, 0, 0, .7), inset 0 0 26px rgba(0, 0, 0, .85); } 50% { box-shadow: 0 0 0 2px #000, 0 0 30px 6px rgba(255, 58, 40, .65), inset 0 0 26px rgba(0, 0, 0, .85); } }
+@media (prefers-reduced-motion: reduce) { #hud .orb .fill::before, #hud .orb.life.low { animation: none; } }
+
+/* ───────── skill slots: a bevelled brass frame around a dark tile */
+#hud .skill { width: 58px; height: 58px; border: 0; border-radius: 10px; background: linear-gradient(#1b222d, #0a0d13); overflow: hidden;
+  box-shadow: 0 0 0 1px #000, 0 0 0 3px #7a5a24, 0 0 0 4px #000, 0 7px 14px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -10px 16px rgba(0, 0, 0, .35); transition: transform .08s, box-shadow .12s; }
+#hud .skill.small { width: 46px; height: 46px; border-radius: 8px; }
+#hud .skill:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px #000, 0 0 0 3px var(--brass), 0 0 0 4px #000, 0 0 18px rgba(217, 162, 74, .5), 0 7px 14px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .2); }
+#hud .skill:active { transform: translateY(0) scale(.97); }
+#hud .skill.tone-low { box-shadow: 0 0 0 1px #000, 0 0 0 3px #c0562a, 0 0 0 4px #000, 0 7px 14px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .14); }
+#hud .skill.tone-mid { box-shadow: 0 0 0 1px #000, 0 0 0 3px var(--brass), 0 0 0 4px #000, 0 7px 14px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .14); }
+#hud .skill.tone-high { box-shadow: 0 0 0 1px #000, 0 0 0 3px #5fc8e8, 0 0 0 4px #000, 0 0 12px rgba(127, 227, 255, .25), 0 7px 14px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .14); }
+#hud .skill .key { left: 4px; top: 3px; padding: 0 4px; border-radius: 4px; background: rgba(0, 0, 0, .62); font-size: 10px; letter-spacing: .3px; line-height: 14px; }
+#hud .skill .cd { background: linear-gradient(rgba(6, 8, 12, .84), rgba(6, 8, 12, .72)); border-top: 1px solid rgba(255, 224, 160, .55); }
+#hud .skill .cdt { font-size: 17px; }
+#hud .skillbar { gap: 8px; padding-bottom: 6px; }
+#hud .phrase { height: 16px; margin-bottom: 6px; gap: 8px; }
+#hud .phrase i { width: 13px; height: 13px; border: 2px solid #4a4030; background: radial-gradient(circle at 35% 30%, #2a3040, #10131a); box-shadow: 0 0 0 1px #000; }
+
+/* potion: a small flask tablet above the life orb */
+#hud .potion { width: 52px; height: 32px; border: 0; border-radius: 8px; background: linear-gradient(#2a1414, #120808); box-shadow: 0 0 0 1px #000, 0 0 0 3px #7a5a24, 0 0 0 4px #000, 0 5px 10px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .12); }
+#hud .potion .pk { left: 4px; top: 1px; font-size: 9px; }
+#hud .potion::before { content: ''; width: 14px; height: 18px; margin-right: 2px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 20'%3E%3Cpath d='M6 1h4v2l-1 1v4l4.5 8.2A2 2 0 0 1 11.8 19H4.2a2 2 0 0 1-1.7-2.8L7 8V4L6 3z' fill='%23d9503c' stroke='%23ffd9d0' stroke-width='.8'/%3E%3Cpath d='M4 14h8l1.4 2.6a1 1 0 0 1-.9 1.4H3.5a1 1 0 0 1-.9-1.4z' fill='%23ff8a7a'/%3E%3C/svg%3E") center / contain no-repeat; }
+
+/* ───────── experience: a thin brass-trimmed bar under everything */
+#hud .xpbar { width: 560px; height: 8px; border: 0; border-radius: 4px; background: #05070a; box-shadow: 0 0 0 1px #000, 0 0 0 2px #6b4f1f, 0 3px 8px rgba(0, 0, 0, .6); overflow: hidden; }
+#hud .xpbar i { background: linear-gradient(#a8f0ff, #3fa6d9 60%, #2a7fb0); box-shadow: 0 0 8px rgba(127, 227, 255, .6); transition: width .25s ease-out; }
+#hud .xpbar::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(0, 0, 0, .55) calc(10% - 1px) 10%); pointer-events: none; }
+
+/* ───────── minimap: brass ring with a north tick */
+#hud .minimap { border: 0; background: radial-gradient(circle, #0c1118, #05070a); box-shadow: 0 0 0 2px #000, 0 6px 18px rgba(0, 0, 0, .65), inset 0 0 22px rgba(0, 0, 0, .8); }
+#hud .minimap::before { content: ''; position: absolute; inset: 0; border-radius: 50%; z-index: 2; pointer-events: none;
+  background: conic-gradient(from 200deg, #f6dfa6, #b98a3c 14%, #5b3f14 30%, #d9a24a 48%, #fbe9b8 58%, #8a6428 74%, #4a3414 88%, #f6dfa6);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px)); }
+#hud .minimap::after { content: ''; position: absolute; left: 50%; top: 0; width: 10px; height: 10px; margin-left: -5px; z-index: 3; pointer-events: none; background: linear-gradient(#fbe9b8, #8a6428); clip-path: polygon(50% 100%, 0 0, 100% 0); }
+
+/* ───────── boss bar: a framed health plate with the name above it */
+#hud .bossbar .name { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; letter-spacing: 4px; text-transform: uppercase; color: #f1e3c0; text-shadow: 0 2px 8px #000, 0 0 14px rgba(255, 120, 80, .35); }
+#hud .bossbar .bar { height: 16px; border: 0; border-radius: 3px; background: #0b0606; box-shadow: 0 0 0 1px #000, 0 0 0 3px #7a5a24, 0 0 0 4px #000, 0 6px 16px rgba(0, 0, 0, .75), inset 0 0 8px rgba(0, 0, 0, .8); }
+#hud .bossbar .bar i { background: linear-gradient(#ff7a5a, #c0301c 55%, #7a140c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
+#hud .bossbar .shield { height: 8px; margin-top: 6px; }
+
+/* ───────── quest tracker */
+#hud .tracker { width: 280px; padding: 10px 14px 10px 14px; border-left: 3px solid var(--brass); border-radius: 0 6px 6px 0;
+  background: linear-gradient(90deg, rgba(8, 10, 15, .84), rgba(8, 10, 15, .5) 80%, rgba(8, 10, 15, 0)); text-shadow: 0 1px 3px #000; }
+#hud .tracker .tq-title { font-family: Georgia, 'Times New Roman', serif; font-size: 14px; letter-spacing: 1px; color: var(--brass); margin-bottom: 3px; }
+#hud .tracker .tq-stage { font-size: 12px; color: var(--dim); margin-bottom: 4px; font-style: italic; }
+#hud .tracker .tq-obj { font-size: 13px; margin: 3px 0; }
+#hud .tracker .tq-obj.done { color: var(--dim); text-decoration: line-through; }
+#hud .tracker .tq-obj.warn { color: #ff9a7a; }
+#hud .tracker.pulse { animation: tracker-pulse 1.2s ease-out; }
+@keyframes tracker-pulse { 0% { box-shadow: -4px 0 0 0 rgba(217, 162, 74, 0); background-color: rgba(217, 162, 74, .25); } 100% { box-shadow: none; background-color: transparent; } }
+
+/* ───────── messages */
+#hud .toast { border: 0; border-radius: 6px; background: linear-gradient(rgba(22, 27, 36, .94), rgba(12, 15, 21, .94)); box-shadow: 0 0 0 1px #000, 0 0 0 2px #6b4f1f, 0 8px 20px rgba(0, 0, 0, .6); letter-spacing: .4px; }
+#hud .prompt { border: 0; border-radius: 6px; background: linear-gradient(rgba(22, 27, 36, .94), rgba(12, 15, 21, .94)); box-shadow: 0 0 0 1px #000, 0 0 0 2px #8a6428, 0 8px 18px rgba(0, 0, 0, .6); }
+#hud .area-name { font-family: Georgia, 'Times New Roman', serif; font-size: 34px; letter-spacing: 9px; color: #f4ead0; text-shadow: 0 2px 14px #000, 0 0 30px rgba(217, 162, 74, .35); }
+#hud .area-name::after { content: ''; display: block; width: 62%; height: 2px; margin: 10px auto 0; background: linear-gradient(90deg, transparent, var(--brass), transparent); }
+#hud .status { border-radius: 6px; box-shadow: 0 3px 8px rgba(0, 0, 0, .6); }

@@ -11,6 +11,8 @@ import { PuzzleHost } from '../puzzles/host.js';
 import { applyEffects } from '../effects.js';
 import { logger } from '../../core/logger.js';
 const log = logger('dungeon-rt');
+/** radius (m) of the walkable-map footprint of each solid prop kind */
+const SOLID_PROP_R = { d_pillar: 0.8, sarcophagus: 0.95, machine: 1.05, console: 0.8, cargo: 0.85 };
 
 export class DungeonRuntime {
   constructor(session, dungeon) {
@@ -31,6 +33,8 @@ export class DungeonRuntime {
   build() {
     const s = this.s, d = this.d, map = d.map;
     const nav = map.toNav();
+    // solid props (pillars, sarcophagi, machines…) are obstacles: what you see is what stops you. 1 m cells → each blocks its whole 2×2 m tile
+    for (const p of d.content.props) { const r = SOLID_PROP_R[p.kind]; if (p.block && r) nav.blockCircle(p.x, p.z, r); }
     this.nav = nav;
     const world = new World({ registry: s.registry, nav, seed: `${d.seed}:run`, difficulty: s.settings?.difficulty ?? 'seeker', areaLevel: d.ilvl, balance: s.balance });
     world.dungeon = this;
