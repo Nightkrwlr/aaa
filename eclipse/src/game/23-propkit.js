@@ -40,6 +40,18 @@ function J(n, e, t = {}) {
     }
   }
   i.computeVertexNormals();
+  // fondos que tocan el suelo y miran abajo: nunca se ven (cámara desde arriba); fuera triángulos
+  if (!t.keep) {
+    let a = i.attributes.position, nn = i.attributes.normal, keep = [];
+    for (let v = 0; v < a.count; v += 3)
+      (nn.getY(v) < -0.9 && a.getY(v) < 0.06 && a.getY(v + 1) < 0.06 && a.getY(v + 2) < 0.06) || keep.push(v, v + 1, v + 2);
+    if (keep.length < a.count) {
+      let pa = new Float32Array(keep.length * 3), na = new Float32Array(keep.length * 3);
+      keep.forEach((v, k) => { pa[k * 3] = a.getX(v); pa[k * 3 + 1] = a.getY(v); pa[k * 3 + 2] = a.getZ(v); na[k * 3] = nn.getX(v); na[k * 3 + 1] = nn.getY(v); na[k * 3 + 2] = nn.getZ(v); });
+      i.setAttribute("position", new ft(pa, 3));
+      i.setAttribute("normal", new ft(na, 3));
+    }
+  }
   return PkPaint(i, e, t);
 }
 
@@ -49,7 +61,7 @@ var eh = (n) => (n.length ? Ld(n, !1) : null),
   Je = (n, e, t) => new kn(n, e, t),
   Ye = (n, e, t, i = 7) => new ni(n, e, t, i),
   _n = (n, e = 7, t = 5) => new rr(n, e, t),
-  Wn = (n, e, t = 6) => new oo(n, e, t),
+  Wn = (n, e, t = 6) => new oo(n, e, t, 1, !0), // sin tapa: la base no se ve desde arriba
   ko = (n, e = 0) => new ya(n, e),
   Yn = (n) => new lo(n, 0),
   Mp = (n, e, t = 5, i = 10) => new Yi(n, e, t, i),
@@ -97,7 +109,6 @@ Ie.oak = (n, e) => {
     g: [
       J(Ye(0.12, 0.2, 0.95, 6), 5914672, { y: 0.47, tg: 0.1, ao: 0.6, aoH: 0.8, vary: 0.1, seed: e, rough: 0.92 }),
       J(Wn(0.3, 0.3, 6), 4863012, { y: 0.12, ao: 0.4, rough: 0.92 }),
-      J(Ye(0.05, 0.08, 0.6, 5), 5914672, { x: 0.22, y: 1.15, rz: -0.8, ao: 0.2, rough: 0.92 }),
       J(ko(0.78, 0), tt(L, 0, 0.14), { y: 1.5, jit: 0.25, seed: e, vary: 0.2, tg: 0.5, ao: 0, aoH: 1, sky: 0.34, rough: 0.9, speck: 0.12 }),
       J(ko(0.52, 0), tt(L, 16777088, 0.14), { x: 0.4, y: 1.8, z: 0.22, jit: 0.15, seed: e + 1, tg: 0.4, ao: 0, sky: 0.3, rough: 0.9 }),
       J(ko(0.46, 0), tt(L, 0, 0.1), { x: -0.38, y: 1.32, z: -0.2, jit: 0.15, seed: e + 2, tg: 0.4, ao: 0, sky: 0.3, rough: 0.9 }),
@@ -111,7 +122,6 @@ Ie.bush = (n, e) => {
     g: [
       J(ko(0.44, 0), tt(L, 0, 0.1), { y: 0.3, sy: 0.7, jit: 0.15, seed: e, vary: 0.2, tg: 0.5, ao: 0.5, aoH: 0.4, sky: 0.3, rough: 0.9 }),
       J(ko(0.3, 0), tt(L, 16777215, 0.14), { x: 0.28, y: 0.34, jit: 0.1, seed: e + 1, tg: 0.4, ao: 0.3, aoH: 0.3, sky: 0.3, rough: 0.9 }),
-      J(ko(0.24, 0), tt(L, 16777215, 0.06), { x: -0.24, y: 0.25, z: 0.2, jit: 0.1, seed: e + 2, tg: 0.4, ao: 0.4, aoH: 0.3, rough: 0.9 }),
     ],
   };
 };
@@ -183,14 +193,14 @@ Ie.cactus = (n, e) => {
   let C = 4880954;
   return {
     g: [
-      J(Ye(0.16, 0.19, 1.3, 8), C, { y: 0.65, vary: 0.1, seed: e, tg: 0.3, ao: 0.55, aoH: 0.6, rough: 0.85, speck: 0.15 }),
-      J(_n(0.16, 8, 4), tt(C, 16777215, 0.1), { y: 1.3, sy: 0.55, ao: 0, rough: 0.85 }),
-      J(Ye(0.1, 0.1, 0.5, 7), C, { x: 0.25, y: 0.8, rz: -Math.PI / 2, tg: 0.1, ao: 0.2, rough: 0.85 }),
-      J(Ye(0.1, 0.1, 0.45, 7), tt(C, 16777215, 0.06), { x: 0.4, y: 1.02, tg: 0.3, ao: 0.1, rough: 0.85 }),
-      J(Ye(0.09, 0.09, 0.3, 7), C, { x: -0.22, y: 0.55, rz: Math.PI / 2, ao: 0.2, rough: 0.85 }),
-      J(Ye(0.09, 0.09, 0.35, 7), tt(C, 16777215, 0.06), { x: -0.34, y: 0.74, tg: 0.3, ao: 0.1, rough: 0.85 }),
+      J(Ye(0.16, 0.19, 1.3, 6), C, { y: 0.65, vary: 0.1, seed: e, tg: 0.3, ao: 0.55, aoH: 0.6, rough: 0.85, speck: 0.15 }),
+      J(_n(0.16, 6, 3), tt(C, 16777215, 0.1), { y: 1.3, sy: 0.55, ao: 0, rough: 0.85 }),
+      J(Ye(0.1, 0.1, 0.5, 5), C, { x: 0.25, y: 0.8, rz: -Math.PI / 2, tg: 0.1, ao: 0.2, rough: 0.85 }),
+      J(Ye(0.1, 0.1, 0.45, 5), tt(C, 16777215, 0.06), { x: 0.4, y: 1.02, tg: 0.3, ao: 0.1, rough: 0.85 }),
+      J(Ye(0.09, 0.09, 0.3, 5), C, { x: -0.22, y: 0.55, rz: Math.PI / 2, ao: 0.2, rough: 0.85 }),
+      J(Ye(0.09, 0.09, 0.35, 5), tt(C, 16777215, 0.06), { x: -0.34, y: 0.74, tg: 0.3, ao: 0.1, rough: 0.85 }),
       // flor rosada en la cima
-      J(_n(0.07, 5, 4), 16734842, { y: 1.42, x: 0.04, ao: 0, rough: 0.7 }),
+      J(_n(0.07, 4, 3), 16734842, { y: 1.42, x: 0.04, ao: 0, rough: 0.7 }),
     ],
   };
 };
@@ -252,7 +262,6 @@ Ie.shroom_small = (n, e) => ({
 Ie.snow_tuft = (n, e) => ({
   g: [
     J(_n(0.19, 6, 3), 16054527, { y: 0.02, sy: 0.35, jit: 0.05, seed: e, tg: 0.3, ao: 0.3, aoH: 0.08, rough: 0.9 }),
-    J(_n(0.1, 5, 3), 15264255, { x: 0.16, y: 0.01, sy: 0.4, rough: 0.9, ao: 0.2 }),
   ],
 });
 
@@ -263,7 +272,6 @@ Ie.snow_tuft = (n, e) => ({
 Ie.rock = (n, e) => ({
   g: [
     J(Yn(0.46), n.rock, { y: 0.22, sy: 0.66, jit: 0.2, seed: e, vary: 0.14, strata: 0.16, strataF: 14, tc: 1, ao: 0.55, aoH: 0.28, tg: 0.24, rough: 0.95, speck: 0.12 }),
-    J(Yn(0.2), tt(n.rock, 0, 0.12), { x: 0.44, y: 0.08, sy: 0.6, jit: 0.1, seed: e + 3, tc: 1, ao: 0.5, aoH: 0.14, rough: 0.95 }),
   ],
 });
 
@@ -271,7 +279,6 @@ Ie.rock_big = (n, e) => ({
   g: [
     J(Yn(0.8), n.rock, { y: 0.4, sy: 0.75, jit: 0.3, seed: e, vary: 0.12, strata: 0.18, strataF: 9, tc: 1, ao: 0.6, aoH: 0.5, tg: 0.26, rough: 0.95, speck: 0.14 }),
     J(Yn(0.46), tt(n.rock, 16777215, 0.08), { x: 0.52, y: 0.25, z: 0.3, jit: 0.15, seed: e + 1, strata: 0.14, strataF: 13, tc: 1, ao: 0.5, aoH: 0.3, rough: 0.95 }),
-    J(Yn(0.22), tt(n.rock, 0, 0.14), { x: -0.62, y: 0.1, z: -0.36, sy: 0.6, jit: 0.1, seed: e + 2, tc: 1, ao: 0.5, aoH: 0.16, rough: 0.95 }),
   ],
 });
 
@@ -286,18 +293,15 @@ Ie.rock_desert = (n, e) => ({
   g: [
     J(Je(0.9, 0.7, 0.8), 11567194, { y: 0.35, jit: 0.25, seed: e, vary: 0.1, grad: [14198904, 0, 0.75], strata: 0.22, strataF: 22, tc: 1, ao: 0.55, aoH: 0.4, rough: 0.95, speck: 0.1 }),
     J(Je(0.6, 0.35, 0.6), 13144160, { y: 0.88, x: 0.1, jit: 0.15, seed: e + 1, strata: 0.2, strataF: 26, tc: 1, ao: 0.3, aoH: 0.2, rough: 0.95 }),
-    J(Yn(0.2), 10518880, { x: 0.62, y: 0.09, z: 0.38, sy: 0.6, jit: 0.1, seed: e + 2, tc: 1, ao: 0.5, aoH: 0.15, rough: 0.95 }),
   ],
 });
 
 Ie.mesa = (n, e) => ({
   g: [
-    J(Ye(1.08, 1.22, 0.7, 8), 9070634, { y: 0.35, jit: 0.16, seed: e, tg: 0.2, ao: 0.6, aoH: 0.5, strata: 0.1, strataF: 30, rough: 0.96 }),
-    J(Ye(0.98, 1.08, 0.55, 8), 12426344, { y: 0.97, jit: 0.14, seed: e + 1, tg: 0.2, ao: 0.2, aoH: 1.1, strata: 0.12, strataF: 30, rough: 0.96 }),
-    J(Ye(0.92, 0.98, 0.5, 8), 13601658, { y: 1.5, jit: 0.12, seed: e + 2, tg: 0.2, ao: 0, strata: 0.1, strataF: 30, rough: 0.96 }),
-    J(Ye(0.9, 0.9, 0.1, 8), 14854300, { y: 1.8, jit: 0.1, seed: e + 3, tc: 1, ao: 0, rough: 0.96 }),
-    J(Yn(0.3), 10518880, { x: 0.95, y: 0.1, z: 0.4, sy: 0.6, jit: 0.1, seed: e + 4, ao: 0.5, aoH: 0.2, rough: 0.95 }),
-    J(Yn(0.22), 11571808, { x: -0.9, y: 0.08, z: -0.5, sy: 0.6, jit: 0.1, seed: e + 5, ao: 0.5, aoH: 0.15, rough: 0.95 }),
+    J(Ye(1.08, 1.22, 0.7, 7), 9070634, { y: 0.35, jit: 0.16, seed: e, tg: 0.2, ao: 0.6, aoH: 0.5, strata: 0.1, strataF: 30, rough: 0.96 }),
+    J(Ye(0.98, 1.08, 0.55, 7), 12426344, { y: 0.97, jit: 0.14, seed: e + 1, tg: 0.2, ao: 0.2, aoH: 1.1, strata: 0.12, strataF: 30, rough: 0.96 }),
+    J(Ye(0.92, 0.98, 0.5, 7), 13601658, { y: 1.5, jit: 0.12, seed: e + 2, tg: 0.2, ao: 0, strata: 0.1, strataF: 30, rough: 0.96 }),
+    J(Ye(0.9, 0.9, 0.1, 7), 14854300, { y: 1.8, jit: 0.1, seed: e + 3, tc: 1, ao: 0, rough: 0.96 }),
   ],
 });
 
@@ -305,7 +309,6 @@ Ie.boulder_snow = (n, e) => ({
   g: [
     J(Yn(0.62), 8030872, { y: 0.3, sy: 0.7, jit: 0.2, seed: e, vary: 0.1, strata: 0.14, strataF: 12, tg: 0.2, ao: 0.55, aoH: 0.3, rough: 0.95 }),
     J(Yn(0.52), 16054527, { y: 0.52, sy: 0.34, jit: 0.15, seed: e + 1, tg: 0.2, ao: 0, rough: 0.92 }),
-    J(Yn(0.2), 9082280, { x: 0.62, y: 0.08, z: 0.3, sy: 0.6, jit: 0.1, seed: e + 2, ao: 0.4, aoH: 0.12, rough: 0.95 }),
   ],
 });
 
@@ -319,9 +322,9 @@ Ie.pebble = (n, e) => ({
 
 Ie.log = (n, e) => ({
   g: [
-    J(Ye(0.17, 0.17, 1.4, 7), 5914672, { y: 0.17, rz: Math.PI / 2, vary: 0.1, seed: e, grad: [4208672, 0.17, 0.35], tg: 0.2, ao: 0.5, aoH: 0.2, rough: 0.95, speck: 0.15 }),
-    J(Ye(0.145, 0.145, 0.02, 7), 12623744, { x: 0.71, y: 0.17, rz: Math.PI / 2, ao: 0, rough: 0.8 }),
-    J(Ye(0.07, 0.07, 0.025, 7), 10518864, { x: 0.715, y: 0.17, rz: Math.PI / 2, ao: 0, rough: 0.8 }),
+    J(Ye(0.17, 0.17, 1.4, 6), 5914672, { y: 0.17, rz: Math.PI / 2, vary: 0.1, seed: e, grad: [4208672, 0.17, 0.35], tg: 0.2, ao: 0.5, aoH: 0.2, rough: 0.95, speck: 0.15 }),
+    J(Ye(0.145, 0.145, 0.02, 6), 12623744, { x: 0.71, y: 0.17, rz: Math.PI / 2, ao: 0, rough: 0.8 }),
+    J(Ye(0.07, 0.07, 0.025, 5), 10518864, { x: 0.715, y: 0.17, rz: Math.PI / 2, ao: 0, rough: 0.8 }),
     J(Ye(0.05, 0.06, 0.2, 5), 5914672, { x: -0.2, y: 0.3, z: 0.1, rx: 0.9, ao: 0.3, rough: 0.95 }),
     J(_n(0.09, 5, 3), 12098634, { x: 0.1, y: 0.33, z: 0.08, sy: 0.4, sx: 1.4, ao: 0, rough: 0.85 }),
   ],
@@ -329,10 +332,10 @@ Ie.log = (n, e) => ({
 
 Ie.stump = (n, e) => ({
   g: [
-    J(Ye(0.22, 0.3, 0.4, 7), 5914672, { y: 0.2, tg: 0.15, ao: 0.6, aoH: 0.3, rough: 0.95, speck: 0.15 }),
+    J(Ye(0.22, 0.3, 0.4, 6), 5914672, { y: 0.2, tg: 0.15, ao: 0.6, aoH: 0.3, rough: 0.95, speck: 0.15 }),
     ...[0, 2.1, 4.2].map((a) => J(Wn(0.12, 0.3, 4), 4863012, { x: Math.cos(a) * 0.27, z: Math.sin(a) * 0.27, y: 0.06, rz: Math.cos(a) * 0.7, rx: -Math.sin(a) * 0.7, ao: 0.4, rough: 0.95 })),
-    J(Ye(0.22, 0.22, 0.02, 7), 12623744, { y: 0.41, ao: 0, rough: 0.8 }),
-    J(Ye(0.1, 0.1, 0.025, 7), 10518864, { y: 0.415, ao: 0, rough: 0.8 }),
+    J(Ye(0.22, 0.22, 0.02, 6), 12623744, { y: 0.41, ao: 0, rough: 0.8 }),
+    J(Ye(0.1, 0.1, 0.025, 5), 10518864, { y: 0.415, ao: 0, rough: 0.8 }),
   ],
 });
 
@@ -388,8 +391,8 @@ Ie.car = (n, e) => {
       J(Je(0.72, 0.26, 0.82), 1456168, { y: 0.76, x: -0.12, sx: 1.02, sz: 0.98, ao: 0, ...PkGlass }),
       J(Je(1.78, 0.06, 0.9), 2763306, { y: 0.17, ao: 0.3, rough: 0.8, metal: 0.2 }),
       ...[[0.56, 0.45], [-0.56, 0.45], [0.56, -0.45], [-0.56, -0.45]].flatMap(([i, s]) => [
-        J(Ye(0.19, 0.19, 0.14, 8), 1710618, { x: i, z: s, y: 0.19, rx: Math.PI / 2, ao: 0.2, ...PkRubber }),
-        J(Ye(0.09, 0.09, 0.16, 6), 11184810, { x: i, z: s * 1.02, y: 0.19, rx: Math.PI / 2, ao: 0, ...PkMetal }),
+        J(Ye(0.19, 0.19, 0.14, 7), 1710618, { x: i, z: s, y: 0.19, rx: Math.PI / 2, ao: 0.2, ...PkRubber }),
+        J(Ye(0.09, 0.09, 0.16, 4), 11184810, { x: i, z: s * 1.02, y: 0.19, rx: Math.PI / 2, ao: 0, ...PkMetal }),
       ]),
     ],
     e: [
@@ -416,7 +419,7 @@ Ie.tank_wreck = (n, e) => ({
 
 Ie.lamp = (n, e) => ({
   g: [
-    J(Ye(0.13, 0.16, 0.14, 7), 2763312, { y: 0.07, ao: 0.4, aoH: 0.1, ...PkMetal }),
+    J(Ye(0.13, 0.16, 0.14, 6), 2763312, { y: 0.07, ao: 0.4, aoH: 0.1, ...PkMetal }),
     J(Ye(0.045, 0.075, 2.4, 6), 3817028, { y: 1.2, tg: 0.2, ao: 0.4, aoH: 0.4, ...PkMetal }),
     J(Ye(0.06, 0.06, 0.1, 6), 5921370, { y: 0.55, ao: 0, ...PkMetal }),
     J(Je(0.55, 0.06, 0.12), 3817028, { y: 2.38, x: 0.25, ao: 0, ...PkMetal }),
@@ -434,16 +437,16 @@ Ie.hydrant = (n, e) => ({
     J(Ye(0.12, 0.14, 0.45, 8), 11546656, { y: 0.32, tg: 0.2, ao: 0.4, aoH: 0.3, speck: 0.15, ...PkPaintM }),
     J(_n(0.135, 8, 4), 12598816, { y: 0.56, sy: 0.9, ao: 0, ...PkPaintM }),
     J(Ye(0.05, 0.05, 0.38, 6), 12696408, { y: 0.4, rz: Math.PI / 2, ao: 0, ...PkMetal }),
-    J(Ye(0.06, 0.06, 0.06, 6), 14395240, { y: 0.4, x: 0.2, rz: Math.PI / 2, ao: 0, ...PkMetal }),
-    J(Ye(0.06, 0.06, 0.06, 6), 14395240, { y: 0.4, x: -0.2, rz: Math.PI / 2, ao: 0, ...PkMetal }),
+    J(Ye(0.06, 0.06, 0.06, 4), 14395240, { y: 0.4, x: 0.2, rz: Math.PI / 2, ao: 0, ...PkMetal }),
+    J(Ye(0.06, 0.06, 0.06, 4), 14395240, { y: 0.4, x: -0.2, rz: Math.PI / 2, ao: 0, ...PkMetal }),
     J(Ye(0.04, 0.04, 0.05, 6), 14395240, { y: 0.69, ao: 0, ...PkMetal }),
   ],
 });
 
 Ie.tire = (n, e) => ({
   g: [
-    J(Mp(0.25, 0.1, 6, 12), 1973790, { y: 0.1, rx: Math.PI / 2, ao: 0.4, aoH: 0.1, ...PkRubber }),
-    J(Mp(0.2, 0.08, 6, 12), 2565934, { y: 0.28, x: 0.04, rx: Math.PI / 2 - 0.1, ao: 0.4, aoH: 0.1, ...PkRubber }),
+    J(Mp(0.25, 0.1, 4, 9), 1973790, { y: 0.1, rx: Math.PI / 2, ao: 0.4, aoH: 0.1, ...PkRubber }),
+    J(Mp(0.2, 0.08, 4, 8), 2565934, { y: 0.28, x: 0.04, rx: Math.PI / 2 - 0.1, ao: 0.4, aoH: 0.1, ...PkRubber }),
   ],
 });
 
@@ -451,10 +454,10 @@ Ie.barrel = (n, e) => {
   let c = [9058858, 3824250, 5925434][e % 3];
   return {
     g: [
-      J(Ye(0.24, 0.24, 0.68, 10), c, { y: 0.34, vary: 0.06, seed: e, tg: 0.18, ao: 0.5, aoH: 0.25, speck: 0.28, ...PkPaintM }),
-      J(Ye(0.255, 0.255, 0.04, 10), 2763306, { y: 0.2, ao: 0.4, aoH: 0.3, ...PkMetal }),
-      J(Ye(0.255, 0.255, 0.04, 10), 2763306, { y: 0.5, ao: 0, ...PkMetal }),
-      J(Ye(0.22, 0.22, 0.03, 10), 4605510, { y: 0.69, ao: 0, ...PkMetal }),
+      J(Ye(0.24, 0.24, 0.68, 8), c, { y: 0.34, vary: 0.06, seed: e, tg: 0.18, ao: 0.5, aoH: 0.25, speck: 0.28, ...PkPaintM }),
+      J(Ye(0.255, 0.255, 0.04, 8), 2763306, { y: 0.2, ao: 0.4, aoH: 0.3, ...PkMetal }),
+      J(Ye(0.255, 0.255, 0.04, 8), 2763306, { y: 0.5, ao: 0, ...PkMetal }),
+      J(Ye(0.22, 0.22, 0.03, 8), 4605510, { y: 0.69, ao: 0, ...PkMetal }),
       J(Ye(0.045, 0.045, 0.04, 6), 1710618, { y: 0.715, x: 0.1, z: 0.05, ao: 0, ...PkMetal }),
     ],
   };
@@ -462,10 +465,10 @@ Ie.barrel = (n, e) => {
 
 Ie.barrel_toxic = (n, e) => ({
   g: [
-    J(Ye(0.24, 0.24, 0.68, 10), 13148192, { y: 0.34, vary: 0.05, seed: e, tg: 0.16, ao: 0.5, aoH: 0.25, speck: 0.3, ...PkPaintM }),
+    J(Ye(0.24, 0.24, 0.68, 8), 13148192, { y: 0.34, vary: 0.05, seed: e, tg: 0.16, ao: 0.5, aoH: 0.25, speck: 0.3, ...PkPaintM }),
     J(Ye(0.255, 0.255, 0.05, 10), 2763306, { y: 0.5, ao: 0, ...PkMetal }),
     J(Ye(0.255, 0.255, 0.05, 10), 2763306, { y: 0.2, ao: 0.4, aoH: 0.3, ...PkMetal }),
-    J(Ye(0.248, 0.248, 0.09, 10), 1974800, { y: 0.35, ao: 0, ...PkPaintM }),
+    J(Ye(0.248, 0.248, 0.09, 8), 1974800, { y: 0.35, ao: 0, ...PkPaintM }),
   ],
   e: [J(Ye(0.19, 0.19, 0.03, 10), 10354506, { y: 0.7, ao: 0, tg: 0 }), J(_n(0.07, 5, 3), 12582730, { y: 0.72, x: 0.05, sy: 0.4, ao: 0 })],
   dim: 0.95,
@@ -474,8 +477,8 @@ Ie.barrel_toxic = (n, e) => ({
 
 Ie.barrel_rad = (n, e) => ({
   g: [
-    J(Ye(0.24, 0.24, 0.68, 10), 3815984, { y: 0.34, rz: e % 2 ? 0.2 : 0, tg: 0.16, ao: 0.5, aoH: 0.25, speck: 0.25, ...PkPaintM }),
-    J(Ye(0.255, 0.255, 0.04, 10), 2368552, { y: 0.66, rz: e % 2 ? 0.2 : 0, ao: 0, ...PkMetal }),
+    J(Ye(0.24, 0.24, 0.68, 8), 3815984, { y: 0.34, rz: e % 2 ? 0.2 : 0, tg: 0.16, ao: 0.5, aoH: 0.25, speck: 0.25, ...PkPaintM }),
+    J(Ye(0.255, 0.255, 0.04, 8), 2368552, { y: 0.66, rz: e % 2 ? 0.2 : 0, ao: 0, ...PkMetal }),
   ],
   e: [
     J(Ye(0.248, 0.248, 0.12, 10), 13172512, { y: 0.34, rz: e % 2 ? 0.2 : 0, ao: 0, tg: 0 }),
@@ -508,7 +511,7 @@ Ie.container = (n, e) => {
   return {
     g: [
       J(Je(2.2, 1.1, 0.95), t, { y: 0.55, vary: 0.04, seed: e, tg: 0.2, ao: 0.55, aoH: 0.4, speck: 0.35, ...PkPaintM }),
-      ...Array.from({ length: 7 }, (i, s) => J(Je(0.04, 1, 0.98), tt(t, 0, 0.25), { x: -0.95 + s * 0.32, y: 0.55, ao: 0.3, aoH: 0.3, ...PkPaintM })),
+      ...Array.from({ length: 5 }, (i, s) => J(Je(0.04, 1, 0.98), tt(t, 0, 0.25), { x: -0.9 + s * 0.45, y: 0.55, ao: 0.3, aoH: 0.3, ...PkPaintM })),
       // marco superior/inferior y esquineros
       J(Je(2.24, 0.06, 1.0), tt(t, 0, 0.4), { y: 1.1, ao: 0, ...PkMetal }),
       J(Je(2.24, 0.06, 1.0), tt(t, 0, 0.4), { y: 0.03, ao: 0.4, aoH: 0.1, ...PkMetal }),
@@ -890,7 +893,7 @@ var PkWindAmp = {
   },
   // luces artificiales: c color · r radio del charco · i intensidad · hy/hs/hi altura, tamaño e intensidad del halo · ox desplazamiento lateral
   PkLight = {
-    lamp: { c: 16767104, r: 3.6, i: 1, hy: 2.33, hs: 1.7, hi: 1.1, ox: 0.46 },
+    lamp: { c: 16767104, r: 3.8, i: 0.7, hy: 2.33, hs: 1.7, hi: 1.1, ox: 0.46 },
     antenna: { c: 16724e3, r: 0, hy: 3.02, hs: 0.75, hi: 1.5 },
     tower: { c: 16724e3, r: 0, hy: 4.22, hs: 0.8, hi: 1.5 },
     barrel_toxic: { c: 10354506, r: 1.5, i: 0.8, hy: 0.72, hs: 0.5, hi: 0.6 },
@@ -948,11 +951,11 @@ function PkClump(ch, d) {
     out = [];
   for (let f of list) {
     let n = PkNoise(f.x * 0.11 + 5.3, f.z * 0.11 - 2.1);
-    if (n < 0.36 && r() < 0.65) continue;
+    if (n < 0.4 && r() < 0.78) continue;
     out.push(f);
-    if (n > 0.56) {
+    if (n > 0.6) {
       let src = e.ter[(f.z | 0) * e.w + (f.x | 0)];
-      for (let k = r() < 0.5 ? 2 : 1; k > 0; k--) {
+      for (let k = r() < 0.25 ? 2 : r() < 0.6 ? 1 : 0; k > 0; k--) {
         let a = r() * 6.283,
           dd = 0.22 + r() * 0.34,
           nx = f.x + Math.cos(a) * dd,
