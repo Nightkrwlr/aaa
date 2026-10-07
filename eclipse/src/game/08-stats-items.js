@@ -74,28 +74,30 @@ function Ks(n, e) {
 // ════════ [333] VariableDeclaration mt,Di,Sg,vo (956 bytes) ════════
 var mt = {
     maxLevel: 60,
-    xpToNext: (n) => Math.round(40 * Math.pow(n, 1.75) + 40),
+    xpToNext: (n) => ecoXpToNext(n), // curva derivada de tiempos objetivo (31a-economy.js)
     power: (n) => Math.pow(1.12, n - 1) * (1 + 0.05 * (n - 1)),
     enemyHp: (n) => mt.power(n) * Math.pow(1.036, n - 1),
-    enemyDmg: (n) => Math.pow(1.085, n - 1),
+    enemyDmg: (n) => Math.pow(1.085, n - 1) * ecoEarlyDmg(n), // arranque exigente ×1,4 que se diluye hasta el nivel 15
     playerHp: (n) => 100 * Math.pow(1.075, n - 1),
     gearScale: (n) => Math.pow(1.075, n - 1),
     enemyXp: (n) => 1.5 * (1 + 0.32 * (n - 1)),
     credits: (n) => 1 + 0.25 * (n - 1),
     armorK: (n) => 60 * Math.pow(1.075, n - 1),
   },
+  // Dificultad (los ids son los del guardado). Soldado es ahora el reto que antes era Veterano; Recluta sigue siendo el modo cómodo.
+  // loot: multiplicador de suerte (acotado a ×2 en rollLoot); xp: multiplicador de experiencia.
   Di = {
     recluta: {
       n: "Recluta",
       hp: 0.7,
       dmg: 0.55,
-      loot: 0.9,
+      loot: 1,
       xp: 1,
       desc: "Para disfrutar de la historia y la exploraci\xF3n.",
     },
-    soldado: { n: "Soldado", hp: 1, dmg: 1, loot: 1, xp: 1, desc: "La experiencia equilibrada. Recomendada." },
-    veterano: { n: "Veterano", hp: 1.35, dmg: 1.4, loot: 1.3, xp: 1.15, desc: "Enemigos duros. Mejor bot\xEDn." },
-    pesadilla: { n: "Pesadilla", hp: 1.8, dmg: 1.9, loot: 1.7, xp: 1.3, desc: "Solo para operadores de \xE9lite." },
+    soldado: { n: "Soldado", hp: 1.3, dmg: 1.35, loot: 1, xp: 1, desc: "El reto equilibrado. Los primeros minutos perdonan poco." },
+    veterano: { n: "Veterano", hp: 1.75, dmg: 1.8, loot: 1.15, xp: 1.1, desc: "Enemigos duros y curaci\xF3n escasa. Mejor bot\xEDn." },
+    pesadilla: { n: "Pesadilla", hp: 2.4, dmg: 2.6, loot: 1.3, xp: 1.2, desc: "Solo para operadores de \xE9lite." },
   },
   Sg = [
     "Soldado",
@@ -151,6 +153,7 @@ r0(xf, {
 
 
 // ════════ [336] VariableDeclaration Ct,mn,Tl,Hn,Mw,Cd,ai,Tg,Ag,Gn,ww (14356 bytes) ════════
+// Rarezas. El peso `w` es heredado y ya no decide nada: las probabilidades por fuente viven en x.cfg.econ.rar (31a-economy.js).
 var Ct = [
     { n: "Com\xFAn", c: 13226454, css: "#c9d1d6", aff: 0, mult: 1, w: 62 },
     { n: "Poco com\xFAn", c: 6280026, css: "#5fd35a", aff: 1, mult: 1.08, w: 27 },
@@ -1097,9 +1100,8 @@ var Ct = [
 
 // ════════ [337] FunctionDeclaration yo (115 bytes) ════════
 function yo(n = 0, e = 0, t = 0) {
-  let i = Ct.map((a, r) => ({ i: r, w: r === 0 ? a.w : a.w * (1 + n) * (1 + t * r) })),
-    s = ii(i).i;
-  return Math.max(e, s);
+  // n = suerte (0 = sin suerte), e = rareza mínima, t = fuente («normal» por omisión). La tabla vive en 31a-economy.js (rollLoot).
+  return ecoRoll(t || "normal", 1 + n, e);
 }
 
 

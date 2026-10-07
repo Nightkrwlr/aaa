@@ -50,7 +50,8 @@ function ql(n, e) {
     a = e || null,
     r = a ? es(a) : null;
   if (
-    ((i += `<div class="pwr"><b>\u26A1 ${s}</b><span>PODER</span>${r != null && r !== s ? `<em class="${s > r ? "up" : "dn"}">${s > r ? "\u25B2 +" : "\u25BC "}${s - r} frente al equipado</em>` : ""}</div>`),
+    ((i += ecoLoreHtml(n)),
+    (i += `<div class="pwr"><b>\u26A1 ${s}</b><span>PODER</span>${r != null && r !== s ? `<em class="${s > r ? "up" : "dn"}">${s > r ? "\u25B2 +" : "\u25BC "}${s - r} frente al equipado</em>` : ""}</div>`),
     (i += `<div class="ty">${t.n} \xB7 ${n.type === "weapon" ? "Arma \xB7 " + Hn[n.base].n : Cd[n.slot] + " \xB7 " + ai[n.base].n} \xB7 Nivel ${n.ilvl}</div><ul>`),
     n.type === "weapon")
   ) {
@@ -263,7 +264,7 @@ function Ai(n = "inv") {
   let e = x.S,
     t = x.player;
   e.chips || (e.chips = []);
-  let i = `<div class="tabs"><button class="tab ${n === "inv" ? "on" : ""}" data-t="inv">Arsenal</button><button class="tab ${n === "mods" ? "on" : ""}" data-t="mods">M\xF3dulos ${e.chips.length}</button><button class="tab ${n === "char" ? "on" : ""}" data-t="char">Ficha</button></div>`,
+  let i = `<div class="tabs"><button class="tab ${n === "inv" ? "on" : ""}" data-t="inv">Arsenal</button><button class="tab ${n === "mods" ? "on" : ""}" data-t="mods">M\xF3dulos ${e.chips.length}</button>${ecoJunkTabBtn(n)}<button class="tab ${n === "char" ? "on" : ""}" data-t="char">Ficha</button></div>`,
     s = "";
   if (n === "inv") {
     let l = vb
@@ -303,7 +304,7 @@ function Ai(n = "inv") {
             "",
           )}<button class="rchip" data-mr="all">Todo</button><button class="rchip" data-mr="none">Ninguno</button></div>
         <div class="mrow"><b>${p.length} seleccionados</b>${p.length ? `<span class="muted" style="font-size:13px">Desguazar da: ${b}</span>` : '<span class="muted" style="font-size:13px">Pulsa los objetos para marcarlos. Los bloqueados \u2605 no se marcan con los botones de rareza.</span>'}</div>
-        <div class="mrow">${Gi ? `<button class="btn pri" data-act="msell" ${p.length ? "" : "disabled"}>${Rs === "sell" ? "Confirmar venta" : "Vender"} (${yt(m)} \xA4)</button>` : ""}<button class="btn bad" data-act="msalv" ${p.length ? "" : "disabled"}>${Rs === "salv" ? "Confirmar desguace" : "Desguazar"} ${p.length || ""}</button>${y && Rs ? '<span style="color:#ff9aa5;font-size:13px">Hay objetos \xE9picos o mejores en la selecci\xF3n.</span>' : ""}</div></div>`;
+        <div class="mrow">${ecoCanSell() ? `<button class="btn pri" data-act="msell" ${p.length ? "" : "disabled"}>${Rs === "sell" ? "Confirmar venta" : "Vender"} (${yt(m)} \xA4)</button>` : ""}<button class="btn bad" data-act="msalv" ${p.length ? "" : "disabled"}>${Rs === "salv" ? "Confirmar desguace" : "Desguazar"} ${p.length || ""}</button>${y && Rs ? '<span style="color:#ff9aa5;font-size:13px">Hay objetos \xE9picos o mejores en la selecci\xF3n.</span>' : ""}</div></div>`;
     }
     let f = on ? on.inv || e.eq[on.eq] : null,
       u =
@@ -318,7 +319,7 @@ function Ai(n = "inv") {
               ? (u +=
                   '<button class="btn pri" data-act="eq1">Equipar (principal)</button><button class="btn" data-act="eq2">Equipar (secundaria)</button>')
               : (u += '<button class="btn pri" data-act="eq">Equipar</button>'),
-            Gi && (u += `<button class="btn" data-act="sell">Vender (${yt(ka(f))} \xA4)</button>`),
+            ecoCanSell() && (u += `<button class="btn" data-act="sell">Vender (${yt(ka(f))} \xA4)</button>`),
             (u += `<button class="btn ${f.fav ? "" : "bad"}" data-act="salv" ${f.fav ? "disabled" : ""}>Desguazar (pierdes el plano)</button><button class="btn" data-act="fav">${f.fav ? "Desbloquear" : "Bloquear \u2605"}</button>`))
           : (u += '<button class="btn" data-act="uneq">Quitar</button>'),
         (u += "</div>"));
@@ -334,11 +335,11 @@ function Ai(n = "inv") {
       <div style="min-width:0"><div class="row" style="justify-content:space-between"><div class="sec">Arsenal sin equipar ${e.inv.length}</div><button class="btn ${Hi ? "pri" : ""}" data-act="multi" style="padding:4px 10px;font-size:12px">${Hi ? "\u2713 Selecci\xF3n m\xFAltiple" : "Selecci\xF3n m\xFAltiple"}</button><div class="tabs"><button class="tab ${qa === "all" ? "on" : ""}" data-f="all">Todo</button><button class="tab ${qa === "w" ? "on" : ""}" data-f="w">Armas</button><button class="tab ${qa === "g" ? "on" : ""}" data-f="g">Equipo</button></div></div>
       ${h}<div class="inv">${d || '<div class="muted">La mochila est\xE1 vac\xEDa.</div>'}</div>
       ${Hi ? "" : `<div class="row" style="margin-top:8px"><span class="muted" style="font-size:13px">Consejo: Ctrl/May\xFAs + clic para seleccionar varios. Los objetos bloqueados \u2605 est\xE1n protegidos.</span></div><div style="margin-top:10px">${u}</div>`}</div></div>`));
-  } else n === "mods" ? (s = aS()) : (s = oS());
+  } else n === "mods" ? (s = aS()) : n === "junk" ? (s = ecoJunkHtml()) : (s = oS());
   let a = (x.uiOpen === "inv" && document.querySelector("#panel .wbody")?.scrollTop) || 0;
   Ze.open(
     "inv",
-    `<div class="win">${Ze.head(Gi ? "Inventario \xB7 vender" : "Inventario", i)}<div class="wbody">${s}</div></div>`,
+    `<div class="win">${Ze.head(ecoCanSell() ? "Inventario \xB7 vender" : "Inventario", i)}<div class="wbody">${s}</div></div>`,
     { silent: !!x.uiOpen },
   );
   {
@@ -454,7 +455,8 @@ function Ai(n = "inv") {
     Ai("inv");
   };
   (r.querySelectorAll("[data-act]").forEach((l) => l.addEventListener("click", () => o(l.dataset.act))),
-    n === "mods" && rS(r, () => Ai("mods")));
+    n === "mods" && rS(r, () => Ai("mods")),
+    n === "junk" && ecoJunkBind(r, () => Ai("junk")));
 }
 
 
@@ -846,105 +848,13 @@ function Wp(n, e) {
 var gb = (n, e) => Math.round((n.pow ? 2500 : 45 * Math.pow(n.t, 1.7)) * mt.credits(e));
 
 
-// ════════ [695] FunctionDeclaration lS (501 bytes) ════════
+// ════════ [695-696] lS (stock de un vendedor) y Oo (tienda) ════════
+// La tienda (Comprar · Vender · Curiosidades), su stock limitado y los precios viven en 31a-economy.js.
 function lS(n) {
-  let e = x.S;
-  e.shop || (e.shop = {});
-  let t = Date.now(),
-    i = e.shop[n];
-  if (!i || t > i.until || i.lvl !== e.lvl || !i.v2) {
-    let s = zt[n],
-      a = s.reg >= 0 ? qe(e.lvl, De[Math.max(0, s.reg)].lvl[0], De[Math.max(0, s.reg)].lvl[1] + 4) : e.lvl,
-      r = [];
-    for (let l = 0; l < 4; l++)
-      r.push(us(a, { minR: l === 0 ? 1 : 0, newChance: 0.9, weaponChance: n === "vega" ? 0.6 : 0.4 }));
-    let o = [];
-    for (let l = 0; l < 5; l++) o.push(xi(a, { minT: l < 2 ? 2 : 1, kind: l % 2 ? "g" : "w" }));
-    (Lt() < 0.1 && o.push(xi(a, { pow: !0 })),
-      (e.shop[n] = { until: t + 15 * 6e4, items: r, chips: o, lvl: e.lvl, v2: 1, clvl: a }));
-  }
-  return e.shop[n];
+  return ecoShopStock(n);
 }
-
-
-// ════════ [696] FunctionDeclaration Oo (2838 bytes) ════════
 function Oo(n) {
-  let e = x.S,
-    t = lS(n),
-    i = Gi?.sel,
-    s = Gi?.csel,
-    a = (f) => Math.round(Tl[f].price * (1 + e.lvl * 0.12)),
-    r = x.player,
-    o =
-      '<div class="card muted">Selecciona un art\xEDculo. Los planos que ya tienes se convierten en mejoras de tu pieza (rango, nivel, m\xF3dulos y materiales).</div>';
-  if (i) {
-    let f = Dl(i.base),
-      u = ka(i) * 3;
-    o =
-      ql(i, f || Hd(i)) +
-      `<div class="row" style="margin-top:8px"><button class="btn pri" id="sBuy" ${e.credits < u ? "disabled" : ""}>Comprar plano por ${yt(u)} \xA4</button>${f ? '<span class="muted" style="font-size:13px">Ya la tienes: mejorar\xE1 la tuya.</span>' : '<span style="color:var(--good);font-size:13px">Pieza nueva</span>'}</div>`;
-  } else if (s) {
-    let f = gb(s, t.clvl || e.lvl);
-    o =
-      lh(s) +
-      `<div class="row" style="margin-top:8px"><button class="btn pri" id="sBuyC" ${e.credits < f ? "disabled" : ""}>Comprar por ${yt(f)} \xA4</button></div>`;
-  }
-  let l = `<div class="win">${Ze.head(zt[n].n + " \xB7 Comercio", `<span class="tag" style="color:#ffd447">\xA4 ${yt(e.credits)}</span>`)}<div class="wbody"><div class="grid2"><div>
-    <div class="sec">Suministros</div>
-    ${Object.entries(Tl)
-      .map(([f, u]) => {
-        let p = f === "grenade" ? r.grenadeMax : f === "medkit" ? r.medkitMax : 5;
-        return `<div class="row" style="justify-content:space-between;margin-bottom:6px"><span><b>${u.n}</b> <span class="muted">(${e.cons[f]}/${p})</span><br><span class="muted" style="font-size:13px">${u.desc}</span></span><button class="btn" data-cons="${f}" ${e.credits < a(f) || e.cons[f] >= p ? "disabled" : ""}>${a(f)} \xA4</button></div>`;
-      })
-      .join("")}
-    <p class="muted" style="font-size:13px">El g\xE9nero se renueva en ${Xs((t.until - Date.now()) / 1e3)}.</p></div>
-    <div style="min-width:0"><div class="sec">Planos</div><div class="inv">${t.items.map((f, u) => Vp(f, i === f, u)).join("") || '<span class="muted">Agotado</span>'}</div><div class="sec">M\xF3dulos</div><div class="inv">${t.chips.map((f, u) => qp(f, s === f, u)).join("") || '<span class="muted">Agotado</span>'}</div><div style="margin-top:10px">${o}</div></div></div></div></div>`;
-  Ze.open("shop", l, { silent: x.uiOpen === "shop" });
-  let c = _t("#panel");
-  (c.querySelectorAll(".cell[data-i]").forEach((f) =>
-    f.addEventListener("click", () => {
-      ((Gi = { npc: n, sel: t.items[+f.dataset.i] }), Oo(n));
-    }),
-  ),
-    c.querySelectorAll(".cell[data-c]").forEach((f) =>
-      f.addEventListener("click", () => {
-        ((Gi = { npc: n, csel: t.chips[+f.dataset.c] }), Oo(n));
-      }),
-    ),
-    c.querySelectorAll("[data-cons]").forEach((f) =>
-      f.addEventListener("click", () => {
-        let u = f.dataset.cons;
-        ((e.credits -= a(u)), e.cons[u]++, ae.play("coin"), ee("cons"), Oo(n));
-      }),
-    ));
-  let d = _t("#sBuy");
-  d &&
-    d.addEventListener("click", () => {
-      let f = ka(i) * 3;
-      e.credits < f ||
-        ((e.credits -= f),
-        t.items.splice(t.items.indexOf(i), 1),
-        Ss(i),
-        ae.play("coin"),
-        (Gi = { npc: n }),
-        ee("res"),
-        ee("save"),
-        Oo(n));
-    });
-  let h = _t("#sBuyC");
-  h &&
-    h.addEventListener("click", () => {
-      let f = gb(s, t.clvl || e.lvl);
-      e.credits < f ||
-        ((e.credits -= f),
-        t.chips.splice(t.chips.indexOf(s), 1),
-        Ts(s),
-        ae.play("coin"),
-        (Gi = { npc: n }),
-        ee("res"),
-        ee("save"),
-        Oo(n));
-    });
+  ecoShopOpen(n);
 }
 
 
@@ -999,7 +909,7 @@ function fs(n = xb) {
       let p = qd(u);
       if (!p)
         s +=
-          '<div class="card" style="margin-top:8px"><b>Rango M\xEDtico</b><div class="muted" style="font-size:13px">Rango m\xE1ximo alcanzado.</div></div>';
+          '<div class="card" style="margin-top:8px"><b>Rango m\xE1ximo</b><div class="muted" style="font-size:13px">${u.r >= 5 ? "Rango M\xEDtico alcanzado." : "El rango M\xEDtico no se consigue ascendiendo: solo cae de los jefes m\xE1s dif\xEDciles."}</div></div>';
       else {
         let m = u.r + 1;
         s += `<div class="card" style="margin-top:8px"><b>Ascender a <span style="color:${Ct[m].css}">${Ct[m].n}</span></b><div class="muted" style="font-size:13px">M\xE1s poder base y ${ur[m] > ur[u.r] ? "+1 ranura de m\xF3dulo" : "misma cantidad de ranuras"}${m === 4 ? " y una ranura legendaria" : m === 5 && u.type === "weapon" ? " y una segunda ranura legendaria" : ""}. Los n\xFAcleos \u25C9 salen de jefes, cofres buenos, operaciones y zonas interiores.</div><div class="cost">${Do(p)}</div><button class="btn pri" style="margin-top:6px" id="wbAsc" ${ca(p) ? "" : "disabled"}>Ascender</button></div>`;
@@ -1513,6 +1423,7 @@ function No(n = "chron") {
       ["best", `Bestiario ${r}/${a.length}`],
       ["reg", `Regiones ${o}/${De.length}`],
       ["npc", `Personajes ${l}/${Object.keys(Ll).length}`],
+      ["hitos", `Hitos ${(e.hitos || []).length}`],
     ]
       .map(([p, m]) => `<button class="tab ${n === p ? "on" : ""}" data-t="${p}">${m}</button>`)
       .join("")}</div>`,
@@ -1564,7 +1475,8 @@ function No(n = "chron") {
               .join("")}</div>`,
         )
         .join("");
-  } else
+  } else if (n === "hitos") h = ecoHitosHtml();
+  else
     n === "reg"
       ? (h = De.map((p, m) =>
           e.visited[m]
