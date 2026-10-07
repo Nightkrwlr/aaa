@@ -202,8 +202,7 @@ var ta = new _i(),
         (this.fx = new CkCharFx()
           .setRim(i.rim ?? 10409215, i.rimK ?? 0.5)
           .setAura(i.aura ?? 0, i.aura ? (i.auraK ?? 0.55) : 0)
-          .setEyes(i.eyes ?? 1.4)),
-        (this.st = { hit: 0, frz: 0, frzT: 0, burn: 0, burnT: 0, poi: 0, poiT: 0, shd: 0, shdT: 0 }),
+          .setEyes(i.eyes ?? 0)),
         (this.mats = []),
         this.obj.traverse((o) => {
           o.isMesh &&
@@ -257,24 +256,12 @@ var ta = new _i(),
         this.lock > 0 && this.lock < 99 && (this.lock -= e),
         i && this.play(i, s),
         this.mixer.update(e),
-        this.tickFx(e));
+        this.fx.tick(e));
     }
-    // estados del personaje → uniformes compartidos (sin asignaciones); el impacto cae en ~3 fotogramas
-    tickFx(e) {
-      let t = this.st,
-        i = Math.min(1, e * 12);
-      ((t.hit = Math.max(0, t.hit - e * 11)),
-        (t.frz += (t.frzT - t.frz) * i),
-        (t.burn += (t.burnT - t.burn) * i),
-        (t.poi += (t.poiT - t.poi) * i),
-        (t.shd += (t.shdT - t.shd) * Math.min(1, e * 8)),
-        this.fx.setStatus(t.hit, t.frz, t.burn, t.poi, t.shd));
-    }
-    // quemado / veneno / escudo activos (los llama el enemigo cada fotograma)
+    // estados del personaje (lógica en CharFx): quemado / veneno / escudo activos y disolución de muerte
     setStates(e, t, i) {
-      ((this.st.burnT = e ? 1 : 0), (this.st.poiT = t ? 1 : 0), (this.st.shdT = i ? 1 : 0));
+      this.fx.setStates(e, t, i);
     }
-    // disolución de muerte 0..1 (el borde incandescente toma el color de la familia)
     dissolve(e, t) {
       (this.fx.setDissolve(e, t),
         e > 0.45 &&
@@ -317,9 +304,8 @@ var ta = new _i(),
         this.mixer.update(0));
     }
     flash(e, t = 16777215) {
-      // blanco HDR de impacto (se apaga solo) o azul hielo persistente; lo pinta el shader, no el emisivo
-      (t === 16777215 ? (this.st.hit = e ? 1 : 0) : (this.st.frzT = e ? 1 : 0), e || ((this.st.frzT = 0), (this.st.hit = 0)));
-      this.fx.setStatus(this.st.hit, this.st.frz, this.st.burn, this.st.poi, this.st.shd);
+      // blanco HDR de impacto (cae solo) o azul hielo persistente: lo pinta el shader, el emisivo solo conserva el tinte base
+      this.fx.flash(e, t !== 16777215);
       for (let i of this.mats) (i.emissive.setHex(this.baseEm), (i.emissiveIntensity = this.baseEm ? 0.12 : 0));
     }
     dispose() {

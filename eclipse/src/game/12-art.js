@@ -107,6 +107,9 @@ var Pa = class {
       (this.h = t),
       (this.root = new Ve()),
       (this.mat = new Xt({ alphaTest: 0.45, roughness: 0.85, metalness: 0, side: pn, emissive: 0 })),
+      // luz de borde, contorno de familia/élite, estados de combate y disolución (engine/chars.js): todo en el shader, sin mallas extra
+      (this.fx = new CkCharFx().setRim(10409215, 0.55).setAura(12577535, 0.8).setEyes(0)),
+      CkPatchSprite(this.mat, this.fx),
       (this.mesh = new Ge(Pd, this.mat)),
       (this.mesh.castShadow = !1),
       this.root.add(this.mesh),
@@ -137,8 +140,12 @@ var Pa = class {
       }
     return null;
   }
+  // estilo del personaje: luz de borde (rim), contorno exterior (aura) y su grosor en píxeles extra
+  style(e, t, i = 0, s = 0, a = 0.3, r = 0) {
+    this.fx.setRim(e, t).setAura(i, s).setOutline(a).setEyes(r);
+  }
   update(e, t, i, s = 1) {
-    (i !== this.anim && ((this.anim = i), (this.t = 0)), (this.t += e * s));
+    (this.fx.tick(e), i !== this.anim && ((this.anim = i), (this.t = 0)), (this.t += e * s));
     let a = Math.round((t - Math.PI / 4) / (Math.PI / 4));
     a = ((a % 8) + 8) % 8;
     let r = this.pick(i, Pw[a]);
@@ -163,7 +170,13 @@ var Pa = class {
       kl && this.mesh.quaternion.copy(this.root.quaternion).invert().multiply(kl));
   }
   flash(e, t = 16777215) {
-    (this.mat.emissive.setHex(e ? t : 0), (this.mat.emissiveIntensity = e ? 0.9 : 0));
+    this.fx.flash(e, t !== 16777215);
+  }
+  setStates(e, t, i) {
+    this.fx.setStates(e, t, i);
+  }
+  dissolve(e, t) {
+    this.fx.setDissolve(e, t);
   }
 };
 

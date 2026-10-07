@@ -17,16 +17,20 @@ const _c = new Color();
 export class CharFx {
   constructor() {
     this.uCfA = { value: new Vector4(0, 0, 0, 0) };      // x impacto · y congelado · z quemado · w veneno
-    this.uCfB = { value: new Vector4(0, 0, 1, 0) };      // x escudo · y disolución · z ganancia de ojos · w (libre)
+    this.uCfB = { value: new Vector4(0, 0, 1, 0.3) };    // x escudo · y disolución · z ganancia de ojos · w grosor extra del contorno (sprites)
     this.uRimC = { value: new Vector4(0.55, 0.78, 1, 0.55) }; // rgb luz de borde · a intensidad
-    this.uAuraC = { value: new Vector4(0, 0, 0, 0) };    // rgb aura de élite/familia · a intensidad
+    this.uAuraC = { value: new Vector4(0, 0, 0, 0) };    // rgb aura (mallas) / contorno (sprites) de élite o familia · a intensidad
     this.uDisC = { value: new Color(1, 0.5, 0.12) };     // color del borde de la disolución
+    // valores suavizados / objetivos de los estados (sin asignaciones por fotograma)
+    this.hit = 0; this.frz = 0; this.frzT = 0; this.burn = 0; this.burnT = 0; this.poi = 0; this.poiT = 0; this.shd = 0; this.shdT = 0;
   }
   /** luz de borde (hex, intensidad) */
   setRim(hex, k) { _c.setHex(hex); this.uRimC.value.set(_c.r, _c.g, _c.b, k); return this; }
-  /** aura de élite/familia: borde ancho y pulsante */
+  /** aura de élite/familia (mallas) o contorno exterior (sprites): borde con latido suave */
   setAura(hex, k) { _c.setHex(hex); this.uAuraC.value.set(_c.r, _c.g, _c.b, k); return this; }
-  /** estados: sin asignaciones, se llama cada fotograma */
+  /** grosor extra del contorno de sprites en píxeles de pantalla */
+  setOutline(w) { this.uCfB.value.w = w; return this; }
+  /** estados directos */
   setStatus(flash, frozen, burn, poison, shield) {
     this.uCfA.value.set(flash, frozen, burn, poison); this.uCfB.value.x = shield; return this;
   }
@@ -34,6 +38,22 @@ export class CharFx {
   setDissolve(p, hex) { this.uCfB.value.y = p; if (hex !== undefined) this.uDisC.value.setHex(hex); return this; }
   setEyes(g) { this.uCfB.value.z = g; return this; }
   reset() { this.uCfA.value.set(0, 0, 0, 0); this.uCfB.value.x = 0; this.uCfB.value.y = 0; return this; }
+  // ─── estados del juego → uniformes ────────────────────────────────────────────────────────
+  /** impacto (blanco HDR que cae en ~3 fotogramas) o congelado persistente; `ice` distingue el azul hielo */
+  flash(on, ice) {
+    if (on) { if (ice) this.frzT = 1; else this.hit = 1; } else { this.hit = 0; this.frzT = 0; }
+    return this;
+  }
+  /** quemado / veneno / escudo activos (se llama cada fotograma) */
+  setStates(burn, poison, shield) { this.burnT = burn ? 1 : 0; this.poiT = poison ? 1 : 0; this.shdT = shield ? 1 : 0; return this; }
+  /** avanza y vuelca los estados suavizados a los uniformes */
+  tick(dt) {
+    const k = Math.min(1, dt * 12);
+    this.hit = Math.max(0, this.hit - dt * 11);
+    this.frz += (this.frzT - this.frz) * k; this.burn += (this.burnT - this.burn) * k; this.poi += (this.poiT - this.poi) * k;
+    this.shd += (this.shdT - this.shd) * Math.min(1, dt * 8);
+    return this.setStatus(this.hit, this.frz, this.burn, this.poi, this.shd);
+  }
 }
 
 // ─── GLSL ─────────────────────────────────────────────────────────────────────────────────────
@@ -54,21 +74,11 @@ if (uCfB.y > 0.0) { chDis = chNoise(vOP * 7.0) * 0.75 + chNoise(vOP * 19.0) * 0.
 // puntos de acento (ojos, cristales): colores saturados y claros del atlas de paleta, antes de teñir
 float chMx = max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)), chMn = min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b));
 float chSat = chMx > 0.001 ? (chMx - chMn) / chMx : 0.0;
-float chEye = uCfB.z > 0.0 ? smoothstep(0.55, 0.8, chSat) * smoothstep(0.32, 0.5, chMx) : 0.0;
+float chEye = uCfB.z > 0.0 ? smoothstep(0.75, 0.92, chSat) * smoothstep(0.55, 0.75, chMx) : 0.0;
 vec3 chEyeCol = diffuseColor.rgb;`;
 
-const GLSL_FINAL = /* glsl */`
-{
-  vec3 chV = normalize(vViewPosition);
-  float chNV = clamp(dot(chV, normal), 0.0, 1.0);
-  float chFr = pow(1.0 - chNV, 2.2);
-  float chUp = clamp(normal.y * 0.5 + 0.5, 0.0, 1.0);
-  // luz de borde: cielo frío, más fuerte arriba y en el contorno (silueta legible sobre cualquier bioma)
-  outgoingLight += uRimC.rgb * (uRimC.a * chFr * (0.4 + 0.9 * chUp));
-  // aura de élite/familia: borde más ancho con latido suave
-  outgoingLight += uAuraC.rgb * (uAuraC.a * pow(1.0 - chNV, 1.5) * (0.78 + 0.22 * sin(uCharT * 3.2 + vOP.y * 5.0)));
-  // ojos y puntos débiles en HDR (alimentan el bloom)
-  outgoingLight += chEyeCol * (chEye * uCfB.z);
+// estados de combate (comunes a mallas y sprites): usan `chFr` (0..1, intensidad de borde) y `chDis`
+const GLSL_STATUS = /* glsl */`
   float chLum = dot(outgoingLight, vec3(0.299, 0.587, 0.114));
   // congelado: desatura hacia azul hielo y filo claro
   outgoingLight = mix(outgoingLight, vec3(chLum) * vec3(0.62, 0.92, 1.3) + vec3(0.03, 0.09, 0.2), uCfA.y * 0.72);
@@ -83,7 +93,55 @@ const GLSL_FINAL = /* glsl */`
   // impacto: blanco HDR (1–2 fotogramas) → el bloom lo realza sin quemar el color de la familia
   outgoingLight = mix(outgoingLight, vec3(2.5, 2.4, 2.2), uCfA.x * 0.88);
   // borde incandescente de la disolución de muerte
-  if (chDis < 0.1) outgoingLight += uDisC * ((1.0 - chDis / 0.1) * 3.2);
+  if (chDis < 0.1) outgoingLight += uDisC * ((1.0 - chDis / 0.1) * 3.2);`;
+
+const GLSL_FINAL = /* glsl */`
+{
+  vec3 chV = normalize(vViewPosition);
+  float chNV = clamp(dot(chV, normal), 0.0, 1.0);
+  float chFr = pow(1.0 - chNV, 2.2);
+  float chUp = clamp(normal.y * 0.5 + 0.5, 0.0, 1.0);
+  // luz de borde: cielo frío, más fuerte arriba y en el contorno (silueta legible sobre cualquier bioma)
+  outgoingLight += uRimC.rgb * (uRimC.a * chFr * (0.4 + 0.9 * chUp));
+  // aura de élite/familia: borde más ancho con latido suave
+  outgoingLight += uAuraC.rgb * (uAuraC.a * pow(1.0 - chNV, 1.5) * (0.78 + 0.22 * sin(uCharT * 3.2 + vOP.y * 5.0)));
+  // ojos y puntos débiles en HDR (alimentan el bloom)
+  outgoingLight += chEyeCol * (chEye * uCfB.z);
+  ${GLSL_STATUS}
+}`;
+
+// ─── sprites (billboards con hoja de animación): contorno y luz de borde por detección de bordes del alfa ───
+// Antes del alphaTest: los píxeles transparentes vecinos a un píxel sólido pasan a ser el contorno exterior (se pintan HDR al final).
+const GLSL_SPRITE_PRE = /* glsl */`
+float chIn = 0.0, chOut = 0.0, chDis = 1.0;
+float chMx = max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)), chMn = min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b));
+float chSat = chMx > 0.001 ? (chMx - chMn) / chMx : 0.0;
+float chEye = uCfB.z > 0.0 ? smoothstep(0.7, 0.9, chSat) * smoothstep(0.5, 0.7, chMx) * step(0.45, diffuseColor.a) : 0.0;
+vec3 chEyeCol = diffuseColor.rgb;
+#ifdef USE_MAP
+{
+  vec2 px = fwidth(vMapUv) * (0.9 + uCfB.w);
+  float aR = texture2D(map, vMapUv + vec2(px.x, 0.0)).a, aL = texture2D(map, vMapUv - vec2(px.x, 0.0)).a;
+  float aU = texture2D(map, vMapUv + vec2(0.0, px.y)).a, aD = texture2D(map, vMapUv - vec2(0.0, px.y)).a;
+  float aMax = max(max(aR, aL), max(aU, aD)), aMin = min(min(aR, aL), min(aU, aD));
+  float solid = step(0.45, diffuseColor.a);
+  chOut = (1.0 - solid) * step(0.45, aMax) * step(0.001, uAuraC.a);
+  chIn = solid * (1.0 - step(0.45, aMin));
+  if (chOut > 0.0) { diffuseColor.a = 1.0; diffuseColor.rgb = vec3(0.0); }
+}
+#endif
+if (uCfB.y > 0.0) { chDis = chNoise(vOP * vec3(11.0, 11.0, 3.0)) * 0.75 + chNoise(vOP * vec3(27.0, 27.0, 5.0)) * 0.25 - uCfB.y * 1.15 + 0.12; if (chDis < 0.0) discard; }
+#include <alphatest_fragment>`;
+
+const GLSL_SPRITE_FINAL = /* glsl */`
+{
+  float chFr = clamp(chIn + 0.2 + chOut, 0.0, 1.0);
+  // luz de borde interior: el contorno de la silueta se enciende (HDR) y despega al personaje del suelo
+  outgoingLight += uRimC.rgb * (uRimC.a * chIn);
+  // contorno exterior de familia/élite, con latido suave
+  outgoingLight = mix(outgoingLight, uAuraC.rgb * (0.85 + 0.15 * sin(uCharT * 3.2)) * uAuraC.a, chOut);
+  outgoingLight += chEyeCol * (chEye * uCfB.z);
+  ${GLSL_STATUS}
 }`;
 
 // teñido por matiz/traje del juego (idéntico al de Jf original)
@@ -130,6 +188,29 @@ ${recolor ? 'uniform float uHue; uniform float uSat; uniform float uVal; uniform
   };
   const key = (fx ? 'rc3ch' : 'rc2') + (recolor ? 't' : 'n');
   mat.customProgramCacheKey = () => key;
+  mat.needsUpdate = true;
+  return mat;
+}
+
+/**
+ * Parche para sprites (Pa: billboard con hoja de animación, MeshStandardMaterial con alphaTest). No hay normales que den fresnel,
+ * así que la luz de borde y el contorno salen de comparar el alfa con sus vecinos a ~1 píxel de pantalla (fwidth del UV).
+ */
+export function patchSpriteMaterial(mat, fx) {
+  const prev = mat.onBeforeCompile;
+  mat.onBeforeCompile = function (t, r) {
+    prev && prev.call(this, t, r);
+    t.uniforms.uCfA = fx.uCfA; t.uniforms.uCfB = fx.uCfB; t.uniforms.uRimC = fx.uRimC;
+    t.uniforms.uAuraC = fx.uAuraC; t.uniforms.uDisC = fx.uDisC; t.uniforms.uCharT = charClock;
+    t.vertexShader = t.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vOP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position;');
+    t.fragmentShader = t.fragmentShader
+      .replace('#include <common>', `#include <common>${GLSL_DECL}`)
+      .replace('#include <alphatest_fragment>', GLSL_SPRITE_PRE)
+      .replace('#include <opaque_fragment>', `${GLSL_SPRITE_FINAL}\n#include <opaque_fragment>`);
+  };
+  mat.customProgramCacheKey = () => 'rcsp1';
   mat.needsUpdate = true;
   return mat;
 }

@@ -2,7 +2,8 @@
 
 // ════════ [516] VariableDeclaration RE,CE,xp,vp (29554 bytes) ════════
 // luz de borde por familia (se lee sobre cualquier bioma) y color de disolución al morir
-var CkRimFam = { insect: 16761466, mutant: 11993994, mech: 8376575, xeno: 14196991 },
+var CkOutFam = { insect: 8934162, mutant: 4487232, mech: 2851918, xeno: 6824056 },
+  CkRimFam = { insect: 16761466, mutant: 11993994, mech: 8376575, xeno: 14196991 },
   CkDisFam = { insect: 16743184, mutant: 10092336, mech: 8376575, xeno: 14196991 };
 var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
   CE = 1,
@@ -77,6 +78,7 @@ var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
           f = Ei(0.55, 0.5);
         if (
           (h.root.add(f),
+          h.style(CkRimFam[r.fam] ?? 10409215, this.boss || this.elite ? 0.8 : 0.6, this.elite || (this.boss ? r.m.e : CkOutFam[r.fam] ?? 0), this.elite || this.boss ? 1.25 : 0.9, this.elite || this.boss ? 0.55 : 0.3, 0.7),
           (this.rig = { root: h.root, actor: h, meshes: [], shadow: f, parts: [], legs: [], type: "sprite", t: 0 }),
           this.elite)
         ) {
@@ -289,6 +291,18 @@ var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
           this.rig.model.dissolve(Math.min(1, Math.max(0, (1.1 - this.deadT) / 0.95)), CkDisFam[this.fam]),
           this.deadT > 0
         );
+      if (this.dead && this.rig.actor) {
+        // sprites: caen un poco y se disuelven en brasas del color de la familia
+        this._dplay || ((this._dplay = !0), (this.deadT = Math.max(this.deadT, 0.6)), this.rig.actor.flash(!1));
+        this.deadT -= e;
+        let h = Math.min(1, Math.max(0, 1 - this.deadT / 0.55));
+        return (
+          this.rig.actor.update(e, this.face, "idle"),
+          this.rig.actor.dissolve(h, CkDisFam[this.fam]),
+          this.rig.root.scale.setScalar(this.scale * (1 - 0.12 * h)),
+          this.deadT > 0
+        );
+      }
       if (this.dead) {
         this.deadT -= e;
         let h = Math.max(0, this.deadT / 0.35);
@@ -466,6 +480,7 @@ var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
       } else
         l.actor
           ? ((l.root.rotation.y = 0),
+            l.actor.setStates(s.burn > 0, s.poison > 0, this.shielded > 0 || this.shieldHp > 0),
             l.actor.update(
               s.frozen > 0 ? 0 : e * (s.slow > 0 ? 0.5 : 1),
               this.face,

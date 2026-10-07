@@ -230,44 +230,45 @@ var Ad = class {
           h = 4 + Q() * 8;
         this.sparks.spark(e, t, i, Math.sin(d) * h, 1 + Q() * 3.5, Math.cos(d) * h, 0.16 + Q() * 0.16, 0.55, 0.032, r[0], r[1], r[2], 16, 1.1);
       }
-      (this.add.add(e, t, i, 0, 0, 0, 0.09, 0.8, 0.2, 3.2, 2.9, 2.4, 0, 0),
+      (this.add.add(e, t, i, 0, 0, 0, 0.07, 0.42, 0.1, 0.5 + r[0] * 0.5, 0.5 + r[1] * 0.5, 0.5 + r[2] * 0.5, 0, 0),
         this.burst(e, t, i, 2, { color: s, speed: 2.5, life: 0.2, size: 0.16, dir: a !== void 0 ? l : void 0, spread: 1.4, up: 0.3 }));
     }
     blood(e, t, i, s = 8) {
       this.burst(e, 0.6, t, s, { color: i, add: !1, speed: 3.5, life: 0.6, size: 0.2, grav: 9, up: 1.2, drag: 1 });
     }
     explosion(e, t, i, s = 16747040) {
-      // capas: destello blanco → bola de fuego con degradado → onda de choque + charco de luz → chispas → brasas → humo; luz y sacudida según tamaño
+      // capas: destello blanco → bola de fuego con degradado (crece mientras se enfría) → onda de choque + charco de luz → chispas → brasas → humo
+      // las partículas aditivas se apilan: cada una lleva poca intensidad y el núcleo es pequeño, o el bloom lo quema todo
       let a = Math.sqrt(i),
         r = this.lowQ,
-        o = CkHot(s, 3.4, this._c),
+        o = CkHot(s, 1.35, this._c),
         l = o[0],
         c = o[1],
         d = o[2];
-      this.add.add(e, 0.7, t, 0, 0, 0, 0.16, 1.7 * a, 3.6 * a, 5, 4.4, 3.4, 0, 0);
-      let h = Math.round((r ? 12 : 20) + i * (r ? 4 : 8));
+      this.add.add(e, 0.7, t, 0, 0, 0, 0.1, 0.8 * a, 1.9 * a, 2.6, 2.2, 1.6, 0, 0);
+      let h = Math.round((r ? 10 : 16) + i * (r ? 3 : 6));
       for (let f = 0; f < h; f++) {
         let u = Q() * 6.283,
-          p = 7 * i * (0.25 + Q() * 0.75),
-          m = (0.2 + Q() * 0.6) * 7 * a;
-        this.add.add(e + (Q() - 0.5) * 0.3, 0.45 + Q() * 0.5, t + (Q() - 0.5) * 0.3, Math.cos(u) * p, m, Math.sin(u) * p, 0.45 + Q() * 0.4, (0.8 + Q() * 0.5) * a, 0.15, l, c, d, 0, 3.4, l * 0.22, c * 0.05, d * 0.02);
+          p = 6 * i * (0.2 + Q() * 0.8),
+          m = (0.15 + Q() * 0.5) * 6 * a;
+        this.add.add(e + (Q() - 0.5) * 0.3, 0.4 + Q() * 0.5, t + (Q() - 0.5) * 0.3, Math.cos(u) * p, m, Math.sin(u) * p, 0.5 + Q() * 0.4, (0.5 + Q() * 0.3) * a, (1.1 + Q() * 0.6) * a, l, c, d, 0, 3.2, l * 0.2, c * 0.04, d * 0.015);
       }
-      for (let f = 0, u = r ? 4 : 8; f < u; f++) {
+      for (let f = 0, u = r ? 3 : 6; f < u; f++) {
         let p = Q() * 6.283,
-          m = 3 * i * Q();
-        this.add.add(e, 0.6, t, Math.cos(p) * m, 2 + Q() * 2, Math.sin(p) * m, 0.3 + Q() * 0.15, 1.1 * a, 0.3, 4.2, 3.4, 1.9, 0, 4, 1.6, 0.5, 0.12);
+          m = 2 * i * Q();
+        this.add.add(e, 0.6, t, Math.cos(p) * m, 2 + Q() * 2, Math.sin(p) * m, 0.28 + Q() * 0.12, 0.6 * a, 1.2 * a, 1.9, 1.5, 0.8, 0, 4, 0.9, 0.3, 0.07);
       }
       this.ring(e, t, i * 1.5, s, 0.5, 1);
-      r || this.ring(e, t, i * 2, s, 0.55, 2);
+      r || this.ring(e, t, i * 2, s, 0.5, 2);
       for (let f = 0, u = (r ? 8 : 14) + Math.round(i * 5); f < u; f++) {
         let p = Q() * 6.283,
           m = (6 + Q() * 10) * a;
-        this.sparks.spark(e, 0.5, t, Math.cos(p) * m, 3 + Q() * 9, Math.sin(p) * m, 0.5 + Q() * 0.5, 0.65, 0.035, 3.4, 2.1, 0.7, 15, 0.7);
+        this.sparks.spark(e, 0.5, t, Math.cos(p) * m, 3 + Q() * 9, Math.sin(p) * m, 0.5 + Q() * 0.5, 0.65, 0.035, 2.6, 1.6, 0.5, 15, 0.7);
       }
       for (let f = 0, u = r ? 3 : 7; f < u; f++) {
         let p = Q() * 6.283,
           m = 1.5 + Q() * 2.5 * i;
-        this.add.add(e, 0.5, t, Math.cos(p) * m, 1.5 + Q() * 2.5, Math.sin(p) * m, 0.9 + Q() * 0.7, 0.14, 0.03, 3, 1.1, 0.25, -0.6, 1.2);
+        this.add.add(e, 0.5, t, Math.cos(p) * m, 1.5 + Q() * 2.5, Math.sin(p) * m, 0.9 + Q() * 0.7, 0.14, 0.03, 2.4, 0.9, 0.2, -0.6, 1.2);
       }
       for (let f = 0, u = Math.round((r ? 4 : 9) + i * 4); f < u; f++) {
         let p = Q() * 6.283,
@@ -275,7 +276,7 @@ var Ad = class {
         this.norm.add(e + (Q() - 0.5) * 0.4, 0.5, t + (Q() - 0.5) * 0.4, Math.cos(p) * m, 1.2 + Q() * 1.6, Math.sin(p) * m, 1.1 + Q() * 0.8, (0.8 + Q() * 0.4) * a, 1.9 * a, 0.2, 0.18, 0.17, -0.4, 1.6, 0.05, 0.05, 0.055);
       }
       (this.decal(e, t, i * 0.9, 1118481, 0.7),
-        this.R.flashLight(e, 1.3, t, s, 9 * a, 5 + i * 3, 0.34),
+        this.R.flashLight(e, 1.3, t, s, 6 * a, 3 + i * 1.3, 0.28),
         this.R.addShake(0.1 + i * 0.08));
     }
     muzzle(e, t, i, s, a = 16765562, r = 1) {
@@ -292,7 +293,7 @@ var Ad = class {
           u = 7 + Q() * 7;
         this.sparks.spark(e, t, i, Math.sin(f) * u, Q() * 2.5, Math.cos(f) * u, 0.16 + Q() * 0.1, 0.4, 0.028, o[0], o[1], o[2], 10, 1.6);
       }
-      this.R.flashLight(e, t + 0.3, i, a, 2.8 * r, 5, 0.06);
+      this.R.flashLight(e, t + 0.3, i, a, 1.6 * r, 4.5, 0.06);
     }
     smoke(e, t, i, s = 1, a = 5591112, r = 0.4) {
       this.burst(e, t, i, s, { color: a, add: !1, speed: 0.5, life: 0.9, size: r, size1: r * 2.2, up: 1, drag: 1.5 });
@@ -417,7 +418,7 @@ var Ad = class {
     beginFrame() {
       // en pausa se conservan cintas y formas del suelo del último fotograma (nadie las vuelve a emitir)
       ((this._frozen = !!x.paused), this._frozen || ((this.streaks.n = 0), this.ground.begin()));
-      (this.tracer.begin(), this.orb.begin(), this.orbGlow.begin(), this.dark.begin(), this.disc.begin());
+      this._frozen || (this.tracer.begin(), this.orb.begin(), this.orbGlow.begin(), this.dark.begin(), this.disc.begin());
     }
     drawTracer(e, t, i, s, a, r, o, l) {
       // trazador: cabeza casi blanca (HDR) y cola degradada con el color del proyectil; los gruesos llevan un halo
@@ -433,11 +434,11 @@ var Ad = class {
         yn.set(e, t, i),
         an.set(s, s, s),
         sn.compose(yn, vn, an),
-        this.orb.push(sn, si.setHex(a).multiplyScalar(2)),
+        this.orb.push(sn, si.setHex(a).multiplyScalar(1.4)),
         vn.copy(this.R.camera.quaternion),
         an.set(s * 4.4, s * 4.4, 1),
         sn.compose(yn, vn, an),
-        this.orbGlow.push(sn, si.setHex(a).multiplyScalar(0.55)));
+        this.orbGlow.push(sn, si.setHex(a).multiplyScalar(0.4)));
     }
     drawGlow(e, t, i, s, a) {
       (vn.copy(this.R.camera.quaternion),
@@ -560,6 +561,7 @@ var Ad = class {
         (this.decals.length = 0),
         (this.texts.length = 0),
         (this.rings.length = 0),
+        (this.tracer.n = this.orb.n = this.orbGlow.n = this.dark.n = this.disc.n = 0),
         this.sparks.clear(),
         (this.streaks.n = 0),
         this.streaks.flush(),
