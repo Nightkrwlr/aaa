@@ -154,7 +154,7 @@ var ws = new U(1, 1.32, 1).normalize(),
           this.envCur.fog.copy(this.envTgt.fog),
           (this.look = th ? ClThemeLook(th) : lookFor(e.key))));
       // clima de la región (De[i].weather) o, en interiores, el del tema; cruza con suavidad salvo en teletransportes
-      let w = e.weather || null,
+      let w = (e.key && ClRegWx[e.key]) || e.weather || null,
         k = 1;
       th && ClThemeWx[th] && ((w = ClThemeWx[th][0]), (k = ClThemeWx[th][1]));
       this.wx.setTarget(w, k, t);

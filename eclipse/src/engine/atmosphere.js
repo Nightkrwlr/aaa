@@ -82,7 +82,7 @@ export const REGION_LOOK = {
   tundra:   { density: 0.011, sat: 1.0, contrast: 1.12, shadow: [0.86, 0.96, 1.16], high: [0.98, 1.02, 1.08], bloom: [0.55, 0.6, 0.9] },
   complejo: { density: 0.013, sat: 0.96, contrast: 1.16, shadow: [0.88, 0.98, 1.12], high: [1.0, 1.02, 1.04], bloom: [0.8, 0.55, 0.78], vig: 0.42 },
   caldera:  { density: 0.015, sat: 1.14, contrast: 1.18, shadow: [0.95, 0.9, 1.04], high: [1.16, 0.96, 0.78], bloom: [1.0, 0.6, 0.7], vig: 0.42 },
-  yermo:    { density: 0.011, sat: 0.8, contrast: 1.15, shadow: [0.93, 0.96, 1.05], high: [1.03, 1.0, 0.95], bloom: [0.6, 0.6, 0.88] },
+  yermo:    { density: 0.011, sat: 0.7, contrast: 1.15, shadow: [0.93, 0.96, 1.05], high: [1.03, 1.0, 0.95], bloom: [0.6, 0.6, 0.88] },
   colmena:  { density: 0.016, falloff: 0.06, sat: 1.12, contrast: 1.14, shadow: [0.94, 0.88, 1.18], high: [1.04, 0.98, 1.06], bloom: [0.9, 0.7, 0.72], vig: 0.44 },
 };
 
@@ -106,6 +106,13 @@ export const THEME_LOOK = {
   alcantarilla: { density: 0.022, falloff: 0.06, sat: 0.96, contrast: 1.16, shadow: [0.88, 1.04, 0.98], high: [0.98, 1.06, 0.88], bloom: [0.7, 0.6, 0.8], vig: 0.5 },
   gruta:        { density: 0.020, falloff: 0.06, sat: 1.04, contrast: 1.14, shadow: [0.86, 1.02, 1.1], high: [0.96, 1.08, 1.02], bloom: [0.9, 0.65, 0.74], vig: 0.48 },
   colmena:      { density: 0.021, falloff: 0.06, sat: 1.14, contrast: 1.16, shadow: [0.94, 0.86, 1.2], high: [1.06, 0.96, 1.08], bloom: [1.0, 0.7, 0.7], vig: 0.5 },
+};
+/**
+ * Clima por región cuando el dato `De[i].weather` se queda corto para la dirección de arte: el mapa {tipo: intensidad} sustituye al dato.
+ * caldera = brasas + ceniza (volcán), yermo = ceniza + polvo fino, complejo = chispas + polvo industrial.
+ */
+export const REGION_WEATHER = {
+  caldera: { embers: 1, ash: 0.5 }, yermo: { ash: 0.85, dust: 0.3 }, complejo: { embers: 0.5, dust: 0.3 },
 };
 /** clima de interior por tema (la intensidad la limita WeatherFx): partículas suaves que dan vida a las operaciones */
 export const THEME_WEATHER = {

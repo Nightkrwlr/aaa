@@ -262,9 +262,9 @@ export class WeatherFx {
     this.cap = q === 'high' ? 1 : q === 'medium' ? 0.62 : 0.34;
   }
 
-  /** región / tema → clima objetivo (name = null apaga todo). `k` = intensidad máxima 0..1 */
+  /** región / tema → clima objetivo: nombre (k = intensidad máxima 0..1), o mapa {tipo: k} para varios a la vez; null apaga todo */
   setTarget(name, k = 1, instant = false) {
-    for (const t of KEYS) this.tgt[t] = t === name ? k : 0;
+    for (const t of KEYS) this.tgt[t] = (name && typeof name === 'object' ? name[t] : t === name ? k : 0) || 0;
     if (instant) for (const t of KEYS) this.amt[t] = this.tgt[t];
   }
 
@@ -325,6 +325,8 @@ export class WeatherFx {
     const o = this.out, fogC = ctx.fog, k = Math.min(1, dt * 0.55);
     let fogMul = 1, tintAmt = 0, sunMul = 1, wet = 0, warm = 0;
     this._tint.setRGB(0, 0, 0);
+    // el tinte lo pone el clima más intenso (varios climas a la vez en una región)
+    const tint = (amt, r, g, b, m) => { if (amt > tintAmt) { tintAmt = amt; this._tint.setRGB(r, g, b).multiplyScalar(m); } };
     for (const t of KEYS) {
       const a = (this.amt[t] += (this.tgt[t] - this.amt[t]) * k);
       if (this.tgt[t] === 0 && this.amt[t] < 0.004) this.amt[t] = 0;
@@ -347,7 +349,7 @@ export class WeatherFx {
             su.uBox.value.set(viewW + 8, (viewH) / CAM_EL + 8, 1, Math.min(1, a * this.cap * (this.quality === 'low' ? 0.5 : 1)));
             su.uColor.value.copy(u.uColor.value).multiplyScalar(1.3); su.uAmt.value = 1;
           }
-          fogMul += a * 0.3; tintAmt = Math.max(tintAmt, a * 0.2); this._tint.setRGB(0.56, 0.62, 0.7).multiplyScalar(0.3 + 0.7 * L);
+          fogMul += a * 0.3; tint(a * 0.2, 0.56, 0.62, 0.7, 0.3 + 0.7 * L);
           sunMul *= 1 - 0.38 * a; wet = Math.max(wet, a);
           break;
         }
@@ -355,22 +357,22 @@ export class WeatherFx {
           u.uColor.value.setRGB(0.85, 0.68, 0.45).multiplyScalar(0.3 + 0.9 * L).lerp(ctx.sun, 0.15); u.uAmt.value = 1;
           u.uDrift.value = this.drift; u.uGust.value = this.gust; u.uWindDir.value.set(Math.cos(this.windAng), Math.sin(this.windAng));
           const gk = a * (0.25 + 0.75 * this.gust);
-          fogMul += gk * 0.95; tintAmt = Math.max(tintAmt, gk * 0.34); this._tint.setRGB(0.82, 0.64, 0.4).multiplyScalar(0.25 + 0.75 * L); sunMul *= 1 - 0.25 * gk;
+          fogMul += gk * 0.95; tint(gk * 0.34, 0.82, 0.64, 0.4, 0.25 + 0.75 * L); sunMul *= 1 - 0.25 * gk;
           break;
         }
         case 'snow': {
           u.uColor.value.setRGB(0.88, 0.94, 1.0).multiplyScalar(0.55 + 0.7 * L); u.uAmt.value = 0.9;
-          fogMul += a * 0.45; tintAmt = Math.max(tintAmt, a * 0.3); this._tint.setRGB(0.8, 0.88, 1.0).multiplyScalar(0.3 + 0.7 * L);
+          fogMul += a * 0.45; tint(a * 0.3, 0.8, 0.88, 1.0, 0.3 + 0.7 * L);
           break;
         }
         case 'ash': {
           u.uColor.value.setRGB(0.62, 0.58, 0.55).multiplyScalar(0.4 + 0.6 * L); u.uAmt.value = 0.9;
-          fogMul += a * 0.5; tintAmt = Math.max(tintAmt, a * 0.3); this._tint.setRGB(0.55, 0.5, 0.46).multiplyScalar(0.3 + 0.7 * L);
+          fogMul += a * 0.5; tint(a * 0.3, 0.55, 0.5, 0.46, 0.3 + 0.7 * L);
           break;
         }
         case 'embers': {
           u.uColor.value.setRGB(1, 1, 1); u.uAmt.value = 0.95; warm = a;
-          fogMul += a * 0.25; tintAmt = Math.max(tintAmt, a * 0.18); this._tint.setRGB(0.6, 0.26, 0.1).multiplyScalar(0.4 + 0.6 * L);
+          fogMul += a * 0.25; tint(a * 0.18, 0.6, 0.26, 0.1, 0.4 + 0.6 * L);
           break;
         }
         case 'spores': {
