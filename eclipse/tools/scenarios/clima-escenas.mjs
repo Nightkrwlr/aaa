@@ -10,6 +10,8 @@ export const ESCENAS = [
   ['valle-tarde', 'valle', 0.60], ['valle-alba', 'valle', 0.99],
   ['valle-noche', 'valle', 0.80], ['marisma-noche', 'marisma', 0.80], ['colmena-noche', 'colmena', 0.80],
   ['valle-linterna', 'valle', 0.80, true],
+  // mide el coste del clima: misma escena con clima, niebla de suelo, fondo y cono apagados
+  ['ciudad-sinclima', 'ciudad', 0.30, false, true],
 ];
 
 export default async function ({ boot, newGame, god, region, setTime, still, wait, ev, perf }) {
@@ -17,12 +19,13 @@ export default async function ({ boot, newGame, god, region, setTime, still, wai
   const settle = +(process.env.SETTLE || 40);
   await boot(); await newGame(); await god();
   let tPrev = null;
-  for (const [nombre, reg, t, lint] of ESCENAS) {
+  for (const [nombre, reg, t, lint, sinClima] of ESCENAS) {
     if (!quiero.includes(nombre)) continue;
     if (t !== tPrev) { await setTime(t); tPrev = t; }
     await region(reg);
     await ev((l) => { const G = window.__G; G.S.flags.flashlight = !!l; G.player.flashOn = !!l; }, lint);
     await wait(settle);
+    if (sinClima) { await ev(() => { const R = window.__G.R; R.wx.setTarget(null, 1, true); R.wx.update = () => {}; for (const k in R.wx.objs) R.wx.objs[k].visible = false; if (R.wx.splash) R.wx.splash.visible = false; R.mist.mesh.visible = false; R.sky.mesh.visible = false; }); await wait(4); }
     await still(nombre);
     if (process.env.PERF) console.log('perf', nombre, JSON.stringify(await perf()));
   }

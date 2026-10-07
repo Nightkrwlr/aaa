@@ -75,15 +75,15 @@ export const DEFAULT_LOOK = {
 };
 // Afinado en el laboratorio de grade (tools/scenarios/grade-lab.mjs): más contraste y sombras menos «lavadas» que el primer intento.
 export const REGION_LOOK = {
-  valle:    { density: 0.007, sat: 1.08, shadow: [0.93, 0.99, 1.06], high: [1.05, 1.02, 0.93], bloom: [0.6, 0.55, 0.88] },
-  ciudad:   { density: 0.015, falloff: 0.055, sat: 0.94, contrast: 1.16, exposure: 0.98, shadow: [0.92, 0.99, 1.05], high: [1.0, 1.03, 0.98], bloom: [0.7, 0.6, 0.8], vig: 0.42 },
+  valle:    { mist: 0.08, density: 0.007, sat: 1.08, shadow: [0.93, 0.99, 1.06], high: [1.05, 1.02, 0.93], bloom: [0.6, 0.55, 0.88] },
+  ciudad:   { mist: 0.14, density: 0.015, falloff: 0.055, sat: 0.94, contrast: 1.16, exposure: 0.98, shadow: [0.92, 0.99, 1.05], high: [1.0, 1.03, 0.98], bloom: [0.7, 0.6, 0.8], vig: 0.42 },
   desierto: { density: 0.0085, sat: 1.04, contrast: 1.15, exposure: 0.95, shadow: [0.97, 0.96, 1.0], high: [1.12, 1.0, 0.84], bloom: [0.55, 0.6, 0.92] },
-  marisma:  { density: 0.018, falloff: 0.06, sat: 1.02, shadow: [0.88, 1.0, 1.06], high: [0.98, 1.06, 0.94], bloom: [0.7, 0.65, 0.8], vig: 0.42 },
-  tundra:   { density: 0.011, sat: 1.0, contrast: 1.12, shadow: [0.86, 0.96, 1.16], high: [0.98, 1.02, 1.08], bloom: [0.55, 0.6, 0.9] },
+  marisma:  { mist: 0.3, density: 0.018, falloff: 0.06, sat: 1.02, shadow: [0.88, 1.0, 1.06], high: [0.98, 1.06, 0.94], bloom: [0.7, 0.65, 0.8], vig: 0.42 },
+  tundra:   { mist: 0.12, density: 0.011, sat: 1.0, contrast: 1.12, shadow: [0.86, 0.96, 1.16], high: [0.98, 1.02, 1.08], bloom: [0.55, 0.6, 0.9] },
   complejo: { density: 0.013, sat: 0.96, contrast: 1.16, shadow: [0.88, 0.98, 1.12], high: [1.0, 1.02, 1.04], bloom: [0.8, 0.55, 0.78], vig: 0.42 },
   caldera:  { density: 0.012, fogDesat: 0.15, sat: 1.14, contrast: 1.18, shadow: [0.95, 0.9, 1.04], high: [1.16, 0.96, 0.78], bloom: [0.85, 0.6, 0.74], vig: 0.42 },
-  yermo:    { density: 0.011, fogDesat: 0.55, sat: 0.62, contrast: 1.15, shadow: [0.93, 0.96, 1.05], high: [1.03, 1.0, 0.95], bloom: [0.6, 0.6, 0.88] },
-  colmena:  { density: 0.016, falloff: 0.06, sat: 1.08, contrast: 1.16, exposure: 0.94, shadow: [0.94, 0.9, 1.14], high: [1.04, 0.99, 1.04], bloom: [0.62, 0.66, 0.82], vig: 0.44 },
+  yermo:    { mist: 0.08, density: 0.011, fogDesat: 0.55, sat: 0.62, contrast: 1.15, shadow: [0.93, 0.96, 1.05], high: [1.03, 1.0, 0.95], bloom: [0.6, 0.6, 0.88] },
+  colmena:  { mist: 0.2, density: 0.016, falloff: 0.06, sat: 1.08, contrast: 1.16, exposure: 0.94, shadow: [0.94, 0.9, 1.14], high: [1.04, 0.99, 1.04], bloom: [0.62, 0.66, 0.82], vig: 0.44 },
 };
 
 /** copia profunda: el renderer mezcla estos números en sitio al cruzar de bioma, así que no deben compartir arrays con las constantes */
