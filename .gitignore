@@ -12,3 +12,7 @@ coverage/
 
 # Claude Code agent worktrees (live working copies, never project content)
 /.claude/worktrees/
+
+# Operación Eclipse: salidas de build
+/eclipse/.build/
+/eclipse/dist/
