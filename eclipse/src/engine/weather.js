@@ -141,7 +141,7 @@ void main() {
   size = 0.22 + 0.3 * s.y;
   float pulse = 0.5 + 0.5 * sin( uTime * ( 0.8 + 1.6 * s.x ) + s.y * 60.0 );
   alpha = ( 0.12 + 0.88 * uNight ) * ( 0.25 + 0.75 * pulse );
-  col *= 0.35 + 0.85 * uNight * pulse;
+  col *= 0.5 + 0.7 * uNight * pulse;
 #endif
   vec3 w = boxPos( s.xyz, drift, y, edge );
   vA = edge * alpha;
@@ -155,8 +155,11 @@ void main() {
   vec2 c = gl_PointCoord - 0.5; float d = length( c ) * 2.0;
   if ( d > 1.0 ) discard;
   float a = 1.0 - d * d; a *= a; // núcleo suave: a pocos píxeles se lee como un destello redondo, no como un cuadrado
-#if defined( M_EMBER ) || defined( M_SPORE ) || defined( M_SNOW )
-  gl_FragColor = vec4( vCol * ( 0.6 + 0.9 * a ), a * vA * uAmt );
+#if defined( M_SPORE )
+  // por debajo del umbral del bloom: un destello HDR diminuto sale cuadrado en las mips bajas del bloom, así que la esporas son discos suaves
+  gl_FragColor = vec4( vCol * 0.8, a * vA * uAmt );
+#elif defined( M_EMBER ) || defined( M_SNOW )
+  gl_FragColor = vec4( vCol * ( 0.6 + 0.6 * a ), a * vA * uAmt );
 #else
   gl_FragColor = vec4( vCol, a * vA * uAmt );
 #endif
@@ -339,6 +342,8 @@ export class WeatherFx {
       const m = this.mats[t], u = m.uniforms;
       const dens = Math.min(1, a * this.cap * (t === 'dust' ? 0.35 + 0.65 * this.gust : 1));
       u.uBox.value.set(viewW + 8, (viewH + H * 0.73) / CAM_EL + 8, H, dens);
+      // el rango ordenado permite recortar también los vértices que procesa la GPU (los móviles lo agradecen)
+      obj.geometry.setDrawRange(0, Math.ceil(cfg.n * dens) * (t === 'rain' ? 2 : 1));
       const L = ctx.light, night = ctx.night;
       switch (t) {
         case 'rain': {
@@ -346,7 +351,9 @@ export class WeatherFx {
           const sp = this.splash; sp.visible = this.quality !== 'low' || a > 0.5;
           if (sp.visible) {
             const su = sp.material.uniforms;
-            su.uBox.value.set(viewW + 8, (viewH) / CAM_EL + 8, 1, Math.min(1, a * this.cap * (this.quality === 'low' ? 0.5 : 1)));
+            const sd = Math.min(1, a * this.cap * (this.quality === 'low' ? 0.5 : 1));
+            su.uBox.value.set(viewW + 8, (viewH) / CAM_EL + 8, 1, sd);
+            sp.geometry.instanceCount = Math.max(1, Math.ceil(520 * sd));
             su.uColor.value.copy(u.uColor.value).multiplyScalar(1.3); su.uAmt.value = 1;
           }
           fogMul += a * 0.3; tint(a * 0.2, 0.56, 0.62, 0.7, 0.3 + 0.7 * L);
