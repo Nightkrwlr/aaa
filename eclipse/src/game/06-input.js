@@ -20,6 +20,9 @@ var yw = {
     KeyH: "help",
     KeyP: "pause",
     KeyL: "archive",
+    KeyT: "talents",
+    KeyX: "gadget",
+    KeyZ: "gadgetNext",
   },
   Tt = {
     keys: new Set(),

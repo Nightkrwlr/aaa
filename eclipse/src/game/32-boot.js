@@ -199,6 +199,12 @@ function fS(n) {
     n.visited || (n.visited = {}),
     n.met || (n.met = {}),
     n.stats || (n.stats = { kills: 0, deaths: 0, bosses: 0, ops: 0, elites: 0, terminals: 0, dist: 0 }));
+  for (const m of x.migrations)
+    try {
+      m(n);
+    } catch (err) {
+      console.error('[migraci\xF3n]', err);
+    }
 }
 
 
@@ -384,6 +390,7 @@ function Ub(n) {
           gp(e),
           x.world.update(e),
           xn.update(e),
+          x.tick.length && x.tick.forEach((f) => f(e)),
           x.fx.update(e),
           (Yp -= e),
           Yp <= 0 && ((Yp = 30), Ui(!1)),
@@ -450,6 +457,7 @@ window.__step = (n, e = 1 / 30) => {
       gp(e),
       x.world.update(e),
       xn.update(e),
+      x.tick.length && x.tick.forEach((f) => f(e)),
       x.fx.update(e),
       Tt.endFrame());
 };

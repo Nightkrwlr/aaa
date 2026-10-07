@@ -36,7 +36,11 @@ Se concatenan **en este orden** dentro de un único ámbito (igual que en el bun
 | `29-panels.js` | Paneles: inventario, taller, tienda, misiones, mapa, ajustes, muerte, victoria (53 sentencias) |
 | `30-menu.js` | Menú principal (3 sentencias) |
 | `31-texgen.js` | Texturas de suelo procedurales (Lb) (14 sentencias) |
+| `31a-economy.js` … `31i-surprises.js` | Fragmentos de la ampliación de profundidad (economía, talentos, gadgets, lore, hackeo, puzles, jefes, mundo, sorpresas): ver `docs/DEPTH_DESIGN.md` |
 | `32-boot.js` | Arranque, bucle principal y ganchos de depuración window.__* (24 sentencias) |
 
 ## Preludes por frente
 `_prelude.js` (generado en la migración) trae los alias de Three y los imports del motor base. Cada frente de trabajo puede añadir **su propio** `_prelude.<frente>.js` con los `import … from '@engine/…'` que necesite: `tools/build.mjs` los incluye automáticamente tras `_prelude.js` (orden alfabético), así que no hace falta tocar `_order.json`.
+
+## Ganchos de extensión (en `x`, 00-core.js)
+`x.tick` (funciones `dt` por fotograma de simulación), `x.migrations` (funciones `S` del guardado), `x.cfg` (datos por sistema). El bus `ee/It` aísla los errores de cada manejador.

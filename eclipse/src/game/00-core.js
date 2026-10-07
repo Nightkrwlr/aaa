@@ -39,6 +39,10 @@ var x = {
   bossActive: null,
   combatHeat: 0,
   started: !1,
+  // ── ganchos de extensión (ampliación de profundidad) ──
+  tick: [], //  funciones (dt) que se ejecutan cada fotograma de simulación, tras world.update (no pausado)
+  migrations: [], //  funciones (S) idempotentes que completan/migran el guardado (se llaman desde fS)
+  cfg: {}, //  configuración por sistema (x.cfg.loot, x.cfg.xp…): datos, no lógica
 };
 
 
@@ -52,7 +56,13 @@ function It(n, e) {
 // ════════ [4] FunctionDeclaration ee (66 bytes) ════════
 function ee(n, ...e) {
   let t = x.events[n];
-  if (t) for (let i of t) i(...e);
+  if (t)
+    for (let i of t)
+      try {
+        i(...e);
+      } catch (err) {
+        console.error(`[evento ${n}]`, err);
+      }
 }
 
 

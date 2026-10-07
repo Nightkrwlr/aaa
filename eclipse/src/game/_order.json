@@ -32,5 +32,14 @@
  "29-panels.js",
  "30-menu.js",
  "31-texgen.js",
+ "31a-economy.js",
+ "31b-talents.js",
+ "31c-gadgets.js",
+ "31d-lore.js",
+ "31e-hacking.js",
+ "31f-puzzles.js",
+ "31g-bosses.js",
+ "31h-world2.js",
+ "31i-surprises.js",
  "32-boot.js"
 ]
