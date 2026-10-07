@@ -110,12 +110,12 @@ export function bioUniforms() {
 // ───────────────────────────────────────────────────────── shader del suelo
 /** estados de borde (aEdge): 0 nada · 1 vecino de la capa «otra» (mezcla) · 2 caída sólida · 3 subida (muro) · 4 caída a líquido */
 const GROUND_VERT_PARS = /* glsl */ `
-attribute vec4 aLay;   // x capa propia, y capa vecina (-1 ninguna), z = lateral + 2*bits diagonales, w = clase*16 + bioma
-attribute vec4 aEdge;  // cara superior: estado de los bordes W,E,N,S · lateral: (y alto, y base, hash, 0)
-attribute vec3 aCol2;  // color de la capa vecina en esta esquina
+attribute vec4 aLay;   // (Uint8) x capa propia, y capa vecina (255 ninguna), z = lateral + 2*bits diagonales, w = clase*16 + bioma
+attribute vec4 aEdge;  // (Uint8) cara superior: estado de los bordes W,E,N,S · lateral: (t 0 base..255 cresta, alto*32, hash, 0)
+attribute vec4 aCol2;  // (Uint8) color de la capa vecina en esta esquina, codificado en raíz cuadrada
 varying vec4 vLay; varying vec4 vEdge; varying vec3 vCol2; varying vec3 vWP;`;
 const GROUND_VERT_BODY = /* glsl */ `
-vLay = aLay; vEdge = aEdge; vCol2 = aCol2; vWP = (modelMatrix * vec4(position, 1.0)).xyz;`;
+vLay = aLay; vEdge = aEdge; vCol2 = (aCol2.rgb / 255.0) * (aCol2.rgb / 255.0); vWP = (modelMatrix * vec4(position, 1.0)).xyz;`;
 
 const GROUND_FRAG_PARS = /* glsl */ `
 precision highp sampler2DArray;
@@ -125,13 +125,14 @@ uniform vec3 uStainA[9]; uniform vec3 uStainB[9]; uniform vec3 uCap[9]; uniform 
 varying vec4 vLay; varying vec4 vEdge; varying vec3 vCol2; varying vec3 vWP;
 vec3 gTilt; float gRoughMul;
 float gHash(float n){ return fract(sin(n * 12.9898) * 43758.5453); }
-// capa del array. En capas orgánicas una 2.ª muestra rotada y a otra escala rompe la repetición (contraste compensado)
-vec3 gTex(float L, vec2 uv, float org, float k){
-  vec3 a = texture(uArr, vec3(uv, L)).rgb;
+// capa del array (textureGrad: se llama dentro de ramas y las derivadas implícitas serían indefinidas). En capas orgánicas
+// una 2.ª muestra rotada y a otra escala rompe la repetición (contraste compensado). «two» limita las lecturas por píxel.
+vec3 gTex(float L, vec2 uv, vec2 dx, vec2 dy, float org, float k, bool two){
+  vec3 a = textureGrad(uArr, vec3(uv, L), dx, dy).rgb;
   #if TQ >= 2
-  if (org > 0.5) {
-    vec2 uv2 = vec2(uv.x * 0.8 - uv.y * 0.6, uv.x * 0.6 + uv.y * 0.8) * 0.57 + vec2(0.37, 0.11);
-    vec3 b = texture(uArr, vec3(uv2, L)).rgb;
+  if (two && org > 0.5) {
+    mat2 R = mat2(0.8, 0.6, -0.6, 0.8) * 0.57;
+    vec3 b = textureGrad(uArr, vec3(R * uv + vec2(0.37, 0.11), L), R * dx, R * dy).rgb;
     float w = smoothstep(0.30, 0.70, k);
     a = mix(a, b, w);
     a = 0.85 + (a - 0.85) * (1.0 + 0.45 * w * (1.0 - w) * 4.0);
@@ -161,20 +162,22 @@ const GROUND_FRAG_COLOR = /* glsl */ `
   gTilt = vec3(0.0); gRoughMul = 1.0;
   vec3 alb = vColor;
   float ao = 1.0;
-  float Lo = floor(vLay.x + 0.5);
+  float Lo = vLay.x > 254.5 ? -1.0 : floor(vLay.x + 0.5);
   bool isWallish = (cls > 2.5 && cls < 3.5) || (cls > 6.5 && cls < 7.5) || (cls > 8.5 && cls < 9.5);
+  float gAmt = 1.0;
   vec4 K = uBioK[bi];
   float topness = 0.0;
   if (Lo > -0.5) {
     if (!isSide) {
       // ───── cara superior: mezcla de capas por campo bilineal centrado en las losetas
-      vec2 tuv = wp * 0.42 + (nM.rg - 0.5) * 0.30;
-      vec3 tA = gTex(Lo, tuv, uOrg[int(Lo)], nL.a);
+      vec2 tuv = wp * 0.42 + (nM.rg - 0.5) * 0.30 * uOrg[int(Lo)];   // la deformación solo en capas orgánicas (las baldosas se quedan rectas)
+      vec2 tdx = dFdx(tuv), tdy = dFdy(tuv);
+      vec3 tA = gTex(Lo, tuv, tdx, tdy, uOrg[int(Lo)], nL.a, true);
       alb = tA * vColor;
       vec2 f = fract(wp); vec2 dq = abs(f - 0.5); vec2 u = 0.5 - dq;
       bool left = f.x < 0.5; bool up = f.y < 0.5;
       vec2 st = vec2(left ? vEdge.x : vEdge.y, up ? vEdge.z : vEdge.w);
-      if (vLay.y > -0.5) {
+      if (vLay.y < 254.5) {
         float cx = abs(st.x - 1.0) < 0.5 ? 0.0 : 1.0;
         float cz = abs(st.y - 1.0) < 0.5 ? 0.0 : 1.0;
         int bit = up ? (left ? 0 : 1) : (left ? 2 : 3);
@@ -182,15 +185,16 @@ const GROUND_FRAG_COLOR = /* glsl */ `
         float fld = (1.0 - dq.x) * (1.0 - dq.y) + dq.x * (1.0 - dq.y) * cx + (1.0 - dq.x) * dq.y * cz + dq.x * dq.y * cd;
         if (fld < 0.995) {
           float Lb = floor(vLay.y + 0.5);
-          vec3 tB = gTex(Lb, tuv, uOrg[int(Lb)], nL.a);
+          vec3 tB = gTex(Lb, tuv, tdx, tdy, 0.0, nL.a, false);   // una sola lectura: tope de 3 por píxel (2 + 1)
           // borde irregular: el ruido desplaza la frontera (signo opuesto a cada lado → continuo entre losetas)
           float nB = texture2D(uTN, wp * 0.33 + vec2(0.7, 0.2)).r - 0.5;
           #if TQ >= 2
           nB += 0.65 * (texture2D(uTN, wp * 1.9 + vec2(0.2, 0.9)).b - 0.5);
           #endif
           float sgn = Lo < Lb ? 1.0 : -1.0;
-          float hb = dot(tA - tB, vec3(0.3333)) * 1.5;      // mezcla por altura: gana la capa más clara en los relieves
-          float t = (fld - 0.5 + sgn * nB * 0.5) / 0.115 + sgn * hb;
+          // mezcla por altura (gana la capa más clara en los relieves): simétrica entre las dos losetas = sin costura
+          float hb = dot(tA - tB, vec3(0.3333)) * 1.5;
+          float t = (fld - 0.5 + sgn * nB * 0.5) / 0.115 + hb;
           float wOwn = smoothstep(-1.0, 1.0, t);
           alb = mix(tB * vCol2, alb, wOwn);
         }
@@ -221,13 +225,13 @@ const GROUND_FRAG_COLOR = /* glsl */ `
       if (isWallish) alb *= 0.91 + 0.18 * gHash(floor(wp.x) * 7.13 + floor(wp.y) * 13.71);
     } else {
       // ───── lateral: base sucia, parte alta clara, vetas verticales
-      float topY = vEdge.x, baseY = vEdge.y, yy = vWP.y;
-      float fromBase = max(yy - baseY, 0.0), fromTop = max(topY - yy, 0.0);
+      float hSide = vEdge.y / 32.0, tt = vEdge.x / 255.0;
+      float fromBase = tt * hSide, fromTop = (1.0 - tt) * hSide, yy = vWP.y;
       vec2 suv = vec2((vWP.x - vWP.z) * 0.4, -yy * 0.4);
-      vec3 tA = gTex(Lo, suv, uOrg[int(Lo)], nL.a);
+      vec3 tA = gTex(Lo, suv, dFdx(suv), dFdy(suv), uOrg[int(Lo)], nL.a, true);
       alb = tA * vColor * uTexK;
       float al = vWP.x + vWP.z;
-      float seg = gHash(floor(al + 0.01) * 5.37 + vEdge.z * 31.0);
+      float seg = gHash(floor(al + 0.01) * 5.37 + vEdge.z * 0.37);
       float sk = texture2D(uTN, vec2(al * 0.62, yy * 0.075) + vec2(0.13, 0.27)).r;
       alb *= 0.90 + 0.20 * seg;
       alb *= 0.80 + 0.40 * sk;
@@ -243,7 +247,7 @@ const GROUND_FRAG_COLOR = /* glsl */ `
     float mA = smoothstep(0.50, 0.78, nL.a * 0.5 + nM.r * 0.3 + nM.g * 0.2);
     float mB = smoothstep(0.55, 0.82, nL.r * 0.45 + nM.a * 0.35 + nM.b * 0.2);
     float amt = isWallish || isSide ? K.y : K.x;
-    if (isSide) { mA *= 0.35 + 0.65 * (1.0 - smoothstep(0.0, 1.1, max(vWP.y - vEdge.y, 0.0)) * 0.0); mB *= 0.5 + 0.5 * (1.0 - smoothstep(0.0, 1.0, max(vWP.y - vEdge.y, 0.0))); }
+    if (isSide) mB *= 0.5 + 0.5 * (1.0 - smoothstep(0.0, 1.0, vEdge.x / 255.0 * vEdge.y / 32.0));   // la suciedad se concentra abajo
     alb *= mix(vec3(1.0), uStainA[bi], mA * amt);
     alb *= mix(vec3(1.0), uStainB[bi], mB * amt * 0.8);
     // capa superior sobre tapas de muros y rocas (nieve, ceniza, polvo): deja ver la piedra en el borde
@@ -324,7 +328,9 @@ const WATER_OPAQUE = /* glsl */ `
 {
   vec3 vd = isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vViewPosition);
   float fr = pow(1.0 - clamp(dot(vd, normal), 0.0, 1.0), 2.0);
+  #ifdef USE_FOG
   outgoingLight += fogColor * (0.10 + 0.55 * fr) * gSpark;           // cielo reflejado (velo de la niebla)
+  #endif
   #if NUM_DIR_LIGHTS > 0
   vec3 H = normalize(directionalLights[0].direction + vd);
   float sp = pow(max(dot(normal, H), 0.0), 150.0) + 0.5 * pow(max(dot(normal, H), 0.0), 40.0);

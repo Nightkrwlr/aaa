@@ -104,6 +104,8 @@ var Nl = [
 
 
 // ════════ [611] FunctionDeclaration NE (205 bytes) ════════
+// Buffers de trabajo compartidos por los chunks. Los atributos de mezcla del terreno van en Uint8 (capa propia/vecina,
+// estados de borde, color de la capa vecina) para no engordar la geometría del mapa entero.
 function NE() {
   if (!Sp) {
     let n = Va * Va * 5 * 6;
@@ -112,8 +114,9 @@ function NE() {
       nor: new Float32Array(n * 3),
       col: new Float32Array(n * 3),
       uv: new Float32Array(n * 2),
-      lay: new Float32Array(n),
-      side: new Float32Array(n),
+      lay: new Uint8Array(n * 4),
+      edge: new Uint8Array(n * 4),
+      col2: new Uint8Array(n * 4),
     };
   }
   return Sp;
@@ -148,6 +151,29 @@ function UE(n) {
 }
 
 
+// ════════ terreno: tablas estáticas del frente «Terreno, muros y agua» ════════
+// capa de muro / suelo de interior según la variante de la casilla (map.var)
+const TER_WALL_BY_VAR = ["wall_military", "wall_ruin", "wall_adobe", "wall_wood", "wall_log", "wall_metal", "wall_obsidian", "wall_organic", "wall_military", null, "wall_military", "wall_military", "cliff_tundra", "wall_obsidian", "wall_ruin", "wall_adobe", "wall_metal", "wall_adobe", "wall_metal", "wall_military", "wall_metal", "wall_ruin", "wall_adobe", "wall_military", "wall_metal", "wall_metal", "wall_adobe", "wall_wood"];
+const TER_FLOOR_BY_VAR = ["floor_concrete", "floor_tiles", "floor_adobe", "floor_wood", "floor_wood", "floor_metal", "cave_floor", "floor_organic", "floor_concrete", "cave_floor", "base_floor", "floor_tiles", "ice", "cave_floor", "floor_wood", "floor_tiles", "floor_metal", "floor_adobe", "floor_metal", "floor_concrete", "floor_tiles", "floor_wood", "floor_tiles", "floor_concrete", "floor_metal", "floor_metal", "floor_adobe", "floor_wood"];
+// tema de mazmorra → bioma cuya paleta usa
+const TER_THEME_REG = { ruinas: "ciudad", bunker: "complejo", laboratorio: "complejo", fabrica: "complejo", caverna: "tundra", magma: "caldera", colmena: "colmena" };
+const TER_BIO_IDX = {}; BIO_KEYS.forEach((k, n) => (TER_BIO_IDX[k] = n));
+const TER_N8 = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]; // W E N S + NW NE SW SE (orden que espera el shader)
+const TER_VOTES = new Int16Array(64), TER_NBI = new Int32Array(64), TER_CAND = new Int16Array(8), TER_ZERO4 = [0, 0, 0, 0];
+const TER_HSTEP = 0.2; // desnivel mínimo para que un vecino cuente como subida / caída (y no como «mismo nivel»)
+const TER_LIQUID = (t) => t === F.WATER || t === F.LAVA || t === F.ACID;
+const TER_DEPTH_R = 3; // alcance (casillas) del campo de profundidad de los líquidos
+// capas que reciben la 2.ª muestra anti-repetición (las orgánicas; las de patrón regular, baldosa o metal, no)
+function terOrgFlags() {
+  let u = new Float32Array(32);
+  for (let k in Et.layer || {}) {
+    let n = Et.layer[k];
+    if (n < 32 && /^(ground_|cliff_|cave_floor|floor_organic|wall_organic|road_dirt|wall_log|ice)/.test(k)) u[n] = 1;
+  }
+  return Array.from(u);
+}
+
+
 // ════════ [613] VariableDeclaration Ul (16541 bytes) ════════
 var Ul = class {
   constructor(e, t) {
@@ -168,47 +194,24 @@ var Ul = class {
       (this.useArr = !!Et.groundArray),
       this.useArr)
     ) {
-      let s = Et.groundArray;
-      ((this.groundMat.map = null),
-        (this.groundMat.onBeforeCompile = (a) => {
-          (xo(a),
-            (a.uniforms.uArr = { value: s }),
-            (a.uniforms.uTime = zo.uTime),
-            (a.uniforms.uCloud = { value: i ? 0 : 1 }),
-            (a.uniforms.uTexK = { value: Et.procTex ? 1.17 : 1 }),
-            (a.vertexShader = a.vertexShader
-              .replace(
-                "#include <common>",
-                `#include <common>
-attribute float aLayer; attribute float aSide; varying float vLayer; varying float vSide; varying vec3 vWP;`,
-              )
-              .replace(
-                "#include <begin_vertex>",
-                `#include <begin_vertex>
-vLayer = aLayer; vSide = aSide; vWP = (modelMatrix * vec4(position,1.0)).xyz;`,
-              )),
-            (a.fragmentShader = a.fragmentShader
-              .replace(
-                "#include <common>",
-                `#include <common>
-precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime; uniform float uCloud; uniform float uTexK; varying float vLayer; varying float vSide; varying vec3 vWP;`,
-              )
-              .replace(
-                "#include <map_fragment>",
-                `#include <map_fragment>
-            if (vLayer > -0.5) {
-              vec2 tuv = vSide > 0.5 ? vec2((vWP.x - vWP.z) * 0.4, -vWP.y * 0.4) : vWP.xz * 0.42;
-              vec4 tc = texture(uArr, vec3(tuv, floor(vLayer + 0.5)));
-              diffuseColor.rgb *= tc.rgb * uTexK;
-            }
-            // sombras de nubes que pasan sobre el terreno (solo exteriores)
-            if (uCloud > 0.5) {
-              vec2 cp = vWP.xz * 0.018 + vec2(uTime * 0.012, uTime * 0.007);
-              float cl = sin(cp.x * 2.1 + sin(cp.y * 1.7)) * sin(cp.y * 2.6 + sin(cp.x * 1.3 + 1.7)) + 0.35 * sin(cp.x * 5.3 - cp.y * 4.1);
-              diffuseColor.rgb *= 1.0 - 0.22 * smoothstep(0.15, 0.75, cl);
-            }`,
-              )));
-        }));
+      // suelo pintado (src/engine/terrain.js): mezcla de capas por fragmento, AO/bisel, macroescala por bioma
+      let s = Et.groundArray,
+        uni = {
+          uArr: { value: s },
+          uTime: zo.uTime,
+          uCloud: { value: i ? 0 : 1 },
+          uTexK: { value: Et.procTex ? 1.17 : 1 },
+          uTN: { value: terrainNoise() },
+          uOrg: { value: terOrgFlags() },
+          ...bioUniforms(),
+        };
+      this.groundMat.map = null;
+      this._tq = this.terQuality();
+      this.groundMat.onBeforeCompile = (a) => {
+        xo(a);
+        patchGroundShader(a, { uniforms: uni, tq: this._tq });
+      };
+      this.groundMat.customProgramCacheKey = () => "ground-" + this._tq;
     }
     this.cliffMat = this.groundMat;
     for (let s = 0; s < e.h; s += Va) for (let a = 0; a < e.w; a += Va) this.buildChunk(a, s);
@@ -290,20 +293,29 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
     }
     return o === F.VOID ? 329224 : 5592405;
   }
+  // clave de bioma de una casilla (región del mundo abierto o tema de la mazmorra)
+  bioKey(i) {
+    let a = this.map,
+      o = this.regionOf(i);
+    return o ? o.key : a.rk || TER_THEME_REG[a.theme] || "valle";
+  }
+  terQuality() {
+    let q = this.R && this.R.quality;
+    return q === "low" ? 0 : q === "medium" ? 1 : 2;
+  }
+  // capa del array de texturas de la casilla. La cara superior (s = false) se cachea: buildChunk la consulta 9 veces por casilla.
   layerFor(e, t, i, s) {
+    let a = this.map;
+    if (!s) {
+      let q = this._lt || (this._lt = new Int16Array(a.w * a.h).fill(-2));
+      return q[i] !== -2 ? q[i] : (q[i] = this.layerCalc(e, t, i, !1));
+    }
+    return this.layerCalc(e, t, i, !0);
+  }
+  layerCalc(e, t, i, s) {
     let a = this.map,
       r = a.ter[i],
-      o = this.regionOf(i),
-      l = {
-        ruinas: "ciudad",
-        bunker: "complejo",
-        laboratorio: "complejo",
-        fabrica: "complejo",
-        caverna: "tundra",
-        magma: "caldera",
-        colmena: "colmena",
-      },
-      c = o ? o.key : a.rk || l[a.theme] || "valle",
+      c = this.bioKey(i),
       d = (...m) => {
         for (let g of m) {
           let b = Et.layerOf(g);
@@ -313,68 +325,8 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
       },
       h = ((e * 73856093) ^ (t * 19349663)) >>> 0,
       f = a.var[i],
-      u =
-        [
-          "wall_military",
-          "wall_ruin",
-          "wall_adobe",
-          "wall_wood",
-          "wall_log",
-          "wall_metal",
-          "wall_obsidian",
-          "wall_organic",
-          "wall_military",
-          "cliff_" + c,
-          "wall_military",
-          "wall_military",
-          "cliff_tundra",
-          "wall_obsidian",
-          "wall_ruin",
-          "wall_adobe",
-          "wall_metal",
-          "wall_adobe",
-          "wall_metal",
-          "wall_military",
-          "wall_metal",
-          "wall_ruin",
-          "wall_adobe",
-          "wall_military",
-          "wall_metal",
-          "wall_metal",
-          "wall_adobe",
-          "wall_wood",
-        ][f] || "wall_military",
-      p =
-        [
-          "floor_concrete",
-          "floor_tiles",
-          "floor_adobe",
-          "floor_wood",
-          "floor_wood",
-          "floor_metal",
-          "cave_floor",
-          "floor_organic",
-          "floor_concrete",
-          "cave_floor",
-          "base_floor",
-          "floor_tiles",
-          "ice",
-          "cave_floor",
-          "floor_wood",
-          "floor_tiles",
-          "floor_metal",
-          "floor_adobe",
-          "floor_metal",
-          "floor_concrete",
-          "floor_tiles",
-          "floor_wood",
-          "floor_tiles",
-          "floor_concrete",
-          "floor_metal",
-          "floor_metal",
-          "floor_adobe",
-          "floor_wood",
-        ][f] || "floor_concrete";
+      u = (f === 9 ? "cliff_" + c : TER_WALL_BY_VAR[f]) || "wall_military",
+      p = TER_FLOOR_BY_VAR[f] || "floor_concrete";
     switch (r) {
       case F.GROUND: {
         let m = (h >> 3) & 1 ? "b" : "a";
@@ -419,15 +371,79 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
     }
     return i;
   }
+  // Mezcla de capas de una casilla: capa «vecina» dominante (B), qué vecinos de borde (W,E,N,S) y diagonales son de esa capa,
+  // y el estado de cada borde (2 caída sólida · 3 subida · 4 caída a líquido) para el AO de contacto y la luz de cresta.
+  blendInfo(g, m, L, v) {
+    let i = this.map,
+      s = this.heights,
+      R = this._bi || (this._bi = { st: [0, 0, 0, 0], bits: 0, B: 255, nbi: -1 }),
+      votes = TER_VOTES,
+      nbi = TER_NBI;
+    votes.fill(0);
+    nbi.fill(-1);
+    R.st[0] = R.st[1] = R.st[2] = R.st[3] = 0;
+    R.bits = 0;
+    R.B = 255;
+    R.nbi = -1;
+    for (let k = 0; k < 8; k++) {
+      let x = g + TER_N8[k][0],
+        z = m + TER_N8[k][1],
+        st = 0,
+        cand = -1;
+      if (i.inb(x, z)) {
+        let j = z * i.w + x,
+          tj = i.ter[j],
+          hj = s[j];
+        if (tj !== F.VOID && tj !== F.SECRET) {
+          if (hj > v + TER_HSTEP) st = 3;
+          else if (hj < v - TER_HSTEP) st = TER_LIQUID(tj) ? 4 : 2;
+          else if (!TER_LIQUID(tj)) {
+            let lj = this.layerFor(x, z, j, !1);
+            if (lj >= 0 && lj !== L) {
+              cand = lj;
+              votes[lj] += k < 4 ? 2 : 1;
+              if (nbi[lj] < 0 || k < 4) nbi[lj] = j;
+            }
+          }
+        }
+      }
+      TER_CAND[k] = cand;
+      k < 4 && (R.st[k] = st);
+    }
+    let best = 0;
+    for (let k = 0; k < 64; k++) if (votes[k] > best) ((best = votes[k]), (R.B = k));
+    if (best > 0) {
+      R.nbi = nbi[R.B];
+      for (let k = 0; k < 8; k++)
+        if (TER_CAND[k] === R.B) k < 4 ? (R.st[k] = 1) : (R.bits |= 1 << (k - 4));
+    }
+    return R;
+  }
+  // distancia (en casillas, tope TER_DEPTH_R) de la esquina (X,Z) a la orilla más cercana del líquido de tipo k → 0..1
+  liquidDepth(k, X, Z) {
+    let i = this.map,
+      best = TER_DEPTH_R,
+      r = TER_DEPTH_R;
+    for (let tz = Z - r; tz < Z + r; tz++)
+      for (let tx = X - r; tx < X + r; tx++) {
+        if (!i.inb(tx, tz) || i.ter[tz * i.w + tx] === k) continue;
+        let dx = Math.max(tx - X, 0, X - tx - 1),
+          dz = Math.max(tz - Z, 0, Z - tz - 1),
+          dd = Math.hypot(dx, dz);
+        dd < best && (best = dd);
+      }
+    return best / TER_DEPTH_R;
+  }
   buildChunk(e, t) {
     var p;
     let i = this.map,
       s = this.heights,
       a = NE(),
+      arr = this.useArr,
       r = 0,
       o = { water: [], lava: [], acid: [] },
-      l = -1,
-      c = 0,
+      // estado del lote en curso (los lee h() para cada vértice)
+      LA = 255, LB = 255, LZ = 0, LW = 0, ED = TER_ZERO4, ev = null, c2 = null,
       d = [0, 1, 2, 0, 2, 3],
       h = (m, g, b = 0, y = 1, v = 0) => {
         for (let _ = 0; _ < 6; _++) {
@@ -435,30 +451,57 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
             T = r++,
             S = m[A],
             k = g[A];
-          ((a.pos[T * 3] = S[0]),
-            (a.pos[T * 3 + 1] = S[1]),
-            (a.pos[T * 3 + 2] = S[2]),
-            (a.nor[T * 3] = b),
-            (a.nor[T * 3 + 1] = y),
-            (a.nor[T * 3 + 2] = v),
-            (a.col[T * 3] = k[0]),
-            (a.col[T * 3 + 1] = k[1]),
-            (a.col[T * 3 + 2] = k[2]),
-            (a.uv[T * 2] = S[0] * 0.32 + S[1] * 0.2),
-            (a.uv[T * 2 + 1] = S[2] * 0.32 + S[1] * 0.2),
-            (a.lay[T] = l),
-            (a.side[T] = c));
+          a.pos[T * 3] = S[0];
+          a.pos[T * 3 + 1] = S[1];
+          a.pos[T * 3 + 2] = S[2];
+          a.nor[T * 3] = b;
+          a.nor[T * 3 + 1] = y;
+          a.nor[T * 3 + 2] = v;
+          a.col[T * 3] = k[0];
+          a.col[T * 3 + 1] = k[1];
+          a.col[T * 3 + 2] = k[2];
+          if (arr) {
+            let q = T * 4,
+              E = ev ? ev[A] : ED,
+              C = c2 ? c2[A] : null;
+            a.lay[q] = LA;
+            a.lay[q + 1] = LB;
+            a.lay[q + 2] = LZ;
+            a.lay[q + 3] = LW;
+            a.edge[q] = E[0];
+            a.edge[q + 1] = E[1];
+            a.edge[q + 2] = E[2];
+            a.edge[q + 3] = E[3];
+            // color de la capa vecina codificado en raíz cuadrada (el 8 bits lineal se come los oscuros)
+            a.col2[q] = C ? Math.sqrt(Math.min(C[0], 1)) * 255 : 0;
+            a.col2[q + 1] = C ? Math.sqrt(Math.min(C[1], 1)) * 255 : 0;
+            a.col2[q + 2] = C ? Math.sqrt(Math.min(C[2], 1)) * 255 : 0;
+          } else {
+            a.uv[T * 2] = S[0] * 0.32 + S[1] * 0.2;
+            a.uv[T * 2 + 1] = S[2] * 0.32 + S[1] * 0.2;
+          }
         }
       },
       f = (m, g = 1) => (nn.setHex(m), [nn.r * g, nn.g * g, nn.b * g]),
-      u = (m, g) => (i.inb(m, g) ? s[g * i.w + m] : 2.5);
+      u = (m, g) => (i.inb(m, g) ? s[g * i.w + m] : 2.5),
+      mapBio = TER_BIO_IDX[this.bioKey(0)] ?? 0,
+      grey = !Et.procTex;
     for (let m = t; m < Math.min(t + Va, i.h); m++)
       for (let g = e; g < Math.min(e + Va, i.w); g++) {
         let b = m * i.w + g,
           y = i.ter[b],
           v = s[b];
         if (y === F.VOID) continue;
-        if (((l = this.useArr ? this.layerFor(g, m, b, !1) : -1), (c = 0), y === F.SECRET)) {
+        let L = arr ? this.layerFor(g, m, b, !1) : -1,
+          bio = i.kind === "op" ? mapBio : (TER_BIO_IDX[this.bioKey(b)] ?? 0);
+        LA = L >= 0 ? L : 255;
+        LB = 255;
+        LZ = 0;
+        LW = y * 16 + bio;
+        ED = TER_ZERO4;
+        ev = null;
+        c2 = null;
+        if (y === F.SECRET) {
           let S = f(Nl[i.var[b]]?.f ?? 5592405);
           h(
             [
@@ -477,29 +520,38 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
             [g + 1, m + 1],
             [g + 1, m],
           ],
-          A = _.map(([S, k]) => {
+          liq = TER_LIQUID(y),
+          W = _.map(([S, k]) => {
+            // oclusión suave de la esquina: cuántas de las 4 casillas que la rodean son altas
             let w = 1;
-            if (v < 0.5) {
+            if (v < 0.5 && !liq) {
               let E = 0;
-              for (let [H, Z] of [
-                [-1, -1],
-                [0, -1],
-                [-1, 0],
-                [0, 0],
-              ]) {
-                let me = S + H,
-                  G = k + Z;
-                u(me, G) > 0.6 && E++;
-              }
+              for (let [H, Z] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) u(S + H, k + Z) > 0.6 && E++;
               w = 1 - E * 0.13;
             }
-            if (((y === F.WATER || y === F.LAVA || y === F.ACID) && (w = 1), l >= 0 && !Et.procTex)) {
+            return w;
+          }),
+          colorAt = (S, k, w, tb, tx, tz) => {
+            if (L >= 0 && grey) {
               let E = 0.94 + this.noise2(S * 0.3, k * 0.3) * 0.12;
               return [w * E, w * E, w * E];
             }
-            return f(this.tileColor(g, m, b, S, k), w);
-          });
+            return f(this.tileColor(tx, tz, tb, S, k), w);
+          },
+          A = _.map(([S, k], n) => colorAt(S, k, W[n], b, g, m));
         if (y === F.ROCK) for (let S of A) ((S[0] *= 1.08), (S[1] *= 1.08), (S[2] *= 1.08));
+        if (arr && L >= 0) {
+          let R = this.blendInfo(g, m, L, v);
+          ED = R.st;
+          if (R.B !== 255) {
+            LB = R.B;
+            LZ = R.bits * 2;
+            let nj = R.nbi,
+              nx = nj % i.w,
+              nz = (nj / i.w) | 0;
+            c2 = _.map(([S, k], n) => colorAt(S, k, W[n], nj, nx, nz));
+          }
+        }
         h(
           _.map(([S, k]) => [S, v, k]),
           A,
@@ -516,62 +568,77 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
             me = i.inb(H, Z) ? s[Z * i.w + H] : -0.5,
             G = i.inb(H, Z) ? i.ter[Z * i.w + H] : F.VOID;
           if (me >= v - 0.001) continue;
-          let L = this.useArr ? this.layerFor(g, m, b, !0) : -1;
-          ((l = L), (c = L >= 0 ? 1 : 0));
+          let L2 = arr ? this.layerFor(g, m, b, !0) : -1;
+          LA = L2 >= 0 ? L2 : 255;
+          LB = 255;
+          LZ = 1; // lateral
+          c2 = null;
           let B = G === F.VOID ? -0.01 : me,
+            hq = Math.max(1, Math.min(255, Math.round((v - B) * 32))),
+            hs = (g * 7 + m * 13 + (S + 2) * 5 + (k + 2) * 11) & 255,
             I,
             M;
+          // (t, alto del lateral, hash por casilla): el shader reconstruye base/cresta a partir de ellos
+          ev = [[255, hq, hs, 0], [0, hq, hs, 0], [0, hq, hs, 0], [255, hq, hs, 0]];
           if (y === F.WALL) {
             nn.setHex(this.tileColor(g, m, b, g, m));
-            let z = 0.8;
-            ((I = [nn.r * z, nn.g * z, nn.b * z]), (M = [nn.r * 0.45, nn.g * 0.45, nn.b * 0.45]));
-          } else
-            y === F.ROCK
-              ? (nn.setHex(this.tileColor(g, m, b, g + S, m + k)),
-                (I = [nn.r * 0.85, nn.g * 0.85, nn.b * 0.85]),
-                (M = [nn.r * 0.38, nn.g * 0.38, nn.b * 0.38]))
-              : (nn.setHex(this.tileColor(g, m, b, g, m)),
-                (I = [nn.r * 0.6, nn.g * 0.6, nn.b * 0.6]),
-                (M = [nn.r * 0.3, nn.g * 0.3, nn.b * 0.3]));
-          (L >= 0 && !Et.procTex && ((I = [0.95, 0.95, 0.95]), (M = [0.45, 0.45, 0.45])),
-            h(
-              [
-                [w[0], v, w[1]],
-                [w[0], B, w[1]],
-                [E[0], B, E[1]],
-                [E[0], v, E[1]],
-              ],
-              [I, M, M, I],
-              S,
-              0,
-              k,
-            ));
+            I = [nn.r * 0.95, nn.g * 0.95, nn.b * 0.95];
+            M = [nn.r * 0.62, nn.g * 0.62, nn.b * 0.62];
+          } else if (y === F.ROCK) {
+            nn.setHex(this.tileColor(g, m, b, g + S, m + k));
+            I = [nn.r * 0.95, nn.g * 0.95, nn.b * 0.95];
+            M = [nn.r * 0.55, nn.g * 0.55, nn.b * 0.55];
+          } else {
+            nn.setHex(this.tileColor(g, m, b, g, m));
+            I = [nn.r * 0.7, nn.g * 0.7, nn.b * 0.7];
+            M = [nn.r * 0.4, nn.g * 0.4, nn.b * 0.4];
+          }
+          L2 >= 0 && grey && ((I = [0.95, 0.95, 0.95]), (M = [0.45, 0.45, 0.45]));
+          h(
+            [
+              [w[0], v, w[1]],
+              [w[0], B, w[1]],
+              [E[0], B, E[1]],
+              [E[0], v, E[1]],
+            ],
+            [I, M, M, I],
+            S,
+            0,
+            k,
+          );
         }
-        (y === F.WATER || y === F.LAVA || y === F.ACID) &&
-          (y === F.WATER ? o.water : y === F.LAVA ? o.lava : o.acid).push(g, m);
+        liq && (y === F.WATER ? o.water : y === F.LAVA ? o.lava : o.acid).push(g, m);
       }
     if (r) {
       let m = new $t();
-      (m.setAttribute("position", new St(a.pos.slice(0, r * 3), 3)),
-        m.setAttribute("normal", new St(a.nor.slice(0, r * 3), 3)),
-        m.setAttribute("color", new St(a.col.slice(0, r * 3), 3)),
-        m.setAttribute("uv", new St(a.uv.slice(0, r * 2), 2)),
-        m.setAttribute("aLayer", new St(a.lay.slice(0, r), 1)),
-        m.setAttribute("aSide", new St(a.side.slice(0, r), 1)),
-        m.computeBoundingSphere());
+      m.setAttribute("position", new St(a.pos.slice(0, r * 3), 3));
+      m.setAttribute("normal", new St(a.nor.slice(0, r * 3), 3));
+      m.setAttribute("color", new St(a.col.slice(0, r * 3), 3));
+      if (arr) {
+        m.setAttribute("aLay", new St(a.lay.slice(0, r * 4), 4));
+        m.setAttribute("aEdge", new St(a.edge.slice(0, r * 4), 4));
+        m.setAttribute("aCol2", new St(a.col2.slice(0, r * 4), 4));
+      } else m.setAttribute("uv", new St(a.uv.slice(0, r * 2), 2));
+      m.computeBoundingSphere();
       let g = new Ge(m, this.groundMat);
       ((g.receiveShadow = !0), (g.castShadow = !0), this.group.add(g));
     }
     for (let m of ["water", "lava", "acid"]) {
       let g = o[m];
       if (!g.length) continue;
-      let b = [],
-        y = [];
+      let kt = { water: F.WATER, lava: F.LAVA, acid: F.ACID }[m],
+        b = [],
+        dp = [],
+        memo = new Map(),
+        depthAt = (X, Z) => {
+          let q = Z * (i.w + 1) + X,
+            c = memo.get(q);
+          return (c === undefined && memo.set(q, (c = this.liquidDepth(kt, X, Z))), c);
+        };
       for (let A = 0; A < g.length; A += 2) {
         let T = g[A],
           S = g[A + 1],
-          k = -0.1,
-          w = m === "water" ? 0.16 : 0.12;
+          k = -0.1;
         for (let [E, H] of [
           [T, S],
           [T, S + 1],
@@ -580,13 +647,13 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
           [T + 1, S + 1],
           [T + 1, S],
         ])
-          (b.push(E, k, H), y.push(E * w, H * w));
+          (b.push(E, k, H), dp.push(depthAt(E, H)));
       }
       {
         let A = [],
           T = [],
           S = { water: [0.85, 0.95, 1], lava: [1, 0.75, 0.3], acid: [0.85, 1, 0.45] }[m],
-          k = { water: F.WATER, lava: F.LAVA, acid: F.ACID }[m],
+          k = kt,
           w = (E, H) => !i.inb(E, H) || i.ter[H * i.w + E] === k;
         for (let E = 0; E < g.length; E += 2) {
           let H = g[E],
@@ -647,75 +714,21 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
         }
       }
       let v = new $t();
-      (v.setAttribute("position", new ft(b, 3)), v.setAttribute("uv", new ft(y, 2)), v.computeVertexNormals());
+      (v.setAttribute("position", new ft(b, 3)), v.setAttribute("aDepth", new ft(dp, 1)), v.computeVertexNormals());
       let _ = new Ge(v, this.liquidMat(m));
       ((_.receiveShadow = m === "water"), this.group.add(_));
     }
   }
+  // líquidos con shader propio (src/engine/terrain.js): profundidad, ondas, espuma, lava HDR, ácido con pulso
   liquidMat(e) {
     if ((this._lm || (this._lm = {}), this._lm[e])) return this._lm[e];
-    let t = _g().clone();
-    ((t.needsUpdate = !0), (t.wrapS = t.wrapT = ei));
-    let i = Et.m.textures[e];
-    i && ((t = Et.tex(i.f).clone()), (t.needsUpdate = !0), (t.wrapS = t.wrapT = ei), t.repeat.set(3, 3));
-    let s;
-    return (
-      i && e === "water"
-        ? (s = new Xt({ color: 16777215, roughness: 0.1, metalness: 0.2, transparent: !0, opacity: 0.9, map: t }))
-        : i
-          ? (s = new Xt({
-              color: 2236962,
-              roughness: 0.6,
-              emissive: 16777215,
-              emissiveMap: t,
-              emissiveIntensity: e === "lava" ? 1.8 : 1.1,
-              map: t,
-            }))
-          : e === "water"
-            ? ((s = new Xt({
-                color: 3836586,
-                roughness: 0.08,
-                metalness: 0.35,
-                transparent: !0,
-                opacity: 0.86,
-                map: t,
-                emissive: 667712,
-                emissiveIntensity: 0.55,
-              })),
-              (s.onBeforeCompile = (a) => {
-                (xo(a),
-                  (a.fragmentShader = a.fragmentShader.replace(
-                    "#include <map_fragment>",
-                    `
-        vec4 t1 = texture2D(map, vMapUv); vec4 t2 = texture2D(map, vMapUv * 0.37 + vec2(0.31, 0.17));
-        float w = (t1.r * 0.55 + t2.r * 0.45);
-        diffuseColor.rgb *= mix(0.72, 1.22, w);
-        diffuseColor.rgb += vec3(0.25, 0.35, 0.38) * smoothstep(0.78, 0.95, w);`,
-                  )));
-              }))
-            : e === "lava"
-              ? (s = new Xt({
-                  color: 4198400,
-                  roughness: 0.6,
-                  emissive: 16732176,
-                  emissiveMap: t,
-                  emissiveIntensity: 2.2,
-                }))
-              : (s = new Xt({
-                  color: 2771472,
-                  roughness: 0.3,
-                  emissive: 8060704,
-                  emissiveMap: t,
-                  emissiveIntensity: 1.1,
-                  transparent: !0,
-                  opacity: 0.92,
-                })),
-      (s.userData.tex = t),
-      (s.userData.kind = e),
-      this.liquidMats.push(s),
-      (this._lm[e] = s),
-      s
-    );
+    let s = makeLiquidMaterial({
+      kind: e,
+      time: zo.uTime,
+      hook: xo,
+      quality: () => (this.R && this.R.quality) || "high",
+    });
+    return ((this._lm[e] = s), this.liquidMats.push(s), s);
   }
   buildSecrets() {
     let e = this.map,
@@ -952,16 +965,13 @@ precision highp sampler2DArray; uniform sampler2DArray uArr; uniform float uTime
     );
   }
   update(e, t) {
-    for (let i of this.liquidMats) {
-      if (i.userData.foam) {
-        i.opacity = 0.45 + Math.sin(t * 1.6) * 0.15;
-        continue;
-      }
-      let s = i.userData.tex,
-        a = i.userData.kind === "water" ? 0.02 : i.userData.kind === "lava" ? 0.012 : 0.018;
-      ((s.offset.x = (t * a) % 1),
-        (s.offset.y = (t * a * 0.6) % 1),
-        i.userData.kind === "lava" && !Et.m.textures.lava && (i.emissiveIntensity = 2 + Math.sin(t * 1.5) * 0.4));
+    for (let i of this.liquidMats) i.userData.foam && (i.opacity = 0.45 + Math.sin(t * 1.6) * 0.15);
+    // si cambia el preset de calidad hay que recompilar el suelo y los líquidos (el shader depende de TQ)
+    let q = this.terQuality();
+    if (q !== this._tq) {
+      this._tq = q;
+      this.groundMat.needsUpdate = !0;
+      for (let i of this.liquidMats) i.userData.kind && (i.needsUpdate = !0);
     }
     for (let [i, s] of this.secretMeshes)
       s.userData.sink &&
