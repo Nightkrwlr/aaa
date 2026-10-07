@@ -1,0 +1,11 @@
+# Operación Eclipse (edición alojada): tipos MIME y caché
+AddType application/manifest+json .webmanifest
+<IfModule mod_headers.c>
+  # la página del juego se revalida siempre (304 si no cambió): las actualizaciones llegan al instante
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.(png|webmanifest)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>
