@@ -1,0 +1,5 @@
+{
+ "chars.loading": "Cargando arte… {done}/{total}",
+ "chars.ready": "Arte cargado",
+ "chars.failed": "No se pudo cargar el arte: se usan modelos sencillos"
+}

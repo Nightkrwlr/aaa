@@ -47,7 +47,7 @@ export class EntityViews {
     this.frustum = new THREE.Frustum(); this._pv = new THREE.Matrix4(); this._sph = new THREE.Sphere();
     this.artReady = false;
     this.stats = { views: 0, animated: 0, culled: 0 };
-    this._v3 = new THREE.Vector3(); this._n = new THREE.Vector3();
+    this._v3 = new THREE.Vector3(); this._n = new THREE.Vector3(); this._q = new THREE.Quaternion();
   }
 
   modelIdFor(e) {
@@ -274,6 +274,7 @@ export class EntityViews {
     // corpse bookkeeping (sink after ~2.2 s; the sim removes the entity at corpseTime)
     const deadT = e.dead ? world.time - e.deathTime : 0;
     if (e.dead && !v.wasDead) { v.wasDead = true; this.#rim(v, e, false, true); v.ring.material.opacity = 0; if (v.pring) v.pring.g.visible = false; }
+    else if (!e.dead && v.wasDead) { v.wasDead = false; v.deadOff = null; v.slide.set(0, 0); v.pring && (v.pring.g.visible = true); m.anim?.revive(); this.#rim(v, e, false, true); }   // player respawn
 
     // slide/recoil (decaying world-space offsets → pivot local)
     v.recoil.multiplyScalar(Math.exp(-dt * 13));
@@ -284,7 +285,7 @@ export class EntityViews {
     if (v.deadOff) { ox += v.deadOff.x; oz += v.deadOff.y; }
     const cy = Math.cos(v.yaw), sy = Math.sin(v.yaw);
     const lx = ox * cy - oz * sy, lz = ox * sy + oz * cy;
-    let py = v.hover ? v.hover + Math.sin(t * 1.9 + m.seed) * 0.07 : 0;
+    let py = v.hover ? (e.dead ? v.hover * (1 - smooth(clamp01(deadT / 0.45))) : v.hover + Math.sin(t * 1.9 + m.seed) * 0.07) : 0;
     if (e.dead && deadT > 2.1) { const k = smooth(clamp01((deadT - 2.1) / 1.3)); py -= k * 1.1; pivot.scale.setScalar(Math.max(0.001, v.baseScale * (1 - k * 0.35))); }
     else pivot.scale.setScalar(v.baseScale * (1 + (v.squash ? 0 : 0)));
     if (v.squash) { v.squash = Math.max(0, v.squash - dt * 9); const k = smooth(v.squash); pivot.scale.set(v.baseScale * (1 + k * 0.05), v.baseScale * (1 - k * 0.07), v.baseScale * (1 + k * 0.05)); }
@@ -301,7 +302,7 @@ export class EntityViews {
     // simulation state for the animation layer
     const since = world.time - e.lastHurtTime;
     const st = { uid: e.uid, t, dt, yaw: v.yaw, speed: v.speed, mps: v.mpsSm, dead: e.dead, deadT, hurt: since < 0.18 ? 1 - since / 0.18 : 0, cast: null, dash: null, dashing: !!e.dash, dashP: 0, dashHint: null, listening: !!e.listen?.active,
-      aggro: !!(e.ai && (e.ai.target || AGGRO_STATES.has(e.ai.state))), stunned: !!e.ctl?.stunned, kind: e.kind, tier: e.tier };
+      aggro: e.kind === 'player' ? (world.time - e.lastHitTime < 3 || !!e.cast) : !!(e.ai && (e.ai.target || AGGRO_STATES.has(e.ai.state))), stunned: !!e.ctl?.stunned, kind: e.kind, tier: e.tier };
     if (m.kind !== 'rig') setFlash(m, since < 0.07 && !e.dead);
     if (e.dash) {
       if (e.dash !== v.lastDash) { v.lastDash = e.dash; v.dashId++; }
@@ -341,7 +342,7 @@ export class EntityViews {
     }
     const mat = v.blob.material; mat.opacity = 0.42 * fade;
     v.blob.scale.setScalar(r * 3.1 * (e.kind === 'player' ? 1.0 : 1));
-    const q = tilt ? new THREE.Quaternion().setFromUnitVectors(UP, tilt) : null;
+    const q = tilt ? this._q.setFromUnitVectors(UP, tilt) : null;
     if (q) { v.blob.quaternion.copy(q); v.ring.quaternion.copy(q); if (v.pring) v.pring.g.quaternion.copy(q); if (v.aura) v.aura.g.quaternion.copy(q); }
     v.ring.material.opacity = hovered ? 0.95 : 0;
     if (hovered) { v.ring.material.color.set(e.team === 'enemy' ? '#ff6a5a' : '#ffd27a'); v.ring.scale.setScalar(Math.max(0.8, r * 1.5)); }

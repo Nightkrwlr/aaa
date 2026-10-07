@@ -29,6 +29,19 @@ export function title(game, ui) {
   el.append(h('div', { class: 'title-bg' }), body);
   let nameVal = t('ui.default_name');
 
+  // art loading progress (the glTF characters stream in while the menu is already usable)
+  const artLabel = h('span', {});
+  const artFill = h('div', { style: { height: '100%', width: '0%', background: 'linear-gradient(90deg,#7fe3ff,#d9a24a)', transition: 'width .25s' } });
+  const art = h('div', { class: 'art-load', role: 'status', 'aria-live': 'polite', style: { position: 'absolute', left: '50%', bottom: '16px', transform: 'translateX(-50%)', width: 'min(340px, 80vw)', textAlign: 'center', fontSize: '12px', color: '#9aa4b2', pointerEvents: 'none', transition: 'opacity .6s' } },
+    artLabel, h('div', { style: { height: '4px', background: 'rgba(255,255,255,.12)', borderRadius: '2px', overflow: 'hidden', marginTop: '6px' } }, artFill));
+  el.append(art);
+  const offArt = game.onAssets?.((st) => {
+    const total = Math.max(1, st.total || 1), done = st.ready || st.failed ? total : st.done;
+    artFill.style.width = `${Math.round(done / total * 100)}%`;
+    artLabel.textContent = st.failed ? t('chars.failed') : st.ready ? t('chars.ready') : t('chars.loading', { done: st.done, total });
+    if (st.ready || st.failed) { art.style.opacity = '0'; setTimeout(() => art.remove(), st.failed ? 4000 : 800); }
+  });
+
   const mainMenu = () => {
     clear(body);
     const slots = game.saves.list();
@@ -90,5 +103,5 @@ export function title(game, ui) {
     body.append(h('h2', {}, t('ui.about')), h('p', { class: 'about' }, t('ui.about_text')), h('p', { class: 'about' }, t('ui.assets_note')), h('div', { class: 'menu row' }, button(t('ui.back'), mainMenu)));
   };
 
-  return { el, blocking: true, noEscape: true, open() { mainMenu(); }, close() {} };
+  return { el, blocking: true, noEscape: true, open() { mainMenu(); }, close() { offArt?.(); } };
 }

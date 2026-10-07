@@ -159,6 +159,7 @@ export class CharAnimator {
   /** switch the driving action with a cross-fade; returns it. mode: 'loop' | 'once' | 'scrub' */
   #switch(a, { mode = 'loop', fade = 0.15, ts = 1, time = 0, clamp = false } = {}) {
     if (!a) return null;
+    this.faders.delete(a);
     const prev = this.cur;
     if (prev === a) { // same action: just retime (loops) or restart (one-shots)
       if (mode === 'loop') { a.timeScale = ts; return a; }
@@ -332,6 +333,7 @@ export class CharAnimator {
   #plan(c) {
     const style = this.prof.style;
     const hint = c.hint ?? 'cast';
+    if (hint === 'roll') return null;                     // the dash itself plays the dodge clip
     const list = clipsForHint(style, hint).filter((n) => this.rig.has(n));
     if (hint === 'charge') { const run = this.#first([this.prof.run, 'Running_B']); return { kind: 'charge', clip: run }; }
     if (hint === 'brace' && (style === '1h' || style === '2h') && this.rig.has('Blocking') && !this.prof.noBlock) return { kind: 'hold', clip: 'Blocking' };
@@ -391,6 +393,12 @@ export class CharAnimator {
         this.#switch(a, { mode: 'loop', fade: 0.18, ts, time: rnd() * 0.5 });
       } else if (this.cur) this.cur.timeScale = ts;
     }
+  }
+
+  /** the entity came back to life (player respawn): drop the death pose and start over from idle */
+  revive() {
+    this.dead = false; this.override = null; this.overrideUntil = 0; this.hitUntil = 0; this.castRef = null; this.plan = null;
+    this.mixer.stopAllAction(); this.faders.clear(); this.cur = null; this.curKey = ''; this.locoState = 'idle';
   }
 
   dispose() { this.mixer.stopAllAction(); }
