@@ -123,7 +123,7 @@ uniform sampler2DArray uArr; uniform sampler2D uTN;
 uniform float uTime; uniform float uCloud; uniform float uTexK; uniform float uOrg[32];
 uniform vec3 uStainA[9]; uniform vec3 uStainB[9]; uniform vec3 uCap[9]; uniform vec4 uBioK[9];
 varying vec4 vLay; varying vec4 vEdge; varying vec3 vCol2; varying vec3 vWP;
-vec3 gTilt; float gRoughMul;
+vec3 gTilt; float gRoughMul; vec3 gFill;
 float gHash(float n){ return fract(sin(n * 12.9898) * 43758.5453); }
 // capa del array (textureGrad: se llama dentro de ramas y las derivadas implícitas serían indefinidas). En capas orgánicas
 // una 2.ª muestra rotada y a otra escala rompe la repetición (contraste compensado). «two» limita las lecturas por píxel.
@@ -159,7 +159,7 @@ const GROUND_FRAG_COLOR = /* glsl */ `
   #else
   vec4 nM = nL;
   #endif
-  gTilt = vec3(0.0); gRoughMul = 1.0;
+  gTilt = vec3(0.0); gRoughMul = 1.0; gFill = vec3(0.0);
   vec3 alb = vColor;
   float ao = 1.0;
   float Lo = vLay.x > 254.5 ? -1.0 : floor(vLay.x + 0.5);
@@ -237,6 +237,8 @@ const GROUND_FRAG_COLOR = /* glsl */ `
       alb *= 0.80 + 0.40 * sk;
       alb *= 1.0 - 0.42 * (1.0 - smoothstep(0.0, 0.55, fromBase));        // base sucia
       alb *= 1.0 + 0.32 * (1.0 - smoothstep(0.0, 0.12, fromTop));          // cresta iluminada
+      // relleno falso: los laterales miran a la sombra y se quedaban negros; cielo frío arriba, rebote cálido del suelo abajo
+      gFill = mix(vec3(0.20, 0.13, 0.08), vec3(0.12, 0.16, 0.22), smoothstep(0.0, 0.9, tt)) * 0.9;
       gTilt = vec3(0.0);
       topness = 0.0;
     }
@@ -282,6 +284,7 @@ export function patchGroundShader(shader, o) {
     .replace('#include <common>', `#define TQ ${o.tq}\n#include <common>\n${GROUND_FRAG_PARS}`)
     .replace('#include <map_fragment>', '')
     .replace('#include <color_fragment>', GROUND_FRAG_COLOR)
+    .replace('#include <opaque_fragment>', 'outgoingLight += diffuseColor.rgb * gFill;\n#include <opaque_fragment>')
     .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor *= gRoughMul;')
     .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 #if TQ >= 1
@@ -295,7 +298,7 @@ const LIQ_VERT_BODY = /* glsl */ `vDepth = aDepth; vWPl = (modelMatrix * vec4(po
 const LIQ_FRAG_PARS = /* glsl */ `
 uniform sampler2D uTN; uniform float uTime;
 varying float vDepth; varying vec3 vWPl;
-vec3 gEmis; vec2 gRip; float gSpark;`;
+vec3 gEmis; vec2 gRip; vec2 gRipF; float gSpark;`;
 
 const WATER_MAP = /* glsl */ `
 {
@@ -308,33 +311,35 @@ const WATER_MAP = /* glsl */ `
   vec4 w3 = w2;
   #endif
   gRip = (vec2(w1.r, w1.a) - 0.5) * 0.9 + (vec2(w2.r, w2.a) - 0.5) * 0.6 + (vec2(w3.r, w3.a) - 0.5) * 0.4;
+  gRipF = (vec2(w3.r, w3.a) - 0.5) * 1.2;      // ondas finas: solo ellas dan los destellos del sol (las grandes dejaban manchas de «nube»)
   float depth = clamp(vDepth, 0.0, 1.0);
-  float dd = smoothstep(0.0, 0.85, depth + (w1.r - 0.5) * 0.22);
-  vec3 shallow = vec3(0.10, 0.36, 0.38);
-  vec3 deep = vec3(0.004, 0.045, 0.085);
+  float dd = smoothstep(0.0, 1.0, depth * 1.25 + (w1.r - 0.5) * 0.07);   // las charcas son pequeñas: la profundidad llega a ~1 casilla
+  vec3 shallow = vec3(0.05, 0.30, 0.34);
+  vec3 deep = vec3(0.01, 0.10, 0.19);
   vec3 col = mix(shallow, deep, dd);
-  col += vec3(0.20, 0.34, 0.32) * smoothstep(0.50, 0.95, w2.g * 0.55 + w3.g * 0.45) * (1.0 - dd) * 0.55;   // cáusticas en el bajío
+  col += vec3(0.20, 0.34, 0.32) * smoothstep(0.62, 0.98, w2.g * 0.55 + w3.g * 0.45) * (1.0 - dd) * 0.30;   // cáusticas en el bajío
   float sh = depth + (w3.b - 0.5) * 0.10 + (w1.g - 0.5) * 0.06 + sin(tt * 0.9 + depth * 26.0 + w2.r * 6.0) * 0.012;
   float foam = (1.0 - smoothstep(0.012, 0.075, sh)) * (0.62 + 0.38 * smoothstep(0.30, 0.70, w2.g));
   foam += (1.0 - smoothstep(0.08, 0.17, sh)) * smoothstep(0.60, 0.84, w3.g) * 0.55;
   foam = clamp(foam, 0.0, 1.0);
-  diffuseColor.rgb = mix(col, vec3(0.80, 0.90, 0.92), foam);
+  diffuseColor.rgb = mix(col * 0.62, vec3(0.80, 0.90, 0.92), foam);   // albedo bajo: bajo el sol HDR un albedo «de color de agua» sale lechoso
   diffuseColor.a = max(mix(0.52, 0.94, dd), foam * 0.95);
   gSpark = 1.0 - foam;
 }`;
 const WATER_NORMAL = /* glsl */ `
 normal = normalize(normal + (viewMatrix * vec4(gRip.x, 0.0, gRip.y, 0.0)).xyz * 0.30);`;
-const WATER_OPAQUE = /* glsl */ `
+const WATER_OPAQUE = `
 {
   vec3 vd = isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vViewPosition);
   float fr = pow(1.0 - clamp(dot(vd, normal), 0.0, 1.0), 2.0);
   #ifdef USE_FOG
-  outgoingLight += fogColor * (0.10 + 0.55 * fr) * gSpark;           // cielo reflejado (velo de la niebla)
+  outgoingLight += fogColor * (0.02 + 0.03 * fr) * gSpark;           // cielo reflejado (velo de la niebla)
   #endif
   #if NUM_DIR_LIGHTS > 0
   vec3 H = normalize(directionalLights[0].direction + vd);
-  float sp = pow(max(dot(normal, H), 0.0), 150.0) + 0.5 * pow(max(dot(normal, H), 0.0), 40.0);
-  outgoingLight += directionalLights[0].color * sp * 0.9 * gSpark;     // brillo especular falso (HDR: el bloom lo recoge)
+  vec3 nS = normalize(normal + (viewMatrix * vec4(gRipF.x, 0.0, gRipF.y, 0.0)).xyz * 0.22);
+  float sp = pow(max(dot(nS, H), 0.0), 1400.0);
+  outgoingLight += directionalLights[0].color * sp * 0.8 * gSpark;     // brillo especular falso (HDR: el bloom lo recoge)
   #endif
 }
 #include <opaque_fragment>`;
@@ -355,12 +360,12 @@ const LAVA_MAP = /* glsl */ `
   float vein = smoothstep(0.80, 1.0, v1) + 0.7 * smoothstep(0.84, 1.0, v2);
   float molten = smoothstep(0.30, 0.78, a1.r * 0.7 + b1.g * 0.3);
   float depth = clamp(vDepth, 0.0, 1.0);
-  float heat = clamp(vein * 0.85 + molten * 0.55, 0.0, 1.0);
+  float heat = clamp(vein * 0.62 + molten * 0.42, 0.0, 1.0);
   heat *= 0.28 + 0.72 * smoothstep(0.0, 0.40, depth + (a1.g - 0.5) * 0.25);   // corteza fría junto a la orilla
   float pulse = 0.86 + 0.14 * sin(tt * 1.3 + a1.r * 9.0);
   vec3 ember = mix(vec3(0.30, 0.012, 0.0), vec3(1.0, 0.30, 0.025), smoothstep(0.0, 0.55, heat));
-  ember = mix(ember, vec3(1.0, 0.80, 0.34), smoothstep(0.62, 1.0, heat));
-  gEmis = ember * (0.35 + 4.2 * heat * heat) * pulse;
+  ember = mix(ember, vec3(1.0, 0.72, 0.28), smoothstep(0.80, 1.0, heat));
+  gEmis = ember * (0.28 + 1.55 * heat * heat) * pulse;   // pico ≈ 2: el bloom lo realza sin quemar la estructura de la corriente
   diffuseColor.rgb = vec3(0.022, 0.016, 0.014) * (0.6 + 0.8 * b2.b);
   diffuseColor.a = 1.0;
 }`;
@@ -373,13 +378,13 @@ const ACID_MAP = /* glsl */ `
   vec4 a2 = texture2D(uTN, p * 0.27 + vec2(-tt * 0.016, tt * 0.012) + 0.4);
   float depth = clamp(vDepth, 0.0, 1.0);
   float pulse = 0.5 + 0.5 * sin(tt * 1.7 + a1.r * 5.0);
-  float bub = smoothstep(0.80, 0.90, a2.g) - smoothstep(0.90, 0.99, a2.g);   // anillos de burbuja que revientan
+  float bub = (smoothstep(0.86, 0.93, a2.g) - smoothstep(0.93, 0.99, a2.g)) * max(0.0, sin(tt * 2.2 + a2.r * 40.0));   // burbujas que aparecen y revientan
   float slick = smoothstep(0.45, 0.85, a1.r);
-  vec3 base = mix(vec3(0.020, 0.075, 0.020), vec3(0.060, 0.20, 0.030), slick);
+  vec3 base = mix(vec3(0.010, 0.030, 0.010), vec3(0.025, 0.080, 0.012), slick);
   diffuseColor.rgb = base;
   diffuseColor.a = mix(0.80, 0.95, smoothstep(0.0, 0.6, depth));
   float rim = 1.0 - smoothstep(0.0, 0.22, depth + (a2.b - 0.5) * 0.1);
-  gEmis = vec3(0.30, 0.90, 0.10) * (0.30 + 0.55 * pulse) * (0.55 + 0.45 * slick) + vec3(0.55, 1.0, 0.25) * (bub * (0.5 + 0.5 * pulse) + rim * 0.55);
+  gEmis = vec3(0.30, 0.90, 0.10) * (0.030 + 0.085 * pulse) * (0.45 + 0.55 * slick) + vec3(0.55, 1.0, 0.25) * (bub * (0.7 + 0.9 * pulse) + rim * 0.30);   // el cuerpo oscuro y tóxico; solo burbujas y orilla brillan (bloom)
   gRip = (vec2(a1.r, a1.a) - 0.5) * 0.5;
 }`;
 
@@ -390,9 +395,9 @@ const ACID_MAP = /* glsl */ `
 export function makeLiquidMaterial(o) {
   const kind = o.kind;
   const m = new MeshStandardMaterial(
-    kind === 'water' ? { color: 0xffffff, roughness: 0.10, metalness: 0.0, transparent: true }
+    kind === 'water' ? { color: 0xffffff, roughness: 0.9, metalness: 0.0, transparent: true, envMapIntensity: 0.3 }  // rugosidad alta: el lóbulo especular PBR sobre un plano horizontal es una mancha plana; el brillo lo pone el shader (glints)
       : kind === 'lava' ? { color: 0xffffff, roughness: 0.55, metalness: 0.0 }
-        : { color: 0xffffff, roughness: 0.25, metalness: 0.0, transparent: true });
+        : { color: 0xffffff, roughness: 0.9, metalness: 0.0, transparent: true, envMapIntensity: 0.3 });
   const tq = () => ({ low: 0, medium: 1, high: 2 }[o.quality()] ?? 1);
   m.onBeforeCompile = (shader) => {
     o.hook?.(shader);

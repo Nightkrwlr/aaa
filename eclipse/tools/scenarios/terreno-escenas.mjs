@@ -23,14 +23,15 @@ export default async function ({ boot, newGame, god, region, setTime, still, wai
     const e = ESCENAS[k];
     if (e) await teleport(e.x, e.z);
     else if (k === 'marisma') {
-      // la charca de agua más grande de la región marisma (gx 0, gz 1)
+      // la charca de agua más grande dentro de la región marisma (se busca por clave de región, no por coordenadas)
       const c = await ev(() => {
-        const m = window.__G.map; let b = null;
-        for (let z = 200; z < 376; z += 2) for (let x = 12; x < 180; x += 2) {
+        const m = window.__G.map, De = window.__De; let b = null;
+        for (let z = 10; z < m.h - 10; z += 3) for (let x = 10; x < m.w - 10; x += 3) {
+          const r = De[m.reg[z * m.w + x]]; if (!r || r.key !== 'marisma') continue;
           let w = 0, g = 0;
           for (let dz = -6; dz <= 6; dz++) for (let dx = -8; dx <= 8; dx++) { const q = m.ter[(z + dz) * m.w + x + dx]; if (q === 4) w++; else if (q === 0) g++; }
           const s = Math.min(w, 70) + Math.min(g, 60);
-          if (w > 25 && (!b || s > b.s)) b = { x, z, s };
+          if (w > 25 && (!b || s > b.s)) b = { x, z, s, w };
         }
         return b;
       });

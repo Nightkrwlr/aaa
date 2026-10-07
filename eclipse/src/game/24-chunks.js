@@ -162,7 +162,7 @@ const TER_N8 = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1
 const TER_VOTES = new Int16Array(64), TER_NBI = new Int32Array(64), TER_CAND = new Int16Array(8), TER_ZERO4 = [0, 0, 0, 0];
 const TER_HSTEP = 0.2; // desnivel mínimo para que un vecino cuente como subida / caída (y no como «mismo nivel»)
 const TER_LIQUID = (t) => t === F.WATER || t === F.LAVA || t === F.ACID;
-const TER_DEPTH_R = 3; // alcance (casillas) del campo de profundidad de los líquidos
+const TER_DEPTH_R = 2; // alcance (casillas) del campo de profundidad de los líquidos
 // capas que reciben la 2.ª muestra anti-repetición (las orgánicas; las de patrón regular, baldosa o metal, no)
 function terOrgFlags() {
   let u = new Float32Array(32);
