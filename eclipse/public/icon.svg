@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="44%" r="78%">
+      <stop offset="0" stop-color="#1a2744"/>
+      <stop offset="1" stop-color="#070a14"/>
+    </radialGradient>
+    <radialGradient id="corona" cx="50%" cy="50%" r="50%">
+      <stop offset="52%" stop-color="#ffb347" stop-opacity="0"/>
+      <stop offset="70%" stop-color="#ffb347" stop-opacity=".92"/>
+      <stop offset="100%" stop-color="#ffb347" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- el emblema del menú, dentro de la zona segura de los iconos «maskable» (círculo central del 80 %) -->
+  <g transform="translate(256 256) scale(3.2) translate(-60 -60)">
+    <circle cx="60" cy="60" r="58" fill="url(#corona)"/>
+    <circle cx="60" cy="60" r="38" fill="#ffe2b0"/>
+    <circle cx="66" cy="55" r="37" fill="#070a14"/>
+  </g>
+</svg>

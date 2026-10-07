@@ -21,8 +21,25 @@ La migración (`legacy/` guarda el bundle original comprimido) hizo lo siguiente
 cd eclipse && npm install
 npm run build        # dist/eclipse.html (documento completo) + dist/eclipse.artifact.html (fragmento para publicar como Artifact)
 npm run build:dev    # sin minificar
+npm run build:host   # edición para alojamiento propio (Hostinger…): dist/host/index.html + manifiesto e iconos (ver «Alojamiento»)
 ```
 
 ## Motor gráfico
 
 `src/engine/` contiene los módulos portados/adaptados del motor de SUNDERCHOIR (post-proceso HDR, atmósfera, materiales pintados, luz horneada, FX) y su enganche en el juego. Ver `docs/ENGINE.md` cuando exista.
+
+## Alojamiento propio (Hostinger u otro hosting estático)
+
+`npm run build:host` (o `node tools/build.mjs --host --out dist/host/index.html --title "Operación Eclipse Remasterizada"`) deja en `dist/host/`
+todo lo que hay que subir, sin dependencias de servidor:
+
+| fichero | para qué |
+|---|---|
+| `index.html` | el juego completo en un único documento (≈ 13 MB; el hosting lo comprime ≈ 3:1 al servirlo) |
+| `manifest.webmanifest` | permite instalarlo como app: pantalla completa y en horizontal |
+| `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon-32.png` | iconos (se rasterizan de `public/icon.svg` con `node tools/make-icons.mjs`) |
+
+Esta edición añade al `<head>` los metadatos de app móvil (`theme-color`, `apple-mobile-web-app-*`), enlaza el manifiesto y los iconos y marca la página
+`noindex`. El guardado usa `localStorage` (la capa de `window.claude` del Artifact solo se activa dentro de claude.ai). Se aloja en cualquier carpeta:
+las rutas son relativas.
+

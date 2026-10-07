@@ -6,6 +6,8 @@ Todo se ejecuta desde `eclipse/`. Requisitos: `npm install` (three@0.160.1 + esb
 ```bash
 node tools/build.mjs                       # dist/eclipse.html (minificado) + dist/eclipse.artifact.html (fragmento para Artifact)
 node tools/build.mjs --dev --out dist/dev.html   # sin minificar: errores con nombres legibles
+node tools/build.mjs --host --out dist/host/index.html --title "Operación Eclipse Remasterizada"   # edición para alojar: index.html + manifiesto + iconos (public/)
+node tools/make-icons.mjs                  # rasteriza public/icon.svg → icon-512/192, apple-touch-icon, favicon-32 (solo si cambia el SVG)
 ```
 Los fragmentos de `src/game/*.js` se concatenan **en el orden de `_order.json`** dentro de un único ámbito (no son módulos). Los módulos de `src/engine/*.js` sí son ES y se importan desde el `_prelude.js` o desde un fragmento con `import … from '../engine/…'` colocado en `_prelude.js`.
 

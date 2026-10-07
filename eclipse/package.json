@@ -7,6 +7,7 @@
   "scripts": {
     "build": "node tools/build.mjs",
     "build:dev": "node tools/build.mjs --dev",
+    "build:host": "node tools/build.mjs --host --title \"Operación Eclipse Remasterizada\"",
     "shot": "node tools/shot.mjs"
   },
   "dependencies": {

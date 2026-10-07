@@ -2,7 +2,7 @@
 /**
  * build — compone Operación Eclipse en un único HTML.
  *
- *   node tools/build.mjs [--dev] [--out dist/eclipse.html]
+ *   node tools/build.mjs [--dev] [--out dist/eclipse.html] [--title "Nombre"] [--host]
  *
  * 1. concatena src/game/_prelude.js + los fragmentos de _order.json (comparten ámbito, como el bundle original)
  * 2. empaqueta con esbuild (three@0.160.1 + addons oficiales + src/engine/*) en un IIFE
@@ -11,6 +11,11 @@
  * Salidas:
  *   dist/eclipse.html           documento completo (para probar en local y alojar)
  *   dist/eclipse.artifact.html  solo el fragmento del <body> (lo que se publica como Artifact)
+ *
+ * --host  edición para alojamiento propio (Hostinger…): añade metadatos de app móvil (pantalla completa, color de tema),
+ *         enlaza manifest.webmanifest + iconos, marca la página como noindex y deja junto a la salida el manifiesto y los
+ *         iconos de public/. No genera el fragmento de Artifact. Ejemplo:
+ *           node tools/build.mjs --host --out dist/host/index.html --title "Operación Eclipse Remasterizada"
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,7 +27,8 @@ const args = process.argv.slice(2);
 const dev = args.includes('--dev');
 const outArg = args.includes('--out') ? args[args.indexOf('--out') + 1] : null;
 const titleArg = args.includes('--title') ? args[args.indexOf('--title') + 1] : null;   // p. ej. --title "Operación Eclipse Remasterizada" (nombre de la edición publicada)
-const outFile = path.resolve(ROOT, outArg ?? 'dist/eclipse.html');
+const host = args.includes('--host');
+const outFile = path.resolve(ROOT, outArg ?? (host ? 'dist/host/index.html' : 'dist/eclipse.html'));
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 // 1) fragmentos → entrada única
@@ -58,10 +64,25 @@ const fragmentHead = head.slice(split);
 const art = fs.readFileSync(path.join(ROOT, 'assets/artmanifest.json'), 'utf8');
 const models = fs.readFileSync(path.join(ROOT, 'assets/models3d.json'), 'utf8');
 const fragment = fragmentHead + `<script type="application/json" id="artmanifest">${art}</script>\n<script type="application/json" id="models3d">${models}</script>\n<script>${js}</script>\n`;
-const full = skeletonStart + fragment + '\n</body></html>';
+const HOST_HEAD = `<meta name="theme-color" content="#070a14"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eclipse"><meta name="robots" content="noindex,nofollow"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">`;
+const skeleton = host ? skeletonStart.replace('</head>', HOST_HEAD + '</head>') : skeletonStart;
+const full = skeleton + fragment + '\n</body></html>';
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, full);
-const artifactPath = outFile.replace(/\.html$/, '.artifact.html');
-fs.writeFileSync(artifactPath, fragment);
+if (host) {
+  // manifiesto + iconos junto a index.html: instalable como app a pantalla completa y en horizontal (el juego es un shooter apaisado)
+  const outDir = path.dirname(outFile);
+  for (const f of fs.readdirSync(path.join(ROOT, 'public'))) if (f !== 'icon.svg') fs.copyFileSync(path.join(ROOT, 'public', f), path.join(outDir, f));
+  const title = titleArg ?? (head.match(/<title>(.*?)<\/title>/)?.[1] ?? 'Operación Eclipse');
+  const desc = head.match(/<meta name="description" content="(.*?)">/)?.[1] ?? '';
+  fs.writeFileSync(path.join(outDir, 'manifest.webmanifest'), JSON.stringify({
+    name: title, short_name: 'Eclipse', description: desc, lang: 'es', start_url: './', scope: './',
+    display: 'fullscreen', display_override: ['fullscreen', 'standalone'], orientation: 'landscape',
+    background_color: '#070a14', theme_color: '#070a14',
+    icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }],
+  }, null, 2) + '\n');
+} else {
+  fs.writeFileSync(outFile.replace(/\.html$/, '.artifact.html'), fragment);
+}
 const mb = (n) => (n / 1048576).toFixed(2) + ' MB';
-console.log(`build ok (${dev ? 'dev' : 'min'}) in ${((Date.now() - t0) / 1000).toFixed(1)}s · js ${(js.length / 1024).toFixed(0)} KB · ${path.relative(ROOT, outFile)} ${mb(full.length)} · artifact fragment ${mb(fragment.length)}`);
+console.log(`build ok (${dev ? 'dev' : 'min'}${host ? ', host' : ''}) in ${((Date.now() - t0) / 1000).toFixed(1)}s · js ${(js.length / 1024).toFixed(0)} KB · ${path.relative(ROOT, outFile)} ${mb(full.length)}${host ? ' · + manifest e iconos' : ` · artifact fragment ${mb(fragment.length)}`}`);
