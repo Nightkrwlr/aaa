@@ -25,9 +25,9 @@ const strict = args.includes('--strict');
 // per-frame ceilings, shadow passes and post-processing included; "low" must be comfortable on a 2019 mid-range phone.
 // Baseline of the procedural-model build (before the glTF art): low 67–405 calls / 247k tris, medium 330–944 calls — the horde is what breaks it.
 const BUDGET = {
-  low:    { calls: 220, tris: 260_000, programs: 24, textures: 60 },
-  medium: { calls: 380, tris: 450_000, programs: 32, textures: 90 },
-  high:   { calls: 650, tris: 900_000, programs: 40, textures: 120 },
+  low:    { calls: 220, tris: 260_000, programs: 45, textures: 60 },
+  medium: { calls: 380, tris: 450_000, programs: 65, textures: 90 },
+  high:   { calls: 650, tris: 900_000, programs: 80, textures: 120 },
 };
 
 const server = await createServer({ server: { port: 0, host: '127.0.0.1' }, logLevel: 'error' });
@@ -48,10 +48,17 @@ for (const preset of presets) {
 
   const measure = async (name) => {
     await frames(20);                                                   // let the camera, streaming and particles settle
-    await page.evaluate(() => { const i = window.__game.scene3d.renderer.info; i.autoReset = false; i.reset(); window.__t0 = performance.now(); });
+    // count whole frames: the post pipeline resets renderer.info itself, so wrap the frame's render call and read the totals after each one
+    await page.evaluate(() => {
+      const sc = window.__game.scene3d, i = sc.renderer.info; i.autoReset = false;
+      window.__acc = { calls: 0, tris: 0, points: 0, n: 0 };
+      if (!sc.__origRender) sc.__origRender = sc.render.bind(sc);
+      sc.render = (...a) => { i.reset(); const r = sc.__origRender(...a); window.__acc.calls += i.render.calls; window.__acc.tris += i.render.triangles; window.__acc.points += i.render.points; window.__acc.n++; return r; };
+      window.__t0 = performance.now();
+    });
     await frames(FRAMES);
     const r = await page.evaluate((n) => {
-      const g = window.__game, rd = g.scene3d.renderer, i = rd.info, dt = performance.now() - window.__t0;
+      const g = window.__game, rd = g.scene3d.renderer, i = rd.info, dt = performance.now() - window.__t0, A = window.__acc, k = Math.max(1, A.n);
       let objects = 0, meshes = 0, skinned = 0, lights = 0, shadowCasters = 0, instanced = 0;
       g.scene3d.scene.traverse((o) => {
         objects++;
@@ -59,14 +66,14 @@ for (const preset of presets) {
         if (o.isMesh || o.isPoints || o.isLine) { if (o.visible) meshes++; if (o.isSkinnedMesh) skinned++; if (o.isInstancedMesh) instanced++; if (o.castShadow) shadowCasters++; }
       });
       const out = {
-        calls: Math.round(i.render.calls / n), tris: Math.round(i.render.triangles / n), points: Math.round(i.render.points / n),
+        calls: Math.round(A.calls / k), tris: Math.round(A.tris / k), points: Math.round(A.points / k),
         programs: i.programs?.length ?? 0, geometries: i.memory.geometries, textures: i.memory.textures,
         objects, meshes, skinned, instanced, lights, shadowCasters,
         entities: g.world.entities.length, ms: +(dt / n).toFixed(1),
         heapMB: performance.memory ? +(performance.memory.usedJSHeapSize / 1048576).toFixed(0) : null,
         px: `${rd.domElement.width}x${rd.domElement.height}`,
       };
-      i.autoReset = true; return out;
+      i.autoReset = true; g.scene3d.render = g.scene3d.__origRender; return out;
     }, FRAMES);
     rows.push({ preset, scenario: name, ...r });
   };

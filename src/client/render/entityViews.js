@@ -128,7 +128,10 @@ export class EntityViews {
     if (!v) return;
     this.scene.remove(v.root);
     v.model.dispose?.();
-    v.root.traverse((o) => { if (o.isMesh && o.material && !o.userData.mat0 && !o.material.userData?.shared) o.material.dispose?.(); });
+    v.root.traverse((o) => {
+      if (o.isMesh && o.material && !o.userData.mat0 && !o.material.userData?.shared) o.material.dispose?.();
+      if (o.isMesh && o.geometry?.userData.owned) o.geometry.dispose();           // merged (per-instance) geometry; cached shape buffers are shared and stay
+    });
     this.views.delete(uid);
   }
 

@@ -3,6 +3,7 @@
  * templates build a named-joint hierarchy (roles) that the Animator drives. Replacing a model with a
  * glTF later only requires matching the role names listed in docs/ART_BIBLE.md §6.
  */
+import { mergeStatic } from './mergeStatic.js';
 import * as THREE from 'three';
 import { mat, box, cyl, cone, sphere, ico, torus, group } from './kit.js';
 import { CharFactory } from './charFactory.js';
@@ -249,6 +250,7 @@ export function buildModelFromSpec(spec, opts = {}) {
   const make = CREATURES[spec.tpl] ?? TEMPLATES[spec.tpl];
   if (!make) throw new Error(`unknown model template ${spec.tpl}`);
   const m = make(spec.p ?? {}, opts);
+  mergeStatic(m.root);          // 60-mesh creatures become ~15 draw calls: only unnamed parts that never move relative to their joint are baked together
   m.spec = spec;
   m.kind = 'proc';
   m.fallback = !!spec.glb;       // true = this is the stand-in for a rigged model (EntityViews upgrades it when the assets arrive)

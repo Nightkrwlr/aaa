@@ -179,7 +179,7 @@ export function buildInstancedProps(zone, ctx) {
         const n = heights.length;
         heights.forEach((h, i) => {
           const a = (i / (n - 1 || 1) - 0.5) * 2.3, x = Math.sin(a) * 0.95, z = -Math.abs(Math.cos(a)) * 0.55 + 0.35, r = 0.27 + 0.05 * (h / 5), y0 = 0.7;
-          g.cone(r * 1.15, 0.6, 10, { pos: [x, y0 + 0.2, z], rot: [PI, 0, 0], mat: 'bronze', g: [0.1, 0.8] });
+          g.cone(r * 1.15, 0.6, 10, { pos: [x, y0 + 0.2, z], rot: [Math.PI, 0, 0], mat: 'bronze', g: [0.1, 0.8] });
           g.cyl(r, r, h, 10, { pos: [x, y0 + 0.5 + h / 2, z], mat: i % 2 ? 'brass' : 'bronze', g: [0.05, 0.95] });
           for (const f of [0.28, 0.62]) g.cyl(r * 1.08, r * 1.08, 0.1, 10, { pos: [x, y0 + 0.5 + h * f, z], mat: 'limestoneLight', g: [0.1, 0.7] });
           g.box(r * 1.2, h * 0.14, 0.1, { pos: [x, y0 + 0.5 + h * 0.2, z + r * 0.92], mat: 'void' });

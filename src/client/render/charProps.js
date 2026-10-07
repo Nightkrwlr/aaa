@@ -5,6 +5,7 @@
  *
  *   buildProp('bell_hammer', { scale: 1 }) → { obj: Group, tick?(t,dt,st) }
  */
+import { mergeStatic } from './mergeStatic.js';
 import * as THREE from 'three';
 import { P, J, G, add, shade } from './stylekit.js';
 
@@ -203,7 +204,9 @@ export const PROPS = {
 export function buildProp(kind, opts = {}) {
   const f = PROPS[kind];
   if (!f) return null;
-  return f(opts);
+  const built = f(opts);
+  if (built?.obj) mergeStatic(built.obj);     // a sword is 6 primitives: one draw call per material is enough
+  return built;
 }
 
 /** re-export so the factory can place props without importing three itself */
