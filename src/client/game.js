@@ -8,6 +8,9 @@ import { Scene3D } from './render/scene3d.js';
 import { CameraRig } from './render/cameraRig.js';
 import { Vfx } from './render/vfx.js';
 import { EntityViews } from './render/entityViews.js';
+import { Assets } from './render/assets.js';
+import { setModelAssets } from './render/models.js';
+import { dependenciesOf } from './render/charFactory.js';
 import { InteractViews } from './render/interactViews.js';
 import { LootViews } from './render/lootViews.js';
 import { GateCurtain, WeatherFx } from './render/worldFx.js';
@@ -32,6 +35,11 @@ export class Game {
   constructor(registry, dom) {
     this.registry = registry; this.dom = dom;
     this.settings = loadSettings();
+    // real art (KayKit glTF): one Assets instance for the whole client, preloaded at boot with progress for the title screen
+    this.assets = new Assets();
+    this.assetState = { ready: false, failed: false, done: 0, total: 0, item: '' };
+    this.assetListeners = new Set();
+    this.assetsReady = null;
     this.statDefs = statDefsFrom(registry);
     this.saves = new SaveManager(new LocalStorageAdapter(), { build: BUILD });
     this.session = null; this.autosaver = null;
@@ -45,6 +53,7 @@ export class Game {
   // ───────────────────────── boot & lifecycle
   boot() {
     const d = this.dom;
+    this.#loadAssets();
     this.scene3d = new Scene3D(d.gl, this.settings);
     this.rig = new CameraRig(this.scene3d.camera);
     this.rig.setZoom(this.settings.cameraZoom); this.rig.shakeScale = this.settings.screenShake;
@@ -72,6 +81,24 @@ export class Game {
   }
 
   canvasFocus() { this.dom.gl.focus?.({ preventScroll: true }); }
+
+  /**
+   * Preload the glTF art (characters + the props their specs reference) and tell the title screen how far along it is.
+   * If anything fails the game keeps running with the procedural models (EntityViews upgrades views when the art arrives).
+   * `game.assetsReady` is a promise (e2e tools await it).
+   */
+  #loadAssets() {
+    const st = this.assetState;
+    setModelAssets(this.assets);
+    const keys = dependenciesOf(this.registry.all('model'));
+    const emit = () => { for (const f of this.assetListeners) { try { f(st); } catch { /* UI listener must never break loading */ } } };
+    st.total = keys.length; emit();
+    this.assetsReady = this.assets.load((p) => { st.done = p.done; st.total = p.total || st.total; st.item = p.item; emit(); }, keys)
+      .then((ok) => { st.ready = !!ok; st.failed = !ok; if (!ok) log.warn('art failed to load: using procedural models'); emit(); return !!ok; })
+      .catch((err) => { st.failed = true; log.error('art loading crashed: using procedural models', err); emit(); return false; });
+  }
+  /** subscribe to asset-loading progress (called immediately with the current state); returns an unsubscribe fn */
+  onAssets(fn) { this.assetListeners.add(fn); try { fn(this.assetState); } catch { /* ignore */ } return () => this.assetListeners.delete(fn); }
 
   /** start a fresh playthrough */
   newGame({ classId = 'cls.belfry', name = 'Reposo', seed = `sc-${Date.now().toString(36)}`, difficulty = this.settings.difficulty } = {}) {
@@ -200,7 +227,8 @@ export class Game {
     this.vfx.reset?.();
     this.vfx.bind(s.world, zoneLike);
     this.audio.bind(s.world, s.player);
-    this.views = new EntityViews(this.scene3d.content, reg, zoneLike, this.vfx);
+    this.views = new EntityViews(this.scene3d.content, reg, zoneLike, this.vfx, this.assets, this.scene3d.camera);
+    this.views.bindSession(s);
     this.interact = new InteractViews(this.scene3d, s, (x, z) => zoneLike.heightAt(x, z), reg);
     this.loot = new LootViews(this.scene3d, s, (x, z) => zoneLike.heightAt(x, z));
     this.rig.initialised = false;
@@ -361,7 +389,7 @@ export class Game {
     s.update(simDt);
     this.ui.update(dt);
     this.dungeonViewDoors?.();
-    this.views.update(w, dt, this.time, this.hoverEnemy?.uid);
+    this.views.update(w, this.vfx.hitstop > 0 ? dt * 0.06 : dt, this.time, this.hoverEnemy?.uid);   // rigs freeze with the sim during hit-stop
     this.interact.update(dt, this.time);
     this.loot.update(dt, this.time);
     this.gate?.update(dt, this.time);

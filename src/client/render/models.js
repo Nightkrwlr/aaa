@@ -5,6 +5,16 @@
  */
 import * as THREE from 'three';
 import { mat, box, cyl, cone, sphere, ico, torus, group } from './kit.js';
+import { CharFactory } from './charFactory.js';
+import { CREATURES } from './creatures.js';
+import { logger } from '../../core/logger.js';
+
+const log = logger('models');
+
+/** one factory for the whole client: set by Game once the glTF assets are ready (specs with a `glb` block use it, everything else is procedural) */
+let factory = null;
+export function setModelAssets(assets) { factory = assets ? new CharFactory(assets) : null; }
+export function modelFactory() { return factory; }
 
 const PI = Math.PI;
 const J = (name, pos = [0, 0, 0]) => { const g = new THREE.Group(); g.name = name; g.position.set(...pos); return g; };
@@ -226,12 +236,22 @@ const TEMPLATES = {
   },
 };
 
-/** Build a model from spec { tpl, p, extra? } */
-export function buildModelFromSpec(spec) {
-  const make = TEMPLATES[spec.tpl];
+/**
+ * Build a model from a spec { tpl, p, glb? }.
+ *  • spec.glb + ready assets → a rigged KayKit character (see charFactory.js)
+ *  • otherwise the procedural template named by spec.tpl (hand-made creatures and the primitive biped fallback)
+ * Every model exposes: root, height, meshes[], kind ('rig' | 'proc'), rig (animation family) and, for new-style models, tick(st, dt).
+ */
+export function buildModelFromSpec(spec, opts = {}) {
+  if (spec.glb && factory?.ready) {
+    try { const m = factory.build(spec, opts); if (m) return m; } catch (err) { log.error(`rig build failed for ${spec.id}, using the procedural fallback`, err); }
+  }
+  const make = CREATURES[spec.tpl] ?? TEMPLATES[spec.tpl];
   if (!make) throw new Error(`unknown model template ${spec.tpl}`);
-  const m = make(spec.p ?? {});
+  const m = make(spec.p ?? {}, opts);
   m.spec = spec;
+  m.kind = 'proc';
+  m.fallback = !!spec.glb;       // true = this is the stand-in for a rigged model (EntityViews upgrades it when the assets arrive)
   m.roles = {};
   m.meshes = [];
   m.root.traverse((o) => {
@@ -240,16 +260,19 @@ export function buildModelFromSpec(spec) {
   });
   m.rest = {};
   for (const k in m.roles) { const o = m.roles[k]; m.rest[k] = { r: o.rotation.clone(), p: o.position.clone() }; }
+  m.height ??= m.h ?? 1.8;
   return m;
 }
 
 const flashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 export function setFlash(m, on) {
+  if (m.kind === 'rig') return;            // rigs flash through rig.flash() (emissive pulse), see EntityViews
   if (m.flashed === on) return;
   m.flashed = on;
   for (const me of m.meshes) me.material = on ? flashMat : me.userData.mat0;
 }
 export function setGhost(m, on, color = '#7fe3ff') {
+  if (m.kind === 'rig') { m.ghost(on); return; }
   const gm = on ? mat(color, { emissive: color, ei: 1, opacity: 0.45 }) : null;
   for (const me of m.meshes) me.material = on ? gm : me.userData.mat0;
 }
