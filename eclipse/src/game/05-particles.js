@@ -21,6 +21,8 @@ var Ad = class {
         (this.s0 = new Float32Array(t)),
         (this.s1 = new Float32Array(t)),
         (this.c0 = new Float32Array(t * 3)),
+        // color final: la partícula pasa de c0 a c1 durante su vida (bola de fuego blanco-amarilla → rojo oscuro)
+        (this.c1 = new Float32Array(t * 3)),
         (this.mat = new wn({
           uniforms: { map: { value: cr() }, uScale: { value: 30 } },
           vertexShader: `attribute float size; attribute float alpha; attribute vec3 color; varying vec3 vC; varying float vA; uniform float uScale;
@@ -38,7 +40,7 @@ var Ad = class {
         (this.geo = s),
         e.add(this.points));
     }
-    add(e, t, i, s, a, r, o, l, c, d, h, f, u = 0, p = 0) {
+    add(e, t, i, s, a, r, o, l, c, d, h, f, u = 0, p = 0, d1 = d, h1 = h, f1 = f) {
       if (this.n >= this.cap) return;
       let m = this.n++;
       ((this.pos[m * 3] = e),
@@ -54,6 +56,9 @@ var Ad = class {
         (this.c0[m * 3] = d),
         (this.c0[m * 3 + 1] = h),
         (this.c0[m * 3 + 2] = f),
+        (this.c1[m * 3] = d1),
+        (this.c1[m * 3 + 1] = h1),
+        (this.c1[m * 3 + 2] = f1),
         (this.grav[m] = u),
         (this.drag[m] = p));
     }
@@ -80,9 +85,9 @@ var Ad = class {
             (this.vel[t * 3 + 2] *= 0.6)),
           (this.size[t] = this.s0[t] + (this.s1[t] - this.s0[t]) * i),
           (this.alpha[t] = Math.min(1, (1 - i) * 1.6)),
-          (this.col[t * 3] = this.c0[t * 3]),
-          (this.col[t * 3 + 1] = this.c0[t * 3 + 1]),
-          (this.col[t * 3 + 2] = this.c0[t * 3 + 2]),
+          (this.col[t * 3] = this.c0[t * 3] + (this.c1[t * 3] - this.c0[t * 3]) * i),
+          (this.col[t * 3 + 1] = this.c0[t * 3 + 1] + (this.c1[t * 3 + 1] - this.c0[t * 3 + 1]) * i),
+          (this.col[t * 3 + 2] = this.c0[t * 3 + 2] + (this.c1[t * 3 + 2] - this.c0[t * 3 + 2]) * i),
           t++);
       }
       if ((this.geo.setDrawRange(0, this.n), !(this.n === 0 && this._lastN === 0))) {
@@ -95,7 +100,7 @@ var Ad = class {
     }
     swap(e, t) {
       if (e !== t) {
-        for (let i of [this.pos, this.vel, this.c0]) for (let s = 0; s < 3; s++) i[e * 3 + s] = i[t * 3 + s];
+        for (let i of [this.pos, this.vel, this.c0, this.c1]) for (let s = 0; s < 3; s++) i[e * 3 + s] = i[t * 3 + s];
         for (let i of [this.life, this.max, this.s0, this.s1, this.grav, this.drag]) i[e] = i[t];
       }
     }
@@ -132,6 +137,7 @@ var Ad = class {
   Sd = new va(),
   vw = new U(0, 1, 0),
   Td = new U(),
+  Sw = new Ee(16777215),
   Rd = class {
     constructor(e, t) {
       ((this.scene = e), (this.R = t), (this.add = new Ad(e, 6e3, !0)), (this.norm = new Ad(e, 2500, !1)));
@@ -147,7 +153,7 @@ var Ad = class {
           200,
         )),
         (this.disc = new cs(e, new ni(0.5, 0.5, 0.08, 12), i(), 200)),
-        (this.beamP = new cs(e, s, i({ transparent: !0, blending: en, depthWrite: !1 }), 400)));
+        (this.beamP = new cs(e, s, i({ transparent: !0, blending: en, depthWrite: !1 }), 800)));
       let a = new Pi(1, 1);
       (a.rotateX(-Math.PI / 2),
         (this.tele = new cs(e, a, i({ map: Ys(), transparent: !0, blending: en, depthWrite: !1 }), 200)),
@@ -160,6 +166,12 @@ var Ad = class {
         (this.decalP = new cs(e, a, new td({ map: cr(), transparent: !0, depthWrite: !1, opacity: 0.7 }), 260)),
         (this.orbGlow.mesh.renderOrder = 6),
         (this.beamP.mesh.renderOrder = 6),
+        // capas nuevas (engine/fx.js): una llamada de dibujo para todas las cintas y otra para todo lo pintado en el suelo
+        (this.streaks = new CkStreakBatch(e, 2600)),
+        (this.ground = new CkGroundBatch(e, 320)),
+        (this.sparks = new CkSparkPool(this.streaks)),
+        (this._c = [0, 0, 0]),
+        (this._frozen = !1),
         (this.beams = []),
         (this.teles = []),
         (this.decals = []),
@@ -204,77 +216,84 @@ var Ad = class {
         );
       }
     }
+    // quality low: menos chispas y sin capas caras
+    get lowQ() {
+      return this.R.quality === "low";
+    }
     hit(e, t, i, s, a) {
-      this.burst(e, t, i, 6, {
-        color: s,
-        speed: 6,
-        life: 0.25,
-        size: 0.18,
-        dir: a !== void 0 ? a + Math.PI : void 0,
-        spread: 1.6,
-        up: 0.4,
-      });
+      // chispas estiradas que rebotan contra la dirección del disparo + destello breve en el punto de impacto
+      let r = CkHot(s, 2.2, this._c),
+        o = this.lowQ ? 3 : 6,
+        l = a !== void 0 ? a + Math.PI : 0;
+      for (let c = 0; c < o; c++) {
+        let d = a !== void 0 ? l + (Q() - 0.5) * 2.2 : Q() * 6.283,
+          h = 4 + Q() * 8;
+        this.sparks.spark(e, t, i, Math.sin(d) * h, 1 + Q() * 3.5, Math.cos(d) * h, 0.16 + Q() * 0.16, 0.55, 0.032, r[0], r[1], r[2], 16, 1.1);
+      }
+      (this.add.add(e, t, i, 0, 0, 0, 0.07, 0.42, 0.1, 0.5 + r[0] * 0.5, 0.5 + r[1] * 0.5, 0.5 + r[2] * 0.5, 0, 0),
+        this.burst(e, t, i, 2, { color: s, speed: 2.5, life: 0.2, size: 0.16, dir: a !== void 0 ? l : void 0, spread: 1.4, up: 0.3 }));
     }
     blood(e, t, i, s = 8) {
       this.burst(e, 0.6, t, s, { color: i, add: !1, speed: 3.5, life: 0.6, size: 0.2, grav: 9, up: 1.2, drag: 1 });
     }
     explosion(e, t, i, s = 16747040) {
-      (this.burst(e, 0.5, t, Math.round(28 + i * 10), {
-        color: s,
-        speed: 7 * i,
-        life: 0.55,
-        size: 0.9 * Math.sqrt(i),
-        size1: 0.1,
-        up: 0.6,
-        drag: 3.5,
-      }),
-        this.burst(e, 0.5, t, Math.round(10 + i * 4), {
-          color: 16769184,
-          speed: 4 * i,
-          life: 0.3,
-          size: 1.1 * Math.sqrt(i),
-          size1: 0.2,
-          up: 0.4,
-          drag: 4,
-        }),
-        this.burst(e, 0.6, t, Math.round(10 + i * 5), {
-          color: 2762276,
-          add: !1,
-          speed: 2.5 * i,
-          life: 1.4,
-          size: 0.9 * Math.sqrt(i),
-          size1: 1.6 * Math.sqrt(i),
-          up: 0.5,
-          upMin: 0.2,
-          drag: 2,
-        }),
-        this.burst(e, 0.3, t, 12, {
-          color: 16760928,
-          speed: 10,
-          life: 0.6,
-          size: 0.08,
-          size1: 0.05,
-          grav: 14,
-          up: 1.5,
-          drag: 0.5,
-        }),
-        this.ring(e, t, i * 1.1, s, 0.35),
-        this.decal(e, t, i * 0.9, 1118481, 0.7),
-        this.R.flashLight(e, 1.5, t, s, 6 * Math.sqrt(i), 4 + i * 2.5, 0.25),
-        this.R.addShake(0.12 + i * 0.06));
+      // capas: destello blanco → bola de fuego con degradado (crece mientras se enfría) → onda de choque + charco de luz → chispas → brasas → humo
+      // las partículas aditivas se apilan: cada una lleva poca intensidad y el núcleo es pequeño, o el bloom lo quema todo
+      let a = Math.sqrt(i),
+        r = this.lowQ,
+        o = CkHot(s, 1.35, this._c),
+        l = o[0],
+        c = o[1],
+        d = o[2];
+      this.add.add(e, 0.7, t, 0, 0, 0, 0.1, 0.8 * a, 1.9 * a, 2.6, 2.2, 1.6, 0, 0);
+      let h = Math.round((r ? 10 : 16) + i * (r ? 3 : 6));
+      for (let f = 0; f < h; f++) {
+        let u = Q() * 6.283,
+          p = 6 * i * (0.2 + Q() * 0.8),
+          m = (0.15 + Q() * 0.5) * 6 * a;
+        this.add.add(e + (Q() - 0.5) * 0.3, 0.4 + Q() * 0.5, t + (Q() - 0.5) * 0.3, Math.cos(u) * p, m, Math.sin(u) * p, 0.5 + Q() * 0.4, (0.5 + Q() * 0.3) * a, (1.1 + Q() * 0.6) * a, l, c, d, 0, 3.2, l * 0.2, c * 0.04, d * 0.015);
+      }
+      for (let f = 0, u = r ? 3 : 6; f < u; f++) {
+        let p = Q() * 6.283,
+          m = 2 * i * Q();
+        this.add.add(e, 0.6, t, Math.cos(p) * m, 2 + Q() * 2, Math.sin(p) * m, 0.28 + Q() * 0.12, 0.6 * a, 1.2 * a, 1.9, 1.5, 0.8, 0, 4, 0.9, 0.3, 0.07);
+      }
+      this.ring(e, t, i * 1.5, s, 0.5, 1);
+      r || this.ring(e, t, i * 2, s, 0.5, 2);
+      for (let f = 0, u = (r ? 8 : 14) + Math.round(i * 5); f < u; f++) {
+        let p = Q() * 6.283,
+          m = (6 + Q() * 10) * a;
+        this.sparks.spark(e, 0.5, t, Math.cos(p) * m, 3 + Q() * 9, Math.sin(p) * m, 0.5 + Q() * 0.5, 0.65, 0.035, 2.6, 1.6, 0.5, 15, 0.7);
+      }
+      for (let f = 0, u = r ? 3 : 7; f < u; f++) {
+        let p = Q() * 6.283,
+          m = 1.5 + Q() * 2.5 * i;
+        this.add.add(e, 0.5, t, Math.cos(p) * m, 1.5 + Q() * 2.5, Math.sin(p) * m, 0.9 + Q() * 0.7, 0.14, 0.03, 2.4, 0.9, 0.2, -0.6, 1.2);
+      }
+      for (let f = 0, u = Math.round((r ? 4 : 9) + i * 4); f < u; f++) {
+        let p = Q() * 6.283,
+          m = 2.2 * i * (0.3 + Q() * 0.7);
+        this.norm.add(e + (Q() - 0.5) * 0.4, 0.5, t + (Q() - 0.5) * 0.4, Math.cos(p) * m, 1.2 + Q() * 1.6, Math.sin(p) * m, 1.1 + Q() * 0.8, (0.8 + Q() * 0.4) * a, 1.9 * a, 0.2, 0.18, 0.17, -0.4, 1.6, 0.05, 0.05, 0.055);
+      }
+      (this.decal(e, t, i * 0.9, 1118481, 0.7),
+        this.R.flashLight(e, 1.3, t, s, 6 * a, 3 + i * 1.3, 0.28),
+        this.R.addShake(0.1 + i * 0.08));
     }
     muzzle(e, t, i, s, a = 16765562, r = 1) {
-      (this.burst(e, t, i, 3, {
-        color: a,
-        speed: 5,
-        life: 0.07,
-        size: 0.35 * r,
-        size1: 0.05,
-        dir: s,
-        spread: 0.6,
-        up: 0.1,
-      }),
-        this.R.flashLight(e, t + 0.3, i, a, 2.2 * r, 4.5, 0.05));
+      // fogonazo con forma: aguja central + dos laterales (estrella), destello esférico, chispas expulsadas y luz breve
+      let o = CkHot(a, 3.6, this._c),
+        l = Math.sin(s),
+        c = Math.cos(s);
+      (this.sparks.spike(e, t, i, l, 0, c, 0.075, 1.15 * r, 0.17 * r, o[0], o[1], o[2]),
+        this.sparks.spike(e, t, i, Math.sin(s + 0.5), 0, Math.cos(s + 0.5), 0.06, 0.62 * r, 0.1 * r, o[0] * 0.8, o[1] * 0.8, o[2] * 0.8),
+        this.sparks.spike(e, t, i, Math.sin(s - 0.5), 0, Math.cos(s - 0.5), 0.06, 0.62 * r, 0.1 * r, o[0] * 0.8, o[1] * 0.8, o[2] * 0.8),
+        this.add.add(e + l * 0.12, t, i + c * 0.12, 0, 0, 0, 0.06, 0.95 * r, 0.3 * r, 3.4, 2.9, 2.1, 0, 0));
+      for (let d = 0, h = this.lowQ ? 1 : 3; d < h; d++) {
+        let f = s + (Q() - 0.5) * 0.9,
+          u = 7 + Q() * 7;
+        this.sparks.spark(e, t, i, Math.sin(f) * u, Q() * 2.5, Math.cos(f) * u, 0.16 + Q() * 0.1, 0.4, 0.028, o[0], o[1], o[2], 10, 1.6);
+      }
+      this.R.flashLight(e, t + 0.3, i, a, 1.6 * r, 4.5, 0.06);
     }
     smoke(e, t, i, s = 1, a = 5591112, r = 0.4) {
       this.burst(e, t, i, s, { color: a, add: !1, speed: 0.5, life: 0.9, size: r, size1: r * 2.2, up: 1, drag: 1.5 });
@@ -318,8 +337,20 @@ var Ad = class {
         drag: 1,
       });
     }
-    ring(e, t, i, s, a = 0.4) {
-      this.rings.push({ x: e, z: t, r: i, color: s, life: a, max: a });
+    // kind 0 anillo clásico (se pinta como onda de choque) · 1 onda de choque · 2 charco de luz
+    ring(e, t, i, s, a = 0.4, r = 1) {
+      this.rings.length > 80 && this.rings.shift();
+      this.rings.push({ x: e, z: t, r: i, color: s, life: a, max: a, kind: r });
+    }
+    // halo fijo en el suelo (botín): se vuelve a emitir cada fotograma
+    halo(e, t, i, s, a = 1, r = 2) {
+      let o = CkHot(s, 1.4, this._c);
+      this.ground.push(r, e, 0.05, t, i, o[0], o[1], o[2], a, 0);
+    }
+    // pulso que sale del centro (botín raro): p = 0..1
+    pulse(e, t, i, s, a, r) {
+      let o = CkHot(s, 1.2, this._c);
+      this.ground.push(1, e, 0.05, t, i, o[0], o[1], o[2], a, r, 0.7);
     }
     decal(e, t, i, s, a = 0.7) {
       (this.decals.length > 240 && this.decals.shift(),
@@ -329,17 +360,41 @@ var Ad = class {
       this.beams.push({ x1: e, y1: t, z1: i, x2: s, y2: a, z2: r, color: o, w: l, life: c, max: c });
     }
     zap(e, t, i, s, a = 9426175, r = 1) {
-      let l = e,
-        c = t;
-      for (let d = 1; d <= 5; d++) {
-        let h = d / 5,
-          f = e + (i - e) * h,
-          u = t + (s - t) * h;
-        (d < 5 && ((f += (Q() - 0.5) * 0.6), (u += (Q() - 0.5) * 0.6)),
-          this.beam(l, r + (Q() - 0.5) * 0.2, c, f, r + (Q() - 0.5) * 0.2, u, a, 0.07, 0.12),
-          (l = f),
-          (c = u));
+      // rayo con ramas: camino quebrado + bifurcaciones finas, chispas en el extremo y luz breve
+      let o = e,
+        l = t,
+        c = r,
+        d = this.lowQ ? 5 : 8,
+        h = i - e,
+        f = s - t,
+        u = Math.hypot(h, f) || 1,
+        p = -f / u,
+        m = h / u,
+        g = Math.min(0.9, 0.3 + u * 0.06);
+      for (let b = 1; b <= d; b++) {
+        let y = b / d,
+          v = e + h * y,
+          _ = t + f * y,
+          A = r + (Q() - 0.5) * 0.3;
+        if (b < d) {
+          let T = (Q() - 0.5) * g * 2;
+          ((v += p * T), (_ += m * T));
+        }
+        if ((this.beam(o, c, l, v, A, _, a, 0.075, 0.15), b < d && !this.lowQ && Q() < 0.5)) {
+          let T = Math.atan2(f, h) + (Q() - 0.5) * 2.4,
+            S = 0.7 + Q() * 1.1;
+          this.beam(v, A, _, v + Math.cos(T) * S, A + (Q() - 0.5) * 0.3, _ + Math.sin(T) * S, a, 0.04, 0.11);
+        }
+        ((o = v), (c = A), (l = _));
       }
+      let w = CkHot(a, 2.6, this._c);
+      for (let b = 0, y = this.lowQ ? 2 : 4; b < y; b++) {
+        let v = Q() * 6.283,
+          _ = 3 + Q() * 5;
+        this.sparks.spark(i, r, s, Math.cos(v) * _, 1 + Q() * 3, Math.sin(v) * _, 0.14 + Q() * 0.12, 0.4, 0.026, w[0], w[1], w[2], 12, 1.4);
+      }
+      (this.add.add(i, r, s, 0, 0, 0, 0.1, 0.9, 0.25, w[0] * 1.2, w[1] * 1.2, w[2] * 1.2, 0, 0),
+        this.R.flashLight((e + i) / 2, r + 0.4, (t + s) / 2, a, 2.4, 6.5, 0.1));
     }
     telegraph(e, t, i, s, a = 16719904) {
       let r = { x: e, z: t, r: i, life: s, max: s, color: a };
@@ -361,41 +416,55 @@ var Ad = class {
         }));
     }
     beginFrame() {
-      (this.tracer.begin(), this.orb.begin(), this.orbGlow.begin(), this.dark.begin(), this.disc.begin());
+      // en pausa se conservan cintas y formas del suelo del último fotograma (nadie las vuelve a emitir)
+      ((this._frozen = !!x.paused), this._frozen || ((this.streaks.n = 0), this.ground.begin()));
+      this._frozen || (this.tracer.begin(), this.orb.begin(), this.orbGlow.begin(), this.dark.begin(), this.disc.begin());
     }
     drawTracer(e, t, i, s, a, r, o, l) {
-      let c = Math.atan2(s, a);
-      (vn.setFromEuler(Sd.set(0, c, 0)),
-        yn.set(e - Math.sin(c) * r * 0.5, t, i - Math.cos(c) * r * 0.5),
-        an.set(o, o, r),
-        sn.compose(yn, vn, an),
-        this.tracer.push(sn, si.setHex(l)));
+      // trazador: cabeza casi blanca (HDR) y cola degradada con el color del proyectil; los gruesos llevan un halo
+      let c = Math.hypot(s, a) || 1,
+        d = s / c,
+        h = a / c,
+        f = CkHot(l, 1.9, this._c);
+      (this.streaks.push(e + d * r * 0.5, t, i + h * r * 0.5, d, 0, h, r * 2.2, Math.max(0.05, o * 1.3), f[0], f[1], f[2], 1),
+        o >= 0.075 && this.drawGlow(e + d * r * 0.5, t, i + h * r * 0.5, 0.7 + o * 3, l));
     }
     drawOrb(e, t, i, s, a) {
       (vn.identity(),
         yn.set(e, t, i),
         an.set(s, s, s),
         sn.compose(yn, vn, an),
-        this.orb.push(sn, si.setHex(a)),
+        this.orb.push(sn, si.setHex(a).multiplyScalar(1.4)),
         vn.copy(this.R.camera.quaternion),
-        an.set(s * 4, s * 4, 1),
+        an.set(s * 4.4, s * 4.4, 1),
         sn.compose(yn, vn, an),
-        this.orbGlow.push(sn, si.setHex(a).multiplyScalar(0.3)));
+        this.orbGlow.push(sn, si.setHex(a).multiplyScalar(0.4)));
     }
     drawGlow(e, t, i, s, a) {
       (vn.copy(this.R.camera.quaternion),
         yn.set(e, t, i),
         an.set(s, s, 1),
         sn.compose(yn, vn, an),
-        this.orbGlow.push(sn, si.setHex(a).multiplyScalar(0.6)));
+        this.orbGlow.push(sn, si.setHex(a).multiplyScalar(1)));
     }
     drawRocket(e, t, i, s, a, r, o = 0.12) {
       let l = Math.atan2(s, a);
-      (vn.setFromEuler(Sd.set(Math.PI / 2, l, 0, "YXZ")),
+      if (
+        (vn.setFromEuler(Sd.set(Math.PI / 2, l, 0, "YXZ")),
         yn.set(e, t, i),
         an.set(o * 1.6, o * 5, o * 1.6),
         sn.compose(yn, vn, an),
-        this.dark.push(sn, si.setHex(r)));
+        this.dark.push(sn, si.setHex(r)),
+        !(s === 0 && a === 1))
+      ) {
+        // estela de cohete: llama naranja larga con núcleo caliente + chispas de escape (las granadas no llevan: su dirección es fija)
+        let c = Math.sin(l),
+          d = Math.cos(l);
+        (this.streaks.push(e - c * o * 2, t, i - d * o * 2, c, 0, d, 1.3 + o * 6, o * 1.1, 3.2, 1.35, 0.3, 0.95),
+          this.streaks.push(e - c * o * 2, t, i - d * o * 2, c, 0, d, 0.5 + o * 2, o * 0.55, 4, 3.4, 2.4, 1),
+          Q() < 0.6 &&
+            this.sparks.spark(e - c * o * 3, t, i - d * o * 3, -c * 3 + (Q() - 0.5) * 2, Q() * 1.5, -d * 3 + (Q() - 0.5) * 2, 0.3, 0.3, 0.025, 3, 1.3, 0.3, 2, 1.5));
+      }
     }
     drawDisc(e, t, i, s, a, r) {
       (vn.setFromEuler(Sd.set(0, a, 0)),
@@ -405,6 +474,8 @@ var Ad = class {
         this.disc.push(sn, si.setHex(r)));
     }
     update(e) {
+      ((CkFxTime.value = (CkFxTime.value + e) % 1e3), (CkClock.value = (CkClock.value + e) % 1e3));
+      this._frozen || this.sparks.update(e);
       (this.add.update(e), this.norm.update(e));
       let t = this.R.pxPerUnit * this.R.r.getPixelRatio();
       ((this.add.mat.uniforms.uScale.value = t),
@@ -429,26 +500,27 @@ var Ad = class {
           yn.set((s.x1 + s.x2) / 2, (s.y1 + s.y2) / 2, (s.z1 + s.z2) / 2),
           an.set(s.w * (0.4 + a * 0.6), r, s.w * (0.4 + a * 0.6)),
           sn.compose(yn, vn, an),
-          this.beamP.push(sn, si.setHex(s.color).multiplyScalar(0.5 + a)),
-          an.set(s.w * 3 * a, r, s.w * 3 * a),
+          this.beamP.push(sn, si.setHex(s.color).multiplyScalar(1.4 + a * 2)),
+          an.set(s.w * 0.34 * (0.5 + a), r, s.w * 0.34 * (0.5 + a)),
           sn.compose(yn, vn, an),
-          this.beamP.push(sn, si.setHex(s.color).multiplyScalar(0.25 * a)));
+          this.beamP.push(sn, si.setHex(s.color).lerp(Sw, 0.7).multiplyScalar(0.4 + a * 2.4)),
+          an.set(s.w * 3.4 * a, r, s.w * 3.4 * a),
+          sn.compose(yn, vn, an),
+          this.beamP.push(sn, si.setHex(s.color).multiplyScalar(0.4 * a)));
       }
       (this.beamP.end(), this.tele.begin(), this.teleFill.begin(), vn.identity());
+      let gp = !this._frozen;
       for (let i = this.teles.length - 1; i >= 0; i--) {
         let s = this.teles[i];
         if (((s.life -= e), s.life <= 0)) {
           this.teles.splice(i, 1);
           continue;
         }
-        let a = 1 - s.life / s.max;
-        (yn.set(s.x, 0.06, s.z),
-          an.set(s.r * 2, 1, s.r * 2),
-          sn.compose(yn, vn, an),
-          this.tele.push(sn, si.setHex(s.color).multiplyScalar(0.8)),
-          an.set(s.r * 2 * a, 1, s.r * 2 * a),
-          sn.compose(yn, vn, an),
-          this.teleFill.push(sn, si.setHex(s.color).multiplyScalar(0.5 + a * 0.5)));
+        // telegrafo en el suelo con shader: borde nítido, relleno que crece hasta el impacto y rayas de peligro
+        if (gp) {
+          let a = CkHot(s.color, 1.1, this._c);
+          this.ground.push(0, s.x, 0.06, s.z, s.r, a[0], a[1], a[2], 1, 1 - s.life / s.max);
+        }
       }
       for (let i = this.rings.length - 1; i >= 0; i--) {
         let s = this.rings[i];
@@ -456,13 +528,12 @@ var Ad = class {
           this.rings.splice(i, 1);
           continue;
         }
-        let a = 1 - s.life / s.max;
-        (yn.set(s.x, 0.1, s.z),
-          an.set(s.r * 2 * (0.3 + a * 0.9), 1, s.r * 2 * (0.3 + a * 0.9)),
-          sn.compose(yn, vn, an),
-          this.tele.push(sn, si.setHex(s.color).multiplyScalar(1 - a)));
+        if (gp) {
+          let a = CkHot(s.color, 1.2, this._c);
+          this.ground.push(s.kind === 2 ? 2 : 1, s.x, 0.08, s.z, s.r, a[0], a[1], a[2], 1, 1 - s.life / s.max, 1);
+        }
       }
-      (this.tele.end(), this.teleFill.end(), this.decalP.begin());
+      (this.tele.end(), this.teleFill.end(), gp && (this.ground.end(), this.streaks.flush()), this.decalP.begin());
       for (let i = this.decals.length - 1; i >= 0; i--) {
         let s = this.decals[i];
         if (((s.life -= e), s.life <= 0)) {
@@ -489,7 +560,13 @@ var Ad = class {
         (this.teles.length = 0),
         (this.decals.length = 0),
         (this.texts.length = 0),
-        (this.rings.length = 0));
+        (this.rings.length = 0),
+        (this.tracer.n = this.orb.n = this.orbGlow.n = this.dark.n = this.disc.n = 0),
+        this.sparks.clear(),
+        (this.streaks.n = 0),
+        this.streaks.flush(),
+        this.ground.begin(),
+        this.ground.end());
     }
   };
 

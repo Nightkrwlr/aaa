@@ -540,8 +540,11 @@ function XE(n) {
       (xe.lineWidth = 3),
       (xe.strokeStyle = "rgba(0,0,0,0.85)"),
       (xe.fillStyle = o.color),
+      // crítico con peso: halo del color del daño y trazo más grueso
+      o.crit && ((xe.lineWidth = 4), (xe.shadowColor = o.color), (xe.shadowBlur = 12)),
       xe.strokeText(o.txt, Xe.x, Xe.y),
-      xe.fillText(o.txt, Xe.x, Xe.y));
+      xe.fillText(o.txt, Xe.x, Xe.y),
+      (xe.shadowBlur = 0));
   }
   xe.globalAlpha = 1;
   let r = [];

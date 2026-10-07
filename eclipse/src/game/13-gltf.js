@@ -198,11 +198,16 @@ var ta = new _i(),
         r = t / a;
       (this.obj.scale.setScalar(r),
         (this.obj.position.y = -Math.min(0, ta.min.y) * r),
+        // estado visual del personaje: luz de borde, aura, ojos HDR, impacto/congelado/quemado/veneno/escudo y disolución (ver engine/chars.js)
+        (this.fx = new CkCharFx()
+          .setRim(i.rim ?? 10409215, i.rimK ?? 0.5)
+          .setAura(i.aura ?? 0, i.aura ? (i.auraK ?? 0.55) : 0)
+          .setEyes(i.eyes ?? 0)),
         (this.mats = []),
         this.obj.traverse((o) => {
           o.isMesh &&
             ((o.material = o.material.clone()),
-            i.recolor && Jf(o.material, i.recolor),
+            CkPatch(o.material, i.recolor || null, this.fx),
             i.tint != null && o.material.color.setHex(i.tint),
             (o.material.emissive = new Ee(i.emissive ?? 0)),
             (o.material.emissiveIntensity = i.emissive ? 0.12 : 0),
@@ -250,7 +255,21 @@ var ta = new _i(),
       ((this.root.rotation.y = t),
         this.lock > 0 && this.lock < 99 && (this.lock -= e),
         i && this.play(i, s),
-        this.mixer.update(e));
+        this.mixer.update(e),
+        this.fx.tick(e));
+    }
+    // estados del personaje (lógica en CharFx): quemado / veneno / escudo activos y disolución de muerte
+    setStates(e, t, i) {
+      this.fx.setStates(e, t, i);
+    }
+    dissolve(e, t) {
+      (this.fx.setDissolve(e, t),
+        e > 0.45 &&
+          !this._noSh &&
+          ((this._noSh = !0),
+          this.obj.traverse((i) => {
+            i.isMesh && (i.castShadow = !1);
+          })));
     }
     addSilhouette(e = 3121087) {
       let t = new vt({ color: e, depthWrite: !1, depthFunc: Hu, toneMapped: !1, fog: !1 }),
@@ -285,10 +304,9 @@ var ta = new _i(),
         this.mixer.update(0));
     }
     flash(e, t = 16777215) {
-      for (let i of this.mats)
-        e
-          ? (i.emissive.setHex(t === 16777215 ? 16767168 : t), (i.emissiveIntensity = 0.16))
-          : (i.emissive.setHex(this.baseEm), (i.emissiveIntensity = this.baseEm ? 0.12 : 0));
+      // blanco HDR de impacto (cae solo) o azul hielo persistente: lo pinta el shader, el emisivo solo conserva el tinte base
+      this.fx.flash(e, t !== 16777215);
+      for (let i of this.mats) (i.emissive.setHex(this.baseEm), (i.emissiveIntensity = this.baseEm ? 0.12 : 0));
     }
     dispose() {
       this.mixer.stopAllAction();
