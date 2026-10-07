@@ -5,6 +5,8 @@ import { mat, sphere, cyl, box, ico, group } from './kit.js';
 
 const ELEMS = ['sonic', 'fire', 'frost', 'shock', 'toxic', 'hollow', 'physical'];
 const elemOf = (ab, fallback = 'physical') => ab?.tags?.find((t) => ELEMS.includes(t)) ?? fallback;
+const fmtNum = (v) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e4 ? `${(v / 1e3).toFixed(v >= 1e5 ? 0 : 1)}k` : String(Math.round(v)));
+const RARITY = { fine: '#8fc4ff', attuned: '#ffd24a', relic: '#ff9a4a' };
 const COLORS = { physical: '#f2e7cf', sonic: '#7fe3ff', fire: '#ff8a3a', frost: '#9fe8ff', shock: '#ffe34a', toxic: '#9ad13a', hollow: '#b79cff', heal: '#6dff9a' };
 
 /** Event-driven visual effects. Reads simulation events; never mutates the simulation. */
@@ -15,6 +17,8 @@ export class Vfx {
     this.particles.density = quality.particles;
     this.ground = new GroundFx(scene, 56);
     this.numbers = [];
+    this.numMerge = new Map();
+    this.pillars = [];
     this.projViews = new Map();
     this.zoneViews = new Map();
     this.telegraphFx = new Map();
@@ -32,7 +36,9 @@ export class Vfx {
     for (const v of this.zoneViews.values()) { this.ground.release(v.fx); v.orbit?.forEach((b) => this.scene.remove(b)); }
     for (const fx of this.telegraphFx.values()) this.ground.release(fx);
     this.projViews.clear(); this.zoneViews.clear(); this.telegraphFx.clear();
-    this.numbers.length = 0; this.listenRings.length = 0; this.hitstop = 0; this.flash = 0;
+    for (const p of this.pillars) { this.scene.remove(p.mesh); p.mesh.geometry.dispose(); p.mesh.material.dispose(); }
+    this.pillars.length = 0;
+    this.numbers.length = 0; this.numMerge.clear(); this.listenRings.length = 0; this.hitstop = 0; this.flash = 0;
   }
 
   bind(world, zone) {
@@ -40,7 +46,7 @@ export class Vfx {
     const ev = world.events;
     const gy = (x, z) => zone.heightAt(x, z);
     ev.on('damage', (i) => this.#onDamage(i));
-    ev.on('heal', (i) => this.#number(i.target, `+${Math.round(i.amount)}`, '#6dff9a', 0.9, false));
+    ev.on('heal', (i) => this.#number(i.target, `+${fmtNum(i.amount)}`, '#6dff9a', 0.95, false, false, i.amount, 'heal'));
     ev.on('area:hit', (i) => {
       const el = elemOf(i.ab, 'physical');
       if (i.entity.team !== 'player' && i.effect?.hit?.every?.((h) => h.op === 'heal')) return;
@@ -59,6 +65,15 @@ export class Vfx {
       for (const p of [i.from, i.to]) this.particles.emit({ x: p.x, y: gy(p.x, p.z) + 1, z: p.z, count: 24, color: '#7fe3ff', speed: 4, up: 2, life: 0.5, size: 0.22 });
     });
     ev.on('entity:died', (i) => this.#onDeath(i.entity));
+    ev.on('level:up', (i) => this.#levelUp(i.entity ?? world.player));
+    ev.on('loot:drop', (i) => {                                    // a drop you can see coming: ring + sparks in the rarity's colour, bigger for better loot
+      const r = i.item.rarity; if (r === 'common') return;
+      const big = r === 'relic' ? 3 : r === 'attuned' ? 2 : 1, el = r === 'relic' ? 'fire' : r === 'attuned' ? 'shock' : 'frost', col = RARITY[r];
+      const y = gy(i.x, i.z);
+      this.ground.spawn({ kind: 'ring', x: i.x, y, z: i.z, yaw: 0, radius: 1.2 + big * 0.55, inner: 0, color: el, life: 0.7, mode: 'flash', alpha: 0.9, band: 0.45 });
+      this.particles.emit({ x: i.x, y: y + 0.2, z: i.z, count: 10 * big, color: col, speed: 2.6 + big, up: 4 + big * 1.2, life: 0.9, size: 0.2, gravity: 6 });
+      if (big > 1) this.rig.addShake(0.08 * big);
+    });
     ev.on('cadence:chord', (i) => this.#chord(i));
     ev.on('listen:pulse', (i) => this.#listenPulse(i));
     ev.on('burst', (i) => { this.ground.spawn({ kind: 'circle', x: i.x, y: gy(i.x, i.z), z: i.z, yaw: 0, radius: i.radius, color: COLORS[i.type] ? i.type : 'sonic', life: 0.35, mode: 'flash', alpha: 0.9 }); this.particles.emit({ x: i.x, y: gy(i.x, i.z) + 0.6, z: i.z, count: 26, color: COLORS[i.type] ?? '#fff', speed: i.radius * 2, up: 3, life: 0.6, size: 0.25 }); });
@@ -80,7 +95,9 @@ export class Vfx {
     this.particles.emit({ x: t.x, y: t.y + (t.height ?? 1.5) * 0.6, z: t.z, count: i.crit ? 16 : 8, color: i.dot ? col : '#ffffff', speed: i.crit ? 6 : 3.5, up: 2, life: 0.35, size: 0.16, gravity: 8 });
     if (!i.dot || isPlayerHurt || i.amount > t.hpMax * 0.02) {
       const colr = isPlayerHurt ? '#ff6a5a' : i.crit ? '#ffd27a' : i.dot ? col : '#ffffff';
-      if (!i.dot || this.numbers.length < 40) this.#number(t, String(Math.round(i.amount)), colr, i.crit ? 1.45 : i.dot ? 0.8 : 1, i.crit, isPlayerHurt);
+      const rel = Math.min(0.5, i.amount / Math.max(1, t.hpMax));                 // a hit that takes a quarter of the target's life reads bigger
+      const sc = (i.dot ? 0.78 : 0.9 + rel * 1.7) * (i.crit ? 1.45 : 1) * (isPlayerHurt ? 1.2 : 1);
+      if (!i.dot || this.numbers.length < 20) this.#number(t, fmtNum(i.amount), colr, sc, i.crit, isPlayerHurt, i.amount, isPlayerHurt ? 'hurt' : i.dot ? 'dot' : 'hit');
     }
     if (i.source?.team === 'player' && !i.dot) {
       const base = i.fx?.hitstop ?? 30;
@@ -93,9 +110,31 @@ export class Vfx {
     if (t.shieldHit) { t.shieldHit = false; this.particles.emit({ x: t.x + Math.sin(t.yaw) * 0.6, y: t.y + 1, z: t.z + Math.cos(t.yaw) * 0.6, count: 10, color: '#ffd27a', speed: 3, up: 1, life: 0.3, size: 0.16 }); this.#number(t, '🛡', '#ffd27a', 0.9, false); }
   }
 
-  #number(ent, text, color, scale, crit, onPlayer) {
-    if (this.numbers.length > 70) this.numbers.shift();
-    this.numbers.push({ x: ent.x + (Math.random() - 0.5) * 0.6, y: (ent.y ?? 0) + (ent.height ?? 1.6) + 0.2, z: ent.z + (Math.random() - 0.5) * 0.6, text, color, scale, crit, t: 0, life: crit ? 1.2 : 0.9, vy: crit ? 2.2 : 1.7 });
+  /**
+   * Floating combat text. Rapid hits on one target merge into a single growing number (a fast attack must not paint
+   * 22 22 22 22 across the enemy), crits never merge and pop bigger, and the cap drops the smallest old numbers first.
+   */
+  #number(ent, text, color, scale, crit, onPlayer, amount = 0, kind = 'hit') {
+    const key = `${ent.uid}|${kind}`;
+    if (!crit && amount > 0) {
+      const m = this.numMerge.get(key);
+      if (m && m.t < 0.32 && !m.dead) {
+        m.sum += amount; m.text = fmtNum(m.sum); m.t = Math.min(m.t, 0.05); m.life = 0.95;
+        m.scale = Math.min(2.1, m.scale0 * (1 + Math.min(0.9, Math.log10(1 + m.sum / Math.max(1, amount)) * 0.45)));
+        return;
+      }
+    }
+    if (this.numbers.length >= 28) {
+      let drop = -1, lo = Infinity;
+      for (let k = 0; k < this.numbers.length; k++) { const n = this.numbers[k]; const v = n.crit ? 1e9 : n.sum; if (v < lo) { lo = v; drop = k; } }
+      if (drop >= 0) { this.numbers[drop].dead = true; this.numbers.splice(drop, 1); }
+    }
+    const n = {
+      x: ent.x, y: (ent.y ?? 0) + (ent.height ?? 1.6) + (onPlayer ? 0.5 : 0.2), z: ent.z, text, color, scale, scale0: scale, crit, onPlayer,
+      t: 0, life: crit ? 1.25 : 0.95, vy: crit ? 2.4 : 1.8, sum: amount, seed: Math.random(), kind, dead: false,
+    };
+    this.numbers.push(n);
+    if (amount > 0 && !crit) this.numMerge.set(key, n);
   }
 
   #castFlair(i) {
@@ -114,6 +153,20 @@ export class Vfx {
     const big = e.tier === 'boss' ? 4 : e.tier === 'miniboss' ? 3 : e.tier === 'elite' ? 2 : 1;
     this.particles.emit({ x: e.x, y: e.y + (e.height ?? 1.5) * 0.5, z: e.z, count: 18 * big, color: col, speed: 4 * big * 0.6, up: 3, life: 0.8, size: 0.22, gravity: 3 });
     if (big > 1) { this.rig.addShake(0.4 * big * 0.5); this.flash = Math.max(this.flash, 0.2); }
+  }
+
+  /** level-up: a column of gold light rising from the hero, two expanding rings and a shower of sparks (the one moment the screen is allowed to be loud) */
+  #levelUp(e) {
+    if (!e) return;
+    const y = this.zone.heightAt(e.x, e.z);
+    this.ground.spawn({ kind: 'ring', x: e.x, y, z: e.z, yaw: 0, radius: 6, inner: 0, color: 'shock', life: 0.9, mode: 'flash', alpha: 1, band: 0.8 });
+    this.ground.spawn({ kind: 'ring', x: e.x, y, z: e.z, yaw: 0, radius: 3.2, inner: 0, color: 'sonic', life: 0.6, mode: 'flash', alpha: 0.9, band: 0.6 });
+    this.particles.emit({ x: e.x, y: y + 0.3, z: e.z, count: 70, color: '#ffe27a', speed: 3.2, up: 7.5, life: 1.3, size: 0.22, gravity: 1.5 });
+    this.particles.emit({ x: e.x, y: y + 1, z: e.z, count: 30, color: '#ffffff', speed: 6, up: 2, life: 0.7, size: 0.16, gravity: 2 });
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.8, 14, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#ffe27a', transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    beam.position.set(e.x, y + 7, e.z); this.scene.add(beam);
+    this.pillars.push({ mesh: beam, t: 0, ent: e });
+    this.rig.addShake(0.18); this.flash = Math.max(this.flash, 0.25);
   }
 
   #chord(i) {
@@ -157,7 +210,14 @@ export class Vfx {
       const u = r.fx.m.uniforms; u.uR.value = rad; u.uInner.value = Math.max(0, rad - 0.7); u.uAlpha.value = (1 - k) * 0.9; u.uProg.value = 1; u.uExtent.value = rad + 1; r.fx.mesh.scale.set(rad + 1, 1, rad + 1);
       if (k > 0.97) { this.ground.release(r.fx); r.fx = null; }
     }
-    for (let i = this.numbers.length - 1; i >= 0; i--) { const n = this.numbers[i]; n.t += dt; n.y += n.vy * dt; n.vy *= 0.94; if (n.t > n.life) this.numbers.splice(i, 1); }
+    for (let i = this.numbers.length - 1; i >= 0; i--) { const n = this.numbers[i]; n.t += dt; n.y += n.vy * dt; n.vy *= 0.93; if (n.t > n.life) { n.dead = true; this.numbers.splice(i, 1); } }
+    for (let i = this.pillars.length - 1; i >= 0; i--) {
+      const p = this.pillars[i]; p.t += dt; const k = p.t / 1.4;
+      if (k >= 1) { this.scene.remove(p.mesh); p.mesh.geometry.dispose(); p.mesh.material.dispose(); this.pillars.splice(i, 1); continue; }
+      p.mesh.position.x = p.ent.x; p.mesh.position.z = p.ent.z;                                 // it follows the hero for as long as it lasts
+      p.mesh.material.opacity = Math.sin(Math.min(1, k * 1.6) * Math.PI) * 0.26 * (k < 0.7 ? 1 : (1 - k) / 0.3);
+      p.mesh.scale.set(1 - k * 0.55, 1 + k * 0.25, 1 - k * 0.55);
+    }
     this.flash = Math.max(0, this.flash - dt * 2.5);
     if (this.hitstop > 0) this.hitstop -= dt;
   }

@@ -11,9 +11,10 @@ export class Overlay {
     c.strokeText(str, x, y); c.fillStyle = color; c.fillText(str, x, y); c.globalAlpha = 1;
   }
 
-  bar(x, y, w, h, frac, { fill = '#c0392b', back = 'rgba(0,0,0,.65)', border = '#000', shield = 0, shieldColor = '#9fe8ff' } = {}) {
+  bar(x, y, w, h, frac, { fill = '#c0392b', back = 'rgba(0,0,0,.65)', border = '#000', shield = 0, shieldColor = '#9fe8ff', ghost = null } = {}) {
     const c = this.ctx;
     c.fillStyle = back; c.fillRect(x - w / 2 - 1, y - h / 2 - 1, w + 2, h + 2);
+    if (ghost !== null && ghost > frac) { c.fillStyle = 'rgba(255,238,200,.85)'; c.fillRect(x - w / 2, y - h / 2, w * Math.min(1, ghost), h); }   // the chunk you just took away lingers, then drains
     c.fillStyle = fill; c.fillRect(x - w / 2, y - h / 2, w * Math.max(0, Math.min(1, frac)), h);
     if (shield > 0) { c.fillStyle = shieldColor; c.fillRect(x - w / 2, y + h / 2 - 2, w * Math.min(1, shield), 2); }
     c.strokeStyle = border; c.lineWidth = 1; c.strokeRect(x - w / 2 - 0.5, y - h / 2 - 0.5, w + 1, h + 1);

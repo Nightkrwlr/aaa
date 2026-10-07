@@ -110,6 +110,11 @@ export class AudioEngine {
       case 'step': this.#noiseBurst(t, 0.06, b, { gain: 0.05 * k, type: 'lowpass', f0: 900, f1: 300, pan }); break;
       case 'potion': this.#osc('sine', 500, t, 0.18, b, { gain: 0.2 * k, slide: 260 }); this.#osc('sine', 760, t + 0.1, 0.18, b, { gain: 0.16 * k, slide: 200 }); break;
       case 'dodgeperfect': this.#bell(1046, t, b, { gain: 0.2 * k, dur: 0.9 }); break;
+      // loot stingers: the better the drop, the longer and brighter the tell (you can hear a relic from across the room)
+      case 'drop_common': this.#osc('triangle', 1250 * p, t, 0.05, b, { gain: 0.07 * k, slide: -300, pan }); break;
+      case 'drop_fine': this.#bell(784 * p, t, b, { gain: 0.16 * k, dur: 0.9, pan }); this.#osc('sine', 1568, t + 0.05, 0.25, b, { gain: 0.05 * k, rev: 0.5, pan }); break;
+      case 'drop_attuned': this.#bell(880 * p, t, b, { gain: 0.2 * k, dur: 1.3, pan }); this.#bell(1318 * p, t + 0.09, b, { gain: 0.15 * k, dur: 1.2, pan }); this.#noiseBurst(t, 0.5, b, { gain: 0.05 * k, type: 'highpass', f0: 4000, f1: 9000, pan }); break;
+      case 'drop_relic': this.#bell(196 * p, t, b, { gain: 0.3 * k, dur: 2.4, rev: 0.8, pan }); [0, 4, 7, 12, 16].forEach((st, i) => this.#bell(NOTE(69 + st), t + 0.1 + i * 0.07, b, { gain: 0.13 * k, dur: 1.4, rev: 0.7, pan })); this.#noiseBurst(t, 0.9, b, { gain: 0.08 * k, type: 'bandpass', f0: 600, f1: 6000, q: 0.8, pan }); break;
       default: this.#noiseBurst(t, 0.08, b, { gain: 0.15 * k });
     }
   }
@@ -160,6 +165,7 @@ export class AudioEngine {
       if (e.team === 'player') { this.sfx(i.ab.tags?.includes('sonic') ? 'bell' : i.ab.tags?.includes('projectile') ? 'note' : 'swing', { pan: pn, gain: 0.8 }); if (i.ab.tags?.includes('ultimate') || i.ab.slotType === 'ultimate') this.sfx('toll'); }
       else this.sfx(map[fx] ?? 'swing', { pan: pn, gain: 0.7 });
     });
+    ev.on('loot:drop', (i) => { if (near(i)) this.sfx(`drop_${i.item.rarity}`, { pan: pan(i) }); });
     ev.on('entity:died', (i) => { if (near(i.entity) && i.entity.team === 'enemy') this.sfx('death', { pan: pan(i.entity), pitch: i.entity.tier === 'boss' ? 0.5 : 1 }); });
     ev.on('cadence:chord', (i) => this.sfx(i.chord.type === 'triad' ? 'chord' : i.chord.type === 'unison' ? 'unison' : 'reprise'));
     ev.on('listen:start', () => this.sfx('listen')); ev.on('listen:pulse', () => this.sfx('pulse'));

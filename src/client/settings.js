@@ -9,7 +9,7 @@ export const DEFAULTS = {
   screenShake: 1, vibration: 1, hitStop: true, damageNumbers: true, occlusionFade: true,
   volMaster: 0.8, volMusic: 0.6, volSfx: 0.8, volUi: 0.7, volAmbient: 0.7,
   scheme: 'click', bindings: {}, aimAssist: 0.35, autoPickupMaterials: true, lootFilter: 'normal',
-  puzzleHints: true, hudTracker: true, hudScale: 1, cameraZoom: 32, difficulty: 'seeker', telemetry: false,
+  puzzleHints: true, hudTracker: true, hudScale: 1, cameraZoom: 26, difficulty: 'seeker', telemetry: false,
   showFps: false,
   // touch / mobile (see src/client/mobile): touchControls auto|on|off · touchScheme stick|tap · perfMode auto|saver|smooth
   touchControls: 'auto', touchScheme: 'stick', touchScale: 1, touchOpacity: 0.9, leftHanded: false, listenToggle: true, showAimLine: true, perfMode: 'auto', perfInit: false,

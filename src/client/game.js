@@ -44,6 +44,7 @@ export class Game {
     this.saves = new SaveManager(new LocalStorageAdapter(), { build: BUILD });
     this.session = null; this.autosaver = null;
     this.fps = 60; this.time = 0; this.frames = 0; this.running = false;
+    this.barGhost = new Map(); this.dtDraw = 1 / 60;   // enemy health bars: the lost chunk lingers a moment (see #drawOverlay)
     this.state = 'menu'; // menu | playing
     this.leftMode = 'move'; this.pendingInteract = null; this.pendingPickup = null;
     this.hoverEnemy = null; this.hoverIA = null; this.hoverLoot = null; this.fade = 0; this.fadeTarget = 0; this.rebuilding = false;
@@ -364,6 +365,7 @@ export class Game {
     this.time += raw;
     try { this.#update(raw); } catch (err) { log.error('frame failed', err); }
     this.scene3d.render();
+    this.dtDraw = raw; if (this.barGhost.size > 400) this.barGhost.clear();
     this.#drawOverlay();
     requestAnimationFrame((n) => this.#frame(n));
     this.frames++;
@@ -492,8 +494,10 @@ export class Game {
     const s = this.session, w = s.world, p = s.player;
     if (this.settings.damageNumbers) for (const n of this.vfx.numbers) {
       const sp = cam.project(n.x, n.y, n.z); if (!sp.visible) continue;
-      const k = n.t / n.life, pop = n.crit ? 1 + Math.max(0, 0.5 - n.t * 2.2) : 1;
-      o.text(sp.x, sp.y, n.text, { size: 17 * n.scale * pop, color: n.color, alpha: Math.min(1, (1 - k) * 2.2) });
+      const k = n.t / n.life, a = Math.min(1, n.t / 0.14), b = a - 1;
+      const pop = a < 1 ? 0.5 + 0.5 * (1 + 2.7 * b * b * b + 1.7 * b * b) * (n.crit ? 1.25 : 1) : 1;        // ease-out-back: punches in with a little overshoot
+      const drift = Math.sin(n.seed * 6.283) * 16 * Math.min(1, n.t * 2.5);
+      o.text(sp.x + drift, sp.y, n.text, { size: Math.round(17 * n.scale * pop), color: n.color, alpha: Math.min(1, (1 - k) * 2.4), stroke: n.crit ? '#5a2a00' : '#000' });
     }
     for (const e of w.entities) {
       if (e.dead || e.team !== 'enemy' || (e.hidden && e.untargetable) || e.isHazard) continue;
@@ -502,7 +506,9 @@ export class Game {
       if (e.tier === 'boss' || (e.boss && e.boss.started)) continue;
       const sp = cam.project(e.x, e.y + (e.height ?? 1.5) + 0.35, e.z); if (!sp.visible) continue;
       const wBar = big ? 78 : 52;
-      o.bar(sp.x, sp.y, wBar, e.tier === 'elite' ? 7 : 5, e.hp / e.hpMax, { fill: e.tier === 'elite' ? '#ffcf5a' : e.tier === 'miniboss' ? '#ff8a3a' : '#d9473a', shield: e.shield ? e.shield / e.hpMax : 0 });
+      const frac = e.hp / e.hpMax; let gh = this.barGhost.get(e.uid) ?? frac;
+      gh = frac >= gh ? frac : Math.max(frac, gh - this.dtDraw * 0.7); this.barGhost.set(e.uid, gh);
+      o.bar(sp.x, sp.y, wBar, e.tier === 'elite' ? 7 : 5, frac, { fill: e.tier === 'elite' ? '#ffcf5a' : e.tier === 'miniboss' ? '#ff8a3a' : '#d9473a', shield: e.shield ? e.shield / e.hpMax : 0, ghost: gh });
       if (hovered || big) o.text(sp.x, sp.y - 11, t(`${e.id}.name`), { size: 12, color: big ? '#ffcf5a' : '#f2e7cf' });
       if (e.modifiers?.length && (hovered || big)) o.text(sp.x, sp.y - 24, e.modifiers.map((m) => t(`${m}.name`)).join(' · '), { size: 11, color: '#ffb36a' });
     }

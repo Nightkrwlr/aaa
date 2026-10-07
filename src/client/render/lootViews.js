@@ -55,8 +55,11 @@ export class LootViews {
       seen.add(g.uid);
       let v = this.views.get(g.uid);
       if (!v) { v = this.#make(g); this.views.set(g.uid, v); this.root.add(v.root); }
-      const age = Math.min(1, (this.session.world.time - g.born) / 0.5);
-      v.root.position.set(g.x, this.heightAt(g.x, g.z) + (1 - age) * 0.6 * (1 - age), g.z);
+      // tossed out of the corpse on an arc, one small bounce, then it settles and bobs
+      const age = Math.min(1, (this.session.world.time - g.born) / 0.65), inv = 1 - age;
+      const bounce = age < 1 ? Math.abs(Math.sin(age * Math.PI * 1.6)) * Math.pow(inv, 1.3) * 1.35 : 0;
+      const ang = (g.uid * 2.399) % (Math.PI * 2), back = inv * inv * 1.1;
+      v.root.position.set(g.x - Math.sin(ang) * back, this.heightAt(g.x, g.z) + bounce, g.z - Math.cos(ang) * back);
       v.root.children[0].rotation.y = t * 0.9 + g.uid;
       v.root.children[0].position.y = 0.1 + Math.sin(t * 2 + g.uid) * 0.05;
       v.disc.material.opacity = 0.35 + Math.sin(t * 3 + g.uid) * 0.2;

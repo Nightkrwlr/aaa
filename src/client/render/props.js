@@ -101,7 +101,8 @@ export function buildInstancedProps(zone, ctx) {
     const list = byKind.pine ?? [], items = { s: [], m: [], l: [], fb: [] }, accents = { s: [], m: [], l: [] };
     for (const p of list) {
       const sc = p.scale * 0.88, size = p.scale < 1.05 ? 'm' : 'l';
-      const it = { x: p.x, y: p.y - 0.05, z: p.z, ry: r0.range(0, TAU), sx: sc, sy: sc * r0.range(0.92, 1.12), sz: sc, color: varc(r0) };
+      // walkable-area pines are squatter than the border forest: from the isometric camera a tall tree hides the enemies behind it (readability first)
+      const it = { x: p.x, y: p.y - 0.05, z: p.z, ry: r0.range(0, TAU), sx: sc, sy: sc * 0.74 * r0.range(0.92, 1.12), sz: sc, color: varc(r0) };
       if (!kitOK) { items.fb.push({ ...it, sx: sc * 1.1, sy: sc * 1.1, sz: sc * 1.1, color: undefined }); continue; }
       const autumn = (inArea('area.orrel', p.x, p.z) || inArea('area.overlook', p.x, p.z)) && r0.next() < 0.45;
       (autumn ? accents : items)[size].push(it);

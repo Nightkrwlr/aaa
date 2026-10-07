@@ -10,7 +10,7 @@ export class CameraRig {
     this.cam = camera;
     this.yaw = Math.PI / 4;
     this.pitch = THREE.MathUtils.degToRad(46);
-    this.zoom = 32; this.zoomTarget = 32; this.zoomMin = 15; this.zoomMax = 38;
+    this.zoom = 26; this.zoomTarget = 26; this.zoomMin = 15; this.zoomMax = 38;
     this.target = new THREE.Vector3();
     this.look = new THREE.Vector3();
     this.ahead = new THREE.Vector2();
