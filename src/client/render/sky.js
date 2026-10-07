@@ -1,49 +1,72 @@
+/**
+ * Sky dome: gradient + sun bloom + drifting clouds + stars, rendered at the far plane around the camera.
+ * The horizon colour is the fog colour so distant terrain dissolves into it seamlessly.
+ */
 import * as THREE from 'three';
-import { Rng } from '../../core/rng.js';
-import { mat, cone, box, group } from './kit.js';
+import { WORLD, bindWorldUniforms } from './atmosphere.js';
+import { getNoiseTexture } from './noiseTex.js';
 
-export function buildSky(ambient) {
-  const [top, mid, low] = ambient.sky.map((c) => new THREE.Color(c));
-  const g = new THREE.SphereGeometry(900, 24, 16);
+const VERT = `varying vec3 vDir;
+void main(){ vDir = position; vec4 p = projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0); gl_Position = p.xyww; }`;
+
+const FRAG = `varying vec3 vDir;
+uniform vec3 uZenith, uMid, uHorizon, uSunCol, uSun, uCloudCol;
+uniform float uTime, uCloud, uStars, uSunPow;
+uniform sampler2D uNoise;
+float hash13(vec3 p){ p = fract(p * 0.1031); p += dot(p, p.zyx + 31.32); return fract((p.x + p.y) * p.z); }
+void main(){
+  vec3 d = normalize(vDir);
+  float h = d.y;
+  vec3 c = mix(uHorizon, uMid, smoothstep(-0.02, 0.22, h));
+  c = mix(c, uZenith, smoothstep(0.18, 0.75, h));
+  c = mix(c, uHorizon * 0.8, smoothstep(0.0, -0.35, h));
+  float s = max(dot(d, normalize(uSun)), 0.0);
+  c += uSunCol * (pow(s, 6.0) * 0.18 + pow(s, 48.0) * 0.5 + pow(s, uSunPow) * 6.0);
+  // clouds: projected onto a plane overhead, two drifting layers
+  if (h > 0.01) {
+    vec2 p = d.xz / (h + 0.22) * 0.5;
+    float n1 = texture2D(uNoise, p * 0.35 + vec2(uTime * 0.004, 0.0)).r;
+    float n2 = texture2D(uNoise, p * 0.9 + vec2(-uTime * 0.007, 0.13)).r;
+    float cl = smoothstep(0.42 - uCloud * 0.2, 0.78, n1 * 0.65 + n2 * 0.35) * smoothstep(0.0, 0.22, h);
+    vec3 cc = mix(uCloudCol * 0.62, uCloudCol * 1.25, smoothstep(0.35, 0.8, n2)) + uSunCol * pow(s, 3.0) * 0.5;
+    c = mix(c, cc, cl * (0.55 + uCloud));
+  }
+  if (uStars > 0.01 && h > 0.0) {
+    vec3 g = floor(d * 160.0); float st = step(0.9975, hash13(g)) * (0.5 + 0.5 * hash13(g + 7.0));
+    c += vec3(0.8, 0.9, 1.0) * st * uStars * smoothstep(0.02, 0.3, h);
+  }
+  gl_FragColor = vec4(c, 1.0);
+}`;
+
+export function buildSky(atm) {
   const m = new THREE.ShaderMaterial({
-    side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { uTop: { value: top }, uMid: { value: mid }, uLow: { value: low }, uSun: { value: new THREE.Vector3(...ambient.sunDir).normalize() }, uSunCol: { value: new THREE.Color(ambient.sun) } },
-    vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-    fragmentShader: `varying vec3 vD; uniform vec3 uTop,uMid,uLow,uSunCol,uSun;
-      void main(){ float h = clamp(vD.y,-0.2,1.0);
-        vec3 c = mix(uMid, uTop, smoothstep(0.0,0.65,h)); c = mix(uLow, c, smoothstep(-0.2,0.08,h));
-        float s = max(dot(normalize(vD), uSun),0.0); c += uSunCol * (pow(s,24.0)*0.55 + pow(s,400.0)*1.4);
-        gl_FragColor = vec4(c,1.0); }`,
+    side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
+    uniforms: {
+      uZenith: { value: new THREE.Color() }, uMid: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() },
+      uSunCol: { value: new THREE.Color() }, uSun: { value: new THREE.Vector3(0, 1, 0) }, uCloudCol: { value: new THREE.Color('#ffffff') },
+      uTime: WORLD.uTime, uCloud: { value: 0.3 }, uStars: { value: 0 }, uSunPow: { value: 900 }, uNoise: { value: getNoiseTexture() },
+    },
+    vertexShader: VERT, fragmentShader: FRAG,
   });
-  const sky = new THREE.Mesh(g, m);
-  sky.renderOrder = -10;
-  return sky;
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), m);
+  mesh.renderOrder = -100; mesh.frustumCulled = false; mesh.name = 'sky';
+  mesh.userData.apply = (a) => {
+    const u = m.uniforms;
+    u.uZenith.value.copy(a.sky[0]); u.uMid.value.copy(a.sky[1]); u.uHorizon.value.copy(a.fog).lerp(a.sky[2], 0.55);
+    u.uSunCol.value.copy(a.sun); u.uSun.value.copy(a.sunDir); u.uCloud.value = a.cloud; u.uStars.value = a.stars;
+    u.uCloudCol.value.copy(a.sky[1]).lerp(new THREE.Color('#ffffff'), 0.55).lerp(a.sun, 0.12);
+  };
+  let cur = atm;
+  mesh.userData.apply = ((orig) => (a) => { cur = a; orig(a); })(mesh.userData.apply);
+  mesh.userData.setFog = (c) => { m.uniforms.uHorizon.value.copy(c).lerp(cur.sky[2], 0.55); };
+  mesh.userData.apply(atm);
+  return mesh;
 }
 
-/** distant mountain ring + drifting cloud banks give depth beyond the playable terrace */
+/** distant haze layers: low "mist banks" that hug the base of the cliffs (soft, drifting, fogged like everything else) */
 export function buildBackdrop(zone) {
   const g = new THREE.Group();
   g.name = 'backdrop';
-  const r = new Rng('backdrop');
-  const cx = zone.def.origin[0] + zone.def.size[0] / 2, cz = zone.def.origin[1] + zone.def.size[1] / 2;
-  const rock = mat('#8e95a8', { fade: false, flat: true }), rockFar = mat('#a7aec0', { fade: false });
-  for (let i = 0; i < 38; i++) {
-    const a = (i / 38) * Math.PI * 2 + r.range(-0.05, 0.05), d = r.range(150, 230), h = r.range(35, 110), w = r.range(24, 52);
-    const m = new THREE.Mesh(new THREE.ConeGeometry(w, h, 6), i % 3 ? rock : rockFar);
-    m.position.set(cx + Math.sin(a) * d, h / 2 - 10, cz + Math.cos(a) * d);
-    m.rotation.y = r.range(0, 6.28);
-    m.scale.set(1, 1, r.range(0.8, 1.4));
-    g.add(m);
-  }
-  const cloudMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.55, depthWrite: false, fog: true });
-  const clouds = [];
-  for (let i = 0; i < 14; i++) {
-    const c = new THREE.Mesh(new THREE.PlaneGeometry(r.range(60, 120), r.range(14, 26)), cloudMat);
-    c.rotation.x = -Math.PI / 2;
-    c.position.set(cx + r.range(-220, 220), r.range(52, 85), cz + r.range(-220, 220));
-    c.userData.speed = r.range(0.4, 1.2);
-    g.add(c); clouds.push(c);
-  }
-  g.userData.update = (t) => { for (const c of clouds) { c.position.x += c.userData.speed * 0.016; if (c.position.x > cx + 260) c.position.x = cx - 260; } };
+  g.userData.update = () => {};
   return g;
 }
