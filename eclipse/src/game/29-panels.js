@@ -628,14 +628,7 @@ function oS() {
     e = x.player,
     t = e.st,
     i = Object.keys(Sl).filter((o) => t[o]),
-    s = Object.entries(n.perks)
-      .map(([o, l]) => {
-        let c = Al.find((d) => d.id === o);
-        return c
-          ? `<div class="card"><b style="color:${["#e6ebee", "#3fa3ff", "#ff9a1f"][c.r]}">${c.ic} ${ke(c.n)}${c.max > 1 ? " \xD7" + l : ""}</b><div class="muted" style="font-size:13px">${ke(c.d)}</div></div>`
-          : "";
-      })
-      .join(""),
+    s = tlSummaryHTML(),
     a = [...e.powers]
       .map(
         (o) =>
@@ -649,7 +642,7 @@ function oS() {
     <div class="sec">Combate</div><div class="stats">${Eb()}</div>
     <div class="sec">Recursos</div>${oh()}
     <div class="sec">Bonificaciones totales</div><div style="font-size:14px;line-height:1.5">${i.map((o) => `<div>${Ks(o, t[o])}</div>`).join("") || '<span class="muted">Ninguna todav\xEDa.</span>'}</div></div>
-    <div style="min-width:0"><div class="sec">Poderes activos</div><div class="cards">${a || '<span class="muted">Consigue objetos legendarios o mejoras \xE9picas para desbloquear poderes.</span>'}</div><div class="sec">Mejoras de nivel</div><div class="cards">${s || '<span class="muted">Sube de nivel para elegir mejoras.</span>'}</div></div></div>`;
+    <div style="min-width:0"><div class="sec">Poderes activos</div><div class="cards">${a || '<span class="muted">Consigue objetos legendarios o talentos de poder para desbloquearlos.</span>'}</div><div class="sec">\xC1rbol de talentos</div><div class="tlsum">${s}</div></div></div>`;
 }
 
 
@@ -660,73 +653,13 @@ var Bl = null,
   fb = -1;
 
 
-// ════════ [688] FunctionDeclaration pb (260 bytes) ════════
+// ════════ [688-689] pb / Wa — sustituidas por el árbol de talentos (31b-talents.js) ════════
+// Las mejoras aleatorias con modal ya no existen: Wa() abre el árbol (compatibilidad con 32-boot y __dbg.openLevelUp).
 function pb() {
-  let n = x.S,
-    e = Al.filter((i) => (n.perks[i.id] || 0) < i.max && (i.r < 2 || n.lvl >= 6)),
-    t = [];
-  for (let i = 0; i < 3 && e.length; i++) {
-    let s = e
-      .filter((a) => !t.includes(a))
-      .map((a) => ({ p: a, w: a.r === 0 ? 70 : a.r === 1 ? 24 : 4 + Math.min(6, n.lvl / 8) }));
-    if (!s.length) break;
-    t.push(ii(s).p);
-  }
-  return t;
+  return [];
 }
-
-
-// ════════ [689] FunctionDeclaration Wa (1932 bytes) ════════
 function Wa() {
-  let n = x.S;
-  if (!n.pendingPerks) return;
-  let e = n.lvl * 100 + n.pendingPerks;
-  (fb !== e || !Bl) && ((Bl = pb()), (_r = -1), (fb = e), (Hl = 1));
-  let t = Bl,
-    i = ["#9aa4ad", "#3fa3ff", "#ff9a1f"],
-    s = t[_r],
-    a = `<div class="win" style="width:min(860px,100%)">${Ze.head(`\xA1Ascenso! Nivel ${n.lvl}`)}<div class="wbody lvlup">
-    <p class="muted" style="margin:0 0 10px">Elige una mejora permanente${n.pendingPerks > 1 ? ` \xB7 te quedan <b style="color:var(--amber)">${n.pendingPerks}</b>` : ""}. Toca una para ver el detalle y conf\xEDrmala abajo.</p>
-    <div class="perks">${t
-      .map((o, l) => {
-        let c = n.perks[o.id] || 0;
-        return `<button class="perk r${o.r} ${l === _r ? "sel" : ""}" data-p="${l}" style="--pc:${i[o.r]}"><span class="pi">${o.ic}</span><span class="ptx"><span class="pr" style="color:${i[o.r]}">${["Com\xFAn", "Rara", "\xC9pica"][o.r]}${o.max > 1 ? ` \xB7 rango ${c} \u2192 ${c + 1} de ${o.max}` : ""}</span><span class="pn">${ke(o.n)}</span><span class="pd">${ke(o.d)}</span></span></button>`;
-      })
-      .join("")}</div>
-    <div class="lvbar">
-      <button class="btn" id="luLater">M\xE1s tarde</button>
-      <button class="btn" id="luRe" ${Hl > 0 ? "" : "disabled"}>Cambiar opciones (${Hl})</button>
-      <button class="btn pri" id="luOk" ${s ? "" : "disabled"}>${s ? "Elegir: " + ke(s.n) : "Selecciona una mejora"}</button>
-    </div></div></div>`;
-  (Ze.open("levelup", a, { modal: !0, silent: x.uiOpen === "levelup" }), x.uiOpen !== "levelup" && ae.play("levelup"));
-  let r = _t("#panel .x");
-  (r && r.remove(),
-    _t("#panel")
-      .querySelectorAll("[data-p]")
-      .forEach((o) =>
-        o.addEventListener("click", () => {
-          ((_r = +o.dataset.p), ae.play("ui"), Wa());
-        }),
-      ),
-    (_t("#luLater").onclick = () => {
-      (Ze.close(), ee("toast", "Puedes elegir tu mejora con el bot\xF3n \xABMEJORA\xBB", "quest"));
-    }),
-    (_t("#luRe").onclick = () => {
-      Hl <= 0 || (Hl--, (Bl = pb()), (_r = -1), ae.play("ui"), Wa());
-    }),
-    (_t("#luOk").onclick = () => {
-      let o = t[_r];
-      o &&
-        ((n.perks[o.id] = (n.perks[o.id] || 0) + 1),
-        n.pendingPerks--,
-        (Bl = null),
-        (_r = -1),
-        x.player.recalc(),
-        ae.play("buff"),
-        Ze.close(),
-        n.pendingPerks > 0 && setTimeout(Wa, 150),
-        ee("save"));
-    }));
+  openTalents();
 }
 
 

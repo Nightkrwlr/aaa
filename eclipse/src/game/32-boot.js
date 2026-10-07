@@ -228,13 +228,8 @@ function pS() {
       (oa(`Nivel ${n}`, "Ascenso conseguido", "#5dff9a"),
         x.fx.ring(x.player.x, x.player.z, 4, 6160282, 0.8),
         x.fx.burst(x.player.x, 1, x.player.z, 40, { color: 6160282, speed: 5, life: 0.8, size: 0.3, up: 1 }));
-      let e = x.enemies.some((t) => !t.dead && t.alerted && Math.hypot(t.x - x.player.x, t.z - x.player.z) < 16);
-      (!x.uiOpen && !e
-        ? setTimeout(() => {
-            x.uiOpen || Wa();
-          }, 400)
-        : la("Mejora disponible: pulsa \xABMEJORA\xBB cuando est\xE9s a salvo", "quest"),
-        x.world.checkGatesUnlock());
+      // Sin modal: el aviso de «punto de talento» lo emite 31b-talents.js y el botón #hPerk abre el árbol.
+      x.world.checkGatesUnlock();
     }),
     It("kill", (n) => {
       (ht.onKill(n), x.op && n.opPack && x.op.kills++);
