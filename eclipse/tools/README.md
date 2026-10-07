@@ -29,7 +29,7 @@ Un guion es `export default async (api) => {…}` y recibe `api`:
 | `hideUi(bool)` | oculta/muestra HUD y overlay (para mirar solo el mundo) |
 | `god()` | invulnerable (para auditar regiones de nivel alto sin morir) |
 | `freeze(bool)` / `still(name,{ui})` | congela la simulación / captura estática sin HUD (o con él) y descongela |
-| `spawn(kind,x,z,lvl,opts)` | `window.__spawn` (enemigos) |
+| `spawn(kind,x,z,lvl,opts)` | `window.__spawn(kind, nivel, x, z, opts)` (enemigos; ojo al orden: el nivel va ANTES de x,z) |
 | `step(n,dt)` | simula n pasos de `dt` sin render (`window.__step`) |
 | `wait(frames)` | espera fotogramas de `requestAnimationFrame` |
 | `shot(name)` | `${out}/${tag}-${name}.png` |

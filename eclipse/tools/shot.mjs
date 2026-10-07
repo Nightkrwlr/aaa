@@ -101,7 +101,8 @@ const api = {
     const p = await shot(name); await api.freeze(false); await api.hideUi(false); return p;
   },
   async hideUi(hide = true) { await ev((h) => { document.getElementById('hud').style.visibility = h ? 'hidden' : ''; document.getElementById('ov').style.visibility = h ? 'hidden' : ''; document.getElementById('toasts').style.display = h ? 'none' : ''; }, hide); },
-  async spawn(kind, x, z, lvl = 1, opts = {}) { return ev(([k, x, z, l, o]) => { const e = window.__spawn(k, x, z, l, o); return !!e; }, [kind, x, z, lvl, opts]); },
+  // OJO: el gancho del juego es window.__spawn(tipo, NIVEL, x, z, opciones); aquí se expone con el orden natural (tipo, x, z, nivel, opciones)
+  async spawn(kind, x, z, lvl = 1, opts = {}) { return ev(([k, x, z, l, o]) => { const e = window.__spawn(k, l, x, z, o); return !!e; }, [kind, x, z, lvl, opts]); },
   /** presupuesto de render de UN fotograma completo (todas las pasadas del composer): llamadas, triángulos, programas, texturas */
   async perf() {
     return ev(async () => {
