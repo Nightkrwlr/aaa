@@ -304,24 +304,37 @@ function accentMesh(geo, mat, n, setup, order, update) {
  */
 export function buildAccents(group, { blobs = [], pools = [], halos = [] }, facing) {
   const A = accentKit();
-  if (blobs.length) {
-    group.add(accentMesh(A.floor, A.blob, blobs.length, (i, m) => {
-      const b = blobs[i], r = b[2] * 2.3;
+  // Se trocea en celdas de CELL unidades: la malla de un chunk entero abarca todo el mapa y nunca se descartaría por el frustum
+  // (miles de quads fuera de pantalla en cada fotograma); por celdas sólo se dibuja lo que se ve.
+  const CELL = 22;
+  const split = (list, xi, zi) => {
+    const cells = new Map();
+    for (const it of list) {
+      const k = Math.floor(it[xi] / CELL) * 4096 + Math.floor(it[zi] / CELL);
+      let c = cells.get(k);
+      c || cells.set(k, (c = []));
+      c.push(it);
+    }
+    return cells.values();
+  };
+  for (const blobsC of split(blobs, 0, 1)) {
+    group.add(accentMesh(A.floor, A.blob, blobsC.length, (i, m) => {
+      const b = blobsC[i], r = b[2] * 2.3;
       _P.set(b[0] + b[2] * 0.12, (b[3] || 0) + 0.035, b[1] + b[2] * 0.08); _S.set(r, 1, r * 0.92); _Q.identity();
       m.setMatrixAt(i, _M.compose(_P, _Q, _S));
     }, 1, () => { propFx.tick(); A.blob.opacity = propFx.quality === 'low' ? 1 : 0.78; }));
   }
-  if (pools.length) {
-    group.add(accentMesh(A.floor, A.pool, pools.length, (i, m) => {
-      const b = pools[i], r = b[2] * 2;
+  for (const poolsC of split(pools, 0, 1)) {
+    group.add(accentMesh(A.floor, A.pool, poolsC.length, (i, m) => {
+      const b = poolsC[i], r = b[2] * 2;
       _P.set(b[0], (b[5] || 0) + 0.05, b[1]); _S.set(r, 1, r); _Q.identity();
       m.setMatrixAt(i, _M.compose(_P, _Q, _S));
       m.setColorAt(i, _Cc.setHex(b[3]).multiplyScalar(b[4]));
     }, 2, () => { propFx.tick(); A.pool.opacity = 0.05 + 0.95 * propFx.uGlow.value; }));
   }
-  if (halos.length) {
-    group.add(accentMesh(A.wall, A.halo, halos.length, (i, m) => {
-      const b = halos[i];
+  for (const halosC of split(halos, 0, 2)) {
+    group.add(accentMesh(A.wall, A.halo, halosC.length, (i, m) => {
+      const b = halosC[i];
       _P.set(b[0], b[1], b[2]); _S.set(b[3], b[3], 1);
       m.setMatrixAt(i, _M.compose(_P, facing, _S));
       m.setColorAt(i, _Cc.setHex(b[4]).multiplyScalar(b[5]));
