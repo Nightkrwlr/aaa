@@ -111,7 +111,7 @@ vec4 surfacePattern(float pat, vec2 s, vec3 wp){
     float a = hsh(floor(s * 2.2)); float b = hsh(floor(s * 7.0) + 3.0); float c = hsh(floor(s * 19.0) + 8.0);
     float strata = 0.5 + 0.5 * sin(s.y * 6.5 + hsh(vec2(floor(s.x * 0.7), 4.0)) * 6.28 + sin(s.x * 1.3) * 1.3);
     float crack = smoothstep(0.93, 0.985, abs(fract(s.x * 0.45 + sin(s.y * 1.7) * 0.4 + a) - 0.5) * 2.0);
-    r.rgb = vec3(0.74 + 0.15 * a + 0.1 * b + 0.06 * c + 0.12 * strata) * (1.0 - 0.28 * crack);
+    r.rgb = vec3(0.66 + 0.16 * a + 0.1 * b + 0.06 * c + 0.22 * strata) * (1.0 - 0.4 * crack);
   }
   return r;
 }`;

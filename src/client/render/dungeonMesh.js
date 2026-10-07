@@ -30,13 +30,13 @@ const STYLE = {
     pat: PAT.stone, floorTile: 0.55, wallTile: 1, capTile: 0.9, bands: true, torches: true, banners: true, moss: true, clutter: ['dungeon/barrel_small', 'dungeon/box_small', 'dungeon/trunk_small_A', 'dungeon/keg'], bones: true,
   },
   cavern: {
-    floor: ['caveDark', 'caveRock', 'caveViolet'], wall: ['caveViolet', 'caveRock', 'caveDark'],
+    floor: ['earth', 'earth', 'caveRock'], wall: ['caveViolet', 'caveRock', 'caveViolet'],
     cap: 'caveDark', ledge: 'caveDark', plinth: 'caveRock', door: 'caveRock', trim: 'crystal',
     pat: PAT.rock, wallPat: PAT.strata, floorTile: 1, wallTile: 1, capTile: 1, bands: false, torches: false, banners: false, moss: true, clutter: [], bones: true, boulders: true,
   },
   facility: {
     floor: ['ironLight', 'ironLight', 'slate'], wall: ['slate', 'ironLight', 'slate'],
-    cap: 'ironLight', ledge: 'soot', plinth: 'soot', door: 'ironLight', trim: 'hazard',
+    cap: 'ironLight', ledge: 'soot', plinth: 'hazard', door: 'ironLight', trim: 'hazard',
     pat: PAT.stone, floorTile: 0.8, wallTile: 0.6, capTile: 0.7, bands: true, torches: false, lamps: true, banners: false, moss: false, clutter: ['dungeon/box_large', 'dungeon/crates_stacked', 'dungeon/barrel_large', 'dungeon/box_stacked'], bones: false, strips: true,
   },
 };
@@ -44,7 +44,7 @@ const STYLE = {
 /** the mood of each family: ambient colours, fog, grade and the colour of the torch the player carries */
 const MOOD = {
   crypt: { sky: '#9aa8c8', ground: '#5c4a46', hemi: 1.7, sun: '#c4d2f4', sunI: 1.2, fogK: 0.5, fogMix: 0.22, torch: '#ffb458', shadow: [0.9, 0.97, 1.14] },
-  cavern: { sky: '#8fa6bc', ground: '#52423e', hemi: 1.75, sun: '#b4d8ee', sunI: 1.0, fogK: 0.5, fogMix: 0.2, torch: '#ffd08a', shadow: [0.9, 0.98, 1.12] },
+  cavern: { sky: '#9aa8b8', ground: '#5a4a42', hemi: 1.75, sun: '#b4d8ee', sunI: 1.0, fogK: 0.5, fogMix: 0.2, torch: '#ffd08a', shadow: [0.9, 0.98, 1.12] },
   facility: { sky: '#a2aec0', ground: '#4c4642', hemi: 1.8, sun: '#d6e0f0', sunI: 1.2, fogK: 0.48, fogMix: 0.16, torch: '#ffd9a0', shadow: [0.94, 0.98, 1.08] },
 };
 export const dungeonTorchColor = (family) => (MOOD[family.theme] ?? MOOD.crypt).torch;
@@ -118,7 +118,7 @@ export function buildDungeonMesh(dungeon, family, scene3d) {
   // ═════════════════════════════════════════════ floor
   const dimTint = new THREE.Color(), tmpC = new THREE.Color();
   const emitFloor = (P, tx, ty, t) => {
-    const x0 = tx * TILE, z0 = ty * TILE, rm = roomAt(tx, ty), v = 0.95 + 0.1 * h2(tx, ty, 2);
+    const x0 = tx * TILE, z0 = ty * TILE, rm = roomAt(tx, ty), v = 0.985 + 0.03 * h2(tx, ty, 2);
     let sw = vn(tx * 0.22, ty * 0.22, 31) > 0.62 ? S.floor[1] : vn(tx * 0.3 + 9, ty * 0.3, 32) > 0.72 ? S.floor[2] : S.floor[0], col = [v, v, v];
     if (t === T.DOOR || t === T.LOCK || t === T.ONEWAY) { sw = 'limestoneLight'; col = [v * 1.05, v * 1.0, v * 0.9]; }
     if (rm && ROOM_TINT[rm.node?.type]) { dimTint.set(ROOM_TINT[rm.node.type]); const m = Math.max(dimTint.r, dimTint.g, dimTint.b); col = col.map((c, i) => c * (1 + 0.2 * ((i === 0 ? dimTint.r : i === 1 ? dimTint.g : dimTint.b) / m - 1))); }
@@ -334,7 +334,7 @@ export function buildDungeonMesh(dungeon, family, scene3d) {
     for (let i = 0; i < n; i++) {
       const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2], nx = nor[i * 3], ny = nor[i * 3 + 1], nz = nor[i * 3 + 2];
       let r = 1, g = 1, b = 1, m = 1;
-      if (mode === 'floor') m = 0.88 + 0.24 * vn(x * 0.17, z * 0.17, 41) + 0.07 * (vn(x * 0.9, z * 0.9, 42) - 0.5);
+      if (mode === 'floor') m = S.pat === PAT.rock ? 0.74 + 0.42 * vn(x * 0.14, z * 0.14, 41) + 0.12 * (vn(x * 0.8, z * 0.8, 42) - 0.5) : 0.88 + 0.24 * vn(x * 0.17, z * 0.17, 41) + 0.07 * (vn(x * 0.9, z * 0.9, 42) - 0.5);
       else if (mode === 'wall') {
         m = 0.86 + 0.28 * vn((x + z) * 0.2, y * 0.4, 43);
         if (S.moss && y < 1.7) { const k = smooth(0.56, 0.78, vn((x + z) * 0.3, 7, 44)) * (1 - y / 1.7); r *= 1 - 0.2 * k; g *= 1 + 0.05 * k; b *= 1 - 0.32 * k; }

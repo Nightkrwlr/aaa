@@ -2,6 +2,7 @@ import { t } from '../../core/i18n.js';
 import { iconSVG } from './iconGen.js';
 import { itemName, RARITY_COLOR } from './itemText.js';
 import { T, TILE } from '../../sim/dungeon/tilemap.js';
+import './hud.css';
 
 const SLOT_KEYS = { s1: '1', s2: '2', s3: '3', s4: '4', s5: 'Q', s6: 'RMB' };
 
@@ -81,6 +82,7 @@ export class Hud {
     const life = this.q('.orb.life'), res = this.q('.orb.res');
     life.querySelector('.fill').style.height = `${Math.max(0, p.hp / p.hpMax) * 100}%`;
     life.querySelector('.txt').textContent = `${Math.ceil(p.hp)} / ${p.hpMax}`;
+    life.classList.toggle('low', p.hp > 0 && p.hp / p.hpMax < 0.3);
     if (p.res) {
       res.className = `orb res ${p.res.id}`;
       const max = world.resources.max(p);
