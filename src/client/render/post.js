@@ -86,7 +86,7 @@ void main(){
 export class PostFx {
   constructor(renderer, scene, camera) {
     this.r = renderer; this.scene = scene; this.camera = camera;
-    this.rt = null; this.w = 2; this.h = 2; this.samples = 4; this.bloomOn = true; this.aoOn = false;
+    this.rt = null; this.w = 2; this.h = 2; this.samples = 4; this.bloomOn = false; this.aoOn = false;
     this.material = new THREE.ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, depthTest: false, depthWrite: false,
       uniforms: {
@@ -104,15 +104,38 @@ export class PostFx {
 
   /** @param {{samples:number, bloom:boolean, ao?:boolean}} o */
   configure(o) {
-    const samples = o.samples ?? 4;
+    const samples = o.samples ?? 4, wasBloom = this.bloomOn;
     this.bloomOn = !!o.bloom; this.aoOn = !!o.ao;
     if (samples !== this.samples || !this.rt) { this.samples = samples; this.#makeTarget(); }
+    if (this.bloomOn && !wasBloom) this.bloom.setSize(this.w, this.h);       // the bloom mip chain is only allocated while bloom is on (phones: ~10 MB saved)
   }
 
+  /**
+   * The HDR scene target. Phones are the reason this is defensive: a half-float colour attachment needs EXT_color_buffer_float or
+   * EXT_color_buffer_half_float, and a multisampled half-float renderbuffer needs the former. Without them the framebuffer is
+   * incomplete and the whole screen is black, so the target is probed once and falls back to plain 8-bit (and no MSAA) when needed.
+   */
   #makeTarget() {
     this.rt?.dispose();
-    this.rt = new THREE.WebGLRenderTarget(this.w, this.h, { type: THREE.HalfFloatType, samples: this.samples, depthBuffer: true, stencilBuffer: false });
+    const ext = this.r.extensions, floatOk = ext.has('EXT_color_buffer_float'), halfOk = floatOk || ext.has('EXT_color_buffer_half_float');
+    let type = halfOk && !this.forceLDR ? THREE.HalfFloatType : THREE.UnsignedByteType;
+    let samples = type === THREE.HalfFloatType && !floatOk ? 0 : this.samples;
+    samples = Math.min(samples, this.r.capabilities.maxSamples ?? samples);
+    const make = () => new THREE.WebGLRenderTarget(this.w, this.h, { type, samples, depthBuffer: true, stencilBuffer: false });
+    this.rt = make();
+    if (!this.#complete()) { this.rt.dispose(); type = THREE.UnsignedByteType; samples = 0; this.rt = make(); this.forceLDR = true; console.warn('[post] HDR target unsupported on this GPU: using an 8-bit scene target'); }
     this.rt.texture.name = 'PostFx.scene';
+    this.hdr = type === THREE.HalfFloatType; this.msaa = samples;
+  }
+
+  #complete() {
+    try {
+      const gl = this.r.getContext();
+      this.r.setRenderTarget(this.rt);
+      const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+      this.r.setRenderTarget(null);
+      return ok;
+    } catch { this.r.setRenderTarget(null); return false; }
   }
 
   /** @param {number} w css width @param {number} h css height — drawing-buffer size is derived from the renderer's pixel ratio */
@@ -120,7 +143,7 @@ export class PostFx {
     const pr = this.r.getPixelRatio();
     this.w = Math.max(2, Math.floor(w * pr)); this.h = Math.max(2, Math.floor(h * pr));
     if (!this.rt) this.#makeTarget(); else this.rt.setSize(this.w, this.h);
-    this.bloom.setSize(this.w, this.h);
+    if (this.bloomOn) this.bloom.setSize(this.w, this.h);
     this.u.uRes.value.set(this.w, this.h);
   }
 
