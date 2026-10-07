@@ -37,7 +37,8 @@ export class CameraRig {
     this.target.x += (fx - this.target.x) * k;
     this.target.z += (fz - this.target.z) * k;
     this.target.y += (fy - this.target.y) * damp(3.5, dt);
-    const d = this.cine?.zoom ?? this.zoom;
+    // a portrait screen sees a third of the world sideways (enemies would arrive from outside the picture): back off with the aspect
+    const asp = this.cam.aspect || 1, d = (this.cine?.zoom ?? this.zoom) * (asp < 1 ? Math.min(1.4, 1 + (1 - asp) * 0.6) : 1);
     const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
     this.offset.set(Math.sin(this.yaw) * cp * d, sp * d, Math.cos(this.yaw) * cp * d);
     this.cam.position.copy(this.target).add(this.offset);

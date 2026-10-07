@@ -130,3 +130,21 @@ Lectura:
 2. Ejecuta `npm run balance` (completo ≈ 15 s; `--quick` para humo) y `npm test`.
 3. Nunca subas un tope sin anotar aquí por qué. Los topes existen para que **ninguna combinación de afijos/únicos/talentos rompa el juego**.
 4. Los jefes artesanales se ajustan con `hpMult`/`damage` de su definición, **no** con tiers: el tier `boss` ya fija 130 s de TTK.
+
+## 9. Los primeros diez minutos (diseño y medición)
+Un ARPG se gana o se pierde al principio: si los diez primeros minutos son una fila de muertes o una llanura vacía, el jugador no vuelve. Por eso se mide con tres herramientas de Node (sin navegador) y se corrige **el diseño**, no solo los números:
+
+| Herramienta | Qué mide |
+|---|---|
+| `node tools/pacing-sim.mjs` | un jugador-bot juega los diez primeros minutos de la zona real (ritual → Orrel → cantera): primera muerte de enemigo, niveles, muertes/min, botín/min, poción, muertes del jugador, tramos muertos |
+| `node tools/pack-sim.mjs` | cuánta vida cuesta cada manada de la apertura (por clase, a su nivel): una manada normal debe costar ≈ ¼ de la vida, una dura (escudos, constructos) hasta ⅔ |
+| `node tools/boss-sim.mjs` | probabilidad de ganar al primer jefe (Brannoch) por clase × nivel × habilidad del jugador, empezando en la entrada de su arena |
+
+**Qué encontró (y se corrigió):**
+1. *La dureza de los enemigos suponía un personaje equipado.* El modelo (§1–2) iguala la vida y el daño al poder esperado con equipo; a nivel 3 el héroe lleva dos piezas y recibía golpes del ≈ 12 % de su vida. `Balance.early()` aplica un factor que va de **0,62 a nivel 1 a 1,0 a nivel 14** (vida y daño de enemigos): una manada pasó de costar 60-160 % de la vida a 1-76 % y las normales mueren en 4-16 s.
+2. *El primer jefe no se podía ganar* (0 % para todas las clases y niveles). No era el jefe: dentro y alrededor de su arena había 7 manadas y un élite; todas se unían a la pelea. Brannoch está ahora **solo** en su arena; las manadas viven en el campo de aproximación al norte y el élite en su borde. Con el jefe solo, a nivel 5: Campanario 75-100 %, Prismante 100 %, Rondador 75-100 % (pelea de 70-130 s con 1-4 pociones). A nivel 4 el Rondador (el más frágil) pierde siempre: es una compuerta suave, no un muro. Además `hpMult 0,85`, un ritmo de ataques un 30 % más holgado, `aggroRange 18` (ya no despierta desde la rampa) y su nivel aparece en la barra de jefe.
+3. *Las pociones solo se recargaban al descansar.* Un medidor de muertes recarga la cinta mientras peleas (≈ 1 carga por 9 muertes normales, entera por élite/jefe) y reaparecer deja siempre ≥ 2 cargas y hace que quien te perseguía vuelva a casa (antes el élite esperaba en el punto de reaparición y mataba al héroe recién levantado).
+4. *El bot de pruebas se quedaba parado* si no hería nada (los lanzadores kiteaban sin disparar): ahora se acerca tras 4 s sin daño, como haría una persona.
+
+**Estado actual** (mediana de 3 semillas, habilidad 0,85): primera muerte de enemigo en 4-6 s, nivel 2 a los 12-15 s, nivel 5 a los 2-4 min, 4-6 muertes/min, 1-3 muertes del jugador (0-1 en Campanario y Rondador; el Prismante bot, sin kiteo real, muere ante lanzadores — es una limitación del bot, no de la clase). Los objetivos (`TARGET` en `pacing-sim.mjs`) se leen como cotas: **faltarlos = apertura demasiado lenta, vacía o castigadora**.
+

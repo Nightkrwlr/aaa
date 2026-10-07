@@ -21,7 +21,7 @@ button:disabled { opacity: .45; cursor: default; }
 #hud { position: absolute; inset: 0; pointer-events: none; transform-origin: bottom center; }
 #hud > * { pointer-events: auto; }
 /* full-width layout containers must never swallow clicks meant for the world; only their interactive children do */
-#hud > .hud-bottom, #hud > .subtitles, #hud > .prompt, #hud > .toast, #hud > .area-name { pointer-events: none; }
+#hud > .hud-bottom, #hud > .subtitles, #hud > .prompt, #hud > .toast, #hud > .area-name, #hud > .tracker, #hud > .statuses, #hud > .breath, #hud > .xpbar, #hud > .bossbar, #hud > .fps { pointer-events: none; }
 .hud-bottom { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; align-items: flex-end; gap: 18px; transform: scale(var(--hud-scale)); transform-origin: bottom center; pointer-events: none; }
 .hud-bottom > * { pointer-events: auto; }
 .orb { position: relative; width: 112px; height: 112px; border-radius: 50%; border: 3px solid var(--brass-d); background: #0b0e14; overflow: hidden; box-shadow: 0 0 0 2px #000, 0 4px 18px rgba(0,0,0,.6), inset 0 0 20px rgba(0,0,0,.8); }

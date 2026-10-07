@@ -35,7 +35,7 @@ Versión: 0.2.0 (vertical slice con arte real y capa móvil) · Rama de trabajo:
 | Guardado versionado con checksum, copias rotativas, migraciones, import/export | `save.test.js` |
 | Integridad de datos y localización ES/EN | `validate-data` (0 errores, 0 avisos), `check-ui-keys` |
 | Equilibrio | `npm run balance` → `BALANCE GUARD: OK` |
-| **Ritmo de los primeros diez minutos** medido con un bot | `tools/pacing-sim.mjs` (ver BALANCE §8) |
+| **Ritmo de los primeros diez minutos**, coste de cada manada y probabilidad de ganar al primer jefe, medidos con un bot | `tools/pacing-sim.mjs`, `tools/pack-sim.mjs`, `tools/boss-sim.mjs` (ver BALANCE §9) |
 | Maquetación táctil en 9 tamaños de pantalla × zurdo/diestro | `mobile.test.js` |
 | Fusión de mallas estáticas (llamadas de dibujo) | `mergeStatic.test.js` |
 
@@ -64,7 +64,7 @@ Versión: 0.2.0 (vertical slice con arte real y capa móvil) · Rama de trabajo:
 | 1 | **Validación en dispositivo real** (GPU, iOS, ergonomía) | alto | lista de 5 minutos en MOBILE.md; ajustar el gobernador con datos reales |
 | 2 | **Cantidad de contenido**: 26 arquetipos de enemigo, 12 únicos, 3 familias de mazmorra, 5 misiones, 1 zona | medio | la producción masiva está habilitada por datos ([CONTENT_GUIDE.md](CONTENT_GUIDE.md)) |
 | 3 | Árboles de talentos de 69 nodos comprables por clase (objetivo del brief: «grandes») | medio | alas exteriores y ramas de especialización |
-| 4 | Balance: el bot no flanquea; la cantera a nivel 5 sigue siendo letal para el bot del simulador de ritmo | bajo/medio | ver BALANCE §7 y §8 |
+| 4 | Balance: el bot no flanquea y no kitea de verdad (el Prismante-bot muere ante lanzadores y escudos en la apertura: 3 muertes en 10 min; Campanario y Rondador 0-1); el Rondador nivel 4 no puede con el primer jefe (compuerta suave) | bajo/medio | ver BALANCE §7 y §9: bot con kiteo y flanqueo |
 | 5 | Móvil en vertical: algunos solapes entre botones en pantallas estrechas (la matriz de dispositivos los lista); el modo apaisado es el recomendado | medio | reubicar la pastilla de interacción y los botones pequeños en vertical |
 | 6 | Hordas en preset `low`: ≈ 475 llamadas de dibujo con 16 enemigos (el tope del preset es 220) | medio | LOD de enemigos y fusión por tipo |
 | 7 | Profesiones sin árbol propio; telemetría no persistente entre partidas | bajo | ver CONTENT_GUIDE |

@@ -89,7 +89,7 @@ export default async function ({ page, touch, wait, shot, logs, device, size }) 
   if (dodge) { const d0 = await pos(); await touch.tap(dodge.cx, dodge.cy); await wait(500); const d1 = await pos(); check('dodge button dashes away', dist(d0, d1) > 1.2, `${dist(d0, d1).toFixed(1)} m`); }
 
   // ── 6. tap on an enemy attacks it; pinch zooms
-  await ev(() => { const g = window.__game, w = g.world, p = g.player; for (const e of w.entities) if (e.team === 'enemy' && !e.dead) { e.x = p.x + 5; e.z = p.z + 1; break; } });
+  await ev(() => { const g = window.__game, w = g.world, p = g.player; for (const e of w.entities) if (e.team === 'enemy' && !e.dead) { e.x = p.x + (innerWidth < innerHeight ? 2.4 : 5); e.z = p.z + 1; break; } });
   await wait(300);
   const en = await ev(() => { const g = window.__game; const e = g.world.entities.find((x) => x.team === 'enemy' && !x.dead); const q = g.scene3d.project(e.x, e.y + 0.9, e.z); return { x: q.x, y: q.y, uid: e.uid }; });
   // by now a whole horde is around the hero, so the finger may land on a neighbour of the enemy we placed: any enemy targeted proves the tap works.
