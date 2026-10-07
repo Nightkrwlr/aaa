@@ -1,0 +1,18 @@
+{
+ "hint.move": "Muévete con W A S D (o las flechas).",
+ "hint.move.touch": "Apoya el pulgar en la mitad izquierda de la pantalla y arrastra para caminar.",
+ "hint.attack": "Mantén el clic izquierdo sobre un enemigo para atacar sin parar.",
+ "hint.attack.touch": "Mantén pulsado el botón grande para atacar: apunta solo al enemigo más cercano.",
+ "hint.skills": "Tus habilidades (1, 2, 3…) pegan más fuerte que el ataque normal: úsalas en cada pelea.",
+ "hint.skills.touch": "Toca los botones redondos para lanzar habilidades. Arrástralos para apuntar a mano.",
+ "hint.dodge": "Las zonas rojas avisan de un golpe: esquiva con la barra espaciadora.",
+ "hint.dodge.touch": "Las zonas rojas avisan de un golpe: esquiva con el botón de la flecha circular.",
+ "hint.loot": "Pulsa E junto al botín para recogerlo.",
+ "hint.loot.touch": "Acércate al botín y toca «Recoger» (o toca el objeto directamente).",
+ "hint.potion": "Poca vida: pulsa Z para beber una poción.",
+ "hint.potion.touch": "Poca vida: toca el botón del frasco verde para beber una poción.",
+ "hint.levelup": "¡Subiste de nivel! Tienes puntos de talento: pulsa T para gastarlos.",
+ "hint.levelup.touch": "¡Subiste de nivel! Tienes puntos de talento: abre ☰ → Talentos.",
+ "hint.equip": "Tienes un objeto mejor en la mochila: pulsa I y haz doble clic para equiparlo.",
+ "hint.equip.touch": "Tienes un objeto mejor en la mochila: ☰ → Mochila y toca dos veces para equiparlo."
+}

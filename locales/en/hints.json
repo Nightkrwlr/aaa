@@ -1,0 +1,18 @@
+{
+ "hint.move": "Move with W A S D (or the arrow keys).",
+ "hint.move.touch": "Rest your thumb on the left half of the screen and drag to walk.",
+ "hint.attack": "Hold the left mouse button on an enemy to keep attacking.",
+ "hint.attack.touch": "Hold the big button to attack: it aims at the nearest enemy by itself.",
+ "hint.skills": "Your skills (1, 2, 3…) hit harder than the basic attack: use them in every fight.",
+ "hint.skills.touch": "Tap the round buttons to cast skills. Drag them to aim by hand.",
+ "hint.dodge": "Red zones warn of a hit: dodge with the space bar.",
+ "hint.dodge.touch": "Red zones warn of a hit: dodge with the circular-arrow button.",
+ "hint.loot": "Press E next to loot to pick it up.",
+ "hint.loot.touch": "Walk up to the loot and tap “Pick up” (or tap the item itself).",
+ "hint.potion": "Low health: press Z to drink a potion.",
+ "hint.potion.touch": "Low health: tap the green flask button to drink a potion.",
+ "hint.levelup": "Level up! You have talent points: press T to spend them.",
+ "hint.levelup.touch": "Level up! You have talent points: open ☰ → Talents.",
+ "hint.equip": "There is a better item in your bag: press I and double-click it to equip it.",
+ "hint.equip.touch": "There is a better item in your bag: ☰ → Bag, then double-tap it to equip."
+}

@@ -29,6 +29,7 @@ export class UIManager {
     if (this.isOpen(id)) { p.open?.(data); return p; }
     if (!this.stack.length) this.focusBefore = document.activeElement;
     this.stack.push(p); p.el.classList.remove('hidden'); p.el.style.zIndex = String(10 + this.stack.length);
+    this.g.hints?.note(id);
     p.open?.(data);
     this.#dual();
     this.g.audio?.ui('open');

@@ -9,6 +9,7 @@ import { CameraRig } from './render/cameraRig.js';
 import { Vfx } from './render/vfx.js';
 import { EntityViews } from './render/entityViews.js';
 import { Assets } from './render/assets.js';
+import { Hints } from './hints.js';
 import { setModelAssets } from './render/models.js';
 import { dependenciesOf } from './render/charFactory.js';
 import { InteractViews } from './render/interactViews.js';
@@ -125,7 +126,7 @@ export class Game {
   }
 
   #detach() {
-    this.views?.dispose?.(); this.interact?.dispose(); this.loot?.dispose(); this.session?.events.clear();
+    this.views?.dispose?.(); this.interact?.dispose(); this.loot?.dispose(); this.hints?.dispose(); this.hints = null; this.session?.events.clear();
     this.scene3d.clearContent(); this.session = null; this.autosaver = null; this.views = this.interact = this.loot = this.gate = null;
     this.hud.reset?.();
   }
@@ -230,6 +231,7 @@ export class Game {
     this.audio.bind(s.world, s.player);
     this.views = new EntityViews(this.scene3d.content, reg, zoneLike, this.vfx, this.assets, this.scene3d.camera);
     this.views.bindSession(s);
+    this.hints = new Hints(this, s);                 // the invisible tutorial (one hint per situation, once per install)
     this.interact = new InteractViews(this.scene3d, s, (x, z) => zoneLike.heightAt(x, z), reg);
     this.loot = new LootViews(this.scene3d, s, (x, z) => zoneLike.heightAt(x, z));
     this.rig.initialised = false;
@@ -391,6 +393,7 @@ export class Game {
     s.update(simDt);
     this.ui.update(dt);
     this.dungeonViewDoors?.();
+    this.hints?.update(dt);
     this.views.update(w, this.vfx.hitstop > 0 ? dt * 0.06 : dt, this.time, this.hoverEnemy?.uid);   // rigs freeze with the sim during hit-stop
     this.interact.update(dt, this.time);
     this.loot.update(dt, this.time);
