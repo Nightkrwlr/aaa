@@ -140,8 +140,8 @@ function Qp(n, e, t, i) {
     n
       ? oa(De[x.regionId].n, `Bienvenido de nuevo, ${s.name}`, "#ffb340")
       : (oa("Basti\xF3n", "Habla con el Comandante Reyes", "#ffb340"),
-        setTimeout(() => la("Pulsa E junto a los personajes marcados con \xAB!\xBB para hablar.", "quest"), 2500),
-        setTimeout(() => la("Tu arma dispara sola. Mu\xE9vete con WASD y esquiva con Espacio.", ""), 6500)),
+        setTimeout(() => la(`Pulsa ${Tt.touchMode ? "USAR" : "E"} junto a los personajes marcados con \xAB!\xBB para hablar.`, "quest"), 2500),
+        setTimeout(() => la(Tt.touchMode ? "Tu arma dispara sola. Mu\xE9vete arrastrando el dedo y esquiva con ESPRINT." : "Tu arma dispara sola. Mu\xE9vete con WASD y esquiva con Espacio.", ""), 6500)),
     s.pendingPerks > 0 && setTimeout(Wa, 800),
     Ui(!0));
 }
@@ -238,7 +238,7 @@ function pS() {
       la(`Misi\xF3n completada: ${n.n} \xB7 +${e.xp} XP${e.credits ? " \xB7 +" + e.credits + " \xA4" : ""}`, "quest");
       for (let t of e.items) ee("loot", t);
       (n.rew?.flag === "flashlight" &&
-        (oa("Linterna t\xE1ctica", "Pulsa F para encenderla", "#ffd27a"), (x.player.flashOn = !0)),
+        (oa("Linterna t\xE1ctica", `Pulsa ${Tt.touchMode ? "LUZ" : "F"} para encenderla`, "#ffd27a"), (x.player.flashOn = !0)),
         n.rew?.flag === "research" && la("Laboratorio de la Dra. Lin disponible", "good"),
         n.main && x.world.checkGatesUnlock(),
         Ui(!0));

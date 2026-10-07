@@ -710,7 +710,7 @@ var zt = {
       xpf: 1,
       intro:
         "Hay edificios ah\xED fuera donde no entra ni un rayo de sol, y cr\xE9eme, ah\xED dentro hay cosas que adoran la oscuridad. Tr\xE1eme 4 bater\xEDas de los bichos \u2014se las comen, no preguntes\u2014 y te monto una linterna t\xE1ctica.",
-      done: "Aqu\xED la tienes. Pulsa F para encenderla o apagarla. Las zonas oscuras dejar\xE1n de ser una trampa mortal.",
+      done: "Aqu\xED la tienes. Pulsa F (o LUZ, en el m\xF3vil) para encenderla o apagarla. Las zonas oscuras dejar\xE1n de ser una trampa mortal.",
       obj: [{ t: "collect", item: "Bater\xEDa", any: !0, ch: 0.3, n: 4 }],
       rew: { credits: 60, flag: "flashlight" },
       next: "m3",
