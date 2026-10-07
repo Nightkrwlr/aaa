@@ -1,11 +1,11 @@
 // Simulación del árbol de talentos (31b-talents.js): estructura, topes de seguridad y builds de 30 puntos contra una horda fija.
 // Se ejecuta con el arnés de capturas (arranca la build real y evalúa en la página):
 //   node tools/build.mjs && node tools/shot.mjs --scenario tools/sim/talents.mjs --size 640x360 --out /ruta [--seed 1]
-// Variables de entorno: TRIALS (repeticiones por build, 3), SECS (duración de cada prueba, 40), LVL (nivel del jugador y los enemigos, 30).
+// Variables de entorno: TRIALS (repeticiones por build, 3), SECS (duración, 60), LVL (nivel del jugador, 30), ELVL (nivel de los enemigos, = LVL), HORDE (enemigos vivos a la vez, 20).
 // Imprime tablas; con --seed igual el resultado es reproducible salvo el ruido del RNG interno del juego (por eso se promedian TRIALS pruebas).
 export default async function (api) {
   const { boot, newGame, ev } = api;
-  const TRIALS = +(process.env.TRIALS || 3), SECS = +(process.env.SECS || 40), LVL = +(process.env.LVL || 30);
+  const TRIALS = +(process.env.TRIALS || 3), SECS = +(process.env.SECS || 60), LVL = +(process.env.LVL || 30), ELVL = +(process.env.ELVL || LVL), HORDE = +(process.env.HORDE || 20);
   await boot(); await newGame();
 
   // ───────────────────────── 1 · estructura del árbol
@@ -64,11 +64,11 @@ export default async function (api) {
     }
     // árbol completo
     const all = {}; for (const n of C.nodes) all[n.id] = n.max;
-    T.setBuild(all); const full = read();
+    T.setBuild(all); const full = read(); const fullSt = JSON.parse(JSON.stringify(p.st));
     // perks antiguos al máximo (referencia del diseño: «el árbol completo ≈ los perks antiguos al máximo»)
     const old = T.oldPerksMax();
     T.setBuild({});
-    return { base, worst, full, fullStats: JSON.parse(JSON.stringify(p.st)), old };
+    return { base, worst, full, fullStats: fullSt, old };
   }, LVL);
   const top = (k, n = 4) => [...caps.worst].sort((a, b) => b[k] - a[k]).slice(0, n).map((w) => `${w.n} ×${w[k].toFixed(2)}`).join(', ');
   console.log('\n== TOPES (un solo nodo al máximo, nivel ' + LVL + ') ==');
@@ -80,7 +80,8 @@ export default async function (api) {
   const o = caps.old;
   console.log(`perks antiguos al máximo (referencia): daño +${(o.dmg * 100).toFixed(0)}%, cadencia +${(o.fireRate * 100).toFixed(0)}%, vida +${(o.maxHpPct * 100).toFixed(0)}%, crítico +${(o.critChance * 100).toFixed(0)}%, esquiva +${(o.dodge * 100).toFixed(0)}%`);
   const f = caps.fullStats;
-  console.log(`árbol completo en estadísticas sumadas: daño +${((f.dmg || 0) * 100).toFixed(0)}%, cadencia +${((f.fireRate || 0) * 100).toFixed(0)}%, vida +${((f.maxHpPct || 0) * 100).toFixed(0)}%, crítico +${((f.critChance || 0) * 100).toFixed(0)}%, esquiva +${((f.dodge || 0) * 100).toFixed(0)}%`);
+  console.log('presupuesto de estadísticas, árbol completo / perks antiguos al máximo (1.00 = igual):');
+  console.log('  ' + ['dmg', 'fireRate', 'maxHpPct', 'critChance', 'critDmg', 'dodge', 'moveSpeed', 'reload', 'magSize', 'luck', 'xpGain', 'credits', 'shieldPct', 'elemDmg', 'pickup'].map((k) => `${k} ${(f[k] || 0).toFixed(2)}/${(o[k] || 0).toFixed(2)}`).join(' · '));
 
   // ───────────────────────── 3 · builds de 30 puntos contra una horda fija
   // Cada build es una lista de prioridades [id, rangos]; se compra en orden respetando prerrequisitos y la regla de nodos clave.
@@ -95,10 +96,10 @@ export default async function (api) {
     'disperso (15 en 3 ramas)': [].concat(...['bas', 'art', 'esp'].map((br) => B(br, ['root', 3], ['b1', 5], ['b2', 2]))),
   };
   const PTS = 30;
-  console.log(`\n== BUILDS DE ${PTS} PUNTOS vs HORDA (nivel ${LVL}, ${SECS} s, ${TRIALS} pruebas, arma de rareza Rara) ==`);
+  console.log(`\n== BUILDS DE ${PTS} PUNTOS vs HORDA CONTINUA (jugador nivel ${LVL}, ${HORDE} enemigos vivos de nivel ${ELVL}, ${SECS} s, ${TRIALS} pruebas, equipo Raro) ==`);
   const rows = [];
   for (const [name, prio] of Object.entries(builds)) {
-    const r = await ev(([prio, PTS, LVL, SECS, TRIALS]) => {
+    const r = await ev(([prio, PTS, LVL, ELVL, HORDE, SECS, TRIALS]) => {
       const G = window.__G, S = G.S, p = G.player, T = window.__talents, C = T.cfg();
       // equipo fijo (se crea una vez) para que solo cambien los talentos
       if (!window.__simGear) {
@@ -117,30 +118,35 @@ export default async function (api) {
       const keys = C.nodes.filter((n) => n.key && S.perks[n.id]).map((n) => n.n);
       const stat = { hp: Math.round(p.maxHp + p.maxShield), dmgRed: +p.dmgRed.toFixed(2), dodge: +p.dodge.toFixed(2), spd: +p.speed.toFixed(2), dmg: +(p.ws[0].dmgBase).toFixed(1), rate: +p.ws[0].rate.toFixed(2), multi: p.ws[0].multi };
       const out = { left, keys, stat, trials: [] };
-      const kinds = [['rastrero', 10], ['escupidor', 4], ['bruto', 3], ['acorazado', 2]];
+      const cycle = ['rastrero', 'rastrero', 'escupidor', 'rastrero', 'bruto', 'rastrero', 'escupidor', 'acorazado'];
       const key = (c, on) => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { code: c }));
       for (let t = 0; t < TRIALS; t++) {
         // reinicio de la prueba
         for (const e of G.enemies) e.remove(); G.enemies.length = 0;
         for (const k of ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space']) key(k, false);
+        G.uiOpen = null; G.paused = false; { const pn = document.querySelector('#panel'); pn && (pn.hidden = true, pn.innerHTML = ''); }
         G.uiBlockDamage = false; p.dead = false; p.inv = 0; p.buffs = {}; p.burnT = p.poisonT = p.slowT = 0;
-        p.x = 292; p.z = 292; p.vx = p.vz = 0; p.hp = p.maxHp; p.shield = p.maxShield; p.phoenixCd = 0; p.dashCd = 0; p.dashT = 0;
-        const mk = [];
-        let i = 0;
-        for (const [k, n] of kinds) for (let j = 0; j < n; j++, i++) {
-          const a = (i / 19) * Math.PI * 2, r = 9 + (i % 3) * 2;
-          const e = window.__spawn(k, LVL, p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, { alerted: true });
-          if (e) { mk.push(e); e.alerted = true; }
-        }
-        const hp0 = mk.reduce((s, e) => s + e.maxHp, 0);
-        let tDead = SECS, dmgTaken = 0, lastHp = p.hp + p.shield;
+        p.x = 292; p.z = 292; p.vx = p.vz = 0; p.hp = p.maxHp; p.shield = p.maxShield; p.phoenixCd = 0; p.dashCd = 0; p.dashT = 0; p.deadT = 0;
+        const all = [];
+        let spawned = 0;
+        // horda continua: se mantienen HORDE enemigos vivos alrededor (como un asedio), nivel ELVL
+        const topUp = () => {
+          let alive = 0; for (const e of all) if (!e.dead) alive++;
+          for (; alive < HORDE; alive++, spawned++) {
+            const a = (spawned * 2.399) % (Math.PI * 2), r = 11 + (spawned % 4) * 1.5;
+            const e = window.__spawn(cycle[spawned % cycle.length], ELVL, p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, { alerted: true });
+            if (e) { e.alerted = true; all.push(e); }
+          }
+        };
+        let tEnd = SECS, dmgTaken = 0, lastHp = p.hp + p.shield, hpDealt = 0;
         const dt = 1 / 30, n = Math.round(SECS / dt);
         let held = new Set();
         for (let s = 0; s < n; s++) {
+          if (s % 30 === 0) topUp();
           // política: huir de la masa de enemigos cercanos (kiting) cada 6 fotogramas y esprintar si hay alguno encima
           if (s % 6 === 0) {
             let cx = 0, cz = 0, c = 0, near = 1e9;
-            for (const e of mk) if (!e.dead) { const d = Math.hypot(e.x - p.x, e.z - p.z); if (d < 14) { cx += e.x; cz += e.z; c++; } near = Math.min(near, d); }
+            for (const e of all) if (!e.dead) { const d = Math.hypot(e.x - p.x, e.z - p.z); if (d < 14) { cx += e.x; cz += e.z; c++; } near = Math.min(near, d); }
             const want = new Set();
             if (c) { const dx = p.x - cx / c, dz = p.z - cz / c, m = Math.hypot(dx, dz) || 1; if (dx / m > 0.35) want.add('KeyD'); if (dx / m < -0.35) want.add('KeyA'); if (dz / m > 0.35) want.add('KeyS'); if (dz / m < -0.35) want.add('KeyW'); }
             if (near < 2.6 && p.dashCd <= 0) { key('Space', true); key('Space', false); }
@@ -148,33 +154,32 @@ export default async function (api) {
             for (const k of want) if (!held.has(k)) key(k, true);
             held = want;
           }
+          if (G.uiOpen) { G.uiOpen = null; G.paused = false; const pn = document.querySelector('#panel'); pn && (pn.hidden = true, pn.innerHTML = ''); } // el panel de muerte (setTimeout) pausaría la simulación
           window.__step(1, dt);
           const cur = p.hp + p.shield; if (cur < lastHp) dmgTaken += lastHp - cur; lastHp = cur;
-          if (p.dead || p.hp <= 0) { tDead = s * dt; break; }
-          if (mk.every((e) => e.dead)) { tDead = SECS; break; }
+          if (p.dead || p.hp <= 0) { tEnd = s * dt; break; }
         }
-        const alive = mk.filter((e) => !e.dead);
-        const hpLeft = alive.reduce((s, e) => s + Math.max(0, e.hp), 0);
-        const elapsed = Math.min(tDead, SECS);
-        out.trials.push({ kills: mk.length - alive.length, dmg: hp0 - hpLeft, dps: (hp0 - hpLeft) / Math.max(1, elapsed), surv: tDead, died: p.dead || p.hp <= 0, hpPct: Math.max(0, p.hp / p.maxHp), taken: dmgTaken, all: alive.length === 0, tClear: alive.length === 0 ? elapsed : null });
+        let kills = 0; for (const e of all) { if (e.dead) { kills++; hpDealt += e.maxHp; } else hpDealt += Math.max(0, e.maxHp - e.hp); }
+        const elapsed = Math.max(1, Math.min(tEnd, SECS));
+        out.trials.push({ kills, dps: hpDealt / elapsed, surv: tEnd, died: p.dead || p.hp <= 0, hpPct: Math.max(0, p.hp / p.maxHp), taken: dmgTaken });
         p.dead = false;
         for (const k of held) key(k, false);
       }
       for (const e of G.enemies) e.remove(); G.enemies.length = 0;
       return out;
-    }, [prio, PTS, LVL, SECS, TRIALS]);
+    }, [prio, PTS, LVL, ELVL, HORDE, SECS, TRIALS]);
     const avg = (k) => r.trials.reduce((a, t) => a + (+t[k] || 0), 0) / r.trials.length;
-    const row = { name, kills: avg('kills'), dps: avg('dps'), surv: avg('surv'), died: r.trials.filter((t) => t.died).length, hpPct: avg('hpPct'), taken: avg('taken'), clear: r.trials.filter((t) => t.all).length, keys: r.keys.join('+') || '—', left: r.left, stat: r.stat };
+    const row = { name, kills: avg('kills'), dps: avg('dps'), surv: avg('surv'), died: r.trials.filter((t) => t.died).length, hpPct: avg('hpPct'), taken: avg('taken'), keys: r.keys.join('+') || '—', left: r.left, stat: r.stat };
     rows.push(row);
-    console.log(`${name.padEnd(30)} kills ${row.kills.toFixed(1).padStart(4)}/19  DPS ${row.dps.toFixed(0).padStart(6)}  supervivencia ${row.surv.toFixed(1).padStart(5)}s  muertes ${row.died}/${TRIALS}  vida final ${(row.hpPct * 100).toFixed(0).padStart(3)}%  daño recibido ${row.taken.toFixed(0).padStart(6)}  horda limpia ${row.clear}/${TRIALS}  claves: ${row.keys}  (sin gastar ${row.left})`);
+    console.log(`${name.padEnd(30)} bajas ${row.kills.toFixed(1).padStart(5)}  DPS ${row.dps.toFixed(0).padStart(6)}  supervivencia ${row.surv.toFixed(1).padStart(5)}s  muertes ${row.died}/${TRIALS}  vida final ${(row.hpPct * 100).toFixed(0).padStart(3)}%  daño recibido ${row.taken.toFixed(0).padStart(6)}  claves: ${row.keys}  (sin gastar ${row.left})`);
     console.log(`${''.padEnd(30)} stats: vida+escudo ${r.stat.hp}, reducción ${r.stat.dmgRed}, esquiva ${r.stat.dodge}, vel ${r.stat.spd}, daño/disparo ${r.stat.dmg}, cadencia ${r.stat.rate}, extra proyectiles ${r.stat.multi}`);
   }
   // veredicto: la especialización debe ganar a dispersarse
-  const sc = (r) => r.kills + r.surv / 4 - r.taken / 5000; // marcador simple; el detalle está arriba
+  const sc = (r) => r.kills; // bajas en la ventana de tiempo (morir pronto = menos bajas); supervivencia y daño recibido están arriba
   const disp = rows.filter((r) => r.name.startsWith('disperso')), spec = rows.filter((r) => !r.name.startsWith('disperso') && r.name !== 'sin talentos');
   const bestDisp = Math.max(...disp.map(sc));
   console.log('\n== VEREDICTO ==');
-  for (const r of spec) console.log(`${r.name.padEnd(30)} marcador ${sc(r).toFixed(1)} vs mejor disperso ${bestDisp.toFixed(1)} → ${sc(r) > bestDisp ? 'GANA' : 'NO GANA'}`);
+  for (const r of spec) console.log(`${r.name.padEnd(30)} bajas ${sc(r).toFixed(1)} vs mejor disperso ${bestDisp.toFixed(1)} → ${sc(r) > bestDisp ? 'GANA' : 'NO GANA'}`);
   console.log(`sin talentos: ${sc(rows[0]).toFixed(1)}; dispersos: ${disp.map((r) => sc(r).toFixed(1)).join(', ')}`);
   const errs = api.logs.filter((l) => /pageerror|\[error\]/.test(l));
   console.log(errs.length ? 'ERRORES DE CONSOLA:\n' + errs.slice(0, 5).join('\n') : 'sin errores de consola');

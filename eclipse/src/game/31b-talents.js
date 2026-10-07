@@ -67,6 +67,12 @@ var TL_GLYPH = {
   trophyChance: "☠", trophyValue: "☠", chestSense: "◈",
 };
 
+// Glifos de los poderes heredados de los perks antiguos.
+var TL_PGLYPH = {
+  phoenix: "\u2668", berserker: "\u2694", dashNova: "\u25CE", adrenaline: "\u26A1", drone: "\u2708",
+  burnAura: "\u2600", orbitals: "\u2609", magnetLord: "\u2295",
+};
+
 // Parámetros de las mecánicas de los nodos clave y de los poderes propios. Justificación de los números:
 // cada clave cuesta 3 puntos y exige 15 en la rama, y siempre lleva una contrapartida en estadísticas.
 var TL_PARAMS = {
@@ -200,25 +206,25 @@ var TL_SPEC = [
       ["Esprint ágil", { dashCd: 0.08 }, 4],
       ["Impulso", { moveSpeed: 0.03 }, 3],
       ["Onda de choque", {}, 1, { pow: "dashNova", d: "El esprint libera una onda que daña y empuja." }],
-      ["Sombra veloz", { dodge: 0.02 }, 4],
+      ["Sombra veloz", { dodge: 0.015 }, 4],
       ["Viento en popa", { moveSpeed: 0.03 }, 3],
       ["Resorte", { dashCd: 0.1 }, 3],
     ],
     B: [
-      ["Reflejos felinos", { dodge: 0.025 }, 5],
+      ["Reflejos felinos", { dodge: 0.02 }, 5],
       ["Zancada larga", { moveSpeed: 0.04 }, 4],
-      ["Paso de sombra", { dodge: 0.02 }, 4],
+      ["Paso de sombra", { dodge: 0.015 }, 4],
       ["Adrenalina", {}, 1, { pow: "adrenaline", d: "Con menos del 35 % de vida: +50 % de daño y +30 % de velocidad." }],
-      ["Reflejos de combate", { dodge: 0.03 }, 3],
+      ["Reflejos de combate", { dodge: 0.02 }, 3],
       ["Velocidad pura", { moveSpeed: 0.05 }, 3],
     ],
     C: [
-      ["Manos rápidas", { reload: 0.1 }, 5],
+      ["Manos rápidas", { reload: 0.08 }, 5],
       ["Cinturón de munición", { magSize: 0.1 }, 4],
-      ["Recarga instintiva", { reload: 0.1 }, 4],
+      ["Recarga instintiva", { reload: 0.08 }, 4],
       ["Disparo en carrera", { fireRate: 0.05 }, 4],
       ["Subidón", { moveSpeed: 0.02, fireRate: 0.03 }, 3],
-      ["Ritmo frenético", { reload: 0.12 }, 3],
+      ["Ritmo frenético", { reload: 0.1 }, 3],
     ],
     K: [
       ["Fantasma", { dmg: -0.1 }, 1, {
@@ -357,20 +363,20 @@ var TL_SPEC = [
     mast: [{ st: { luck: 0.08 } }, { st: { xpGain: 0.08, credits: 0.08 } }, { st: { vsElite: 0.1, vsBoss: 0.1 } }],
     root: ["Instinto de rastreo", { luck: 0.06 }, 3],
     A: [
-      ["Saqueador", { luck: 0.08 }, 5],
+      ["Saqueador", { luck: 0.06 }, 5],
       ["Negociante", { credits: 0.08 }, 5],
       ["Bolsillos magnéticos", { pickup: 0.2 }, 4],
-      ["Olfato de chatarrero", { luck: 0.08 }, 4],
+      ["Olfato de chatarrero", { luck: 0.06 }, 4],
       ["Señor del magnetismo", {}, 1, { pow: "magnetLord", d: "Recogida ×2 y los orbes de experiencia te curan." }],
-      ["Fortuna", { luck: 0.1 }, 3],
+      ["Fortuna", { luck: 0.08 }, 3],
     ],
     B: [
-      ["Veteranía", { xpGain: 0.06 }, 5],
+      ["Veteranía", { xpGain: 0.05 }, 5],
       ["Linterna potente", { lightRange: 0.12 }, 3],
-      ["Estudioso", { xpGain: 0.06 }, 4],
+      ["Estudioso", { xpGain: 0.05 }, 4],
       ["Ojo clínico", {}, 4, { fx: { trophyChance: 0.06 } }],
-      ["Experto", { xpGain: 0.08 }, 3],
-      ["Maestría", { xpGain: 0.1 }, 3],
+      ["Experto", { xpGain: 0.06 }, 3],
+      ["Maestría", { xpGain: 0.08 }, 3],
     ],
     C: [
       ["Cazador de insectos", { vsInsect: 0.08 }, 4],
@@ -437,7 +443,7 @@ function tlBuildCfg() {
       const node = {
         id: `t_${b.id}_${suf}`, br: b.id, n: row[0], st, max: row[2] || 1, req, at: pos(b.ax, t, l),
         t, l, cost: ex.cost || (key ? P.keyCost : ex.pow ? P.powerCost : 1),
-        ic: ex.ic || TL_GLYPH[first] || "◆",
+        ic: ex.ic || TL_PGLYPH[ex.pow] || TL_GLYPH[first] || "◆",
       };
       if (ex.fx) node.fx = ex.fx;
       if (ex.pow) node.pow = ex.pow;
@@ -908,7 +914,7 @@ function tlUiRefresh() {
     const el = tlUi.els.nodes[n.id];
     if (!el) continue;
     const st = tlNodeState(n), r = tlRank(n.id);
-    const hl = tlUi.hi ? ((n.st && n.st[tlUi.hi] !== undefined) || (n.fx && n.fx[tlUi.hi] !== undefined)) : null;
+    const hl = tlUi.hi ? !!((n.st && n.st[tlUi.hi] !== undefined) || (n.fx && n.fx[tlUi.hi] !== undefined)) : null;
     el.className = `tn ${n.key ? "key" : ""} ${n.power ? "pw" : ""} ${st} ${tlUi.sel === n.id ? "sel" : ""} ${hl === true ? "hl" : hl === false ? "dim" : ""}`;
     const rk = el.querySelector(".rk");
     const t = n.max > 1 ? `${r}/${n.max}` : r ? "✓" : "";
@@ -1097,7 +1103,7 @@ function tlBind() {
     if (!tlUi.conf) {
       tlUi.conf = 1;
       clearTimeout(tlUi.confT);
-      tlUi.confT = setTimeout(() => { tlUi.conf = 0; tlUiRefresh(); }, 3500);
+      tlUi.confT = setTimeout(() => { tlUi.conf = 0; tlUiRefresh(); }, 4500);
       tlUiRefresh();
       return;
     }
@@ -1129,6 +1135,8 @@ function tlSummaryHTML() {
 window.__talents = {
   cfg: () => x.cfg.talents,
   open: openTalents,
+  // Centra el lienzo en un nodo y lo selecciona (pruebas y futuros enlaces desde otros paneles).
+  focus(id) { const n = tlCfg().byId[id]; if (!n || x.uiOpen !== "talents") return; tlCenterOn(n.at[0], n.at[1], Math.max(tlUi.s, 0.8)); tlSelect(id); },
   grant: grantTalentPoint,
   buy: tlBuy,
   canBuy: (id) => tlCanBuy(tlCfg().byId[id]),
