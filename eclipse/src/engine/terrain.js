@@ -84,12 +84,15 @@ export const BIO_KEYS = ['valle', 'ciudad', 'desierto', 'marisma', 'tundra', 'co
  * a, b  factores multiplicativos del albedo para dos tipos de mancha (a = principal; b = suciedad / desgaste)
  * cap   color de la «capa superior» (nieve, ceniza, polvo) sobre las tapas de muros y rocas
  * k     [mancha en suelo, mancha en muros/roca, capa superior, humedad]
+ * rock  [r,g,b,saturación] opcional: tinte multiplicativo de muros, rocas y laterales (por defecto 1,1,1,1)
+ * edge  [luz de cresta, relleno falso de laterales, compresión de altas luces] opcional (por defecto 1,1,0)
  */
 export const BIO_LOOK = {
   valle:    { a: [0.80, 1.14, 0.60], b: [1.10, 1.04, 0.74], cap: [0.60, 0.80, 0.34], k: [0.62, 0.80, 0.18, 0.15] }, // musgo / hierba seca
-  ciudad:   { a: [0.72, 0.75, 0.78], b: [1.30, 0.90, 0.58], cap: [0.50, 0.52, 0.55], k: [0.55, 0.70, 0.00, 0.30] }, // mugre / óxido
+  ciudad:   { a: [0.72, 0.75, 0.78], b: [1.30, 0.90, 0.58], cap: [0.50, 0.52, 0.55], k: [0.55, 0.70, 0.00, 0.30], rock: [0.80, 0.82, 0.84, 0.65], edge: [0.55, 0.80, 0.42] }, // mugre / óxido (tapas de ruina en gris-hueso, no crema)
   desierto: { a: [1.16, 1.06, 0.86], b: [0.76, 0.66, 0.56], cap: [0.95, 0.80, 0.55], k: [0.55, 0.60, 0.25, 0.00] }, // arena clara / roca oxidada
-  marisma:  { a: [0.66, 0.92, 0.70], b: [0.62, 0.70, 0.62], cap: [0.40, 0.55, 0.38], k: [0.75, 0.90, 0.00, 0.60] }, // alga / barro
+  // la roca de marisma va oscura, desaturada y con barro marrón-violáceo (b): el césped es lo más claro y el agua se separa por valor
+  marisma:  { a: [0.66, 0.92, 0.70], b: [0.78, 0.60, 0.66], cap: [0.40, 0.55, 0.38], k: [0.75, 0.95, 0.00, 0.60], rock: [0.50, 0.44, 0.48, 0.45], edge: [0.35, 0.30] }, // alga / barro
   tundra:   { a: [1.22, 1.32, 1.48], b: [0.84, 0.92, 1.10], cap: [0.92, 0.97, 1.05], k: [0.70, 0.90, 0.90, 0.10] }, // escarcha / hielo sucio
   complejo: { a: [1.34, 0.84, 0.52], b: [0.60, 0.64, 0.70], cap: [0.52, 0.55, 0.60], k: [0.50, 0.80, 0.00, 0.10] }, // óxido / aceite
   caldera:  { a: [0.60, 0.58, 0.58], b: [1.40, 0.74, 0.42], cap: [0.20, 0.19, 0.19], k: [0.62, 0.70, 0.55, 0.00] }, // ceniza / brasa
@@ -99,12 +102,13 @@ export const BIO_LOOK = {
 
 /** uniformes del suelo que dependen del bioma (se crean una vez y los comparten todos los chunks) */
 export function bioUniforms() {
-  const A = [], B = [], C = [], K = [];
+  const A = [], B = [], C = [], K = [], R = [], E = [];
   for (const key of BIO_KEYS) {
     const l = BIO_LOOK[key];
     A.push(new Vector3(...l.a)); B.push(new Vector3(...l.b)); C.push(new Vector3(...l.cap)); K.push(new Vector4(...l.k));
+    R.push(new Vector4(...(l.rock || [1, 1, 1, 1]))); E.push(new Vector4(l.edge?.[0] ?? 1, l.edge?.[1] ?? 1, l.edge?.[2] ?? 0, 0));
   }
-  return { uStainA: { value: A }, uStainB: { value: B }, uCap: { value: C }, uBioK: { value: K } };
+  return { uStainA: { value: A }, uStainB: { value: B }, uCap: { value: C }, uBioK: { value: K }, uRock: { value: R }, uEdgeK: { value: E } };
 }
 
 // ───────────────────────────────────────────────────────── shader del suelo
@@ -121,7 +125,7 @@ const GROUND_FRAG_PARS = /* glsl */ `
 precision highp sampler2DArray;
 uniform sampler2DArray uArr; uniform sampler2D uTN;
 uniform float uTime; uniform float uCloud; uniform float uTexK; uniform float uOrg[32];
-uniform vec3 uStainA[9]; uniform vec3 uStainB[9]; uniform vec3 uCap[9]; uniform vec4 uBioK[9];
+uniform vec3 uStainA[9]; uniform vec3 uStainB[9]; uniform vec3 uCap[9]; uniform vec4 uBioK[9]; uniform vec4 uRock[9]; uniform vec4 uEdgeK[9];
 varying vec4 vLay; varying vec4 vEdge; varying vec3 vCol2; varying vec3 vWP;
 vec3 gTilt; float gRoughMul; vec3 gFill;
 float gHash(float n){ return fract(sin(n * 12.9898) * 43758.5453); }
@@ -206,7 +210,7 @@ const GROUND_FRAG_COLOR = /* glsl */ `
       if (dR < 8.0) {
         float rn = nM.b - 0.5;
         float rim = 1.0 - smoothstep(0.0, 0.17, dR + rn * 0.10);
-        alb *= 1.0 + 0.34 * rim;
+        alb *= 1.0 + 0.34 * rim * (isWallish ? uEdgeK[bi].x : 1.0);
         alb *= 1.0 - 0.14 * (1.0 - smoothstep(0.0, 0.04, dR)) ;           // arista: línea de sombra mínima
         #if TQ >= 1
         float bvx = abs(st.x - 2.0) < 0.5 ? 1.0 - smoothstep(0.0, 0.20, u.x) : 0.0;
@@ -236,9 +240,9 @@ const GROUND_FRAG_COLOR = /* glsl */ `
       alb *= 0.90 + 0.20 * seg;
       alb *= 0.80 + 0.40 * sk;
       alb *= 1.0 - 0.42 * (1.0 - smoothstep(0.0, 0.55, fromBase));        // base sucia
-      alb *= 1.0 + 0.32 * (1.0 - smoothstep(0.0, 0.12, fromTop));          // cresta iluminada
+      alb *= 1.0 + 0.32 * uEdgeK[bi].x * (1.0 - smoothstep(0.0, 0.12, fromTop));          // cresta iluminada
       // relleno falso: los laterales miran a la sombra y se quedaban negros; cielo frío arriba, rebote cálido del suelo abajo
-      gFill = mix(vec3(0.20, 0.13, 0.08), vec3(0.12, 0.16, 0.22), smoothstep(0.0, 0.9, tt)) * 0.9;
+      gFill = mix(vec3(0.20, 0.13, 0.08), vec3(0.12, 0.16, 0.22), smoothstep(0.0, 0.9, tt)) * 0.9 * uEdgeK[bi].y;
       gTilt = vec3(0.0);
       topness = 0.0;
     }
@@ -252,6 +256,13 @@ const GROUND_FRAG_COLOR = /* glsl */ `
     if (isSide) mB *= 0.5 + 0.5 * (1.0 - smoothstep(0.0, 1.0, vEdge.x / 255.0 * vEdge.y / 32.0));   // la suciedad se concentra abajo
     alb *= mix(vec3(1.0), uStainA[bi], mA * amt);
     alb *= mix(vec3(1.0), uStainB[bi], mB * amt * 0.8);
+    // tinte propio de muros y rocas del bioma (oscurece y desatura: separa la roca del suelo por valor)
+    if (isWallish || isSide) {
+      vec4 rk = uRock[bi];
+      float lum = dot(alb, vec3(0.30, 0.59, 0.11));
+      alb = mix(vec3(lum), alb, rk.w) * rk.rgb;
+      alb *= 1.0 - uEdgeK[bi].z * smoothstep(0.28, 0.62, lum);   // compresión de altas luces: los muros claros no superan a personajes ni enemigos
+    }
     // capa superior sobre tapas de muros y rocas (nieve, ceniza, polvo): deja ver la piedra en el borde
     if (topness > 0.5 && isWallish && K.z > 0.01) {
       float cm = smoothstep(0.30, 0.62, nL.a * 0.6 + nM.g * 0.4) * K.z;
@@ -284,7 +295,7 @@ export function patchGroundShader(shader, o) {
     .replace('#include <common>', `#define TQ ${o.tq}\n#include <common>\n${GROUND_FRAG_PARS}`)
     .replace('#include <map_fragment>', '')
     .replace('#include <color_fragment>', GROUND_FRAG_COLOR)
-    .replace('#include <opaque_fragment>', 'outgoingLight += diffuseColor.rgb * gFill;\n#include <opaque_fragment>')
+    .replace('#include <opaque_fragment>', '#if defined( RE_IndirectDiffuse )\noutgoingLight += diffuseColor.rgb * gFill * clamp(dot(irradiance, vec3(0.3333)) * 1.8, 0.0, 1.0) * dkF;   // el relleno sigue a la luz ambiente (de noche y en interiores oscuros no se enciende solo)\n#endif\n#include <opaque_fragment>')
     .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor *= gRoughMul;')
     .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 #if TQ >= 1
@@ -298,7 +309,7 @@ const LIQ_VERT_BODY = /* glsl */ `vDepth = aDepth; vWPl = (modelMatrix * vec4(po
 const LIQ_FRAG_PARS = /* glsl */ `
 uniform sampler2D uTN; uniform float uTime;
 varying float vDepth; varying vec3 vWPl;
-vec3 gEmis; vec2 gRip; vec2 gRipF; float gSpark;`;
+vec3 gEmis; vec2 gRip; vec2 gRipF; float gSpark; float gGlint;`;
 
 const WATER_MAP = /* glsl */ `
 {
@@ -314,17 +325,18 @@ const WATER_MAP = /* glsl */ `
   gRipF = (vec2(w3.r, w3.a) - 0.5) * 1.2;      // ondas finas: solo ellas dan los destellos del sol (las grandes dejaban manchas de «nube»)
   float depth = clamp(vDepth, 0.0, 1.0);
   float dd = smoothstep(0.0, 1.0, depth * 1.25 + (w1.r - 0.5) * 0.07);   // las charcas son pequeñas: la profundidad llega a ~1 casilla
-  vec3 shallow = vec3(0.05, 0.30, 0.34);
-  vec3 deep = vec3(0.01, 0.10, 0.19);
+  vec3 shallow = vec3(0.12, 0.54, 0.54);     // turquesa claro en el bajío (legible sobre el suelo oscuro de la marisma)
+  vec3 deep = vec3(0.035, 0.26, 0.36);
   vec3 col = mix(shallow, deep, dd);
   col += vec3(0.20, 0.34, 0.32) * smoothstep(0.62, 0.98, w2.g * 0.55 + w3.g * 0.45) * (1.0 - dd) * 0.30;   // cáusticas en el bajío
   float sh = depth + (w3.b - 0.5) * 0.10 + (w1.g - 0.5) * 0.06 + sin(tt * 0.9 + depth * 26.0 + w2.r * 6.0) * 0.012;
   float foam = (1.0 - smoothstep(0.012, 0.075, sh)) * (0.62 + 0.38 * smoothstep(0.30, 0.70, w2.g));
-  foam += (1.0 - smoothstep(0.08, 0.17, sh)) * smoothstep(0.60, 0.84, w3.g) * 0.55;
+  foam += (1.0 - smoothstep(0.08, 0.15, sh)) * smoothstep(0.78, 0.95, w2.g * 0.5 + w3.g * 0.5) * 0.20;   // motas de espuma: pocas y suaves (antes parecían ruido)
   foam = clamp(foam, 0.0, 1.0);
-  diffuseColor.rgb = mix(col * 0.62, vec3(0.80, 0.90, 0.92), foam);   // albedo bajo: bajo el sol HDR un albedo «de color de agua» sale lechoso
+  diffuseColor.rgb = mix(col * 0.85, vec3(0.70, 0.84, 0.86), foam);   // albedo medio: mantiene el tinte turquesa sin volverse lechoso bajo el sol HDR
   diffuseColor.a = max(mix(0.52, 0.94, dd), foam * 0.95);
   gSpark = 1.0 - foam;
+  gGlint = smoothstep(0.62, 0.90, w2.g);   // los destellos solo viven en manchas dispersas y grandes: no hay grano fino
 }`;
 const WATER_NORMAL = /* glsl */ `
 normal = normalize(normal + (viewMatrix * vec4(gRip.x, 0.0, gRip.y, 0.0)).xyz * 0.30);`;
@@ -338,8 +350,8 @@ const WATER_OPAQUE = `
   #if NUM_DIR_LIGHTS > 0
   vec3 H = normalize(directionalLights[0].direction + vd);
   vec3 nS = normalize(normal + (viewMatrix * vec4(gRipF.x, 0.0, gRipF.y, 0.0)).xyz * 0.22);
-  float sp = pow(max(dot(nS, H), 0.0), 1400.0);
-  outgoingLight += directionalLights[0].color * sp * 0.8 * gSpark;     // brillo especular falso (HDR: el bloom lo recoge)
+  float sp = pow(max(dot(nS, H), 0.0), 520.0);
+  outgoingLight += directionalLights[0].color * sp * 0.40 * gSpark * gGlint;     // brillo especular falso (HDR: el bloom lo recoge)
   #endif
 }
 #include <opaque_fragment>`;
@@ -378,13 +390,17 @@ const ACID_MAP = /* glsl */ `
   vec4 a2 = texture2D(uTN, p * 0.27 + vec2(-tt * 0.016, tt * 0.012) + 0.4);
   float depth = clamp(vDepth, 0.0, 1.0);
   float pulse = 0.5 + 0.5 * sin(tt * 1.7 + a1.r * 5.0);
-  float bub = (smoothstep(0.86, 0.93, a2.g) - smoothstep(0.93, 0.99, a2.g)) * max(0.0, sin(tt * 2.2 + a2.r * 40.0));   // burbujas que aparecen y revientan
-  float slick = smoothstep(0.45, 0.85, a1.r);
-  vec3 base = mix(vec3(0.010, 0.030, 0.010), vec3(0.025, 0.080, 0.012), slick);
+  // burbujas: pocas (solo en celdas grandes elegidas) y verdes, que aparecen y revientan
+  float bub = (smoothstep(0.88, 0.94, a2.g) - smoothstep(0.94, 0.99, a2.g)) * smoothstep(0.60, 0.80, a1.g) * max(0.0, sin(tt * 2.2 + a2.r * 40.0));
+  float swirl = smoothstep(0.28, 0.80, a1.r * 0.55 + a2.a * 0.45);          // remolinos grandes: el brillo cambia por zonas
+  float vein = 1.0 - smoothstep(0.0, 0.16, abs(a2.r - 0.5));                // vetas claras que serpentean
+  float core = smoothstep(0.10, 0.85, depth);                              // 0 orilla · 1 centro profundo
+  vec3 base = mix(vec3(0.010, 0.030, 0.010), vec3(0.030, 0.090, 0.014), swirl);
   diffuseColor.rgb = base;
   diffuseColor.a = mix(0.80, 0.95, smoothstep(0.0, 0.6, depth));
-  float rim = 1.0 - smoothstep(0.0, 0.22, depth + (a2.b - 0.5) * 0.1);
-  gEmis = vec3(0.30, 0.90, 0.10) * (0.030 + 0.085 * pulse) * (0.45 + 0.55 * slick) + vec3(0.55, 1.0, 0.25) * (bub * (0.7 + 0.9 * pulse) + rim * 0.30);   // el cuerpo oscuro y tóxico; solo burbujas y orilla brillan (bloom)
+  float rim = 1.0 - smoothstep(0.0, 0.30, depth + (a2.b - 0.5) * 0.12);
+  float body = (0.032 + 0.110 * swirl + 0.060 * vein * swirl) * (0.75 + 0.25 * pulse) * (1.0 - 0.55 * core);   // el centro es más oscuro y profundo que la orilla
+  gEmis = vec3(0.30, 0.90, 0.10) * body + vec3(0.45, 1.0, 0.22) * (rim * (0.07 + 0.13 * swirl) + bub * (0.30 + 0.45 * pulse));
   gRip = (vec2(a1.r, a1.a) - 0.5) * 0.5;
 }`;
 

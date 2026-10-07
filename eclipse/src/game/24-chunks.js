@@ -160,6 +160,9 @@ const TER_THEME_REG = { ruinas: "ciudad", bunker: "complejo", laboratorio: "comp
 const TER_BIO_IDX = {}; BIO_KEYS.forEach((k, n) => (TER_BIO_IDX[k] = n));
 const TER_N8 = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]; // W E N S + NW NE SW SE (orden que espera el shader)
 const TER_VOTES = new Int16Array(64), TER_NBI = new Int32Array(64), TER_CAND = new Int16Array(8), TER_ZERO4 = [0, 0, 0, 0];
+const TER_CORN = [[0, 0], [0, 1], [1, 1], [1, 0]];                 // esquinas de la cara superior (en el orden que espera h())
+const TER_AO = [[-1, -1], [0, -1], [-1, 0], [0, 0]];                  // casillas que rodean una esquina (oclusión suave)
+const TER_SIDES = [[0, -1, 1, 0, 0, 0], [0, 1, 0, 1, 1, 1], [-1, 0, 0, 0, 0, 1], [1, 0, 1, 1, 1, 0]]; // vecino (dx,dz) + esquinas de arranque y fin del lateral
 const TER_HSTEP = 0.2; // desnivel mínimo para que un vecino cuente como subida / caída (y no como «mismo nivel»)
 const TER_LIQUID = (t) => t === F.WATER || t === F.LAVA || t === F.ACID;
 const TER_DEPTH_R = 2; // alcance (casillas) del campo de profundidad de los líquidos
@@ -214,7 +217,12 @@ var Ul = class {
       this.groundMat.customProgramCacheKey = () => "ground-" + this._tq;
     }
     this.cliffMat = this.groundMat;
+    let tb0 = performance.now();
+    this._building = true;
     for (let s = 0; s < e.h; s += Va) for (let a = 0; a < e.w; a += Va) this.buildChunk(a, s);
+    this._building = false;
+    this._lt = null; // la caché de capas solo vale durante la construcción: el mapa puede mutar luego (puertas, secretos, sellos)
+    this.buildMs = performance.now() - tb0;
     (this.buildSecrets(), this.buildProps());
   }
   computeHeights() {
@@ -307,6 +315,7 @@ var Ul = class {
   layerFor(e, t, i, s) {
     let a = this.map;
     if (!s) {
+      if (!this._building) return this.layerCalc(e, t, i, !1); // fuera de la construcción no se cachea: el mapa puede haber cambiado
       let q = this._lt || (this._lt = new Int16Array(a.w * a.h).fill(-2));
       return q[i] !== -2 ? q[i] : (q[i] = this.layerCalc(e, t, i, !1));
     }
@@ -445,6 +454,13 @@ var Ul = class {
       // estado del lote en curso (los lee h() para cada vértice)
       LA = 255, LB = 255, LZ = 0, LW = 0, ED = TER_ZERO4, ev = null, c2 = null,
       d = [0, 1, 2, 0, 2, 3],
+      // buffers de trabajo reutilizados casilla a casilla (antes: arrays y cierres nuevos por casilla → presión de GC al cargar chunks)
+      cPos = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+      cW = new Float32Array(4),
+      cA = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+      cB = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+      sI = [0, 0, 0], sM = [0, 0, 0], sCol = [sI, sM, sM, sI],
+      sEv = [[255, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [255, 0, 0, 0]],
       h = (m, g, b = 0, y = 1, v = 0) => {
         for (let _ = 0; _ < 6; _++) {
           let A = d[_],
@@ -486,6 +502,19 @@ var Ul = class {
       u = (m, g) => (i.inb(m, g) ? s[g * i.w + m] : 2.5),
       mapBio = TER_BIO_IDX[this.bioKey(0)] ?? 0,
       grey = !Et.procTex;
+    // color de cada esquina de la casilla de color (tb, tx, tz) escrito en `out`, sin crear arrays ni cierres por casilla
+    const colorInto = (out, tb, tx, tz, g, m, L) => {
+      for (let n = 0; n < 4; n++) {
+        let S = g + TER_CORN[n][0], k = m + TER_CORN[n][1], w = cW[n], o3 = out[n];
+        if (L >= 0 && grey) {
+          let E = 0.94 + this.noise2(S * 0.3, k * 0.3) * 0.12;
+          o3[0] = o3[1] = o3[2] = w * E;
+        } else {
+          nn.setHex(this.tileColor(tx, tz, tb, S, k));
+          o3[0] = nn.r * w; o3[1] = nn.g * w; o3[2] = nn.b * w;
+        }
+      }
+    };
     for (let m = t; m < Math.min(t + Va, i.h); m++)
       for (let g = e; g < Math.min(e + Va, i.w); g++) {
         let b = m * i.w + g,
@@ -514,56 +543,38 @@ var Ul = class {
           );
           continue;
         }
-        let _ = [
-            [g, m],
-            [g, m + 1],
-            [g + 1, m + 1],
-            [g + 1, m],
-          ],
-          liq = TER_LIQUID(y),
-          W = _.map(([S, k]) => {
-            // oclusión suave de la esquina: cuántas de las 4 casillas que la rodean son altas
-            let w = 1;
-            if (v < 0.5 && !liq) {
-              let E = 0;
-              for (let [H, Z] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) u(S + H, k + Z) > 0.6 && E++;
-              w = 1 - E * 0.13;
-            }
-            return w;
-          }),
-          colorAt = (S, k, w, tb, tx, tz) => {
-            if (L >= 0 && grey) {
-              let E = 0.94 + this.noise2(S * 0.3, k * 0.3) * 0.12;
-              return [w * E, w * E, w * E];
-            }
-            return f(this.tileColor(tx, tz, tb, S, k), w);
-          },
-          A = _.map(([S, k], n) => colorAt(S, k, W[n], b, g, m));
-        if (y === F.ROCK) for (let S of A) ((S[0] *= 1.08), (S[1] *= 1.08), (S[2] *= 1.08));
+        let liq = TER_LIQUID(y);
+        for (let n = 0; n < 4; n++) {
+          // oclusión suave de la esquina: cuántas de las 4 casillas que la rodean son altas
+          let S = g + TER_CORN[n][0], k = m + TER_CORN[n][1], w = 1;
+          if (v < 0.5 && !liq) {
+            let E = 0;
+            for (let q = 0; q < 4; q++) u(S + TER_AO[q][0], k + TER_AO[q][1]) > 0.6 && E++;
+            w = 1 - E * 0.13;
+          }
+          cW[n] = w;
+        }
+        colorInto(cA, b, g, m, g, m, L);
+        if (y === F.ROCK) for (let S of cA) ((S[0] *= 1.08), (S[1] *= 1.08), (S[2] *= 1.08));
         if (arr && L >= 0) {
           let R = this.blendInfo(g, m, L, v);
           ED = R.st;
           if (R.B !== 255) {
             LB = R.B;
             LZ = R.bits * 2;
-            let nj = R.nbi,
-              nx = nj % i.w,
-              nz = (nj / i.w) | 0;
-            c2 = _.map(([S, k], n) => colorAt(S, k, W[n], nj, nx, nz));
+            let nj = R.nbi;
+            colorInto(cB, nj, nj % i.w, (nj / i.w) | 0, g, m, L);
+            c2 = cB;
           }
         }
-        h(
-          _.map(([S, k]) => [S, v, k]),
-          A,
-        );
-        let T = [
-          [0, -1, [g + 1, m], [g, m]],
-          [0, 1, [g, m + 1], [g + 1, m + 1]],
-          [-1, 0, [g, m], [g, m + 1]],
-          [1, 0, [g + 1, m + 1], [g + 1, m]],
-        ];
-        for (let [S, k, w, E] of T) {
-          let H = g + S,
+        for (let n = 0; n < 4; n++) {
+          let P = cPos[n];
+          P[0] = g + TER_CORN[n][0]; P[1] = v; P[2] = m + TER_CORN[n][1];
+        }
+        h(cPos, cA);
+        for (let sd = 0; sd < 4; sd++) {
+          let ST = TER_SIDES[sd], S = ST[0], k = ST[1],
+            H = g + S,
             Z = m + k,
             me = i.inb(H, Z) ? s[Z * i.w + H] : -0.5,
             G = i.inb(H, Z) ? i.ter[Z * i.w + H] : F.VOID;
@@ -576,36 +587,28 @@ var Ul = class {
           let B = G === F.VOID ? -0.01 : me,
             hq = Math.max(1, Math.min(255, Math.round((v - B) * 32))),
             hs = (g * 7 + m * 13 + (S + 2) * 5 + (k + 2) * 11) & 255,
-            I,
-            M;
+            kI = 0.95, kM = 0.55;
           // (t, alto del lateral, hash por casilla): el shader reconstruye base/cresta a partir de ellos
-          ev = [[255, hq, hs, 0], [0, hq, hs, 0], [0, hq, hs, 0], [255, hq, hs, 0]];
+          for (let q = 0; q < 4; q++) { sEv[q][1] = hq; sEv[q][2] = hs; }
+          ev = sEv;
           if (y === F.WALL) {
             nn.setHex(this.tileColor(g, m, b, g, m));
-            I = [nn.r * 0.95, nn.g * 0.95, nn.b * 0.95];
-            M = [nn.r * 0.62, nn.g * 0.62, nn.b * 0.62];
+            kM = 0.62;
           } else if (y === F.ROCK) {
             nn.setHex(this.tileColor(g, m, b, g + S, m + k));
-            I = [nn.r * 0.95, nn.g * 0.95, nn.b * 0.95];
-            M = [nn.r * 0.55, nn.g * 0.55, nn.b * 0.55];
           } else {
             nn.setHex(this.tileColor(g, m, b, g, m));
-            I = [nn.r * 0.7, nn.g * 0.7, nn.b * 0.7];
-            M = [nn.r * 0.4, nn.g * 0.4, nn.b * 0.4];
+            kI = 0.7; kM = 0.4;
           }
-          L2 >= 0 && grey && ((I = [0.95, 0.95, 0.95]), (M = [0.45, 0.45, 0.45]));
-          h(
-            [
-              [w[0], v, w[1]],
-              [w[0], B, w[1]],
-              [E[0], B, E[1]],
-              [E[0], v, E[1]],
-            ],
-            [I, M, M, I],
-            S,
-            0,
-            k,
-          );
+          sI[0] = nn.r * kI; sI[1] = nn.g * kI; sI[2] = nn.b * kI;
+          sM[0] = nn.r * kM; sM[1] = nn.g * kM; sM[2] = nn.b * kM;
+          if (L2 >= 0 && grey) { sI[0] = sI[1] = sI[2] = 0.95; sM[0] = sM[1] = sM[2] = 0.45; }
+          let w0 = g + ST[2], w1 = m + ST[3], e0 = g + ST[4], e1 = m + ST[5];
+          cPos[0][0] = w0; cPos[0][1] = v; cPos[0][2] = w1;
+          cPos[1][0] = w0; cPos[1][1] = B; cPos[1][2] = w1;
+          cPos[2][0] = e0; cPos[2][1] = B; cPos[2][2] = e1;
+          cPos[3][0] = e0; cPos[3][1] = v; cPos[3][2] = e1;
+          h(cPos, sCol, S, 0, k);
         }
         liq && (y === F.WATER ? o.water : y === F.LAVA ? o.lava : o.acid).push(g, m);
       }
