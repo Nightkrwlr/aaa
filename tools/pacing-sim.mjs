@@ -35,7 +35,7 @@ function playOne(classKey, seed) {
     let best = null, bd = 20 * 20;
     for (const e of w.entities) {
       if (e.dead || e.team !== 'enemy' || e.untargetable || e.hidden) continue;
-      if ((e.tier === 'boss' || e.tier === 'miniboss') && ch.level < e.level + 1) continue;   // a sensible player comes back for the boss one level later
+      if ((e.tier === 'boss' || e.tier === 'miniboss') && ch.level < e.level) continue;       // a sensible player does not walk up to a boss under its level
       let d = (e.x - pl.x) ** 2 + (e.z - pl.z) ** 2; if (e.role?.includes('support') || e.role?.includes('summoner')) d *= 0.6;
       if (d < bd && reachable(e) && !(ignore.get(e.uid) > M.t)) { bd = d; best = e; }
     }
@@ -98,7 +98,7 @@ function playOne(classKey, seed) {
       else { /* nothing left to do */ }
       if (step >= 2 && near(obj, 8)) {
         // at the quarry: go hunting the nearest reachable enemy so the stretch is never idle
-        const cands = w.entities.filter((e) => !e.dead && e.team === 'enemy' && !e.untargetable && !e.hidden && !((e.tier === 'boss' || e.tier === 'miniboss') && ch.level < e.level + 1) && (e.x - p.x) ** 2 + (e.z - p.z) ** 2 < 70 * 70).sort((a, b) => (a.x - p.x) ** 2 + (a.z - p.z) ** 2 - ((b.x - p.x) ** 2 + (b.z - p.z) ** 2));
+        const cands = w.entities.filter((e) => !e.dead && e.team === 'enemy' && !e.untargetable && !e.hidden && !((e.tier === 'boss' || e.tier === 'miniboss') && ch.level < e.level) && (e.x - p.x) ** 2 + (e.z - p.z) ** 2 < 70 * 70).sort((a, b) => (a.x - p.x) ** 2 + (a.z - p.z) ** 2 - ((b.x - p.x) ** 2 + (b.z - p.z) ** 2));
         const t = cands.slice(0, 6).find((e) => w.nav.findPath(p.x, p.z, e.x, e.z)); if (t) goto(t.x, t.z);
       }
     }

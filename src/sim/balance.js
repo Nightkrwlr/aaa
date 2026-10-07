@@ -55,15 +55,26 @@ export class Balance {
     return t;
   }
 
+  /**
+   * A gentler opening: the enemies of the first levels hit softer and die faster, fading to full strength by `until`.
+   * (The model assumes a geared player; at level 3 the character wears two pieces, so the game teaches before it punishes.)
+   * @param {number} floor strength at level 1 (0..1)
+   */
+  early(level, floor) {
+    const e = this.d.enemyDamage.early; if (!e) return 1;
+    const t = clamp((level - 1) / Math.max(1, e.until - 1), 0, 1);
+    return floor + (1 - floor) * t * t * (3 - 2 * t);
+  }
+
   enemyHp(level, tier, hpMult = 1, difficulty = 'seeker') {
     const dm = this.d.enemyDamage.difficultyHp[difficulty] ?? 1;
-    return Math.max(8, Math.round(this.expectedDps(level) * this.tier(tier).ttk * hpMult * dm));
+    return Math.max(8, Math.round(this.expectedDps(level) * this.tier(tier).ttk * hpMult * dm * this.early(level, this.d.enemyDamage.early?.hpFloor ?? 1)));
   }
 
   /** absolute damage of an enemy attack expressed as a fraction of the player's expected life */
   enemyHit(level, pctLife, damageMult = 1, difficulty = 'seeker') {
     const dd = this.d.enemyDamage.difficultyDamage[difficulty] ?? 1;
-    return Math.max(1, this.expectedLife(level) * pctLife * damageMult * dd);
+    return Math.max(1, this.expectedLife(level) * pctLife * damageMult * dd * this.early(level, this.d.enemyDamage.early?.dmgFloor ?? 1));
   }
 
   playerBaseLife(level) { return Math.round(this.expectedLife(level) * this.d.player.baseLifeShareOfExpected); }

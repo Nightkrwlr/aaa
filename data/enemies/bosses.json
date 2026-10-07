@@ -13,13 +13,13 @@
    "radius": 1.1,
    "height": 3.6,
    "speed": 4.2,
-   "hpMult": 1.0,
+   "hpMult": 0.85,
    "armor": 1.4,
    "kbResist": 0.85,
    "bossId": "boss.brannoch",
    "ai": {
     "brain": "boss",
-    "aggroRange": 24,
+    "aggroRange": 18,
     "noLeash": true,
     "chargeDist": 14,
     "crashStun": 3.6
@@ -46,8 +46,8 @@
       "id": "p1",
       "at": 1.0,
       "gap": [
-       0.7,
-       1.5
+       0.91,
+       1.95
       ],
       "rotation": [
        {
@@ -76,8 +76,8 @@
       "id": "p2",
       "at": 0.55,
       "gap": [
-       0.5,
-       1.1
+       0.65,
+       1.43
       ],
       "enter": {
        "say": "boss.brannoch.p2",

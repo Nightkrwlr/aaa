@@ -396,7 +396,13 @@ export class TouchControls {
       if (best) label = t('ui.pickup');
     }
     if (label !== this.interactLabel) { this.interactLabel = label; this.interactBtn.textContent = label ?? ''; this.interactBtn.classList.toggle('hidden', !label); }
-    if (label && this.layout) { const L = this.layout, m = L.m; this.interactBtn.style.left = `${Math.round((window.visualViewport?.width ?? innerWidth) / 2)}px`; this.interactBtn.style.bottom = `${Math.round(m.margin + 8 * m.u)}px`; }
+    if (label && this.layout) {
+      const m = this.layout.m, W = window.visualViewport?.width ?? innerWidth, H = window.visualViewport?.height ?? innerHeight, st = this.interactBtn.style;
+      if (H > W) {                  // portrait: the right thumb's fan of buttons covers the bottom centre, so the pill sits above the stick's home on the free side
+        st.left = `${Math.round(W * (this.S.leftHanded ? 0.7 : 0.3))}px`; st.maxWidth = `${Math.round(W * 0.44)}px`;
+        st.bottom = `${Math.round(this.#insets().bottom + m.margin + 2 * m.stick + 44 * m.u)}px`;
+      } else { st.left = `${Math.round(W / 2)}px`; st.maxWidth = ''; st.bottom = `${Math.round(m.margin + 8 * m.u)}px`; }
+    }
   }
 
   // ───────────────────────── aim indicator

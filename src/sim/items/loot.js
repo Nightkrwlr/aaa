@@ -74,9 +74,21 @@ export class LootSystem {
     const def = e.def ? { ...e.def, bossId: e.def.bossId } : null;
     const drops = rollDrops({ registry: this.w.registry, balance: this.w.balance, factory: this.factory, rng: this.w.rng, def, level: e.level, tier: e.tier, ctx });
     this.#pity(drops, e, ctx);
+    this.#potionMeter(drops, e, ctx);
     this.spawn(e.x, e.z, drops, ctx, e);
     // elite modifiers can add extra drop rolls
     if (e.eliteExtraDrops) for (let i = 0; i < e.eliteExtraDrops; i++) this.spawn(e.x, e.z, rollDrops({ registry: this.w.registry, balance: this.w.balance, factory: this.factory, rng: this.w.rng, def: null, level: e.level, tier: 'standard', ctx }), ctx, e);
+  }
+
+  /**
+   * The potion belt refills as you fight: every kill charges a meter (about one charge per nine standard kills, a whole one from
+   * an elite's pack or a boss), so a long fight is sustained by the fight itself and the game is not a countdown to the next rest.
+   */
+  #potionMeter(drops, e, ctx) {
+    const ch = ctx.character, cfg = this.w.balance.d.potions.killCharge;
+    if (!ch || !cfg || ch.potion.charges >= ch.potion.max) return;
+    this.potionMeter = (this.potionMeter ?? 0) + (cfg[e.tier] ?? cfg.standard);
+    if (this.potionMeter >= 1) { this.potionMeter -= 1; if (!drops.some((d) => d.type === 'potionCharge')) drops.push({ type: 'potionCharge' }); }
   }
 
   /**

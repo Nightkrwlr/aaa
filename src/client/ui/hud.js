@@ -237,7 +237,7 @@ export class Hud {
     const el = this.q('.bossbar');
     if (!boss || boss.dead) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
-    el.querySelector('.name').textContent = t(`${boss.id}.name`);
+    el.querySelector('.name').textContent = `${t(`${boss.id}.name`)} · ${t('hud.level', { level: boss.level })}`;
     el.querySelector('.bar i').style.width = `${boss.hp / boss.hpMax * 100}%`;
     const sh = el.querySelector('.shield');
     const bs = boss.bossShield;

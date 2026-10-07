@@ -1078,8 +1078,8 @@
      "id": "sp.qr_1",
      "area": "area.quarry",
      "pos": [
-      42,
-      12
+      44,
+      -26
      ],
      "template": "enc.fortified_line",
      "level": 3
@@ -1088,8 +1088,8 @@
      "id": "sp.qr_2",
      "area": "area.quarry",
      "pos": [
-      58,
-      -8
+      60,
+      -28
      ],
      "template": "enc.bull_run",
      "level": 3
@@ -1098,8 +1098,8 @@
      "id": "sp.qr_3",
      "area": "area.quarry",
      "pos": [
-      36,
-      2
+      40,
+      -42
      ],
      "template": "enc.bell_and_blast",
      "level": 4
@@ -1108,8 +1108,8 @@
      "id": "sp.qr_4",
      "area": "area.quarry",
      "pos": [
-      62,
-      18
+      68,
+      -38
      ],
      "template": "enc.construct_guard",
      "level": 4
@@ -1118,8 +1118,8 @@
      "id": "sp.qr_gear",
      "area": "area.quarry",
      "pos": [
-      48,
-      22
+      54,
+      -40
      ],
      "enemies": [
       {
@@ -1224,8 +1224,8 @@
      "id": "sp.or_elite",
      "area": "area.quarry",
      "pos": [
-      26,
-      -4
+      28,
+      -36
      ],
      "level": 3,
      "enemies": [

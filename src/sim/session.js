@@ -245,6 +245,9 @@ export class GameSession {
     w.resources.init(p, p.cls.resource);
     p.invuln = w.time + 2.5;
     p.cmd.moveTo = null; p.cmd.attackTarget = null;
+    // a death is a reset, not a pursuit: whoever was chasing you goes home, and you are never left without a couple of potions
+    for (const e of w.entities) if (e.team === 'enemy' && !e.dead && e.ai?.target === p) { e.ai.target = null; e.ai.lastSeen = null; w.ai?.set?.(e, 'return'); }
+    const pot = this.character.potion; pot.charges = Math.max(pot.charges, Math.min(pot.max, w.balance.d.potions.respawnMin ?? 0));
     this.dead = false; this.pendingDeath = null;
     this.events.emit('player:respawn', { x: p.x, z: p.z });
     return true;

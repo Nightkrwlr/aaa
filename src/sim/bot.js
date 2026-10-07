@@ -43,9 +43,14 @@ export class Bot {
     }
     // ── pick target
     const tgt = this.pickTarget(p);
-    if (!tgt) { c.attackTarget = null; c.holdPrimary = false; c.moveDir = null; return; }
+    if (!tgt) { c.attackTarget = null; c.holdPrimary = false; c.moveDir = null; this.stallAt = w.time; return; }
     c.aim = { x: tgt.x, z: tgt.z };
     const d = Math.hypot(tgt.x - p.x, tgt.z - p.z);
+    // ── unstick: a person who has hit nothing for a few seconds walks up to the target instead of standing there (kiting casters, blocked lines of fire)
+    const dealt = w.metrics.damageDealt ?? 0;
+    if (this.dealt === undefined || dealt > this.dealt + 0.5 || this.stallAt === undefined) { this.dealt = dealt; this.stallAt = w.time; }
+    if (w.time - this.stallAt > 4 && d > 2.2) { this.approachUntil = w.time + 2; this.stallAt = w.time; }
+    if ((this.approachUntil ?? 0) > w.time) { c.moveDir = null; c.holdPrimary = false; c.attackTarget = null; c.moveTo = { x: tgt.x, z: tgt.z }; return; }
     // ── skills
     if (!p.cast || p.cast.phase === 'recover') {
       for (const slot of this.slots) {
