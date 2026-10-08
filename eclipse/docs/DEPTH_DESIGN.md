@@ -156,6 +156,46 @@ Sustituye los 41 perks aleatorios (`Al`, `Wa`, `pb`, `S.pendingPerks`) por un **
 
 Ficheros: `31b-talents.js` (todo), cirugía en `29-panels.js` (reemplazar `Wa` y el listado de perks del panel Personaje), `15-map.js` (`Pl.recalc` si hace falta), `27-hud.js`/`html/template.head.html` (botón), `25-save.js` (`kp`).
 
+### 3.1 Estado (frente TALENTOS, implementado)
+
+**Hecho** (`src/game/31b-talents.js`, ≈1 200 líneas; datos en `x.cfg.talents`):
+- 6 ramas × 25 nodos = **150 nodos** (raíz + 3 carriles A/B/C de 6 niveles + 3 puentes + 3 claves por rama; 8 nodos conceden `powers`). Claves (18, coste 3 puntos, exigen 15 gastados en la rama, cada una con contrapartida visible): Represalia / Muro viviente / Último aliento; Cañón de cristal / Tormenta de plomo / Ejecutor; Fantasma / Cinética / Doble esprint; Detonación en cadena / Maestro de obras / Intruso; Pirómano / Conductor / Plaga; Cazarrecompensas / Instinto / Carroñero. Además **maestrías** de rama a 8/16/24 puntos gastados (premian especializarse; un build disperso no las alcanza).
+- Estadísticas con los mismos `st` que `Sl` (se suman en `Pl.recalc` por `S.perks[id]` = rango). `tlApply` (1 llamada en `15-map.js`) añade maestrías, `S.talentFx` y el ajuste de Represalia.
+- **Puntos:** 1 por nivel desde L2 (`grantTalentPoint("level", lvl)` desde `Pl.addXp`), 1 por primera muerte de cada jefe principal (evento `bossKilled`, solo jefes de región, no minijefes ni operaciones) y 1 por colección de lore. **API para otros frentes:** `grantTalentPoint(motivo, clave, nombre)` (idempotente por `motivo:clave`; toast + sonido) o simplemente `ee("loreCollection", idColeccion, nombre)`. Total del juego ≈ 59 + 9 + ≈ 8 = 76 puntos; comprar TODO cuesta 521: hay que elegir.
+- **Panel (tecla T / botón TAL. del menú táctil / botón `#hPerk` «▲ TALENTO»):** lienzo con arrastre y zoom (rueda, pellizco, botones +/−/⌖; `pointer events`), nodos bloqueado/disponible/comprado/máximo, ficha al tocar (efectos, contrapartida en rojo, requisitos con ✓/✗ y motivo si no se puede comprar), toque con tolerancia de 26 px en la vista general, contador de puntos, selector «Resaltar» por estadística, fichas de rama con puntos gastados, **Reasignar** (gratis hasta nivel 10; luego `150·nivel` créditos, con confirmación en dos toques). Probado en 915×412, 412×915 y escritorio.
+- **Subir de nivel NO abre modal:** `32-boot.js` ya no llama a `Wa`; sale el toast «Punto de talento disponible» y aparece `#hPerk`. `Wa()` queda como alias de `openTalents()` (compatibilidad con `__dbg.openLevelUp`); `Al` marcado obsoleto, no borrado.
+- **Panel Personaje:** resumen de talentos (puntos libres, puntos por rama, claves y maestrías) con botón al árbol.
+- **Migración (`x.migrations`, `S.talentsV = 1`):** los rangos de perks antiguos se reembolsan como puntos (mínimo `lvl − 1`, o los rangos+pendientes si fueran más), los jefes principales ya derrotados cuentan como primera muerte, `S.perks = {}`, `S.pendingPerks = 0`; mensaje de bienvenida al árbol 2,5 s después de empezar (texto táctil/teclado según el modo). Probada con un guardado real del build base (nivel 8, perks `{dmg:3,hp:2,rate:1,p_phx:1}`, jefe 0 derrotado → 8 puntos).
+- **Nodos con mecánica propia** (envuelven `Pl.die/dyn/hurt`, `hs` y el bus; sin tocar los ficheros antiguos): Último aliento, Cinética, Represalia, Ejecutor, Conductor, Pirómano, Plaga, Fantasma (señuelo + invulnerabilidad), Doble esprint, Instinto (pulso sobre cofres/datos). El **daño elemental** potencia también quemadura y veneno de armas no elementales (tope ×2,5): sin esto la rama Elemental no valía nada con armas de bala.
+- **`S.talentFx`** (siempre presente tras `Pl.recalc`, claves a 0 si no hay inversión; los demás frentes lo LEEN): `gadgetSlots` (int), `gadgetDmg`, `gadgetRadius`, `gadgetCdr` (tope 0,7), `gadgetCostCut` (tope 0,6), `hackSpeed`, `hackTraceCut` (tope 0,75; negativo = más traza), `hackTools` (int), `turretDmg`, `turretTime`, `chainDet` (0/1), `intruder` (0/1), `trophyChance`, `trophyValue`, `chestSense` (m). Fracciones: 0,1 = +10 %. La lista completa y sus unidades está en la cabecera de `31b-talents.js`.
+- Eventos emitidos: `talentChanged`, `save`; toasts de punto, de nodo clave y de reasignación.
+
+**Números medidos** (`node tools/shot.mjs --scenario tools/sim/talents.mjs --size 640x360 --seed 1 --out DIR`, `TRIALS=8`; nivel 30, equipo Raro fijo, 24 enemigos vivos de nivel 32 en horda continua, tope 90 s, 8 pruebas por build; dos ejecuciones independientes, A / B):
+
+| build de 30 puntos (se gastan los 30) | métrica de su tarea | build (A / B) | mejor disperso (A / B) | sin talentos |
+|---|---|---|---|---|
+| Tanque (Muro viviente) | segundos vivo | 81,3 / 81,3 | 57,8 / 39,7 | 22,5 |
+| Cañón de cristal | DPS de pegada vs objetivo duro | 8 343 / 8 343 | 3 700 / 3 700 | 2 569 |
+| Velocista (Fantasma) | segundos vivo (tope 90) | 86,3 / 90,0 | 57,8 / 39,7 | 22,5 |
+| Elemental (Pirómano) | bajas por segundo vivo | 1,55 / 1,62 | 1,10 / 1,19 | 1,00 |
+
+El veredicto «ESPECIALIZARSE GANA» sale en las dos ejecuciones (margen mínimo ×1,36 sobre el mejor disperso). Hay que leer la tabla con su método:
+- **Reproducibilidad.** La sim fija sus propias semillas (RNG del juego `__seedRng` y `Math.random` por prueba, equipo, `Date.now` y `x.time` simulados, hora del día, estado del arma, efectos de sonido mudos con `__silence`), y los dos primeros builds salen idénticos en cada ejecución. Aun así, a partir del tercero el mundo real (el bucle de render corre entre builds) introduce ruido que no se ha podido eliminar: por eso se promedian 8 pruebas y se publican dos ejecuciones. Dentro de una misma ejecución sí se compara con la misma horda y el mismo equipo.
+- El Velocista debe llegar a Fantasma (final del carril A, exige 15 puntos gastados en la rama): el build recorre el carril A entero (esprint más frecuente) y gasta el resto en esquiva. Con Fantasma aguanta casi siempre los 90 s (un build que alcanza el tope no murió; el tope subestima su ventaja).
+- El Elemental se juzga por ritmo de bajas por segundo vivo (como el cañón, el total de bajas premia al que sobrevive más tiempo, no al que mata mejor).
+
+Con los 76 puntos en una sola rama: Bastión ×6,6 vida efectiva, Artillería ×5,3 DPS, Espectro ×1,73 velocidad y ×1,6 vida efectiva. Ningún nodo suelto supera ×1,7 (Muro viviente ×1,70 de vida; Tormenta de plomo ×1,65 de DPS), ninguno da NaN/∞/≤0 y el árbol completo (inalcanzable: 521 puntos) llega a ×12 en DPS y vida efectiva con reducción de daño 50 % (tope del juego 80 %) y esquiva 41 % (tope 50 %): no hay invulnerabilidad ni daño infinito. Nota de método: el cañón se juzga por DPS de pegada porque contra una horda de enemigos débiles el sobreimpacto desperdicia el daño extra (ahí el cañón mata como el disperso y muere antes: es el coste del nodo clave); Cinética sube el daño ×1,3 corriendo y no se mide en horda por la misma razón.
+
+**Pendiente / limitaciones:**
+- Los nodos de Ingeniería (`gadget*`, `hack*`, `turret*`, `chainDet`, `intruder`) solo escriben `S.talentFx`; hasta que los frentes GADGETS/HACKEO lo lean no tienen efecto jugable (la ficha ya lo describe). `trophy*` espera al frente ECONOMÍA.
+- La colección de lore concede su punto cuando el frente de lore emita `ee("loreCollection", id, nombre)`.
+- Balance fino de Ingeniería y Cazador solo se ha verificado estructuralmente (su valor es utilidad, no combate).
+- Los números de la tabla vienen de GL por software con un bot sencillo (repulsión por campo 1/d², esprint si hay enemigos a < 2,6 m); sirven para ordenar builds, no como DPS absoluto.
+
+**Revisión (segunda vuelta) — estado y pendiente:**
+- Hecho: la sim ya compra Fantasma y gasta los 30 puntos (la clave cuelga de `a6`, al final del carril A); semillas propias y 8 pruebas; tabla corregida con números de dos ejecuciones. El enfriamiento de Último aliento se guarda (`S.talentLb`, instante de `S.playTime`) y sobrevive a recargar; si el jugador muere de verdad con el árbol abierto, el panel se cierra; eliminado el residuo `pendingPerks > 0 && setTimeout(Wa)` de `32-boot.js`. Ganchos de prueba nuevos en `32-boot.js`: `__seedRng(n)`, `__silence(bool)`. Escenario `tools/scenarios/talents-revision.mjs` (TODO OK).
+- Pendiente: la sim no es bit a bit determinista a partir del tercer build (ruido del mundo real entre evaluaciones); Ingeniería/Cazador siguen sin efecto jugable hasta que otros frentes lean `S.talentFx`; `25-save.js` conserva `pendingPerks: 0` por compatibilidad (inofensivo).
+
 ## 4. Frente GADGETS (D3): trampas, minas y desplegables
 
 - **Hoy:** no hay nada del jugador. Existen minas enemigas (hazard `mine`, 14-combat ~384), torretas aliadas fijas (`allyturret`), pozos persistentes `Oa`, y `x.allies` sin usar. Granada: `throwGrenade` (15-map ~689), botón `#tbGren`.

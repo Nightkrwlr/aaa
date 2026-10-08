@@ -258,6 +258,7 @@ var fx = Object.fromEntries(Al.map((n) => [n.id, n])),
         let l = fx[r];
         l && l.pow && o && this.powers.add(l.pow);
       }
+      tlApply(e, t, i, this.powers); // árbol de talentos (31b): maestrías, efectos de sistema y nodos clave
       for (let r of ["helmet", "suit", "gloves", "boots", "implant", "module"]) {
         let o = e.eq[r];
         if (o) {
@@ -823,7 +824,7 @@ var fx = Object.fromEntries(Al.map((n) => [n.id, n])),
         s = (1 + (this.st.xpGain || 0)) * (this.buffs.wisdom ? 2 : 1) * i.diff.xp;
       if (!(t.lvl >= mt.maxLevel))
         for (t.xp += e * s; t.xp >= mt.xpToNext(t.lvl) && t.lvl < mt.maxLevel;) {
-          ((t.xp -= mt.xpToNext(t.lvl)), t.lvl++, (t.pendingPerks = (t.pendingPerks || 0) + 1));
+          ((t.xp -= mt.xpToNext(t.lvl)), t.lvl++, grantTalentPoint("level", t.lvl));
           let a = this.maxHp;
           (this.recalc(),
             (this.hp = Math.min(this.maxHp, this.hp + (this.maxHp - a) + this.maxHp * 0.3)),

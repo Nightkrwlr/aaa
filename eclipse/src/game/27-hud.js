@@ -95,7 +95,7 @@ function sb() {
       <div class="bar xpbar" style="margin-top:4px"><i id="hXp"></i></div>
     </div>
     <div id="buffs"></div>
-    <button id="hPerk">\u25B2 MEJORA</button>
+    <button id="hPerk">\u25B2 TALENTO</button>
   </div>
   <div id="hTC"><div id="clock"></div><div id="bossbar"><div class="bn" id="bName"></div><div class="bt" id="bTitle"></div><div class="bar"><i id="bHp"></i><b id="bHpT"></b></div></div></div>
   <div id="hTR"><canvas id="mini" width="176" height="176"></canvas><div id="res"></div></div>
@@ -144,7 +144,7 @@ function sb() {
   <button class="tb" id="tbSwap" data-a="swap">ARMA</button>
   <button class="tb" id="tbMed" data-a="medkit">CURA<i id="tbMedN">0</i></button>
   <button class="tb sm" id="tbStim" data-a="stim">ESTIM<i id="tbStimN">0</i></button>
-  <div id="tmenu"><button data-a="inv">INV</button><button data-a="map">MAPA</button><button data-a="quests">MIS.</button><button data-a="archive">ARCH.</button><button data-a="flash">LUZ</button><button data-a="pause">\u275A\u275A</button></div>`),
+  <div id="tmenu"><button data-a="inv">INV</button><button data-a="map">MAPA</button><button data-a="quests">MIS.</button><button data-a="archive">ARCH.</button><button data-a="talents" id="tbTal">TAL.</button><button data-a="flash">LUZ</button><button data-a="pause">\u275A\u275A</button></div>`),
     ["#w0", "#w1"].forEach((t) =>
       Tn(t).addEventListener(
         "touchstart",
@@ -242,7 +242,7 @@ function ab(n) {
     ((Op = 0.1), Bi("#hLvl", e.lvl));
     {
       let g = Tn("#hPerk"),
-        b = e.pendingPerks > 0 && !x.uiOpen;
+        b = e.talentPts > 0 && !x.uiOpen;
       g._s !== b && ((g._s = b), (g.style.display = b ? "block" : "none"));
     }
     (Bi("#hName", e.name), Bi("#hRank", `${vo(e.lvl)} \xB7 ${De[x.regionId]?.n || ""}`));

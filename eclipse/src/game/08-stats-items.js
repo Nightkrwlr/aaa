@@ -1306,6 +1306,7 @@ function gf(n = 0, e = 1) {
 
 
 // ════════ [352] VariableDeclaration Al (4526 bytes) ════════
+// OBSOLETO: los perks aleatorios los sustituye el árbol de talentos (31b-talents.js). Se conserva por si hay referencias.
 var Al = [
   { id: "dmg", n: "Munici\xF3n de punta hueca", d: "+8% de da\xF1o", st: { dmg: 0.08 }, max: 15, r: 0, ic: "\u2738" },
   {
