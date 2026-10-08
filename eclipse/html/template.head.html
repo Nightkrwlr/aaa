@@ -388,6 +388,8 @@ body.touch .trk { border-right: 0; border-left: 2px solid var(--amber); padding:
 body.touch .trk:nth-child(n+3) { display: none; }
 body.touch .trk .tt { font-size: 11.5px; } body.touch .trk .ob { font-size: 11px; }
 body.touch #tmenu { flex-direction: column; right: calc(10px + env(safe-area-inset-right)); top: calc(150px + env(safe-area-inset-top)); }
+/* vertical bajo (≤ 700 px de alto): con ARCH. el menú lateral son 7 botones y el último chocaba con el de gadgets; se compacta */
+@media (orientation: portrait) and (max-height: 700px) { body.touch #tmenu { gap: 3px; } body.touch #tmenu button { height: 30px; } }
 /* barra de arma compacta: solo el arma activa, abajo a la izquierda; tocarla cambia de arma */
 body.touch #hB { left: calc(10px + env(safe-area-inset-left)); bottom: calc(10px + env(safe-area-inset-bottom)); transform: none; }
 body.touch #hB .cons { display: none; }
