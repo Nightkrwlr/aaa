@@ -441,6 +441,11 @@ window.__spawn = (n, e, t, i, s) => In(n, e, t, i, s || {});
 window.__seedRng = (n) => {
   Lt = pi(n >>> 0);
 };
+// prueba: silencia los efectos de sonido (su temporizador usa el reloj de audio real y consume Math.random de forma no determinista)
+window.__silence = (on) => {
+  if (on) ae.__play = ae.__play || ae.play;
+  ae.play = on ? () => {} : ae.__play || ae.play;
+};
 
 
 // ════════ [751] ExpressionStatement ExpressionStatement (215 bytes) ════════

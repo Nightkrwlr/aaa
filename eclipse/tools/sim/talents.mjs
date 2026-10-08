@@ -2,7 +2,7 @@
 // Se ejecuta con el arnés de capturas (arranca la build real y evalúa en la página):
 //   node tools/build.mjs && node tools/shot.mjs --scenario tools/sim/talents.mjs --size 640x360 --out /ruta [--seed 1]
 // Variables de entorno: TRIALS (repeticiones por build, 4), SECS (duración, 90), LVL (nivel del jugador, 30), ELVL (nivel de los enemigos, = LVL+2), HORDE (enemigos vivos a la vez, 24), ONLY (regex: solo los builds cuyo nombre case).
-// Imprime tablas; con --seed igual el resultado es reproducible salvo el ruido del RNG interno del juego (por eso se promedian TRIALS pruebas).
+// Imprime tablas. Es determinista: el equipo y cada prueba reinician el RNG del juego (window.__seedRng) y Math.random con semillas fijas, así que dos ejecuciones dan los mismos números aunque corran en paralelo. La supervivencia tiene tope SECS (90): un build que lo alcanza no murió.
 export default async function (api) {
   const { boot, newGame, ev } = api;
   const TRIALS = +(process.env.TRIALS || 4), SECS = +(process.env.SECS || 90), LVL = +(process.env.LVL || 30), ELVL = +(process.env.ELVL || LVL + 2), HORDE = +(process.env.HORDE || 24);
@@ -125,12 +125,16 @@ export default async function (api) {
   const PTS = 30;
   console.log(`\n== BUILDS DE ${PTS} PUNTOS vs HORDA CONTINUA (jugador nivel ${LVL}, ${HORDE} enemigos vivos de nivel ${ELVL}, ${SECS} s, ${TRIALS} pruebas, equipo Raro) ==`);
   const rows = [];
+  // calentamiento: carga la región donde se lucha y deja que el bucle real asiente el mundo antes de la primera prueba
+  await api.teleport(292, 292); await api.wait(40);
   for (const [name, prio] of Object.entries(builds)) {
-    const r = await ev(([prio, PTS, LVL, ELVL, HORDE, SECS, TRIALS]) => {
+    const r = await ev(([prio, PTS, LVL, ELVL, HORDE, SECS, TRIALS, TRACE]) => {
       const G = window.__G, S = G.S, p = G.player, T = window.__talents, C = T.cfg();
       // equipo fijo (se crea una vez) para que solo cambien los talentos
       if (!window.__simGear) {
-        window.__simGear = T.simGear(LVL, 2);
+        window.__seedRng(0x51ed270b); // el equipo también sale de una semilla fija
+        const ro = Math.random; let q = 0x51ed270b; Math.random = () => { q = (Math.imul(q, 1664525) + 1013904223) >>> 0; return q / 4294967296; };
+        try { window.__simGear = T.simGear(LVL, 2); } finally { Math.random = ro; }
       }
       p.addXp = () => {};
       Object.assign(S.eq, window.__simGear); S.lvl = LVL;
@@ -144,10 +148,11 @@ export default async function (api) {
       p.recalc();
       const keys = C.nodes.filter((n) => n.key && S.perks[n.id]).map((n) => n.n);
       const stat = { hp: Math.round(p.maxHp + p.maxShield), dmgRed: +p.dmgRed.toFixed(2), dodge: +p.dodge.toFixed(2), spd: +p.speed.toFixed(2), dmg: +(p.ws[0].dmgBase).toFixed(1), rate: +p.ws[0].rate.toFixed(2), multi: p.ws[0].multi, dpsA: p.ws[0].dmgBase * p.ws[0].rate * (1 + p.ws[0].multi * 0.6) * (1 + p.ws[0].critC * (p.ws[0].critM - 1)) };
-      const out = { left, keys, stat, trials: [] };
+      const out = { left, keys, stat, trials: [], trace: [] };
       const cycle = ['rastrero', 'rastrero', 'escupidor', 'rastrero', 'bruto', 'rastrero', 'escupidor', 'acorazado'];
       const key = (c, on) => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { code: c }));
-      const rndOrig = Math.random;
+      const rndOrig = Math.random, dateOrig = Date.now;
+      window.__silence(true);
       for (let t = 0; t < TRIALS; t++) {
         // reinicio de la prueba; semilla propia por prueba (RNG del juego y Math.random) para que todos los builds vean la misma horda
         { let q = (0x9e3779b1 * (t + 1)) >>> 0; window.__seedRng(q); Math.random = () => { q = (Math.imul(q, 1664525) + 1013904223) >>> 0; return q / 4294967296; }; }
@@ -155,6 +160,11 @@ export default async function (api) {
         for (const k of ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space']) key(k, false);
         G.uiOpen = null; G.paused = false; { const pn = document.querySelector('#panel'); pn && (pn.hidden = true, pn.innerHTML = ''); }
         G.uiBlockDamage = false; p.dead = false; p.inv = 0; p.buffs = {}; p.burnT = p.poisonT = p.slowT = 0;
+        // reloj propio (x.time y Date.now) y estado del arma a cero: la prueba no depende de cuánto rato llevaba corriendo el bucle real
+        window.__simClock = (window.__simClock || 100000) + 1000; G.time = window.__simClock; let fakeNow = 1.7e12 + window.__simClock * 1000; Date.now = () => fakeNow;
+        S.time = 0.35; // hora del día fija (el reloj del mundo avanza con el bucle real y cambia la iluminación y los eventos)
+        if (G.weather) try { G.weather.t = 0; } catch (e) {}
+        p.ammo = [void 0, void 0]; p.reloadT = [0, 0]; p.fireT = 0; p.idleT = 0; p.comboT = 0; p.combo = 0; G.hazards.length = 0; G.projs.length = 0;
         p.x = 292; p.z = 292; p.vx = p.vz = 0; p.hp = p.maxHp; p.shield = p.maxShield; p.phoenixCd = 0; p.dashCd = 0; p.dashT = 0; p.deadT = 0;
         const all = [];
         let spawned = 0;
@@ -185,7 +195,8 @@ export default async function (api) {
             held = want;
           }
           if (G.uiOpen) { G.uiOpen = null; G.paused = false; const pn = document.querySelector('#panel'); pn && (pn.hidden = true, pn.innerHTML = ''); } // el panel de muerte (setTimeout) pausaría la simulación
-          window.__step(1, dt);
+          fakeNow += dt * 1000; window.__step(1, dt);
+          if (TRACE && t === 0 && s % 15 === 14) out.trace.push(s + ':' + Math.round(p.hp) + ':' + p.x.toFixed(2) + ',' + p.z.toFixed(2) + ':' + all.filter((e) => !e.dead).length + ':' + all.slice(0, 5).map((e) => e.x.toFixed(2)).join(','));
           const cur = p.hp + p.shield; if (cur < lastHp) dmgTaken += lastHp - cur; lastHp = cur;
           if (p.dead || p.hp <= 0) { tEnd = s * dt; break; }
         }
@@ -195,10 +206,11 @@ export default async function (api) {
         p.dead = false;
         for (const k of held) key(k, false);
       }
-      Math.random = rndOrig;
+      Math.random = rndOrig; Date.now = dateOrig; window.__silence(false);
       for (const e of G.enemies) e.remove(); G.enemies.length = 0;
       return out;
-    }, [prio, PTS, LVL, ELVL, HORDE, SECS, TRIALS]);
+    }, [prio, PTS, LVL, ELVL, HORDE, SECS, TRIALS, !!process.env.TRACE]);
+    if (process.env.TRACE) console.log('TRACE ' + name + '\n  ' + r.trace.join('\n  '));
     const avg = (k) => r.trials.reduce((a, t) => a + (+t[k] || 0), 0) / r.trials.length;
     const row = { name, kills: avg('kills'), dps: avg('dps'), surv: avg('surv'), died: r.trials.filter((t) => t.died).length, hpPct: avg('hpPct'), taken: avg('taken'), keys: r.keys.join('+') || '—', left: r.left, stat: r.stat };
     rows.push(row);
@@ -206,10 +218,10 @@ export default async function (api) {
     console.log(`${''.padEnd(30)} stats: vida+escudo ${r.stat.hp}, reducción ${r.stat.dmgRed}, esquiva ${r.stat.dodge}, vel ${r.stat.spd}, daño/disparo ${r.stat.dmg}, cadencia ${r.stat.rate}, extra proyectiles ${r.stat.multi}, DPS de pegada ${r.stat.dpsA.toFixed(0)}`);
   }
   // veredicto: cada build especializado se juzga en SU tarea y debe superar al mejor build disperso en esa misma métrica
-  //   tanque → segundos vivo y daño absorbido; cañón → ritmo de bajas por segundo vivo (DPS efectivo); velocista → segundos vivo; elemental → bajas totales
+  //   tanque → segundos vivo y daño absorbido; cañón → ritmo de bajas por segundo vivo (DPS efectivo); velocista → segundos vivo; elemental → bajas por segundo vivo
   const rate = (r) => r.kills / Math.max(1, r.surv);
   const disp = rows.filter((r) => r.name.startsWith('disperso')), base = rows[0];
-  const task = { tanque: ['segundos vivo', (r) => r.surv], 'cañón': ['DPS de pegada vs objetivo duro', (r) => r.stat.dpsA], velocista: ['segundos vivo', (r) => r.surv], elemental: ['bajas totales', (r) => r.kills] };
+  const task = { tanque: ['segundos vivo', (r) => r.surv], 'cañón': ['DPS de pegada vs objetivo duro', (r) => r.stat.dpsA], velocista: ['segundos vivo', (r) => r.surv], elemental: ['bajas por segundo vivo', (r) => r.kills / Math.max(1, r.surv)] };
   console.log('\n== VEREDICTO ==');
   let allWin = true;
   for (const r of rows.filter((q) => !q.name.startsWith('disperso') && q !== base)) {
