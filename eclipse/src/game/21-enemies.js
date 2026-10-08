@@ -367,6 +367,7 @@ var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
       let r = 0;
       if (
         (s.frozen > 0 ||
+          gadgetEnemyTick(this, e, a) || // gadgets del jugador: aturdidos, detección de minas, señuelo (31c-gadgets.js)
           (this.boss
             ? (r = this.updateBoss(e, a))
             : this.siege && (this.aggroT -= e) <= 0 && a > 4.5 && !this.static && this.siegeTarget()
@@ -537,7 +538,7 @@ var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
       }
       this.sideT > 0 && ((this.sideT -= s), (o += Math.cos(this.sideA)), (l += Math.sin(this.sideA)));
       let d = Math.hypot(o, l) || 1,
-        h = i * (this.st.slow > 0 ? 0.5 : 1),
+        h = i * (this.st.slow > 0 ? (this.slowMul ?? 0.5) : 1),
         f = 1 - Math.exp(-s * 10);
       ((this.vx += ((o / d) * h - this.vx) * f), (this.vz += ((l / d) * h - this.vz) * f));
       let u = this.x,

@@ -813,11 +813,13 @@ function fs(n = xb) {
       ["lvl", "Mejorar"],
       ["mods", "M\xF3dulos"],
       ["craft", "Fabricar"],
+      ["gadgets", "Gadgets"],
     ]
       .map(([u, p]) => `<button class="tab ${n === u ? "on" : ""}" data-t="${u}">${p}</button>`)
       .join("")}</div>`,
     s = "";
-  if (n === "craft")
+  if (n === "gadgets") s = gadgetsPanelHtml(); // 31c-gadgets.js
+  else if (n === "craft")
     s =
       [
         ["grenade", { scrap: 4, credits: 20 }],
@@ -852,10 +854,11 @@ function fs(n = xb) {
         '<button class="btn pri" style="margin-top:8px" id="wbMods">\u2B22 Gestionar m\xF3dulos de esta pieza</button>';
   else s = '<div class="card muted">Elige un arma o pieza de tu arsenal.</div>';
   let a =
-    n === "craft"
-      ? oh()
+    n === "craft" || n === "gadgets"
+      ? oh() + (n === "gadgets" ? gadgetsPanelInfo() : "")
       : `<p class="muted" style="margin:0 0 8px;font-size:13px">${n === "lvl" ? "Toca una pieza para subirle el nivel o ascender su rango." : "Toca una pieza para cambiar sus m\xF3dulos."}</p>${oh()}<div class="inv">${t.map((u, p) => Vp(u, Dn === u, p)).join("")}</div>`;
   n !== "craft" &&
+    n !== "gadgets" &&
     (s = `<div class="invdet ${Dn ? "open" : ""} wbdet">${Dn ? '<button class="x invdx" id="wbX" aria-label="Cerrar detalle">\u2715</button>' : ""}${s}</div>`);
   let r = (x.uiOpen === "workbench" && document.querySelector("#panel .wbody")?.scrollTop) || 0;
   Ze.open(
@@ -873,7 +876,8 @@ function fs(n = xb) {
       ((Dn = null), fs());
     });
   let l = _t("#panel");
-  (l.querySelectorAll("[data-t]").forEach((u) => u.addEventListener("click", () => fs(u.dataset.t))),
+  (n === "gadgets" && gadgetsPanelBind(l, () => fs("gadgets")),
+    l.querySelectorAll("[data-t]").forEach((u) => u.addEventListener("click", () => fs(u.dataset.t))),
     l.querySelectorAll(".cell").forEach((u) =>
       u.addEventListener("click", () => {
         ((Dn = t[+u.dataset.i]), fs());

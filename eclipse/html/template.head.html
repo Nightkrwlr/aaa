@@ -344,6 +344,17 @@ textarea { width: 100%; min-height: 70px; background: #0d1316; color: var(--text
 #tbSwap { right: calc(100px + env(safe-area-inset-right)); bottom: calc(118px + env(safe-area-inset-bottom)); }
 #tbMed { right: calc(178px + env(safe-area-inset-right)); bottom: calc(22px + env(safe-area-inset-bottom)); }
 #tbStim { right: calc(186px + env(safe-area-inset-right)); bottom: calc(98px + env(safe-area-inset-bottom)); }
+/* gadgets (D3): botón táctil sobre el esprint, casilla de escritorio junto a los consumibles */
+.tb.gd { touch-action: none; -webkit-user-select: none; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; right: calc(16px + env(safe-area-inset-right)); bottom: calc(182px + env(safe-area-inset-bottom)); }
+.tb.gd .gi { display: block; line-height: 0; }
+.tb.gd .gl { font: 700 8.5px var(--f-disp); letter-spacing: .04em; color: var(--muted); margin-top: 1px; }
+.tb.gd.empty { opacity: .55; }
+.tb.gd::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; pointer-events: none; opacity: var(--po, 0); transition: opacity .1s; background: conic-gradient(var(--amber) calc(var(--p, 0) * 1%), transparent 0); -webkit-mask: radial-gradient(circle, transparent 60%, #000 62%); mask: radial-gradient(circle, transparent 60%, #000 62%); }
+#gdgChip .gi { line-height: 0; margin-top: -2px; }
+#gdgChip .gn { position: absolute; top: 2px; right: 4px; font: 700 12px var(--f-disp); color: var(--amber); }
+#gdgChip small { font-size: 9.5px; }
+#gdgChip.empty { opacity: .55; }
+body.touch #gdgChip { display: none; }
 #tmenu { position: absolute; pointer-events: auto; display: flex; gap: 5px; }
 #tmenu button { width: 42px; height: 36px; background: rgba(10,14,16,0.72); border: 1px solid var(--line2); color: var(--text); font: 700 10.5px var(--f-disp); padding: 0; -webkit-tap-highlight-color: transparent; }
 #tmenu button:active { background: rgba(255,179,64,0.28); }
@@ -401,6 +412,7 @@ body.touch #banner { top: 18%; } body.touch #banner .b1 { font-size: clamp(22px,
   body.touch .trk:nth-child(n+2) { display: none; }
   .tb { width: 54px; height: 54px; } .tb.big { width: 66px; height: 66px; } .tb.sm { width: 44px; height: 44px; }
   #tbDash { bottom: calc(80px + env(safe-area-inset-bottom)); } #tbGren { bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .tb.gd { right: calc(22px + env(safe-area-inset-right)); bottom: calc(152px + env(safe-area-inset-bottom)); }
   #tbUse { right: calc(88px + env(safe-area-inset-right)); bottom: calc(28px + env(safe-area-inset-bottom)); }
   #tbSwap { right: calc(88px + env(safe-area-inset-right)); bottom: calc(96px + env(safe-area-inset-bottom)); }
   #tbMed { right: calc(156px + env(safe-area-inset-right)); bottom: calc(14px + env(safe-area-inset-bottom)); }
@@ -408,6 +420,20 @@ body.touch #banner { top: 18%; } body.touch #banner .b1 { font-size: clamp(22px,
   body.touch #prompt { top: 64%; }
   body.touch #toasts { top: 24%; }
 }
+
+/* Taller · pestaña Gadgets */
+.gdgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.gdcard { border-left: 3px solid var(--gc, var(--line2)); }
+.gdcard.locked { opacity: .82; }
+.gdh { display: flex; align-items: center; gap: 8px; }
+.gdi { display: grid; place-items: center; width: 34px; height: 34px; background: rgba(0,0,0,.35); border: 1px solid var(--line2); flex: none; }
+.gdn { font: 700 18px var(--f-disp); color: var(--amber); } .gdn small { font-size: 11px; color: var(--muted); } .gdn.zero { color: var(--bad, #ff6a6a); }
+.gdst { font: 600 11.5px var(--f-disp); color: var(--cyan, #40e0ff); letter-spacing: .02em; margin-bottom: 4px; }
+/* costes como fichas en línea (sin barras): la tarjeta mide ~1/3 y caben más en una pantalla de móvil apaisado */
+.gdcard .cost { display: flex; flex-wrap: wrap; gap: 4px; }
+.gdcard .need { display: contents; }
+.gdcard .need .ln { grid-template-columns: auto auto auto; column-gap: 5px; padding: 3px 7px; font-size: 12px; }
+.gdcard .need .ln .bar, .gdcard .need .ln .miss { display: none; }
 
 /* ---------- Ventanas en pantallas pequeñas: a pantalla completa */
 @media (max-width: 760px), (max-height: 520px) {
