@@ -1,7 +1,7 @@
 # Frente LORE (D5): libros, chips cifrados y grabaciones con voz
 
 Fragmento: `src/game/31d-lore.js` (motor, UI, voz) · contenido y funciones puras: `src/engine/lore-data.js` (importado por `src/game/_prelude.lore.js`).
-Pruebas: `tools/scenarios/lore-demo.mjs`, `lore-ui.mjs`, `lore-migrate.mjs`, `lore-mapa.mjs`, `lore-perf.mjs` y `tools/sim/lore.mjs`.
+Pruebas: `tools/scenarios/lore-demo.mjs`, `lore-ui.mjs`, `lore-migrate.mjs`, `lore-mapa.mjs`, `lore-perf.mjs`, `lore-ops.mjs` (las 13 combinaciones región/tema de operación), `lore-hackeo-integracion.mjs` (Archivo + HACKEO reales, ratón o toques) y `tools/sim/lore.mjs`.
 
 ## Estado
 
@@ -65,14 +65,13 @@ humo 13/13 con la build minificada · `tools/sim/lore.mjs` todas. Regresión de 
 - **La voz no se ha escuchado.** El entorno no tiene audio: la síntesis se valida con métricas de señal (finita, nivel, ritmo silábico, sin saturación) y con los `.wav` que escribe la simulación, no de oído. Es una voz de
   «radio de campaña» que dibuja el ritmo del castellano, no habla inteligible: el sentido lo dan los subtítulos. La opción «voz del sistema» (`speechSynthesis`, solo voces locales en español) no se ha podido probar
   en este entorno: el código la ofrece solo si el navegador trae una voz local española y, si no, usa la voz de radio.
-- **`x.hackApi` real:** el descifrado llama a `x.hackApi.run({kind:'chip', …}, cb)` si existe, pero esta rama no contiene el frente de HACKEO: solo se ha probado el minijuego de reserva del juego base (`db`) y `decrypt()` llamado a mano.
-  El formato de `cb` (`true|false` o `{ok, q|quality}`) es lo que entiende el Archivo; si HACKEO devuelve otra cosa habrá que ajustar `loreDecryptUi`.
+- **`x.hackApi` real:** ya probado con el frente HACKEO fusionado (ver «Revisión integrada» más abajo). El Archivo entiende `cb(res)` con `res = {ok, q, abortado?, …}`; con la build sin HACKEO sigue el minijuego de reserva del juego base (`db`).
 - **Jefes:** los expedientes se prueban emitiendo `bossKilled` (el evento real que emite el juego), no abatiendo jefes de verdad.
 - **Instinto:** probado el dibujo de puntos en el minimapa con un contexto 2D falso; no se ha visto el pulso de anillos en el mundo con el talento comprado de verdad.
 - **Dispositivos:** solo Pixel 7 (apaisado y vertical) y escritorio; no se han probado iPhone ni tableta, ni toques reales sobre el lector con inercia.
-- **Operaciones:** un nodo por mapa generado; probadas la operación de búnker del Yermo y la mazmorra de alcantarilla de la Ciudad; las otras 7 combinaciones región/tema solo pasan la validación estática de `loreValidate` (no se han recorrido).
-- **Problemas ajenos encontrados** (no tocados): `tools/scenarios/talents-ui.mjs` no compila en el commit base (un comentario `//` se comió el final de una línea de la comprobación 1; se probó una copia con ese espacio arreglado);
-  `gadgets-demo` falla «la explosión no daña al jugador» también con la build base (`enemies: 3` tras 70 pasos: spawn del mundo, no daño).
+- **Operaciones:** las 13 combinaciones región/tema se recorren de verdad con `lore-ops.mjs` (una semilla de mapa por combinación; nodo único, dentro del mapa, libre, alcanzable por BFS desde la entrada, recogible y sin restos al volver).
+- **Problemas ajenos encontrados** (hallados en la revisión): `tools/scenarios/talents-ui.mjs` no compilaba en el commit base (un comentario `//` se comía el final de la línea 19); arreglado en la revisión integrada.
+  `gadgets-demo` falla «la explosión no daña al jugador» con la build base (`enemies: 3` tras 70 pasos: spawn del mundo, no daño): ver el resultado de la revisión.
 
 ## Contratos (API pública para otros frentes)
 
@@ -101,7 +100,9 @@ Una clave nueva (`hintFor('mi.puzle', {kind:'runes', len:5})`) también da un va
 **Eventos consumidos:** `bossKilled` (expediente del jefe), `uiClosed`, `playerDied`, `toMenu`, `respawn`.
 
 **HACKEO:** un objetivo de tipo chip puede llamar a `x.loreApi.decrypt(id, calidad)` (con `next('chip', reg)` + `grant` para dar uno nuevo). El Archivo usa `x.hackApi.run(spec, cb)` con
-`spec = {kind:'chip', id, name, tier, diff, lore:true}` y entiende `cb(true|false)` o `cb({ok, q|quality})`. **PUZLES:** `hintFor`/`vocab`; las recompensas de puzle pueden pedir pistas de lore.
+`spec = {kind:'chip', id, name, tier, diff, lore:true}`. `cb(res)` llega **después** de cerrar el panel de hackeo y el Archivo lo interpreta así: `res.abortado` (✕, Esc, «Desconectar» o abrirse otro panel encima) no cuenta como intento
+ni cambia la legibilidad; `res.ok === true` (o `cb(true)`) descifra al 100 %; un fallo anota un intento y deja el chip `max(res.q, legibilidad + 15 %)` legible (tope 85 %). Si `run()` devuelve `null` (sin partida o sin estado de hackeo) cae al minijuego de reserva.
+El Archivo solo se reabre si no hay otro panel encima (muerte, pausa) y la partida sigue en curso. **PUZLES:** `hintFor`/`vocab`; las recompensas de puzle pueden pedir pistas de lore.
 **GADGETS:** las colecciones piden planos con `gadgetPlanDrop('lore1'…'lore4')` (se añaden `x.cfg.gadgets.plan.loreN = {p:1, tier:N}` en tiempo de carga) y emiten `'gadgetPlanDrop'`.
 **ECONOMÍA:** `ecoGrantXp`, `ecoChestLoot(…, {src:'secret'})` y `ecoHitosHtml()` si existen.
 
