@@ -2,12 +2,23 @@
 // uso:  node tools/shot.mjs --scenario tools/sim/gadgets.mjs --out DIR --size 640x360 --quality low
 // (shot.mjs arranca la build y entrega `api`; todo se mide con window.__step, sin dibujar: los números no dependen de la GPU)
 // Variables: TRIALS (por defecto 3), SECS (segundos simulados por prueba, 22), ONLY=proximity,cluster (subconjunto), SKIP_PERF=1
-export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
+export default async function (api) {
+  const { boot, newGame, ev, perf, wait, god, region } = api;
   const TRIALS = Number(process.env.TRIALS || 3), SECS = Number(process.env.SECS || 22);
   const only = process.env.ONLY ? process.env.ONLY.split(',') : null;
   await boot(); await newGame(); await god();
   await region('desierto'); // fuera del Bastión: allí las torretas aliadas dispararían a la manada
   await ev(() => { window.__G.player.addXp = () => {}; });
+  // busca un carril despejado (22 m al este × 8 m de ancho) en espiral alrededor de la región y coloca allí al jugador
+  const lane = await ev(() => {
+    const G = window.__G, m = G.map, p = G.player, cx = p.x, cz = p.z;
+    const free = (x, z) => { for (let dx = -2; dx <= 22; dx += 1.5) for (let dz = -4; dz <= 4; dz += 2) if (m.circleHits(x + dx, z + dz, 0.7)) return false; return true; };
+    for (let r = 0; r <= 90; r += 6) for (let a = 0; a < 6.283; a += r ? 6 / r : 7) { const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r; if (free(x, z)) return { x, z, r }; }
+    return null;
+  });
+  if (!lane) throw new Error('sin carril despejado en la región de pruebas');
+  await api.teleport(lane.x, lane.z);
+  await ev(() => { const p = window.__G.player; window.__lane = { x: p.x, z: p.z }; });
 
   // ─── 1. combate: cada gadget contra la misma manada ───────────────────────────────────────────────
   const rows = [];
@@ -20,7 +31,7 @@ export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
         const G = window.__G, gd = window.__gadgets, p = G.player, S = G.S;
         // escenario limpio: nada en el suelo, jugador quieto, arma muda (así solo cuenta el gadget)
         for (const e of G.enemies) e.remove?.(); G.enemies.length = 0; G.projs.length = 0; gd.clear();
-        p.hp = p.maxHp; p.x = p.x; p.vx = 0; p.vz = 0; p.face = Math.PI / 2;
+        p.hp = p.maxHp; p.x = window.__lane.x; p.z = window.__lane.z; p.vx = 0; p.vz = 0; p.face = Math.PI / 2;
         p.reloadT[S.activeW] = 1e9; p.ammo[S.activeW] = 0; p.powers && p.powers.clear && p.powers.clear(); p.droneT = 1e9;
         gd.state.stats.triggered = 0; gd.state.stats.blocked = 0; gd.state.stats.provoked = 0; gd.seed(0x1234 + tr * 7919);
         S.gadgets.inv.proximity = 12; // solo para que el HUD no proteste
@@ -67,6 +78,31 @@ export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
   console.log('gadget        daño medio  % vida manada  bajas  esquivan  activaciones  proyectiles frenados / enemigos provocados');
   for (const r of rows) console.log(`${r.label.padEnd(13)} ${f1(r.dmg).padStart(9)}  ${(f1(r.pct * 100) + ' %').padStart(13)}  ${f1(r.kills).padStart(5)}  ${f1(r.seen).padStart(8)}  ${f1(r.trig).padStart(12)}  ${r.blocked || r.provoked ? f1(r.blocked) + ' / ' + f1(r.provoked) : ''}`);
   console.log(`(daño de referencia G = ${f1(rows[0].G)} = granada de fragmentación del jugador; manada ${process.env.PACK === 'mech' ? 'mecánica de 6' : 'mixta de 16'})`);
+
+  // ─── 1b. detección: quién rodea o desarma una mina (un enemigo suelto que va hacia el jugador por encima de una mina) ─────────
+  if ((!only || process.env.DETECT) && !process.env.SKIP_DETECT) {
+    const kinds = ['rastrero', 'mantis', 'corredor', 'cazador', 'rabioso', 'escudero', 'mech', 'dron'];
+    console.log('\n=== 1b. Detección de minas (20 minas de proximidad por tipo, un enemigo a la vez; 14 s) ===');
+    console.log('enemigo       estalla  rodeada (sigue armada)  desarmada  mecánica');
+    for (const kind of kinds) {
+      const r = await ev(({ kind }) => {
+        const G = window.__G, gd = window.__gadgets, p = G.player, S = G.S, out = { boom: 0, avoided: 0, disarmed: 0, N: 20 };
+        for (let t = 0; t < out.N; t++) {
+          for (const e of G.enemies) e.remove?.(); G.enemies.length = 0; G.projs.length = 0; gd.clear();
+          p.reloadT[S.activeW] = 1e9; p.powers.clear(); p.droneT = 1e9; p.hp = p.maxHp; p.x = window.__lane.x; p.z = window.__lane.z; p.vx = 0; p.vz = 0; gd.seed(77 + t * 131);
+          const e = window.__spawn(kind, 4, p.x + 14, p.z + (t % 5 - 2) * 0.4, { alerted: true }); if (!e) return null;
+          if (e.fly) e.y = e.y;
+          const g = gd.deploy('proximity', { force: true, x: p.x + 7, z: p.z, yaw: 0 });
+          const t0 = gd.state.stats.triggered; let removedBy = '';
+          for (let i = 0; i < 140; i++) { window.__step(3, 1 / 30); if (g.st === 'dead') break; }
+          if (gd.state.stats.triggered > t0) out.boom++; else if (g.st === 'dead') out.disarmed++; else out.avoided++;
+        }
+        return out;
+      }, { kind });
+      if (!r) { console.log(kind.padEnd(13), '(no se pudo generar)'); continue; }
+      console.log(`${kind.padEnd(13)} ${String(r.boom).padStart(5)}/${r.N}  ${String(r.avoided).padStart(14)}/${r.N}          ${String(r.disarmed).padStart(5)}/${r.N}`);
+    }
+  }
 
   // ─── 2. coste en minutos de farmeo ────────────────────────────────────────────────────────────────
   const costs = await ev(() => {

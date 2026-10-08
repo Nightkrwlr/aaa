@@ -65,7 +65,7 @@ x.cfg.gadgets = {
       n: "Mina de proximidad", s: "PROX.", cat: "mine", kind: "mine", shape: "mine", col: 0xff5a3c, tier: 1,
       d: "Explota cuando un enemigo terrestre pisa su radio. Se puede detonar a distancia.",
       cost: { scrap: 3, bio: 1, credits: 28 }, trof: 2,
-      dmg: 2.0, r: 3.2, trig: 1.7, arm: 0.8, fuse: 0.3, kb: 5, remote: true,
+      dmg: 1.5, r: 3.2, trig: 1.7, arm: 0.8, fuse: 0.3, kb: 5, remote: true,
     },
     cluster: {
       n: "Mina de racimo", s: "RACIMO", cat: "mine", kind: "mine", shape: "mine", col: 0xffb040, tier: 1, scale: 1.12,
@@ -78,8 +78,8 @@ x.cfg.gadgets = {
       n: "Mina incendiaria", s: "FUEGO", cat: "mine", kind: "mine", shape: "mine", col: 0xff7a1a, tier: 2,
       d: "Explosión que prende a los enemigos y deja un charco de fuego unos segundos.",
       cost: { bio: 2, scrap: 2, credits: 38 }, trof: 2,
-      dmg: 0.9, r: 2.8, trig: 1.7, arm: 0.8, fuse: 0.3, kb: 2, remote: true,
-      zoneR: 3.0, zoneT: 5, zoneDps: 0.3,
+      dmg: 0.5, r: 2.8, trig: 1.7, arm: 0.8, fuse: 0.3, kb: 2, remote: true,
+      zoneR: 3.0, zoneT: 5, zoneDps: 0.1,
     },
     cryo: {
       n: "Mina criogénica", s: "HIELO", cat: "mine", kind: "mine", shape: "crystal", col: 0x7fd8ff, tier: 2,
@@ -105,7 +105,7 @@ x.cfg.gadgets = {
       n: "Trampa de cuchillas", s: "CUCH.", cat: "trap", kind: "trap", shape: "plate", col: 0xd5dde6, tier: 2, scale: 0.95,
       d: "Cuchillas giratorias que causan sangrado a quien pase. Aguanta dos activaciones.",
       cost: { scrap: 4, credits: 34 }, trof: 3,
-      dmg: 0.3, r: 2.3, trig: 1.5, arm: 0.8, fuse: 0.1, uses: 2, cd: 3, zoneT: 4.5, zoneDps: 0.35, bleed: 0.2,
+      dmg: 0.3, r: 2.3, trig: 1.5, arm: 0.8, fuse: 0.1, uses: 2, cd: 3, zoneT: 4.5, zoneDps: 0.22, bleed: 0.15,
     },
     shock: {
       n: "Trampa de descarga", s: "RAYO", cat: "trap", kind: "trap", shape: "plate", col: 0xa8c8ff, tier: 3,
@@ -117,7 +117,7 @@ x.cfg.gadgets = {
       n: "Campo gravitatorio", s: "GRAV.", cat: "mine", kind: "field", shape: "coil", col: 0xb06bff, tier: 3, scale: 1.3,
       d: "Atrae y retiene a los enemigos en su centro y colapsa al terminar. Detonable a distancia.",
       cost: { battery: 1, scrap: 4, credits: 55 }, trof: 3,
-      dmg: 0.9, r: 3.5, trig: 4.5, arm: 0.6, fuse: 0.1, remote: true, fieldR: 6, fieldT: 5.5, pull: 14, fieldDps: 0.07, slowMul: 0.35,
+      dmg: 0.45, r: 3.5, trig: 4.5, arm: 0.6, fuse: 0.1, remote: true, fieldR: 6, fieldT: 5.5, pull: 14, fieldDps: 0.035, slowMul: 0.35,
     },
     sentinel: {
       n: "Torreta centinela", s: "TORRETA", cat: "device", kind: "turret", shape: "tower", col: 0x40e0ff, tier: 3,
@@ -373,7 +373,7 @@ function gdDrawBodies(t) {
     const d = g.def,
       b = gfx[d.shape];
     if (!b) continue;
-    const sc = (d.scale || 1) * (g.st === "arm" ? 0.7 + 0.3 * Math.min(1, g.age / 0.35) : 1) * (g.pop > 0 ? 1 + g.pop : 1);
+    const sc = (d.scale || 1) * 1.15 * (g.st === "arm" ? 0.7 + 0.3 * Math.min(1, g.age / 0.35) : 1) * (g.pop > 0 ? 1 + g.pop : 1);
     gdQ.setFromAxisAngle(gdAxisY, g.yaw);
     gdP.set(g.x, d.kind === "turret" ? Math.sin(t * 2 + g.ph) * 0.02 : 0, g.z);
     gdS.set(sc, sc, sc);
@@ -1196,13 +1196,18 @@ function gadgetEnemyTick(e, dt, dist) {
     const dx = (g.x - e.x) / (dd || 1),
       dz = (g.z - e.z) / (dd || 1);
     if (e._gMode === "avoid") {
-      // empuje radial hacia fuera + tangencial hacia el lado que mira al jugador: bordea el radio de disparo
-      const lim = g.trigR + 1.5;
+      // rodea la mina: desvío directo de posición (los embestidores ignoran los empujones suaves) hacia el lado que
+      // mira al jugador, sin entrar en el radio de disparo; se frena si el desvío choca con un muro
+      const lim = g.trigR + 1.6;
       if (dd < lim) {
         const side = dx * (x.player.z - e.z) - dz * (x.player.x - e.x) > 0 ? 1 : -1;
-        const k = 26 * dt * (1 - dd / lim + 0.25);
-        e.kbx += (-dx * 0.7 - dz * side) * k;
-        e.kbz += (-dz * 0.7 + dx * side) * k;
+        const sp = Math.max(4, Math.hypot(e.vx, e.vz)) * dt * (1.2 + 1.6 * (1 - dd / lim));
+        const mx = (-dx * 0.75 - dz * side) * sp,
+          mz = (-dz * 0.75 + dx * side) * sp;
+        if (!x.map.circleHits(e.x + mx, e.z + mz, e.rad * 0.8)) {
+          e.x += mx;
+          e.z += mz;
+        }
       }
     } else if (e._gMode === "disarm") {
       if (dd > 1.0) {
