@@ -8,7 +8,7 @@ export default async function (api) {
   const SHOTS = process.env.SHOTS !== '0';
   const results = [];
   const check = (name, ok, info = '') => { results.push({ name, ok: !!ok, info }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`); };
-  await boot(); await newGame(); await god(); await region('valle'); // fuera del Bastión (allí no se puede desplegar) y sin calor/frío extremos
+  await boot(); await newGame(); await god(); await region('desierto'); // fuera del Bastión (la región 'valle' lo contiene y allí no se puede desplegar)
   const st = () => ev(() => { const G = window.__G, gd = window.__gadgets.state; return { inv: { ...G.S.gadgets.inv }, sel: G.S.gadgets.sel, known: Object.keys(G.S.gadgets.known), n: gd.list.length, kinds: gd.list.map((g) => g.id), states: gd.list.map((g) => g.st), hp: G.player.hp, tip: !!(G.S.seenTips && G.S.seenTips.gadgets) }; });
   const clean = () => ev(() => { const G = window.__G; for (const e of G.enemies) e.remove?.(); G.enemies.length = 0; G.projs.length = 0; window.__gadgets.clear(); G.player.reloadT[G.S.activeW] = 1e9; G.player.powers.clear(); G.player.droneT = 1e9; G.uiOpen = null; });
   const press = async (key) => { await page.keyboard.down(key); await wait(2); await page.keyboard.up(key); await wait(2); };
@@ -48,12 +48,12 @@ export default async function (api) {
   await clean();
   const selfHit = await ev(() => {
     const G = window.__G, p = G.player; for (const e of G.enemies) e.remove?.(); G.enemies.length = 0;
-    G.uiBlockDamage = false; p.hp = p.maxHp; const hp0 = p.hp;
-    window.__gadgets.deploy('proximity', { force: true, x: p.x + 0.5, z: p.z });
-    window.__step(40, 1 / 30); const n0 = window.__gadgets.detonate(); window.__step(30, 1 / 30);
-    const o = { hp0, hp1: p.hp, det: n0, near: G.enemies.length }; G.uiBlockDamage = true; return o;
+    G.uiBlockDamage = false;
+    const run = (mine) => { p.hp = p.maxHp; if (mine) window.__gadgets.deploy('proximity', { force: true, x: p.x + 0.5, z: p.z }); window.__step(40, 1 / 30); const n = mine ? window.__gadgets.detonate() : 0; window.__step(30, 1 / 30); return [p.maxHp - p.hp, n]; };
+    const [ctrl] = run(false), [loss, det] = run(true); // el desierto quema un poco: se compara con un control sin mina
+    G.uiBlockDamage = true; return { ctrl: +ctrl.toFixed(2), loss: +loss.toFixed(2), det, enemies: G.enemies.length };
   });
-  check('la explosión no daña al jugador (ni a 0,5 m)', selfHit.det === 1 && selfHit.hp1 >= selfHit.hp0 && selfHit.near === 0, JSON.stringify(selfHit));
+  check('la explosión no daña al jugador (ni a 0,5 m)', selfHit.det === 1 && selfHit.loss <= selfHit.ctrl + 0.01 && selfHit.enemies === 0, JSON.stringify(selfHit));
 
   // 4. mantener = detonar a distancia
   await ev(() => { const gd = window.__gadgets, p = window.__G.player; window.__G.S.gadgets.inv.proximity = 3; gd.deploy('proximity', { force: true, x: p.x + 6, z: p.z }); gd.deploy('proximity', { force: true, x: p.x + 8, z: p.z + 2 }); window.__step(40, 1 / 30); });
@@ -84,7 +84,7 @@ export default async function (api) {
   await ev(() => window.__step(5, 1 / 30));
   s = await st();
   check('al cambiar de región se retiran los gadgets', s.n === 0, `${s.n}`);
-  await region('valle'); await clean();
+  await region('desierto'); await clean();
 
   // 8. aviso de aprendizaje (una vez)
   await ev(() => window.__step(400, 1 / 30));

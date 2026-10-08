@@ -1568,6 +1568,12 @@ function gadgetsPanelHtml() {
   return `<div class="gdgrid">${cards}</div>`;
 }
 function gadgetsPanelBind(root, redraw) {
+  // en móvil estrecho las pestañas se desplazan: que la activa quede a la vista
+  try {
+    root.querySelector(".whead .tab.on")?.scrollIntoView({ inline: "center", block: "nearest" });
+  } catch (e) {
+    /* sin desplazamiento: no es crítico */
+  }
   root.querySelectorAll("[data-gfab]").forEach((b) =>
     b.addEventListener("click", () => {
       if (gadgetCraft(b.dataset.gfab, +b.dataset.q || 1)) redraw();
