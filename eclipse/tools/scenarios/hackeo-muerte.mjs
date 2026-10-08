@@ -27,7 +27,9 @@ export default async function (api) {
   });
   let died = false;
   for (let i = 0; i < 40 && !died; i++) { await ev(() => window.__step(15, 1 / 30)); died = await ev(() => window.__G.player.dead || window.__G.uiOpen === 'death'); }
-  await wait(4);
+  // el panel de muerte se abre 1,6 s de RELOJ después de caer (setTimeout en 32-boot.js): se espera de verdad, no por fotogramas
+  for (let i = 0; i < 40 && (await ev(() => window.__G.uiOpen)) !== 'death'; i++) await new Promise((r) => setTimeout(r, 250));
+  await wait(2);
   const d = await ev(() => { const G = window.__G, h = window.__hack, m = document.querySelector('.hk-mark'); return { dead: G.player.dead, ui: G.uiOpen, hk: !!h.HK.s, mark: m ? m.style.display : null }; });
   check('el jugador muere de verdad con unidades hackeadas y un módulo desplegado', a.gad && a.ctl === 2 && died && d.ui === 'death' && !d.hk, JSON.stringify({ a, died, d }));
 
