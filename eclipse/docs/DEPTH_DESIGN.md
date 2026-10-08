@@ -86,14 +86,19 @@ Ficheros: `31b-talents.js` (todo), cirugía en `29-panels.js` (reemplazar `Wa` y
 - **`S.talentFx`** (siempre presente tras `Pl.recalc`, claves a 0 si no hay inversión; los demás frentes lo LEEN): `gadgetSlots` (int), `gadgetDmg`, `gadgetRadius`, `gadgetCdr` (tope 0,7), `gadgetCostCut` (tope 0,6), `hackSpeed`, `hackTraceCut` (tope 0,75; negativo = más traza), `hackTools` (int), `turretDmg`, `turretTime`, `chainDet` (0/1), `intruder` (0/1), `trophyChance`, `trophyValue`, `chestSense` (m). Fracciones: 0,1 = +10 %. La lista completa y sus unidades está en la cabecera de `31b-talents.js`.
 - Eventos emitidos: `talentChanged`, `save`; toasts de punto, de nodo clave y de reasignación.
 
-**Números medidos** (`node tools/shot.mjs --scenario tools/sim/talents.mjs --size 640x360 --seed 1 --out DIR`; nivel 30, equipo Raro, 24 enemigos vivos de nivel 32 en horda continua, 90 s, 4 pruebas):
+**Números medidos** (`node tools/shot.mjs --scenario tools/sim/talents.mjs --size 640x360 --seed 1 --out DIR`, `TRIALS=8`; nivel 30, equipo Raro fijo, 24 enemigos vivos de nivel 32 en horda continua, tope 90 s, 8 pruebas por build; dos ejecuciones independientes, A / B):
 
-| build de 30 puntos | métrica de su tarea | build | mejor disperso | sin talentos |
+| build de 30 puntos (se gastan los 30) | métrica de su tarea | build (A / B) | mejor disperso (A / B) | sin talentos |
 |---|---|---|---|---|
-| Tanque (Muro viviente) | segundos vivo | 60,6 | 36,8 | 27,3 |
-| Cañón de cristal | DPS de pegada vs objetivo duro | 9 811 | 4 290 | 2 979 |
-| Velocista (Fantasma) | segundos vivo | 49,8 | 36,8 | 27,3 |
-| Elemental (Pirómano) | bajas totales | 56,0 | 37,5 | 28,0 |
+| Tanque (Muro viviente) | segundos vivo | 81,3 / 81,3 | 57,8 / 39,7 | 22,5 |
+| Cañón de cristal | DPS de pegada vs objetivo duro | 8 343 / 8 343 | 3 700 / 3 700 | 2 569 |
+| Velocista (Fantasma) | segundos vivo (tope 90) | 86,3 / 90,0 | 57,8 / 39,7 | 22,5 |
+| Elemental (Pirómano) | bajas por segundo vivo | 1,55 / 1,62 | 1,10 / 1,19 | 1,00 |
+
+El veredicto «ESPECIALIZARSE GANA» sale en las dos ejecuciones (margen mínimo ×1,36 sobre el mejor disperso). Hay que leer la tabla con su método:
+- **Reproducibilidad.** La sim fija sus propias semillas (RNG del juego `__seedRng` y `Math.random` por prueba, equipo, `Date.now` y `x.time` simulados, hora del día, estado del arma, efectos de sonido mudos con `__silence`), y los dos primeros builds salen idénticos en cada ejecución. Aun así, a partir del tercero el mundo real (el bucle de render corre entre builds) introduce ruido que no se ha podido eliminar: por eso se promedian 8 pruebas y se publican dos ejecuciones. Dentro de una misma ejecución sí se compara con la misma horda y el mismo equipo.
+- El Velocista debe llegar a Fantasma (final del carril A, exige 15 puntos gastados en la rama): el build recorre el carril A entero (esprint más frecuente) y gasta el resto en esquiva. Con Fantasma aguanta casi siempre los 90 s (un build que alcanza el tope no murió; el tope subestima su ventaja).
+- El Elemental se juzga por ritmo de bajas por segundo vivo (como el cañón, el total de bajas premia al que sobrevive más tiempo, no al que mata mejor).
 
 Con los 76 puntos en una sola rama: Bastión ×6,6 vida efectiva, Artillería ×5,3 DPS, Espectro ×1,73 velocidad y ×1,6 vida efectiva. Ningún nodo suelto supera ×1,7 (Muro viviente ×1,70 de vida; Tormenta de plomo ×1,65 de DPS), ninguno da NaN/∞/≤0 y el árbol completo (inalcanzable: 521 puntos) llega a ×12 en DPS y vida efectiva con reducción de daño 50 % (tope del juego 80 %) y esquiva 41 % (tope 50 %): no hay invulnerabilidad ni daño infinito. Nota de método: el cañón se juzga por DPS de pegada porque contra una horda de enemigos débiles el sobreimpacto desperdicia el daño extra (ahí el cañón mata como el disperso y muere antes: es el coste del nodo clave); Cinética sube el daño ×1,3 corriendo y no se mide en horda por la misma razón.
 
@@ -102,6 +107,10 @@ Con los 76 puntos en una sola rama: Bastión ×6,6 vida efectiva, Artillería ×
 - La colección de lore concede su punto cuando el frente de lore emita `ee("loreCollection", id, nombre)`.
 - Balance fino de Ingeniería y Cazador solo se ha verificado estructuralmente (su valor es utilidad, no combate).
 - Los números de la tabla vienen de GL por software con un bot sencillo (repulsión por campo 1/d², esprint si hay enemigos a < 2,6 m); sirven para ordenar builds, no como DPS absoluto.
+
+**Revisión (segunda vuelta) — estado y pendiente:**
+- Hecho: la sim ya compra Fantasma y gasta los 30 puntos (la clave cuelga de `a6`, al final del carril A); semillas propias y 8 pruebas; tabla corregida con números de dos ejecuciones. El enfriamiento de Último aliento se guarda (`S.talentLb`, instante de `S.playTime`) y sobrevive a recargar; si el jugador muere de verdad con el árbol abierto, el panel se cierra; eliminado el residuo `pendingPerks > 0 && setTimeout(Wa)` de `32-boot.js`. Ganchos de prueba nuevos en `32-boot.js`: `__seedRng(n)`, `__silence(bool)`. Escenario `tools/scenarios/talents-revision.mjs` (TODO OK).
+- Pendiente: la sim no es bit a bit determinista a partir del tercer build (ruido del mundo real entre evaluaciones); Ingeniería/Cazador siguen sin efecto jugable hasta que otros frentes lean `S.talentFx`; `25-save.js` conserva `pendingPerks: 0` por compatibilidad (inofensivo).
 
 ## 4. Frente GADGETS (D3): trampas, minas y desplegables
 
