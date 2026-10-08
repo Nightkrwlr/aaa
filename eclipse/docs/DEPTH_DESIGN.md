@@ -84,6 +84,45 @@ Ficheros: `31b-talents.js` (todo), cirugía en `29-panels.js` (reemplazar `Wa` y
 
 Ficheros: `31c-gadgets.js` (todo), cirugía en `14-combat.js` (hazards con `team`), `06-input`/`27-hud.js`/`template.head.html` (botón), `29-panels.js` (SOLO la pestaña Gadgets del Taller), `20-pickups.js` (planos de gadget en `rollLoot`: coordina con ECONOMÍA devolviendo `{type:"gadgetPlan"}` desde una función tuya `gadgetPlanDrop(src)` que ECONOMÍA llamará si existe).
 
+### 4.1 Estado (frente GADGETS, entregado)
+
+**Hecho** (todo en `31c-gadgets.js`; cirugía mínima en `21-enemies.js` —una llamada `gadgetEnemyTick(this, dt, dist)` y `slowMul` en la velocidad—, `29-panels.js` —pestaña «Gadgets» del Taller— y `template.head.html` —botón y estilos—; no se tocó `14-combat`, `27-hud` ni `20-pickups`):
+- 12 gadgets en `x.cfg.gadgets.types` (daño ×G, radio, armado, duración, usos, coste, trofeos, nivel de plano): proximidad, racimo, incendiaria, criogénica, EMP, red, cuchillas, descarga, campo gravitatorio, torreta centinela, baliza señuelo y barrera de energía. *G* = daño de la granada de fragmentación del jugador (arma activa × 9), así que todo escala solo con el arma y el nivel.
+- `S.gadgets = {inv, sel, known}` + `S.gadgetsV = 1` (migración idempotente en `x.migrations`; probada con un guardado de la build anterior: se completa con 2 minas conocidas y 3 cargas de proximidad). Máx. 12 cargas por tipo. Los gadgets desplegados no se guardan.
+- Entrada: **X** (tocar = desplegar al soltar, mantener 0,45 s = detonar las minas remotas en cadena; la pulsación necesita ≥ 4 fotogramas para no confundir un toque con «mantener» si el dispositivo se atasca) y **Z** (siguiente). Táctil: botón **GADGET** (icono y carga del seleccionado, anillo de progreso al mantener; deslizar ≥ 26 px hacia arriba = cambiar). Casilla `X` en el HUD de escritorio. Aviso de aprendizaje con la tecla o el gesto que toca (una vez, a los 10 s).
+- Desplegados: 3 + `talentFx.gadgetSlots` (tope 8). Minas y trampas persisten 240 s o hasta salir de la región; no dañan al jugador (no son hazards: solo consultan enemigos). Armado 0,8 s con LED parpadeante. **Gráficos:** 7 mallas instanciadas (una por forma), sin luces; el LED y el brillo son orbes del FX compartido (el brillo de suelo se apaga a calidad `low`).
+- IA: mantis, corredor, cazador xeno y rabioso **rodean** la mina (desvío de posición, 70 % de acierto por par enemigo-gadget, +20 % élites); los mecánicos terrestres la **desarman** (1,1 s, 25 % de fallo = explota); la mina EMP es invisible para los mecánicos. No se tocó el código de las IAs.
+- Obtención: `gadgetPlanDrop(src)` (ECONOMÍA la llamará con `normal|elite|champion|chest1-3|secret|boss|mission|hack`; devuelve `{type:"gadgetPlan", gadget, …}` y el plano se aprende solo al llegar al inventario). Mientras nadie la llame, el frente suelta planos por su cuenta al matar (`kill`) y abrir cofres (`chestOpen`). Taller → **Gadgets**: planos de nivel 1-2 comprables, fabricación ×1 / ×5 con materiales + créditos×`mt.credits(nivel)` + trofeos (`S.junk` si existe; si no, solo materiales).
+- Eventos: `gadgetPlaced(g)`, `gadgetTriggered(g, n)`. Pruebas: `window.__gadgets`.
+
+**Números reales** (`tools/sim/gadgets.mjs`, manada mixta de 16 de nivel 4 —seis rastreros, tres infectados, dos escupidores, dos mantis, dos corredores y un coloso mecánico—, 22 s, media de 3 pruebas, daño de referencia G = 50,3):
+
+| gadget | % vida de la manada | bajas | activaciones | coste hoy / con ECONOMÍA §2.2 |
+|---|---|---|---|---|
+| proximidad | 42 % (29 % detonando a mano con ≥ 3 cerca) | 6,7 | 1 | 1,8 / 3,2 min |
+| racimo | 30 % | 3,7 | 1 | 1,8 / 3,2 |
+| incendiaria | 37 % | 5 | 1 | 1,6 / 2,1 |
+| criogénica | 27 % + congela / ralentiza | 0 | 1 | 2,0 / 3,5 |
+| EMP | 13 % (el valor es el aturdimiento de 3,5 s a mecánicos) | 0 | 1 | 2,0 / 3,5 |
+| red | 7 % (ralentiza al 30 % durante 3,2 s) | 0 | 1 | 1,2 / 2,1 |
+| cuchillas | 40 % (2 usos) | 4 | 1 | 1,8 / 3,2 |
+| descarga | 23 % (2 usos, 5 saltos) | 0 | 2 | 2,0 / 3,5 |
+| campo gravitatorio | 43 % | 2,7 | 1 | 2,3 / 3,5 |
+| torreta centinela (25 s) | 25 % | 0,7 | — | 2,5 / 4,2 |
+| baliza señuelo (12 s) | provoca a 16 de 16 | — | — | 2,0 / 3,5 |
+| barrera (8 s) | frena 6 proyectiles de escupidores | — | — | 2,0 / 3,5 |
+
+Una mina de 1,8 min de farmeo ahorra ≈ 15 s de combate contra una manada de 16 (la pistola inicial tarda ≈ 34 s en acabar con esa manada): consumible útil, no un tesoro. Detección (20 minas por tipo): rastrero 20/20 estallan; mantis, corredor, cazador y rabioso 18/20 la rodean; coloso escudado 14/20 desarmada, 6/20 estalla; mech 14/20 desarmada. **Rendimiento:** 100 gadgets a la vez cuestan +0,4 ms de simulación por fotograma y +19 llamadas de dibujo (de 161; el caso realista de 3-8 desplegados es ≈ +3), 7 mallas en la escena en ambos casos, y 6 ciclos de 60 desplegar + detonar + limpiar no dejan restos (mallas, geometrías ni texturas del renderer idénticas).
+
+**Pruebas:** `tools/scenarios/gadgets-demo.mjs` (16 comprobaciones funcionales por teclado en escritorio y por toques reales CDP en móvil, más capturas del Taller y de la escena; pasa en escritorio, `pixel7` y `iphone14 --portrait`), `tools/scenarios/gadgets-layout.mjs` (el botón no se solapa con nada en 915×412, 844×390, 667×375, 740×360, 390×844, 375×667 y 360×640), `tools/scenarios/gadgets-migrate.mjs` (guardado antiguo → nuevo), `tools/sim/gadgets.mjs` (arriba). Humo 13/13.
+
+**Pendiente / decisiones para otros frentes**
+- ECONOMÍA: llamar a `gadgetPlanDrop(src)` desde `rollLoot` (hoy el frente suelta planos por su cuenta: `normal` 0,06 %, `elite` 6 %, `champion` 22 %, `boss` 40 %, cofres 3/10/25 %; al llamarla, `GD.ext` apaga esa vía) y devolver trofeos en `S.junk`. Los costes están en `x.cfg.gadgets.types[id].cost/trof`; si los materiales bajan a ≈ 15 por 100 muertes (§2.2), los gadgets cuestan ≈ 3-4 min: revisar con la columna «con ECONOMÍA».
+- TALENTOS: leer `S.talentFx.{gadgetDmg, gadgetRadius, gadgetSlots, gadgetLife, gadgetCost, gadgetChain, gadgetSave}` (todos opcionales, 0 por defecto; `gadgetCost` con tope 40 %). §4 hablaba de «+1 hueco por 2 puntos de Ingeniería»: el talento solo debe dar `gadgetSlots`.
+- No hay «perros de caza» en el juego: se tratan como tales cazador xeno, corredor y rabioso (más la mantis). Cambiar en `cfg.detect.byId`.
+- El Taller vende solo planos de nivel 1-2; los de nivel 3-4 solo caen. La tienda de PNJ no los ofrece todavía.
+- Sinergias de elementos (fuego + gasolina, etc.), el módulo «Hacker» y el asedio de la base (§9) no se han cableado: los gadgets desplegados son consultables en `window.__gadgets.state.list` y emiten `gadgetPlaced`/`gadgetTriggered`.
+
 ## 5. Frentes de la ola siguiente (resumen; se detallan al empezarlos)
 
 - **LORE (D5):** libros, chips y grabaciones (≈ 70 entradas nuevas en español, tono ciencia-ficción militar sobrio) repartidos por estanterías, cadáveres, terminales y guaridas; **chips** cifrados que se descifran con hackeo; **grabaciones** con subtítulos y voz sintetizada (`07-audio.js`); colecciones por región con recompensa (talento, plano, revelar mapa). Archivo (`L`) con pestañas Libros/Chips/Grabaciones/Hitos. *Biblia:* ARGOS sabía lo del **Proyecto ECLIPSE** (el laboratorio del Complejo emitía una señal para despertar a la Mente latente bajo la caldera); los Señores del Enjambre fueron personas con nombre (cada jefe tiene un registro de «quién fue»); «eclipse» es también el alineamiento en el que la señal es más fuerte (§9). Las pistas de lore alimentan códigos de puzles.
