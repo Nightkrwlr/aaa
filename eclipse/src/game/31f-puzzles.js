@@ -132,6 +132,21 @@ function pzDist8(w, h, blocked, from) {
   }
   return D;
 }
+// Objeto más cercano (celdas [cx, cz]) dentro del alcance; a igualdad de distancia gana el que tienes delante (fx, fz = hacia dónde miras).
+// La mirada es solo un desempate suave (con ratón es el puntero; en táctil, tu último movimiento o el enemigo al que apunta el arma).
+function pzNearest(cells, px, pz, fx, fz) {
+  let best = -1,
+    bs = PZ_CFG.reach + 1;
+  for (let i = 0; i < cells.length; i++) {
+    const dx = cells[i][0] + 0.5 - px,
+      dz = cells[i][1] + 0.5 - pz,
+      d = Math.hypot(dx, dz);
+    if (d > PZ_CFG.reach) continue;
+    const sc = d - (fx !== undefined && d > 1e-6 ? 0.35 * ((dx * fx + dz * fz) / d) : 0);
+    if (sc < bs) ((bs = sc), (best = i));
+  }
+  return best;
+}
 // Estado inicial de los contadores de un puzle (comunes a todos los tipos)
 function pzBaseState(spec) {
   return { rev: 1, t: 0, done: false, errors: 0, moves: 0, hints: 0, tween: 0 };
@@ -380,15 +395,8 @@ PZ_GENS.mirrors = {
   solid(spec, st, cx, cz) {
     return st.ix.ct[cz * spec.w + cx] !== 0;
   },
-  pick(spec, st, px, pz) {
-    let b = -1,
-      bd = PZ_CFG.reach * PZ_CFG.reach;
-    for (let i = 0; i < spec.mir.length; i++) {
-      const m = spec.mir[i],
-        d = (m.x + 0.5 - px) ** 2 + (m.z + 0.5 - pz) ** 2;
-      if (d < bd) ((bd = d), (b = i));
-    }
-    return b;
+  pick(spec, st, px, pz, fx, fz) {
+    return pzNearest(spec.mir.map((m) => [m.x, m.z]), px, pz, fx, fz);
   },
   label() {
     return "Girar espejo";
@@ -1172,15 +1180,8 @@ PZ_GENS.runes = {
     const c = cz * spec.w + cx;
     return st.cellSet.has(c) || c === spec.stele;
   },
-  pick(spec, st, px, pz) {
-    let b = -1,
-      bd = PZ_CFG.reach * PZ_CFG.reach;
-    for (let i = 0; i < spec.n; i++) {
-      const c = spec.cells[i],
-        d = ((c % spec.w) + 0.5 - px) ** 2 + (((c / spec.w) | 0) + 0.5 - pz) ** 2;
-      if (d < bd) ((bd = d), (b = i));
-    }
-    return b;
+  pick(spec, st, px, pz, fx, fz) {
+    return pzNearest(spec.cells.map((c) => [c % spec.w, (c / spec.w) | 0]), px, pz, fx, fz);
   },
   focus(spec, st, id) {
     const c = spec.cells[id];
@@ -2151,15 +2152,8 @@ PZ_GENS.valves = {
   solid(spec, st, cx, cz) {
     return st.cellSet.has(cz * spec.w + cx);
   },
-  pick(spec, st, px, pz) {
-    let b = -1,
-      bd = PZ_CFG.reach * PZ_CFG.reach;
-    for (let i = 0; i < spec.valves.length; i++) {
-      const v = spec.valves[i],
-        d = (v.x + 0.5 - px) ** 2 + (v.i + 0.5 - pz) ** 2;
-      if (d < bd) ((bd = d), (b = i));
-    }
-    return b;
+  pick(spec, st, px, pz, fx, fz) {
+    return pzNearest(spec.valves.map((v) => [v.x, v.i]), px, pz, fx, fz);
   },
   label() {
     return "Girar válvula";
@@ -3297,12 +3291,14 @@ function pzSolve(rt, how) {
   ee("banner", "ACERTIJO RESUELTO", `${z.gen.n} · ${pzTierStars(d.tier)}${perfect ? " · PERFECTO" : ""}`, perfect ? "#ffd447" : "#9ad8ff");
   // botín por tier con el sistema de ECONOMÍA (cofre de nivel d.tier) + extras
   const R = PZ_CFG.reward;
+  const n0 = x.pickups.length;
   try {
     Co(px, pzz + 0.4, d.tier, lvl, { src: "chest" + d.tier });
     if (perfect) Co(px, pzz - 0.4, 1, lvl, { src: "chest1" }); // bonus por resolverlo limpio
   } catch (err) {
     console.warn("[puzles] botín", err);
   }
+  p.drops = x.pickups.length - n0;
   const xpf = (R.xp[d.tier] + (perfect ? R.perfectXp : 0)) * (hack ? R.hackMul : 1);
   if (typeof ecoGrantXp === "function") ecoGrantXp(xpf, "acertijo");
   else if (x.player && mt.xpToNext) x.player.addXp(xpf * mt.xpToNext(S.lvl));
@@ -3587,20 +3583,29 @@ function pzRemove(id) {
     i >= 0 && map.ents.splice(i, 1);
   }
 }
-// Celda libre desde la que se alcanza un objeto (para que el bot de pruebas no se plante dentro de una caja)
-function pzStandAt(z, ax, az) {
+// Dónde plantarse para usar un objeto (para que el bot de pruebas no se meta dentro de una caja): se prueban posiciones sueltas (cada 0,25 m)
+// alrededor, que quepan según el mapa real, desde las que el aviso apuntaría al objeto pedido mirándolo; gana la más cercana a él.
+function pzStandAt(z, a, id) {
   const g = z.gen,
-    d = z.d;
-  const cx = Math.floor(ax),
-    cz = Math.floor(az),
-    inb = (a, b) => a >= 0 && b >= 0 && a < d.lw && b < d.lh;
-  if (!inb(cx, cz) || !g.solid(z.spec, z.st, cx, cz)) return [ax, az];
-  for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) {
-    const a = cx + dx,
-      b = cz + dz;
-    if (!inb(a, b) || !g.solid(z.spec, z.st, a, b)) return [a + 0.5, b + 0.5];
-  }
-  return [ax, az];
+    d = z.d,
+    p = x.player;
+  const f = g.focus ? g.focus(z.spec, z.st, id) : null,
+    tx = f ? f[0] + 0.5 : a.at[0],
+    tz = f ? f[1] + 0.5 : a.at[1];
+  let best = null,
+    bd = 1e9;
+  for (let sz = tz - 2; sz <= tz + 2; sz += 0.25)
+    for (let sx = tx - 2; sx <= tx + 2; sx += 0.25) {
+      if (sx < -1 || sz < -1 || sx > d.lw + 1 || sz > d.lh + 1) continue;
+      const [wx, wz] = pzLocalToWorld(z, sx, sz);
+      if (x.map.circleHits(wx, wz, p.r)) continue;
+      const l = Math.hypot(tx - sx, tz - sz) || 1,
+        fc = a.face || [(tx - sx) / l, (tz - sz) / l];
+      if (g.pick(z.spec, z.st, sx, sz, fc[0], fc[1]) !== id) continue;
+      const dd = Math.hypot(tx - sx, tz - sz);
+      if (dd < bd) ((bd = dd), (best = { at: [sx, sz], face: fc }));
+    }
+  return best || { at: a.at, face: a.face || null };
 }
 function pzLocalToWorld(z, lx, lz) {
   const T = z.T;
@@ -3612,57 +3617,68 @@ function pzBotLive(rt, o) {
   const z = rt.pz,
     g = z.gen,
     p = x.player,
-    DT = 1 / 30;
+    DT = 1 / 30,
+    S = x.S,
+    aim0 = S.settings.aim;
   const stepN = (n) => window.__step(n, DT);
+  S.settings.aim = "auto"; // con el ratón, la mirada la manda el puntero y el bot no la controla
   const put = (lx, lz) => {
     const [wx, wz] = pzLocalToWorld(z, lx, lz);
     p.x = wx;
     p.z = wz;
     p.vx = p.vz = 0;
   };
+  const faceTo = (fl) => {
+    // fl = vector de mirada en coordenadas del puzle → ángulo del mundo
+    const [fx, fz] = pzLocalToWorld(z, 0, 0),
+      [gx, gz] = pzLocalToWorld(z, fl[0], fl[1]);
+    p.face = Math.atan2(gx - fx, gz - fz);
+  };
   p.inv = 9999; // el bot no muere por el camino
   p.hp = p.maxHp;
   let acted = 0,
     fail = "";
   const plan = g.bot(z.spec, z.st, undefined, undefined);
-  if (!plan) return { ok: false, why: "sin plan" };
+  if (!plan) {
+    S.settings.aim = aim0;
+    return { ok: false, why: "sin plan" };
+  }
   if (g.botMode === "phase") {
-    // pasillo láser: se avanza una celda por fase real del reloj del puzle
+    // pasillo láser: se avanza una celda por fase real del reloj del puzle; el jugador ya está en su celda cuando la fase empieza
     for (const q of plan) {
       let guard = 0;
-      while (Math.floor(z.st.t / PZ_LASER_DT) % z.spec.P !== q.k && guard++ < 400) stepN(1);
+      while (Math.floor((z.st.t + DT * 1.01) / PZ_LASER_DT) % z.spec.P !== q.k && guard++ < 600) {
+        if (guard === 1) put(-3, -3); // esperando fuera del pasillo (la primera vez); después se queda donde está
+        stepN(1);
+      }
       put(q.x + 0.5, q.z + 0.5);
       stepN(1);
+      acted++;
       if (rt.pzDone) break;
     }
   } else if (g.botMode === "walk") {
-    const t0 = z.st.t;
+    let clock = 0;
     for (const a of plan) {
-      if (a.t !== undefined) {
-        let guard = 0;
+      if (a.t !== undefined && a.t > clock) {
         put(-3, -3); // de camino
-        while (z.st.t - t0 < a.t - 0.001 && guard++ < 4000) stepN(1);
+        stepN(Math.round((a.t - clock) / DT));
+        clock = a.t;
       }
       put(a.at[0], a.at[1]);
       stepN(2);
+      clock += 2 * DT;
       acted++;
     }
     stepN(2);
   } else {
-    for (const a of plan) {
-      const id = a.dyn ? a.dyn(z.st) : a.id;
-      let [ax, az] = a.at;
-      [ax, az] = pzStandAt(z, ax, az);
-      put(ax, az);
-      // mirar hacia el objeto (las cajas piden dirección)
-      if (a.face) {
-        const [fx, fz] = pzLocalToWorld(z, 0, 0),
-          [gx, gz] = pzLocalToWorld(z, a.face[0], a.face[1]);
-        p.face = Math.atan2(gx - fx, gz - fz);
-      }
+    for (const a0 of plan) {
+      const id = a0.dyn ? a0.dyn(z.st) : a0.id,
+        a = pzStandAt(z, a0, id);
+      put(a.at[0], a.at[1]);
+      a.face && faceTo(a.face);
       stepN(1);
       if (PZ.pickId !== id || PZ.pickRt !== rt) {
-        fail = `en ${ax.toFixed(1)},${az.toFixed(1)} el aviso apunta a ${PZ.pickId} y se esperaba ${id}`;
+        fail = `en ${a.at[0].toFixed(1)},${a.at[1].toFixed(1)} el aviso apunta a ${PZ.pickId} y se esperaba ${id}`;
         break;
       }
       x.world.updatePrompt();
@@ -3677,8 +3693,10 @@ function pzBotLive(rt, o) {
       if (rt.pzDone) break;
     }
   }
+  S.settings.aim = aim0;
   return { ok: rt.pzDone === true && !fail, why: fail || (rt.pzDone ? "" : "no resuelto"), acted, errors: z.st.errors, moves: z.st.moves };
 }
+
 // ── Simulación de colocación: genera mazmorras con las funciones reales del mundo y mide dónde caen los puzles ──
 // Comprueba además que el puzle cabe de verdad (suelo libre + anillo), que no pisa ninguna entidad y que, con TODAS sus celdas sólidas
 // iniciales ya aplicadas, siguen siendo alcanzables todas las entidades que lo eran antes (la mazmorra no se parte en dos).
@@ -3814,7 +3832,13 @@ Object.assign(x.puzzleApi, {
   mounted: () => Array.from(PZ.mounted).map((rt) => ({ id: rt.e.id, kind: rt.pz.d.kind, tier: rt.pz.d.tier, done: !!rt.pzDone, x: rt.e.x, z: rt.e.z, rot: rt.pz.d.rot })),
   stats: () => (pzS() ? pzS().puzzleStats : null),
 });
+PZ.events = [];
+It("puzzleSolved", (p) => {
+  PZ.events.push(p);
+  PZ.events.length > 30 && PZ.events.shift();
+});
 window.__puzzles = {
+  Ni,
   api: x.puzzleApi,
   PZ,
   PZR,
