@@ -133,6 +133,7 @@ x.cfg.hack = {
     lootTier: { 2: 1, 3: 2 }, // cofre de botín (Co) a partir de 2 capas; el tier sube con riesgo agresivo
     planChance: 1, // veces que se llama a gadgetPlanDrop("hack") en hackeos de 2+ capas o agresivos
     chipXp: 0.05, // fracción de la barra de nivel que da descifrar un chip
+    chipChance: [0.08, 0.14, 0.25], // por riesgo (× capas/2): una cámara acorazada con Archivo puede guardar un chip cifrado sin hallar
   },
   // Módulo «Hacker» de los gadgets (un 13.º gadget: dispositivo temporal que hackea solo)
   gadget: {
@@ -200,6 +201,8 @@ function hkMigrate(S) {
   }
   if (first && !Object.keys(H.tools).length) for (const id in c.start.tools) H.tools[id] = c.start.tools[id];
   H.loadout = Array.isArray(H.loadout) ? H.loadout.filter((id, i, a) => c.programs[id] && a.indexOf(id) === i).slice(0, c.lvl.maxSlots) : [];
+  // primera vez: el kit inicial ya viene cargado (si no, el jugador no sabría que existe la pantalla de programas)
+  if (first && !H.loadout.length) H.loadout = Object.keys(H.tools).filter((id) => H.tools[id] > 0 && c.programs[id].min <= H.lvl).slice(0, c.lvl.baseSlots);
   H.heat = Math.max(0, Math.min(c.trace.heatMax, Number(H.heat) || 0));
   H.risk = hkInt(H.risk, 0, c.risk.length - 1, 1);
   const st = H.stats && typeof H.stats === "object" && !Array.isArray(H.stats) ? H.stats : (H.stats = {});
@@ -836,21 +839,32 @@ HK_GAMES.fw = {
 // archivo de lore: la palabra clave (si has leído lo suficiente, o x.loreApi.hintFor la ofrece) o su forma.
 function hkLoreBonus() {
   const S = x.S,
-    n = S && Array.isArray(S.lore) ? S.lore.length : 0;
-  let text = null;
+    A = x.loreApi;
+  let n = S && Array.isArray(S.lore) ? S.lore.length : 0,
+    word = null;
   try {
-    const t = x.loreApi && typeof x.loreApi.hintFor === "function" ? x.loreApi.hintFor("hack:cipher") : null;
-    if (typeof t === "string") text = t;
-    else if (t && typeof t.text === "string") text = t.text;
+    if (A) {
+      // entradas halladas en el Archivo (libros, chips y grabaciones): cuanto más has leído, más letras te regala el cifrado
+      if (Array.isArray(A.entries) && typeof A.has === "function") {
+        let k = 0;
+        for (const e of A.entries) if (A.has(e.id)) k++;
+        n = Math.max(n, k);
+      }
+      // la clave de supervisión de ARGOS: solo ayuda si ya la has leído (known); si no, el cifrado no la menciona
+      const h = typeof A.hintFor === "function" ? A.hintFor("complejo.clave") : null;
+      if (h && h.known && h.kind === "word" && /^[A-Z]{3,12}$/.test(String(h.value))) word = String(h.value);
+    }
   } catch (e) {
-    text = null;
+    word = null;
   }
-  return { letters: Math.min(3, Math.floor(n / 5)) + (text ? 1 : 0), text, read: n };
+  return { letters: Math.min(3, Math.floor(n / 5)), word, read: n };
 }
 function hkCipherGen(seed, diff) {
   const r = hkRng(seed ^ 0xc1f3),
     P = HK_CFG.phrases[Math.floor(r() * HK_CFG.phrases.length)];
-  const plain = P.t,
+  const lb = hkLoreBonus();
+  // con la clave de ARGOS en el Archivo, el mensaje termina con ella (y sus letras vienen puestas)
+  const plain = lb.word ? P.t + " CLAVE " + lb.word : P.t,
     used = [...new Set(plain.replace(/ /g, "").split(""))];
   const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
   let perm = null;
@@ -867,22 +881,27 @@ function hkCipherGen(seed, diff) {
     .split("")
     .map((ch) => (ch === " " ? " " : map[ch]))
     .join("");
-  const lb = hkLoreBonus(),
-    frac = [0.45, 0.38, 0.3, 0.22, 0.15][diff - 1];
-  const nRev = Math.min(used.length - 3, Math.max(2, Math.round(used.length * frac)) + lb.letters);
+  const frac = [0.45, 0.38, 0.3, 0.22, 0.15][diff - 1];
+  const wordL = lb.word ? [...new Set(lb.word.split(""))] : [];
   const cribL = [...new Set(P.k.split(""))];
-  const order = hkShuffle(cribL.slice(), r).concat(
+  const order = wordL.concat(
     hkShuffle(
-      used.filter((c) => !cribL.includes(c)),
+      cribL.filter((c) => !wordL.includes(c)),
+      r,
+    ),
+    hkShuffle(
+      used.filter((c) => !cribL.includes(c) && !wordL.includes(c)),
       r,
     ),
   );
+  const nRev = Math.min(used.length - 3, Math.max(Math.max(2, Math.round(used.length * frac)) + lb.letters, wordL.length));
   const reveal = order.slice(0, nRev).map((ch) => map[ch]);
   const knows = diff <= 2 || lb.letters >= 1;
-  const hint = knows
+  let hint = knows
     ? `Pista del archivo: el mensaje contiene la palabra «${P.k}».`
     : `Pista del archivo: hay una palabra de ${P.k.length} letras que empieza por «${P.k[0]}».`;
-  return { plain, cipher, map, inv, used, crib: P.k, reveal, hint, extra: lb.text, seed };
+  if (lb.word) hint += ` Termina con la clave de supervisión de ARGOS que anotaste: «${lb.word}».`;
+  return { plain, cipher, map, inv, used, crib: P.k, reveal, hint, word: lb.word, seed };
 }
 HK_GAMES.cipher = {
   gen: hkCipherGen,
@@ -923,7 +942,7 @@ HK_GAMES.cipher = {
       })
       .join("");
     const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-    el.innerHTML = `<div class="cp-hint">${ke(G.hint)}${G.extra ? `<br><em>${ke(G.extra)}</em>` : ""}</div><div class="cp-txt">${wordHtml}</div><div class="cp-keys">${A.map((a) => `<button class="cp-k" data-k="${a}">${a}</button>`).join("")}<button class="cp-k" data-k="-" aria-label="Borrar">⌫</button></div>`;
+    el.innerHTML = `<div class="cp-hint">${ke(G.hint)}</div><div class="cp-txt">${wordHtml}</div><div class="cp-keys">${A.map((a) => `<button class="cp-k" data-k="${a}">${a}</button>`).join("")}<button class="cp-k" data-k="-" aria-label="Borrar">⌫</button></div>`;
     root.appendChild(el);
     let sel = null,
       bad = 0,
@@ -1180,7 +1199,7 @@ HK_GAMES.route = {
             B = G.pts[j];
           const used = path.some((v, q) => q && ((path[q - 1] === i && v === j) || (path[q - 1] === j && v === i)));
           s += `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="${used ? "#46e4ff" : "rgba(160,190,200,.28)"}" stroke-width="${used ? 4 : 1.6}" stroke-linecap="round"/>`;
-          s += `<text x="${(A[0] + B[0]) / 2}" y="${(A[1] + B[1]) / 2 + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="${used ? "#bff7ff" : "#7d8c93"}" stroke="#04090c" stroke-width="3" paint-order="stroke" font-family="Chakra Petch,sans-serif">${G.adj[i][j]}</text>`;
+          s += `<text x="${(A[0] + B[0]) / 2}" y="${(A[1] + B[1]) / 2 + 3}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${used ? "#bff7ff" : "#a3b2b9"}" stroke="#04090c" stroke-width="3" paint-order="stroke" font-family="Chakra Petch,sans-serif">${G.adj[i][j]}</text>`;
         }
       for (let i = 0; i < G.N; i++) {
         const [px, py] = G.pts[i],
@@ -1979,7 +1998,8 @@ function hkOpen(spec, cb) {
     spec,
     cb,
     mods,
-    risk: Math.max(0, Math.min(HK_CFG.risk.length - 1, spec.risk != null ? spec.risk : H.risk)),
+    // el riesgo elegido se recuerda para terminales; en combate (enemigos) se parte siempre del estándar
+    risk: Math.max(0, Math.min(HK_CFG.risk.length - 1, spec.risk != null ? spec.risk : spec.target === "enemy" ? 1 : H.risk)),
     loadout: H.loadout.filter((id) => HK_CFG.programs[id] && H.lvl >= HK_CFG.programs[id].min).slice(0, mods.slots),
     state: "pre",
     ended: false,
@@ -2009,6 +2029,7 @@ function hkOpen(spec, cb) {
     if (ev.code === "Escape" && HK.s === s) {
       ev.preventDefault();
       Ze.close();
+      Tt.pressed.delete("pause"); // el mismo Esc ya está en cola para el juego: sin esto abriría el menú de pausa justo después
     }
   };
   window.addEventListener("keydown", s.onKey);
@@ -2063,7 +2084,7 @@ function hkRenderPre(s) {
       <div class="hk-kv"><span>Dificultad <b style="color:var(--cyan)">${"▮".repeat(Math.min(4, Math.round(sp.diff)))}${"▯".repeat(Math.max(0, 4 - Math.round(sp.diff)))}</b></span><span>Tu hackeo <b>nv ${H.lvl}</b></span><span>Recomendado <b style="color:${short ? "var(--bad)" : "var(--good)"}">nv ${need}</b></span><span>Traza inicial <b>${startT} %</b></span></div>
       <div class="hk-xp" style="margin-top:6px" title="XP de hackeo"><i style="width:${xpPct}%"></i></div>
       ${short ? `<div class="muted" style="font-size:12px;margin-top:5px;color:var(--amber2)">Te faltan ${short} nivel${short > 1 ? "es" : ""}: la traza sube un ${Math.round(short * HK_CFG.trace.shortfall.rate * 100)} % más rápido y tienes menos tiempo.</div>` : ""}
-      <div class="muted" style="font-size:12px;margin-top:5px">Un fallo suma traza y repite la capa. Con la traza al 100 % salta la alarma. ${hkTouch() ? "" : "Esc no cierra: usa «Desconectar»."}</div></div>
+      <div class="muted" style="font-size:12px;margin-top:5px">Un fallo suma traza y repite la capa. Con la traza al 100 % salta la alarma. ${hkTouch() ? "" : "Esc o «Desconectar» salen sin penalización."}</div></div>
     <div class="hk-card"><h3>Capas (${s.plan.length})</h3><div class="hk-lay">${lay}</div></div>
     <div class="hk-card full"><h3>Riesgo · ${R.n}</h3><div class="hk-risk">${risk}</div><div class="muted" style="font-size:12px;margin-top:5px">${ke(R.d)}</div></div>
     <div class="hk-card full"><h3>Programas cargados (${s.loadout.length}/${m.slots})</h3><div class="hk-progs">${progs}</div>
@@ -2073,7 +2094,7 @@ function hkRenderPre(s) {
   s.body.querySelectorAll("[data-risk]").forEach((b) =>
     b.addEventListener("click", () => {
       s.risk = +b.dataset.risk;
-      H.risk = s.risk;
+      if (sp.target !== "enemy") H.risk = s.risk;
       ae.play("ui");
       hkRenderPre(s);
     }),
@@ -2394,11 +2415,27 @@ function hkCleanup(s) {
   if (HK.s === s) HK.s = null;
 }
 // Cierre sin resultado (✕, «Desconectar» o cambio de panel): sin penalización
+// El callback del llamador se entrega DESPUÉS de cerrar el panel (nunca dentro del cierre: si abriera otro panel, Ze.close lo cerraría)
+function hkDeliver(s) {
+  const cb = s.cb,
+    res = s.cbRes;
+  s.cb = null;
+  s.cbRes = null;
+  if (!cb || !res) return;
+  try {
+    cb(res);
+  } catch (err) {
+    console.warn("hackeo: callback", err);
+  }
+}
 function hkAbort(s) {
   const was = s.ended;
   s.ended = true;
   hkCleanup(s);
-  if (was) return;
+  if (was) {
+    if (s.cb && s.cbRes) setTimeout(() => hkDeliver(s), 0); // cierre con ✕ o Esc tras el resultado
+    return;
+  }
   const res = hkResult(s, false);
   res.abortado = true;
   HK.last = res;
@@ -2410,11 +2447,8 @@ function hkAbort(s) {
     }
   }
   if (s.cb) {
-    try {
-      s.cb(res);
-    } catch (e) {
-      console.warn("hackeo: callback", e);
-    }
+    s.cbRes = res;
+    setTimeout(() => hkDeliver(s), 0); // tras el cierre del panel que provoca quien nos aborta
   }
 }
 function hkResult(s, ok) {
@@ -2483,19 +2517,13 @@ function hkFinish(s, ok) {
   }
   HK.last = res;
   ee("hackDone", res);
-  if (s.cb) {
-    try {
-      s.cb(res);
-    } catch (err) {
-      console.warn("hackeo: callback", err);
-    }
-  }
+  s.cbRes = res; // el callback del llamador espera a que el jugador vea y cierre el resultado
   ee("save");
   hkSfx(ok ? "success" : "alarm");
   hkShowResult(s, res, lines);
 }
 function hkShowResult(s, res, lines) {
-  if (!s.body || !s.body.isConnected) return;
+  if (!s.body || !s.body.isConnected) return hkDeliver(s);
   const H = hkState(),
     R = HK_CFG.risk[s.risk];
   const xpPct = Math.min(100, Math.round((H.xp / hkXpToNext(H.lvl)) * 100));
@@ -2506,7 +2534,10 @@ function hkShowResult(s, res, lines) {
     <div class="hk-kv" style="justify-content:center"><span>Hackeo <b>nv ${H.lvl}</b>${res.nivelNuevo ? ' <b style="color:var(--good)">¡sube!</b>' : ""} · +${res.xp} XP</span></div>
     <div class="hk-xp"><i style="width:${xpPct}%"></i></div>
     <button class="btn pri hk-big" id="hkOk" style="min-width:min(260px,70%)">Continuar</button></div>`;
-  s.body.querySelector("#hkOk").addEventListener("click", () => Ze.close());
+  s.body.querySelector("#hkOk").addEventListener("click", () => {
+    Ze.close();
+    hkDeliver(s);
+  });
 }
 
 // ═══ 7. OBJETIVOS ═══════════════════════════════════════════════════════════════════════════════════
@@ -3019,7 +3050,9 @@ x.tick.push((dt) => {
 });
 
 // ── 7.6 Chips de lore (x.loreApi) ────────────────────────────────────────────────────────────────────
-// Descifra un chip: dos capas (la primera, un cifrado con la pista del archivo). calidad ∈ [0, 1] según traza y riesgo.
+// Descifra un chip: dos capas (la primera, un cifrado con la pista del archivo). Éxito → calidad completa (q = 1); si fallas,
+// q es parcial según las capas superadas (el Archivo lo acumula, tope 0,85). opts.lore = lo lanza el propio Archivo (31d-lore.js)
+// con su callback: entonces NO se llama a decrypt desde aquí (lo hace el Archivo con res.q) para no contar dos veces el intento.
 function hkDecryptChip(id, cb, opts) {
   opts = opts || {};
   const L = x.loreApi;
@@ -3028,8 +3061,8 @@ function hkDecryptChip(id, cb, opts) {
     objetivo: "chip",
     id: String(id),
     title: "Chip cifrado",
-    sub: opts.sub || "Descifra el contenido del chip",
-    diff: opts.diff || 2,
+    sub: opts.name ? `Descifra «${opts.name}»` : opts.sub || "Descifra el contenido del chip",
+    diff: Math.max(1, Math.min(4, +opts.diff || 2)),
     kinds: ["cipher"],
     layers: opts.layers || 2,
     pool: ["code", "route", "fw", "seq", "sync", "lights"],
@@ -3038,21 +3071,33 @@ function hkDecryptChip(id, cb, opts) {
     xp: 24,
     loot: false,
     rewMul: 0.6,
+    lore: !!opts.lore,
+    onAbort(res) {
+      res.chip = String(id);
+      res.q = 0;
+    },
     onDone(res) {
       const lines = [];
-      if (!res.ok) return ["El chip resiste: puedes intentarlo de nuevo."];
-      const q = Math.max(0.4, Math.min(1, 1 - res.traza / 200 + res.riesgo * 0.1));
-      res.calidad = +q.toFixed(2);
+      // limpieza del hackeo (traza baja y riesgo alto): solo informativa, el Archivo no distingue calidades por encima de «completo»
+      const clean = Math.max(0.4, Math.min(1, 1 - res.traza / 200 + res.riesgo * 0.1));
+      res.calidad = +clean.toFixed(2);
+      res.chip = String(id);
+      res.q = res.ok ? 1 : Math.min(0.85, +((0.7 * res.capasOk) / Math.max(1, res.capas)).toFixed(2));
       let granted = false;
-      try {
-        if (L && typeof L.decrypt === "function") granted = L.decrypt(id, q) !== false;
-      } catch (e) {
-        console.warn("hackeo: loreApi.decrypt", e);
+      if (!spec.lore) {
+        try {
+          const r = L && typeof L.decrypt === "function" ? L.decrypt(id, res.q) : null;
+          granted = r === true || !!(r && r.ok);
+          if (r && typeof r.q === "number" && !r.ok) res.q = r.q;
+        } catch (e) {
+          console.warn("hackeo: loreApi.decrypt", e);
+        }
       }
+      if (!res.ok) return [res.q > 0 ? `El chip resiste, pero queda legible al <b>${Math.round(res.q * 100)} %</b>: vuelve a intentarlo.` : "El chip resiste: puedes intentarlo de nuevo."];
       const H = hkState();
       H.stats.chips++;
       if (typeof ecoGrantXp === "function") ecoGrantXp(HK_CFG.reward.chipXp, "chip");
-      lines.push(granted ? `Chip descifrado · calidad <b>${Math.round(q * 100)} %</b>` : `Chip abierto · calidad ${Math.round(q * 100)} %`);
+      lines.push(granted || spec.lore ? `Chip descifrado · limpieza <b>${Math.round(clean * 100)} %</b>` : `Chip abierto · limpieza ${Math.round(clean * 100)} %`);
       return lines;
     },
   };
@@ -3117,12 +3162,34 @@ function hkRewards(s, res, lines) {
       lines.push(`<b>${ke(plan.name)}</b>`);
     }
   }
-  res.recompensas = { creditos: cr, datos: dt, cofre: tier, programa: lines.some((l) => l.indexOf("Programa:") === 0) };
+  // una cámara acorazada (cofre, oculta, baliza) puede esconder un chip del Archivo (el frente LORE lo presenta; se descifra hackeándolo)
+  let chip = null;
+  const A = x.loreApi;
+  if (A && typeof A.next === "function" && typeof A.grant === "function" && sp.target === "terminal" && sp.ent && HK_CFG.eff[sp.ent.eff] && HK_CFG.eff[sp.ent.eff].vault) {
+    if (HK.rng() < R.chipChance[s.risk] * Math.min(1.5, n / 2)) {
+      try {
+        const id = A.next("chip", sp.ent.reg);
+        if (id && A.grant(id)) {
+          chip = id;
+          lines.push("Chip cifrado hallado: descífralo en el Archivo");
+        }
+      } catch (err) {
+        console.warn("hackeo: chip de lore", err);
+      }
+    }
+  }
+  res.recompensas = { creditos: cr, datos: dt, cofre: tier, programa: lines.some((l) => l.indexOf("Programa:") === 0), chip };
 }
 
 // ═══ 9. API Y PRUEBAS ═══════════════════════════════════════════════════════════════════════════════
 // spec público: {title, sub, objetivo, diff (1-4), layers (1-3) | kinds:[…], pool, seed, need, xp, risk (0-2, fija el riesgo), noPre, at:{x,z}}
 function hkRun(spec, cb) {
+  // contrato con el Archivo (31d-lore.js): run({kind:"chip", id, name, tier|diff, lore:true}, cb) → cb(res) con res.ok y res.q
+  if (spec && spec.kind === "chip" && spec.id != null) {
+    if (HK.s && (HK.s.ended || x.uiOpen !== "hack")) hkCleanup(HK.s);
+    const sc = hkDecryptChip(spec.id, cb, { name: spec.name, diff: spec.diff || spec.tier, lore: !!spec.lore, layers: spec.layers });
+    return sc ? { session: sc, abort: () => Ze.close() } : null;
+  }
   spec = Object.assign({ title: "Intrusión", diff: 1, layers: 1, objetivo: "personalizado", need: 1, xp: 12 }, spec || {});
   spec.diff = Math.max(1, Math.min(4, +spec.diff || 1));
   if (!spec.seed) spec.seed = hkHash(spec.title + ":" + Math.floor(performance.now()));

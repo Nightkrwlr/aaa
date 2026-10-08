@@ -94,8 +94,8 @@ export default async function (api) {
   // 9. Taller: pestaña Gadgets
   await ev(() => { const G = window.__G; G.S.mats.scrap = 40; G.S.mats.bio = 20; G.S.mats.battery = 10; G.S.credits = 5000; G.S.junk = { 'trofeo_prueba': 30 }; window.__dbg.openWorkbench('gadgets'); });
   await wait(6);
-  const wbk = await ev(() => ({ cards: document.querySelectorAll('#panel .gdcard').length, locked: document.querySelectorAll('#panel .gdcard.locked').length, buttons: document.querySelectorAll('#panel [data-gfab]').length }));
-  check('el Taller muestra 12 tarjetas de gadget', wbk.cards === 12, JSON.stringify(wbk));
+  const wbk = await ev(() => ({ want: Object.keys(window.__gadgets.cfg.types).length, cards: document.querySelectorAll('#panel .gdcard').length, locked: document.querySelectorAll('#panel .gdcard.locked').length, buttons: document.querySelectorAll('#panel [data-gfab]').length }));
+  check('el Taller muestra una tarjeta por gadget (12 propios + el Módulo Hacker del frente HACKEO)', wbk.cards === wbk.want && wbk.cards >= 12, JSON.stringify(wbk));
   const before = (await st()).inv.cluster | 0;
   await ev(() => document.querySelector('#panel [data-gfab="cluster"]')?.click());
   await wait(4);
