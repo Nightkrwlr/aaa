@@ -104,6 +104,18 @@ export default async function (api) {
   if (SHOTS) await shot(`taller-${device}${api.portrait ? '-v' : ''}`);
   await page.keyboard.press('Escape'); await wait(4);
 
+  // 9b. EMP: aturde a un mecánico (se queda quieto ~3,5 s) y la mina EMP no la desarma él
+  const emp = await ev(() => {
+    const G = window.__G, gd = window.__gadgets, p = G.player; for (const e of G.enemies) e.remove?.(); G.enemies.length = 0; gd.clear();
+    const e = window.__spawn('escudero', 3, p.x + 5, p.z, { alerted: true });
+    const g = gd.deploy('emp', { force: true, x: p.x + 4, z: p.z }); window.__step(40, 1 / 30);
+    const pre = { x: e.x, z: e.z }; gd.detonate(); window.__step(8, 1 / 30);
+    const stunned = e.gStun > 0; const x1 = e.x, z1 = e.z; window.__step(45, 1 / 30);
+    const moved = Math.hypot(e.x - x1, e.z - z1);
+    const out = { stunned, moved: +moved.toFixed(2), hp: Math.round(e.hp), maxHp: Math.round(e.maxHp || 0) }; for (const q of G.enemies) q.remove?.(); G.enemies.length = 0; return out;
+  });
+  check('la mina EMP aturde a un mecánico (apenas se mueve en 1,5 s)', emp.stunned && emp.moved < 1.2, JSON.stringify(emp));
+
   // 10. escena para la captura: varios gadgets desplegados con enemigos acercándose
   await clean();
   if (SHOTS) {

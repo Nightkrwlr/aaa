@@ -90,10 +90,10 @@ x.cfg.gadgets = {
     },
     emp: {
       n: "Mina EMP", s: "EMP", cat: "mine", kind: "mine", shape: "coil", col: 0x8f86ff, tier: 3,
-      d: "Pulso electromagnético: aturde a los mecánicos y les hace mucho más daño. Apaga drones.",
+      d: "Pulso electromagnético: aturde a los mecánicos (drones incluidos) y les hace mucho más daño. Ellos no la detectan.",
       cost: { battery: 1, scrap: 3, credits: 45 }, trof: 3,
       dmg: 0.3, r: 4.6, trig: 1.7, arm: 0.8, fuse: 0.3, kb: 0, remote: true,
-      stun: 3.5, mechMul: 2.6, slowOther: 1.5, slowMul: 0.5,
+      stun: 3.5, mechMul: 2.6, slowOther: 1.5, slowMul: 0.5, hidden: true,
     },
     net: {
       n: "Trampa de red", s: "RED", cat: "trap", kind: "trap", shape: "plate", col: 0x9be37a, tier: 1,
@@ -104,7 +104,7 @@ x.cfg.gadgets = {
     blades: {
       n: "Trampa de cuchillas", s: "CUCH.", cat: "trap", kind: "trap", shape: "plate", col: 0xd5dde6, tier: 2, scale: 0.95,
       d: "Cuchillas giratorias que causan sangrado a quien pase. Aguanta dos activaciones.",
-      cost: { scrap: 4, credits: 34 }, trof: 3,
+      cost: { scrap: 3, credits: 34 }, trof: 3,
       dmg: 0.3, r: 2.3, trig: 1.5, arm: 0.8, fuse: 0.1, uses: 2, cd: 3, zoneT: 4.5, zoneDps: 0.22, bleed: 0.15,
     },
     shock: {
@@ -116,13 +116,13 @@ x.cfg.gadgets = {
     gravity: {
       n: "Campo gravitatorio", s: "GRAV.", cat: "mine", kind: "field", shape: "coil", col: 0xb06bff, tier: 3, scale: 1.3,
       d: "Atrae y retiene a los enemigos en su centro y colapsa al terminar. Detonable a distancia.",
-      cost: { battery: 1, scrap: 4, credits: 55 }, trof: 3,
+      cost: { battery: 1, scrap: 3, credits: 55 }, trof: 3,
       dmg: 0.45, r: 3.5, trig: 4.5, arm: 0.6, fuse: 0.1, remote: true, fieldR: 6, fieldT: 5.5, pull: 14, fieldDps: 0.035, slowMul: 0.35,
     },
     sentinel: {
       n: "Torreta centinela", s: "TORRETA", cat: "device", kind: "turret", shape: "tower", col: 0x40e0ff, tier: 3,
       d: "Dispara al enemigo más cercano durante 25 s.",
-      cost: { battery: 1, scrap: 5, credits: 60 }, trof: 4,
+      cost: { battery: 1, scrap: 4, credits: 60 }, trof: 4,
       dmg: 0.11, range: 11, rate: 4, arm: 0.8, life: 25,
     },
     decoy: {
@@ -134,7 +134,7 @@ x.cfg.gadgets = {
     barrier: {
       n: "Barrera de energía", s: "BARRERA", cat: "device", kind: "barrier", shape: "post", col: 0x4fc3ff, tier: 2,
       d: "Un muro de energía de 5 m que detiene los proyectiles enemigos y empuja a los que se acercan. Dura 8 s.",
-      cost: { battery: 1, scrap: 4, credits: 40 }, trof: 3,
+      cost: { battery: 1, scrap: 3, credits: 40 }, trof: 3,
       width: 5.2, dist: 2.6, arm: 0.4, life: 8,
     },
   },
@@ -1175,6 +1175,8 @@ function gadgetEnemyTick(e, dt, dist) {
     for (let i = 0; i < GD.list.length; i++) {
       const g = GD.list[i];
       if ((g.def.kind !== "mine" && g.def.kind !== "trap" && g.def.kind !== "field") || g.st !== "ready") continue;
+      if (g.def.hidden && prof === "disarm") continue; // la mina EMP es invisible para los mecánicos
+
       const dd = Le(e.x, e.z, g.x, g.z);
       if (dd < bd) {
         bd = dd;

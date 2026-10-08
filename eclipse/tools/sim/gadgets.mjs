@@ -37,7 +37,7 @@ export default async function (api) {
         S.gadgets.inv.proximity = 12; // solo para que el HUD no proteste
         const px = p.x, pz = p.z;
         // manada de 16: enjambre, infectados, mantis (evitan), corredores (evitan) y un mecánico (desarma)
-        const kinds = MECH ? [['escudero', 3], ['mech', 2], ['centinela', 1]] : [['rastrero', 6], ['infectado', 3], ['escupidor', 2], ['mantis', 2], ['corredor', 2], ['escudero', 1]];
+        const kinds = MECH ? [['escudero', 5], ['mech', 1]] : [['rastrero', 6], ['infectado', 3], ['escupidor', 2], ['mantis', 2], ['corredor', 2], ['escudero', 1]];
         const pack = []; let k = 0; const pk = kinds.reduce((a, [, n]) => a + n, 0);
         for (const [kind, n] of kinds) for (let i = 0; i < n; i++, k++) {
           const a = (k / pk) * 6.283, rr = 1 + (k % 4) * 0.9;
