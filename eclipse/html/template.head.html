@@ -229,7 +229,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .tli-h b { display: block; font: 700 17px var(--f-disp); } .tli-h small { color: var(--bc); font: 600 11px var(--f-disp); letter-spacing: .08em; text-transform: uppercase; }
 .tli-d { margin: 0; font-size: 14px; line-height: 1.4; color: #cdd5d9; }
 .tli-ef, .tli-rq, .tli-m { margin: 0; padding: 0; list-style: none; font-size: 14px; line-height: 1.45; }
-.tli-ef li { color: var(--good); } .tli-ef li::before { content: '\25B8 '; }
+.tli-ef li { color: var(--good); } .tli-ef li.neg { color: var(--bad, #ff6b5e); } .tli-ef li::before { content: '\25B8 '; }
 .tli-now { font-size: 13px; color: var(--amber2); }
 .tli-con { font-size: 13px; color: #ffb0b8; border-left: 2px solid var(--bad); padding-left: 8px; } .tli-con b { display: block; font: 700 10px var(--f-disp); letter-spacing: .14em; text-transform: uppercase; color: var(--bad); }
 .tli-rq li { font-size: 13px; padding-left: 16px; position: relative; } .tli-rq li.ok { color: var(--good); } .tli-rq li.no { color: #ffb0b8; }
@@ -249,7 +249,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 @media (orientation: landscape) and (max-height: 520px) {
   .tlinfo { width: min(250px, 38vw); padding: 8px 10px; gap: 5px; }
   .tli-d, .tli-ef, .tli-m { font-size: 13px; } .tli-h b { font-size: 15px; }
-  .tlchips { padding: 4px 6px; } .tlchip { min-height: 30px; padding: 3px 8px; font-size: 11px; }
+  .tlchips { padding: 4px 6px; gap: 3px; } .tlchip { min-height: 30px; padding: 3px 6px; gap: 4px; font-size: 11px; letter-spacing: .03em; flex: 1 1 auto; justify-content: center; } .tlchip i { padding: 0 5px; min-width: 16px; }
   .tlbar { gap: 6px; flex-wrap: nowrap; } .tlsel { max-width: 150px; } .tlbar .btn { min-height: 30px; padding: 3px 9px; font-size: 12px; white-space: nowrap; } .tlpts { padding: 3px 8px; font-size: 11px; } .tlpts b { font-size: 16px; }
   .whead:has(.tlbar) { display: flex; padding-top: calc(4px + env(safe-area-inset-top)); padding-bottom: 4px; gap: 8px; }
   .whead:has(.tlbar) > h2 { font-size: 14px; flex: none; }

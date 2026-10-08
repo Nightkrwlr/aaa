@@ -726,8 +726,10 @@ x.tick.push((dt) => {
   const P = TL_PARAMS, pw = p.powers;
   tlRt.lbCd = Math.max(0, tlRt.lbCd - dt);
   if (tlRt.welcome && (tlRt.welcome.t -= dt) <= 0) {
-    ee("toast", tlRt.welcome.text, "quest");
-    window.__talents.lastWelcome = tlRt.welcome.text;
+    // El texto se compone ahora (no al migrar): solo entonces se sabe si el jugador usa táctil o teclado.
+    const msg = `Árbol de talentos: tus ${tlRt.welcome.pts} puntos (mejoras antiguas y jefes derrotados) están listos para repartir. ${Tt.touchMode ? "Toca TALENTO" : "Pulsa T"}.`;
+    ee("toast", msg, "quest");
+    window.__talents.lastWelcome = msg;
     tlRt.welcome = null;
   }
   // Detección del inicio de un esprint: la recarga salta de ≤0 a ~2 s en el mismo fotograma.
@@ -800,7 +802,7 @@ x.migrations.push((S) => {
   S.talentsV = 1;
   // El aviso se emite desde x.tick una vez empieza la partida (un setTimeout se perdería si el jugador está en el menú).
   if (hadOld || S.lvl > 1)
-    tlRt.welcome = { t: 2.5, text: `Árbol de talentos: tus ${S.talentEarned} puntos (mejoras antiguas y jefes derrotados) están listos para repartir. Pulsa ${Tt.touchMode ? "TALENTO" : "T"}.` };
+    tlRt.welcome = { t: 2.5, pts: S.talentEarned };
 });
 
 It("bossKilled", (b) => {
@@ -849,6 +851,12 @@ function tlEffectLines(n, times) {
   return out;
 }
 
+// Líneas de efecto con su signo: las contrapartidas (valores negativos) se pintan en rojo en la ficha.
+function tlEffectHTML(n) {
+  const row = (m, k) => `<li${m[k] < 0 ? ' class="neg"' : ""}>${ke(tlFmt(k, m[k]))}</li>`;
+  return [...Object.keys(n.st || {}).map((k) => row(n.st, k)), ...Object.keys(n.fx || {}).map((k) => row(n.fx, k))].join("");
+}
+
 function tlNodeHTML(n) {
   const b = tlBranchOf(n.br);
   const cls = ["tn", n.key ? "key" : "", n.power ? "pw" : ""].filter(Boolean).join(" ");
@@ -872,6 +880,19 @@ function tlSvg() {
       s += `<line data-e="${q}|${n.id}" x1="${h + m.at[0]}" y1="${h + m.at[1]}" x2="${h + n.at[0]}" y2="${h + n.at[1]}" stroke="${tlBranchOf(n.br).col}" class="te"/>`;
     }
   return s + "</svg>";
+}
+
+// Con el zoom de vista general los nodos miden ~20 px: un toque que cae cerca (≤ 26 px) de un nodo lo elige, para que el dedo no falle.
+function tlNearest(cx, cy) {
+  const v = _t("#tlView");
+  if (!v) return null;
+  const r = v.getBoundingClientRect(), h = tlUi.W / 2, s = tlUi.s;
+  let best = null, bd = 26 * 26;
+  for (const n of tlCfg().nodes) {
+    const dx = r.left + tlUi.ox + (h + n.at[0]) * s - cx, dy = r.top + tlUi.oy + (h + n.at[1]) * s - cy, d = dx * dx + dy * dy;
+    if (d < bd) { bd = d; best = n.id; }
+  }
+  return best;
 }
 
 function tlApplyView() {
@@ -966,7 +987,7 @@ function tlInfoRender() {
     return;
   }
   const b = tlBranchOf(n.br), r = tlRank(n.id), c = tlCanBuy(n);
-  const eff = tlEffectLines(n, 1).map((l) => `<li>${ke(l)}</li>`).join("");
+  const eff = tlEffectHTML(n);
   const now = r > 0 && n.max > 1 ? tlEffectLines(n, r).map(ke).join(" · ") : "";
   const kind = n.key ? "Nodo clave" : n.power ? "Poder" : "Talento";
   const reqs = [];
@@ -975,8 +996,7 @@ function tlInfoRender() {
   const label = r >= n.max ? "Rango máximo" : c.ok ? `Comprar · ${n.cost} pt${n.cost > 1 ? "s" : ""}` : "No disponible";
   box.innerHTML = `<div class="tli-h" style="--bc:${b.col}"><span class="tli-ic">${n.ic}</span><div><b>${ke(n.n)}</b><small>${ke(b.n)} · ${kind}${n.max > 1 ? ` · rango ${r}/${n.max}` : r ? " · comprado" : ""}</small></div></div>
     ${n.d ? `<p class="tli-d">${ke(n.d)}</p>` : ""}
-    ${eff && !n.key ? `<ul class="tli-ef">${eff}</ul>` : ""}
-    ${n.key && eff ? `<ul class="tli-ef">${tlEffectLines(n, 1).map((l, i) => `<li>${ke(l)}</li>`).join("")}</ul>` : ""}
+    ${eff ? `<ul class="tli-ef">${eff}</ul>` : ""}
     ${now ? `<div class="tli-now">Ahora: ${now}</div>` : ""}
     ${n.con ? `<div class="tli-con"><b>Contrapartida</b> ${ke(n.con)}</div>` : ""}
     ${reqs.length ? `<ul class="tli-rq">${reqs.join("")}</ul>` : ""}
@@ -1014,7 +1034,7 @@ function openTalents() {
   const opts = stats.map((k) => `<option value="${k}" ${tlUi.hi === k ? "selected" : ""}>${ke(tlStatLabel(k))}</option>`).join("");
   const chips = C.branches.map((b) => `<button class="tlchip" data-br="${b.id}" style="--bc:${b.col}"><span>${ke(b.n)}</span><i>0</i></button>`).join("");
   const html = `<div class="win tlwin" style="width:min(1180px,100%)">${Ze.head("Árbol de talentos",
-    `<div class="tlbar"><span id="tlPts" class="tlpts"></span><select id="tlHi" class="tlsel" aria-label="Resaltar estadística"><option value="">Resaltar estadística…</option>${opts}</select><button class="btn" id="tlRespec"></button></div>`)}
+    `<div class="tlbar"><span id="tlPts" class="tlpts"></span><select id="tlHi" class="tlsel" aria-label="Resaltar estadística"><option value="">Resaltar…</option>${opts}</select><button class="btn" id="tlRespec"></button></div>`)}
     <div class="wbody tlbody"><div class="tlmain">
       <div class="tlcol"><div class="tlchips">${chips}</div>
         <div class="tlview" id="tlView"><div class="tlworld" id="tlWorld" style="width:${tlUi.W}px;height:${tlUi.W}px">${tlSvg()}${C.nodes.map(tlNodeHTML).join("")}</div>
@@ -1076,7 +1096,7 @@ function tlBind() {
     ptr.delete(e.pointerId);
     if (ptr.size === 0 && drag && !drag.moved && e.type === "pointerup") {
       ae.play("ui");
-      tlSelect(drag.node);
+      tlSelect(drag.node || tlNearest(e.clientX, e.clientY));
     }
     if (ptr.size < 2) pinch = null;
     if (ptr.size === 0) drag = null;
