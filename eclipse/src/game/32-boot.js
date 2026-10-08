@@ -111,6 +111,7 @@ function Qp(n, e, t, i) {
     !n && ("ontouchstart" in window || matchMedia("(pointer: coarse)").matches) && (s.settings.quality = "medium"),
     (x.S = s),
     x.R.setQuality(s.settings.quality),
+    x.R.post.setMode(s.settings.post || (x.R.touch ? "nobloom" : "full")),
     x.R.setZoom(s.settings.zoom),
     ae.setVol("sfx", s.settings.sfx),
     ae.setVol("music", s.settings.music),

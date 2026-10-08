@@ -229,7 +229,7 @@ function rollLoot(src, lvl, ctx = {}) {
 // como {k:'gplan', plan}; al aparecer se emite 'gadgetPlanDrop'(plan, {x, z}) para que ese frente lo materialice.
 function ecoGadgetPlan(out, src, lvl) {
   if (typeof gadgetPlanDrop !== "function") return;
-  let p = gadgetPlanDrop(src, lvl);
+  let p = gadgetPlanDrop(src);
   p && out.push({ k: "gplan", plan: p });
 }
 
@@ -1049,6 +1049,8 @@ It("bossKilled", (b) => {
   ec.bossXp[id] = 1;
   ecoGrantXp(b.def.secret ? ecoCfg.xp.firstSecretBoss : ecoCfg.xp.firstBoss, "jefe");
   ecoMainBosses.includes(id) && ecoGrantSigil(id);
+  // provisional hasta los Eclipses (ola de sorpresas): los jefes secretos y la Mente dan un Fragmento la primera vez
+  (b.def.secret || id === "mente") && ecoGrantFragment(1);
 });
 
 
@@ -1344,10 +1346,15 @@ x.migrations.push((S) => {
   if (!S.sig) S.sig = {};
   if (S.eclipseFrag == null) S.eclipseFrag = 0;
   if (!S.hitos) S.hitos = [];
-  if (!S.sigSeen) {
-    // partidas anteriores: los jefes principales ya abatidos cuentan como primera muerte (sin retroactivo de Sigilos: se ganan de nuevo en la guarida)
-    S.sigSeen = {};
-  }
+  if (!S.sigSeen) S.sigSeen = {};
+  // partidas anteriores: cada jefe principal ya abatido cuenta como primera muerte y concede su Sigilo (idempotente)
+  ecoMainBosses.forEach((b, i) => {
+    if (S.world && S.world.bosses && S.world.bosses["reg" + i] && !S.sigSeen[b]) {
+      S.sigSeen[b] = 1;
+      S.sig[b] = (S.sig[b] || 0) + 1;
+      (S.econ || (S.econ = {})).bossXp = Object.assign(S.econ.bossXp || {}, { [b]: 1 });
+    }
+  });
   S.econ || (S.econ = { v: 1, picked: 0, soldCr: 0, setsSold: 0, sets: {}, found: [0, 0, 0, 0, 0, 0] });
   S.econ.bossXp || (S.econ.bossXp = {});
   if (!S.econV) {

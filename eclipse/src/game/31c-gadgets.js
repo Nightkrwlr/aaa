@@ -1443,6 +1443,12 @@ function gdSelfDrop(src, at) {
   gadgetLearn(it.gadget);
   if (at) x.fx.text(at.x, 2.2, at.z, "PLANO", "#ffd447", 15, { life: 1.4 });
 }
+// ECONOMÍA nos pasa el plano que ha salido en su tabla de botín (no hay recogida en el suelo): se aprende al instante
+It("gadgetPlanDrop", (plan, at) => {
+  if (!plan || !plan.gadget) return;
+  gadgetLearn(plan.gadget);
+  at && x.fx.text(at.x, 2.2, at.z, "PLANO", "#ffd447", 15, { life: 1.4 });
+});
 It("kill", (e) => {
   if (e.boss) return gdSelfDrop("boss", e);
   if (e.champion) return gdSelfDrop("champion", e);

@@ -17,7 +17,7 @@
  * Compatibilidad con el juego original: `uniforms` conserva uVig, uHurt, uTint, uTintA, uTime y uGrain.
  */
 import {
-  ShaderMaterial, WebGLRenderTarget, HalfFloatType, UnsignedByteType, Vector2, Vector3, Color,
+  ShaderMaterial, WebGLRenderTarget, HalfFloatType, UnsignedByteType, Vector2, Vector3, Color, ACESFilmicToneMapping, NoToneMapping,
 } from 'three';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -57,7 +57,9 @@ float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yz
 
 // Antídoto contra NaN/Inf: un solo píxel NaN en el destino HDR (pow de base negativa, 0/0…) se propaga por el desenfoque del bloom y por
 // el FXAA y acaba como un CUADRADO NEGRO en pantalla mientras el objeto exista. Aquí NaN y negativos → 0 y el tope es 256.
-vec3 sane(vec3 c){ if (uSane < 0.5) return c; c = vec3(c.r >= 0.0 ? c.r : 0.0, c.g >= 0.0 ? c.g : 0.0, c.b >= 0.0 ? c.b : 0.0); return min(c, vec3(256.0)); }
+float sane1(float v){ uint b = floatBitsToUint(v); uint m = b & 0x7FFFFFFFu; if (m > 0x7F800000u || (b & 0x80000000u) != 0u) return 0.0; return m == 0x7F800000u ? 256.0 : min(v, 256.0); }
+vec3 saneV(vec3 c){ return vec3(sane1(c.r), sane1(c.g), sane1(c.b)); }
+vec3 sane(vec3 c){ return uSane < 0.5 ? c : saneV(c); }
 vec3 tex3(vec2 p){ return sane(texture2D(tScene, p).rgb); }
 
 // FXAA ligero sobre HDR. La luma se comprime (c/(1+c) y raíz) para que un borde luz/sombra pese como lo hará en pantalla tras el tonemap.
@@ -132,7 +134,7 @@ export class PostFx {
    */
   constructor(renderer, scene, camera, opts = {}) {
     this.r = renderer; this.scene = scene; this.camera = camera;
-    this.rt = null; this.w = 2; this.h = 2; this.samples = 4; this.bloomOn = true; this.hdr = false; this.msaa = 0; this.forceLDR = false; this.fxaa = 'auto';
+    this.rt = null; this.w = 2; this.h = 2; this.samples = 4; this.bloomOn = true; this.hdr = false; this.msaa = 0; this.forceLDR = false; this.fxaa = 'auto'; this.mode = 'full';
     this.material = new ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, depthTest: false, depthWrite: false,
       uniforms: {
@@ -153,7 +155,7 @@ export class PostFx {
     if (this.sanitize) {
       // el filtro de brillo del bloom es la puerta por la que un NaN llega a toda la cadena de desenfoque
       const m = this.bloom.materialHighPassFilter;
-      m.fragmentShader = `vec3 sane(vec3 c){ c = vec3(c.r >= 0.0 ? c.r : 0.0, c.g >= 0.0 ? c.g : 0.0, c.b >= 0.0 ? c.b : 0.0); return min(c, vec3(256.0)); }\n` +
+      m.fragmentShader = `float sane1(float v){ uint b = floatBitsToUint(v); uint m = b & 0x7FFFFFFFu; if (m > 0x7F800000u || (b & 0x80000000u) != 0u) return 0.0; return m == 0x7F800000u ? 256.0 : min(v, 256.0); }\nvec3 sane(vec3 c){ return vec3(sane1(c.r), sane1(c.g), sane1(c.b)); }\n` +
         m.fragmentShader.replace('vec4 texel = texture2D( tDiffuse, vUv );', 'vec4 texel = texture2D( tDiffuse, vUv ); texel.rgb = sane(texel.rgb);');
     }
   }
@@ -194,6 +196,13 @@ export class PostFx {
     } catch { this.r.setRenderTarget(null); return false; }
   }
 
+  /**
+   * Modo de postproceso (ajuste del jugador, y por defecto «nobloom» en táctil):
+   *   full     HDR + bloom + FXAA/MSAA + grade        nobloom  sin bloom (más ligero, evita el desenfoque multi-resolución)
+   *   safe     sin destino HDR ni pasada final: render directo con ACES (último recurso si una GPU concreta falla)
+   */
+  setMode(m) { this.mode = ['full', 'nobloom', 'safe'].includes(m) ? m : 'full'; }
+
   /** @param {number} w ancho CSS @param {number} h alto CSS — el tamaño del buffer sale del pixelRatio del renderer */
   setSize(w, h) {
     const pr = this.r.getPixelRatio();
@@ -205,11 +214,15 @@ export class PostFx {
 
   render() {
     const r = this.r;
-    if (DBG.has('nopost')) { r.setRenderTarget(null); r.render(this.scene, this.camera); return; }
+    if (this.mode === 'safe' || DBG.has('nopost')) {
+      if (r.toneMapping !== ACESFilmicToneMapping) { r.toneMapping = ACESFilmicToneMapping; r.toneMappingExposure = 1.05; }
+      r.setRenderTarget(null); r.render(this.scene, this.camera); return;
+    }
+    if (r.toneMapping !== NoToneMapping) r.toneMapping = NoToneMapping;
     r.setRenderTarget(this.rt);
     r.clear();
     r.render(this.scene, this.camera);
-    if (this.bloom.enabled && this.bloom.strength > 0.001 && !DBG.has('nobloom')) this.bloom.render(r, null, this.rt, 0, false);
+    if (this.bloom.enabled && this.bloom.strength > 0.001 && this.mode === 'full' && !DBG.has('nobloom')) this.bloom.render(r, null, this.rt, 0, false);
     this.uniforms.tScene.value = this.rt.texture;
     this.uniforms.uFxaa.value = !DBG.has('nofxaa') && (this.fxaa === 'auto' ? this.msaa === 0 && this.bloomOn : !!this.fxaa) ? 1 : 0;
     r.setRenderTarget(null);

@@ -1238,6 +1238,7 @@ function jl(n = "main") {
       ? (s = `<div class="stats" style="max-width:560px;gap:10px 16px;align-items:center">
     <span>Operador</span><select id="sChar"><option value="Astronaut_FinnTheFrog">Finn</option><option value="Astronaut_RaeTheRedPanda">Rae</option><option value="Astronaut_BarbaraTheBee">Barbara</option><option value="Astronaut_FernandoTheFlamingo">Fernando</option></select>
     <span>Calidad gr\xE1fica</span><select id="sQ"><option value="high">Alta (sombras, bloom)</option><option value="medium">Media</option><option value="low">Baja (m\xE1ximo rendimiento)</option></select>
+    <span>Postproceso</span><select id="sPost"><option value="full">Completo (bloom y suavizado)</option><option value="nobloom">Sin bloom (m\xE1s ligero)</option><option value="safe">Seguro (sin postproceso)</option></select>
     <span>Apuntado</span><select id="sAim"><option value="auto">Autom\xE1tico</option><option value="mouse">Rat\xF3n (clic para disparar)</option></select>
     <span>Efectos de sonido</span><input type="range" id="sSfx" min="0" max="1" step="0.05">
     <span>M\xFAsica</span><input type="range" id="sMus" min="0" max="1" step="0.05">
@@ -1262,6 +1263,10 @@ function jl(n = "main") {
       ((e.char = o.target.value), (x.player._look = null), x.player.refreshLook());
     }),
     (r("#sQ").value = t.quality),
+    (r("#sPost").value = t.post || (x.R.touch ? "nobloom" : "full")),
+    (r("#sPost").onchange = (o) => {
+      ((t.post = o.target.value), x.R.post.setMode(t.post));
+    }),
     (r("#sAim").value = t.aim),
     (r("#sSfx").value = t.sfx),
     (r("#sMus").value = t.music),

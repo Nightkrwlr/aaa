@@ -20,6 +20,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 import { build } from 'esbuild';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -63,7 +64,17 @@ const skeletonStart = head.slice(0, split);
 const fragmentHead = head.slice(split);
 const art = fs.readFileSync(path.join(ROOT, 'assets/artmanifest.json'), 'utf8');
 const models = fs.readFileSync(path.join(ROOT, 'assets/models3d.json'), 'utf8');
-const fragment = fragmentHead + `<script type="application/json" id="artmanifest">${art}</script>\n<script type="application/json" id="models3d">${models}</script>\n<script>${js}</script>\n`;
+// identificador de versión (fecha + commit): la página lo conoce y, en la edición alojada, compara con version.json para avisar de actualizaciones
+const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12);
+let sha = 'dev'; try { sha = execSync('git rev-parse --short HEAD', { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch {}
+const buildId = `${stamp}-${sha}`;
+const UPDATER = `<script>(function(){var B=${JSON.stringify(buildId)};window.__BUILD=B;
+var t=document.createElement('div');t.textContent='v'+B;t.style.cssText='position:fixed;right:6px;bottom:2px;z-index:5;font:10px/1 system-ui,sans-serif;color:#fff;opacity:.38;pointer-events:none';document.body.appendChild(t);
+if(location.protocol==='file:'||!${host})return;
+function banner(){if(document.getElementById('updBanner'))return;var d=document.createElement('div');d.id='updBanner';d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:99999;background:#ffb340;color:#101418;font:700 14px system-ui,sans-serif;padding:10px 14px;border-radius:10px;box-shadow:0 4px 20px #0008;display:flex;gap:12px;align-items:center';d.innerHTML='<span>Nueva versi\u00f3n disponible</span><button style="font:700 14px system-ui,sans-serif;padding:7px 12px;border:0;border-radius:8px;background:#101418;color:#ffb340">Actualizar</button>';d.querySelector('button').onclick=function(){location.reload()};document.body.appendChild(d)}
+function check(){fetch('version.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(v){if(v&&v.build&&v.build!==B)banner()}).catch(function(){})}
+setInterval(check,300000);document.addEventListener('visibilitychange',function(){if(!document.hidden)check()});setTimeout(check,15000)})();</script>\n`;
+const fragment = fragmentHead + `<script type="application/json" id="artmanifest">${art}</script>\n<script type="application/json" id="models3d">${models}</script>\n<script>${js}</script>\n` + UPDATER;
 const HOST_HEAD = `<meta name="theme-color" content="#070a14"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eclipse"><meta name="robots" content="noindex,nofollow"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">`;
 const skeleton = host ? skeletonStart.replace('</head>', HOST_HEAD + '</head>') : skeletonStart;
 const full = skeleton + fragment + '\n</body></html>';
@@ -75,6 +86,7 @@ if (host) {
   for (const f of fs.readdirSync(path.join(ROOT, 'public'))) if (f !== 'icon.svg') fs.copyFileSync(path.join(ROOT, 'public', f), path.join(outDir, f));
   const title = titleArg ?? (head.match(/<title>(.*?)<\/title>/)?.[1] ?? 'Operación Eclipse');
   const desc = head.match(/<meta name="description" content="(.*?)">/)?.[1] ?? '';
+  fs.writeFileSync(path.join(outDir, 'version.json'), JSON.stringify({ build: buildId, t: new Date().toISOString() }) + '\n');
   fs.writeFileSync(path.join(outDir, 'manifest.webmanifest'), JSON.stringify({
     name: title, short_name: 'Eclipse', description: desc, lang: 'es', start_url: './', scope: './',
     display: 'fullscreen', display_override: ['fullscreen', 'standalone'], orientation: 'landscape',
@@ -85,4 +97,4 @@ if (host) {
   fs.writeFileSync(outFile.replace(/\.html$/, '.artifact.html'), fragment);
 }
 const mb = (n) => (n / 1048576).toFixed(2) + ' MB';
-console.log(`build ok (${dev ? 'dev' : 'min'}${host ? ', host' : ''}) in ${((Date.now() - t0) / 1000).toFixed(1)}s · js ${(js.length / 1024).toFixed(0)} KB · ${path.relative(ROOT, outFile)} ${mb(full.length)}${host ? ' · + manifest e iconos' : ` · artifact fragment ${mb(fragment.length)}`}`);
+console.log(`build ${buildId} ok (${dev ? 'dev' : 'min'}${host ? ', host' : ''}) in ${((Date.now() - t0) / 1000).toFixed(1)}s · js ${(js.length / 1024).toFixed(0)} KB · ${path.relative(ROOT, outFile)} ${mb(full.length)}${host ? ' · + manifest e iconos' : ` · artifact fragment ${mb(fragment.length)}`}`);
