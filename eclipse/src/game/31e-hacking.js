@@ -201,8 +201,6 @@ function hkMigrate(S) {
   }
   if (first && !Object.keys(H.tools).length) for (const id in c.start.tools) H.tools[id] = c.start.tools[id];
   H.loadout = Array.isArray(H.loadout) ? H.loadout.filter((id, i, a) => c.programs[id] && a.indexOf(id) === i).slice(0, c.lvl.maxSlots) : [];
-  // primera vez: el kit inicial ya viene cargado (si no, el jugador no sabría que existe la pantalla de programas)
-  if (first && !H.loadout.length) H.loadout = Object.keys(H.tools).filter((id) => H.tools[id] > 0 && c.programs[id].min <= H.lvl).slice(0, c.lvl.baseSlots);
   H.heat = Math.max(0, Math.min(c.trace.heatMax, Number(H.heat) || 0));
   H.risk = hkInt(H.risk, 0, c.risk.length - 1, 1);
   const st = H.stats && typeof H.stats === "object" && !Array.isArray(H.stats) ? H.stats : (H.stats = {});
@@ -217,6 +215,8 @@ function hkMigrate(S) {
       hkLevelFromXp(H, true);
     }
   }
+  // primera vez: el kit inicial ya viene cargado (si no, el jugador no sabría que existe la pantalla de programas); tras el nivel retroactivo
+  if (first && !H.loadout.length) H.loadout = Object.keys(H.tools).filter((id) => H.tools[id] > 0 && c.programs[id].min <= H.lvl).slice(0, c.lvl.baseSlots + Math.floor((H.lvl - 1) / c.lvl.slotEvery));
   S.hackV = 1;
 }
 x.migrations.push(hkMigrate);
@@ -3268,6 +3268,7 @@ window.__hack = {
   planLayers: hkPlanLayers,
   sims: { HkFwSim, HkBruteSim, hkFwGen, hkBruteGen, hkTuneGen, hkTuneTarget, hkTuneErr, hkRouteGen, hkRouteSolve, hkCipherGen, hkLayerLimit, hkShortfall },
   gadgetPulse: hkGadgetPulse,
+  playerDps: hkPlayerDps,
   rng: (s) => (HK.rng = hkRng(s)),
   // avanza la sesión activa n pasos de dt (modo manual: apaga el bucle en tiempo real); bot = el juego se resuelve solo
   step(n, dt, bot) {

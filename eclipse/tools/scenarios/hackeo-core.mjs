@@ -208,7 +208,7 @@ export default async function (api) {
   // 9 · chips de lore con x.loreApi (simulada)
   const cp = await ev(() => {
     const G = window.__G, h = window.__hack, calls = [];
-    G.loreApi = { decrypt: (id, q) => { calls.push([id, q]); return true; }, hintFor: (k) => 'Pista de prueba del archivo', has: () => true };
+    G.loreApi = { decrypt: (id, q) => { calls.push([id, q]); return true; }, hintFor: () => null, has: () => true };
     document.querySelector('#panel [data-close]')?.click();
     let got = null;
     const hd = h.api.decryptChip('chip_7', (r) => (got = r));
@@ -218,7 +218,7 @@ export default async function (api) {
     const txt = document.querySelector('.cp-hint')?.textContent || '';
     const res = h.autoplay(600);
     document.querySelector('#hkOk')?.click();
-    return { hdr, res, got: !!got, calls, objetivo: res && res.objetivo, q: res && res.calidad, txt: txt.includes('Pista de prueba'), layers: res && res.capas };
+    return { hdr, res, got: !!got, calls, objetivo: res && res.objetivo, q: res && res.calidad, txt: txt.includes('Pista del archivo'), layers: res && res.capas };
   });
   check('chip: dos capas (la 1.ª cifrado con la pista del archivo) y descifra vía x.loreApi.decrypt(id, calidad)', cp.res && cp.res.ok && cp.objetivo === 'chip' && cp.calls.length === 1 && cp.calls[0][0] === 'chip_7' && cp.calls[0][1] >= 0.4 && cp.calls[0][1] <= 1 && cp.txt && cp.layers >= 2, JSON.stringify({ c: cp.calls, t: cp.txt, l: cp.layers }));
 

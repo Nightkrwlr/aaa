@@ -251,13 +251,16 @@ export default async function (api) {
       const r = await ev(([lvl, lane]) => {
         const G = window.__G, h = window.__hack, p = G.player, out = {};
         G.uiBlockDamage = true; G.paused = false; h.state().lvl = 10; h.state().tools = {};
+        // equipo Raro del nivel de la prueba (el mismo generador que usa la sim de talentos): sin esto el arma inicial no araña a un mech de nivel 30
+        const T = window.__talents;
+        if (T && T.simGear) { window.__hkGear = window.__hkGear || {}; if (!window.__hkGear[lvl]) { window.__seedRng && window.__seedRng(0x51ed270b + lvl); window.__hkGear[lvl] = T.simGear(lvl, 2); } Object.assign(G.S.eq, window.__hkGear[lvl]); }
+        G.S.lvl = lvl; p.recalc(); out.dps = Math.round(h.playerDps());
         const clear = () => { for (const e of G.enemies) e.dead = true; G.enemies.length = 0; G.projs.length = 0; window.__gadgets.clear(); };
         const group = () => { const ms = [0, 1, 2].map((i) => window.__spawn('mech', lvl, lane.x + 7 + i * 1.6, lane.z + 1 - i)); ms.forEach((m) => { m.alerted = false; m.static = true; }); window.__step(3, 1 / 30); return ms; };
         const hpOf = (ms) => ms.reduce((a, m) => a + Math.max(0, m.hp), 0), maxOf = (ms) => ms.reduce((a, m) => a + m.maxHp, 0);
         const away = () => { p.x = lane.x - 26; p.z = lane.z; }, home = () => { p.x = lane.x; p.z = lane.z; };
         const secs = 14, n = Math.round(secs * 30);
         const pct = (hp0, ms) => Math.round(100 * (hp0 - hpOf(ms)) / maxOf(ms));
-        out.dps = Math.round(0);
         clear(); away(); let tur = window.__spawn('torreta', lvl, lane.x, lane.z), ms = group(), hp0 = hpOf(ms);
         h.applyControl(tur, secs, false); window.__step(n, 1 / 30); out.ctl = pct(hp0, ms);
         clear(); away(); tur = window.__spawn('torreta', lvl, lane.x, lane.z); ms = group(); hp0 = hpOf(ms);
@@ -267,7 +270,7 @@ export default async function (api) {
         clear(); home();
         return out;
       }, [lvl, lane]);
-      console.log(`  enemigos nv ${String(lvl).padStart(2)}: vida de los 3 mechs quitada en 14 s → torreta controlada ${r.ctl} % · con sobrecarga ${r.over} % (${r.overKills} muertos) · jugador solo ${r.player} % · gadget centinela ${r.gadget} %`);
+      console.log(`  nv ${String(lvl).padStart(2)} · DPS del arma ${String(r.dps).padStart(5)} · vida de los 3 mechs quitada en 14 s → torreta controlada ${r.ctl} % · con sobrecarga ${r.over} % (${r.overKills} muertos) · jugador solo ${r.player} % · gadget centinela ${r.gadget} %`);
     }
   }
 }
