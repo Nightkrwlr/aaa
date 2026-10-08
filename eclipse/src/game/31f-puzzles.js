@@ -3925,6 +3925,9 @@ window.__puzzles = {
   // huella del renderer (geometrías y texturas vivas): para comprobar que montar y desmontar no deja restos
   rawSub: (n) => PZ_RAW.sub(n),
   rawOp: (n) => PZ_RAW.op(n),
+  wrapSub: (n) => _x(n),
+  wrapOp: (n) => yx(n),
+  probe: () => Q(), // siguiente valor del RNG de ejecución del juego (para probar que la colocación no lo consume)
   simDungeons: pzSimDungeons,
   verify: pzVerifyPlacement,
   mem() {
