@@ -88,7 +88,7 @@ var HE = {
           g = gn[m],
           [b, y] = HE[g.ai] || [2, 4],
           v = Math.round(Rt(b, y) * (t.mul || 1)),
-          _ = 0.045 + x.night * 0.03 + (t.elite || 0),
+          _ = x.cfg.econ.diff.eliteWorld + x.night * 0.03 + (t.elite || 0),
           A = Q() < _ ? 0 : -1,
           T = [];
         for (let S = 0; S < v; S++) {
@@ -167,7 +167,7 @@ var HE = {
         return;
       }
       if (x.inSafe || t.inBase() || x.bossActive || ((this.evT -= n), this.evT > 0)) return;
-      this.evT = 200 + Q() * 160;
+      this.evT = x.cfg.econ.diff.eventT[0] + Q() * x.cfg.econ.diff.eventT[1];
       let i = Yt(["supply", "horde", "hunt", "meteor"]);
       this.startEvent(i);
     },
@@ -743,7 +743,7 @@ var VE = 42,
           (l) => (l[2] || 0) <= i && !["nido"].includes(l[0]),
         ),
         r = t.size || (t.big ? Rt(5, 7) : Rt(3, 5)),
-        o = x.mode === "op" ? (x.op.mods.includes("elites") ? 0.35 : 0.08) : 0.07;
+        o = x.mode === "op" ? (x.op.mods.includes("elites") ? 0.35 : x.cfg.econ.diff.eliteOp) : x.cfg.econ.diff.eliteOp;
       for (let l = 0; l < r; l++) {
         let c = a.length ? a[Math.floor(Q() * a.length)][0] : "rastrero";
         t.dark && i >= 8 && Q() < 0.3 && (c = "sombra");

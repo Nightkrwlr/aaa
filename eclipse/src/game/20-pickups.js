@@ -102,53 +102,11 @@ function Nt(n, e, t, i = {}) {
 }
 
 
-// ════════ [510] FunctionDeclaration Tx (1701 bytes) ════════
+// ════════ [510] FunctionDeclaration Tx (botín de una muerte) ════════
+// Toda la lógica de botín vive en rollLoot (31a-economy.js); aquí solo quedan los objetos de misión.
 function Tx(n) {
-  let e = x.S,
-    t = x.player,
-    i = Ex(),
-    s = n.xpVal || 1,
-    a = e.lvl - n.lvl;
-  a > 2 && !n.boss && (s *= Math.max(0.1, 1 - 0.18 * (a - 2)));
-  let r = n.boss ? 14 : n.elite ? 6 : s > 20 ? 3 : s > 6 ? 2 : 1;
-  for (let f = 0; f < r; f++) Nt("xp", n.x, n.z, { val: s / r, spd: n.boss ? 5 : 2.5 });
-  if (Q() < (n.boss || n.elite ? 1 : 0.4)) {
-    let f = (2 + Q() * 3) * mt.credits(n.lvl) * (n.boss ? 40 : n.elite ? 6 : 1) * Sx(),
-      u = n.boss ? 8 : n.elite ? 3 : 1;
-    for (let p = 0; p < u; p++) Nt("cr", n.x, n.z, { val: f / u });
-  }
-  let o = (f, u, p = 1) => {
-    Q() < u * (n.elite ? 4 : 1) * (n.boss ? 20 : 1) &&
-      Nt("mat", n.x, n.z, { mat: f, val: p * (n.boss ? Rt(2, 4) : 1) });
-  };
-  ((n.fam === "insect" || n.fam === "mutant") && o("bio", 0.13),
-    n.fam === "mech" && (o("scrap", 0.28, Rt(1, 2)), o("core", 0.012)),
-    n.fam === "xeno" && (o("crystal", 0.04), o("bio", 0.08)),
-    o("scrap", 0.05),
-    o("battery", 0.03),
-    n.lvl >= 8 && o("crystal", 0.012),
-    n.boss &&
-      (Nt("mat", n.x, n.z, { mat: "core", val: Rt(2, 4) }), Nt("mat", n.x, n.z, { mat: "data", val: Rt(1, 3) })),
-    Q() < 0.045 && Nt("hp", n.x, n.z, { val: 0.12 }),
-    Q() < 0.018 && Nt("cons", n.x, n.z, { cons: "grenade", val: 1 }),
-    Q() < 0.012 && Nt("cons", n.x, n.z, { cons: "medkit", val: 1 }),
-    Q() < (n.boss ? 1 : n.elite ? 0.25 : 0.012) && Nt("cap", n.x, n.z, { buff: Yt(wo), life: 25 }));
-  let l = n.lvl,
-    c = i - 1,
-    d = (f) => Nt("item", n.x, n.z, { item: us(l, { luck: c, ...f }), life: 300 }),
-    h = (f) => Nt("chip", n.x, n.z, { chip: xi(l, { luck: c, ...f }), life: 300 });
-  n.boss && n.mini
-    ? (h({ minT: 2 }), Q() < 0.35 && d({ minR: 1 }))
-    : n.boss
-      ? (d({ minR: 2, newChance: 0.9 }),
-        h({ minT: 2 }),
-        h({ minT: 2 }),
-        Q() < (n.def.secret ? 1 : 0.3) && h({ pow: !0 }))
-      : n.champion
-        ? (h({ minT: 2 }), h({}), Q() < 0.3 && d({ minR: 1 }))
-        : n.elite
-          ? (Q() < 0.3 * i && h({}), Q() < 0.04 * i && d({}))
-          : (Q() < 0.012 * i && h({}), Q() < 0.0035 * i && d({}));
+  let e = x.S;
+  ecoKillLoot(n);
   for (let [f, u] of Object.entries(e.quests.active)) {
     let p = u.def || gi[f];
     p &&
@@ -162,26 +120,9 @@ function Tx(n) {
 }
 
 
-// ════════ [511] FunctionDeclaration Co (718 bytes) ════════
+// ════════ [511] FunctionDeclaration Co (botín de cofre/evento: tier 1-3) ════════
 function Co(n, e, t, i, s = {}) {
-  let a = Ex(),
-    r = t >= 3 ? 2 : t === 2 ? Rt(1, 2) : Q() < 0.6 ? 1 : 0;
-  for (let c = 0; c < r; c++)
-    Nt("chip", n, e, { chip: xi(i, { luck: a - 1, minT: t >= 3 ? 2 : 1 }), life: 300, spd: 3 });
-  (Q() < (t >= 3 ? 0.45 : t === 2 ? 0.15 : 0.05) &&
-    Nt("item", n, e, { item: us(i, { luck: a - 1, minR: t >= 3 ? 2 : t === 2 ? 1 : 0 }), life: 300, spd: 3 }),
-    t >= 2 && Nt("mat", n, e, { mat: "core", val: t >= 3 ? Rt(1, 2) : 1 }));
-  let o = (10 + Q() * 15) * mt.credits(i) * (1 + t) * Sx();
-  for (let c = 0; c < 4; c++) Nt("cr", n, e, { val: o / 4, spd: 3 });
-  let l = ["scrap", "bio", "crystal", "battery"];
-  for (let c = 0; c < t + 1; c++) {
-    let d = Yt(l);
-    Nt("mat", n, e, { mat: d, val: d === "crystal" ? 1 : Rt(2, 4) });
-  }
-  (t >= 2 && Q() < 0.5 && Nt("mat", n, e, { mat: "data", val: 1 }),
-    Q() < 0.5 && Nt("cons", n, e, { cons: Yt(["grenade", "medkit", "stim"]), val: 1 }),
-    Q() < 0.25 + t * 0.1 && Nt("cap", n, e, { buff: Yt(wo), life: 40 }),
-    ae.play("chest"));
+  ecoChestLoot(n, e, t, i, s);
 }
 
 

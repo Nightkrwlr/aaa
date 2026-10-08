@@ -137,7 +137,7 @@ function wE(n) {
 // ════════ [488] FunctionDeclaration Ol (117 bytes) ════════
 function Ol(n) {
   let e = n.type === "weapon" ? Hn[n.base].n : ai[n.base].n;
-  return n.pow ? `\xAB${Gn[n.pow].names[0]}\xBB ${e}` : e;
+  return n.uname ? `\xAB${n.uname}\xBB ${e}` : n.pow ? `\xAB${Gn[n.pow].names[0]}\xBB ${e}` : e;
 }
 
 
@@ -217,9 +217,10 @@ var Vd = (n) => n.ilvl < Math.min(70, x.S.lvl),
 
 // ════════ [493] FunctionDeclaration qd (120 bytes) ════════
 function qd(n) {
-  if (n.r >= 5) return null;
+  // Legendario → Mítico no se asciende: el Mítico solo cae. Épico → Legendario exige Sigilos y Fragmento (ecoAscendCost)
+  if (n.r >= 4) return null;
   let e = { ...EE[n.r + 1] };
-  return ((e.credits = Math.round(120 * mt.credits(n.ilvl) * (n.r + 1))), e);
+  return ((e.credits = Math.round(120 * mt.credits(n.ilvl) * (n.r + 1))), ecoAscendCost(n, e));
 }
 
 

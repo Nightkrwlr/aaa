@@ -778,6 +778,7 @@ function ZE() {
                         : o.k === "datapad" && !x.world.dpTaken(o) && a(o.x, o.z, "#ffffff", 0.8));
     }
   for (let r of x.pickups) r.k === "item" && a(r.x, r.z, Ct[r.item.r].css, 0.8);
+  ecoMinimapPings(Ut, i, s); // ping de los hitos (Épico o superior) que siguen en el suelo
   (Ut.restore(),
     Ut.save(),
     Ut.translate(i / 2, i / 2),
