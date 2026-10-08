@@ -782,6 +782,7 @@ var VE = 42,
         !e.pending &&
         t < i.rad + 1.5 &&
         (i.op ? !e.done : !o || Date.now() - o > Fi.boss) &&
+        bossGateArena(i, t) && // 31g-bosses.js: la guarida sigue sellada hasta cumplir misión, nivel y sellos
         ((e.pending = 1.2),
         (e.done = !1),
         ee("bossIntro", { ...En[i.boss], id: i.boss }),

@@ -166,8 +166,51 @@ var Pa = class {
     let d = this.mat.map;
     r.flip ? ((d.repeat.x = -1 / o.n), (d.offset.x = (c + 1) / o.n)) : ((d.repeat.x = 1 / o.n), (d.offset.x = c / o.n));
     let h = this.h * (o.hs || 1);
-    (this.mesh.scale.set(h * this.aspect, h, 1),
-      kl && this.mesh.quaternion.copy(this.root.quaternion).invert().multiply(kl));
+    if (
+      (this.mesh.scale.set(h * this.aspect, h, 1),
+      kl && this.mesh.quaternion.copy(this.root.quaternion).invert().multiply(kl),
+      this.sil)
+    ) {
+      // silueta de oclusión: misma hoja de animación y mismo plano que el sprite (sin asignaciones por fotograma)
+      let m = this.silMat;
+      (m.map !== this.mat.map && ((m.needsUpdate = !m.map), (m.map = this.mat.map)),
+        this.sil.scale.copy(this.mesh.scale),
+        this.sil.quaternion.copy(this.mesh.quaternion),
+        (this.sil.visible = i !== "death" && !!m.map));
+    }
+  }
+  // Silueta de oclusión: el personaje solo se dibuja "a través" de muros y obstáculos (prueba de profundidad inversa) y NUNCA
+  // sobre sí mismo ni sobre el suelo. Sin contorno permanente: de normal el sprite se ve limpio.
+  addSilhouette(e = 8247551, t = 0.85) {
+    return (
+      (this.silMat = new vt({
+        color: e,
+        alphaTest: 0.45,
+        side: pn,
+        depthFunc: Hu,
+        depthWrite: !1,
+        transparent: !0,
+        opacity: t,
+        toneMapped: !1,
+        fog: !1,
+        polygonOffset: !0,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+      })),
+      // la hoja de animación solo da la forma (alfa): el relleno es un color plano, como una silueta de verdad
+      (this.silMat.onBeforeCompile = (sh) => {
+        sh.fragmentShader = sh.fragmentShader.replace("#include <map_fragment>", "#include <map_fragment>\n  diffuseColor.rgb = diffuse;");
+      }),
+      (this.silMat.customProgramCacheKey = () => "pjsil1"),
+      (this.sil = new Ge(Pd, this.silMat)),
+      (this.sil.renderOrder = 5),
+      (this.sil.frustumCulled = !1),
+      (this.sil.castShadow = !1),
+      (this.sil.receiveShadow = !1),
+      (this.sil.visible = !1),
+      this.root.add(this.sil),
+      this
+    );
   }
   flash(e, t = 16777215) {
     this.fx.flash(e, t !== 16777215);

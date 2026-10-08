@@ -340,7 +340,7 @@ var ht = {
       case "kill":
         return `${n.any ? (n.elite ? "\xC9lites" : "Enemigos") : n.e ? gn[n.e].n : vr[n.fam] + "s"} abatidos${n.reg !== void 0 ? " (" + De[n.reg].n + ")" : ""}: ${i}`;
       case "boss":
-        return `Derrota a ${En[n.b].n}: ${i}`;
+        return `Derrota a ${En[n.b].n}: ${i}${bossGateText(n.b)}`; // 31g-bosses.js: requisitos de la guarida sellada
       case "collect":
         return `${n.item}: ${i}`;
       case "gather":

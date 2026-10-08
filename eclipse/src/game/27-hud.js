@@ -95,7 +95,7 @@ function sb() {
       <div class="bar xpbar" style="margin-top:4px"><i id="hXp"></i></div>
     </div>
     <div id="buffs"></div>
-    <button id="hPerk">\u25B2 TALENTO</button>
+    <button id="hPerk" aria-label="Punto de talento disponible" title="Punto de talento disponible">\u25B2<b></b></button>
   </div>
   <div id="hTC"><div id="clock"></div><div id="bossbar"><div class="bn" id="bName"></div><div class="bt" id="bTitle"></div><div class="bar"><i id="bHp"></i><b id="bHpT"></b></div></div></div>
   <div id="hTR"><canvas id="mini" width="176" height="176"></canvas><div id="res"></div></div>
@@ -243,7 +243,9 @@ function ab(n) {
     {
       let g = Tn("#hPerk"),
         b = e.talentPts > 0 && !x.uiOpen;
-      g._s !== b && ((g._s = b), (g.style.display = b ? "block" : "none"));
+      g._s !== b && ((g._s = b), (g.style.display = b ? "block" : "none"), Tn("#tbTal")?.classList.toggle("has", b));
+      // puntos libres dentro de la pastilla (solo si hay más de uno: con uno basta la flecha)
+      b && g._n !== e.talentPts && ((g._n = e.talentPts), (g.lastChild.textContent = e.talentPts > 1 ? e.talentPts : ""));
     }
     (Bi("#hName", e.name), Bi("#hRank", `${vo(e.lvl)} \xB7 ${De[x.regionId]?.n || ""}`));
     let s = qe(t.hp / t.maxHp, 0, 1) * 100;

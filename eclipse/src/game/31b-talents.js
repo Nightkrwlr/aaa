@@ -824,7 +824,7 @@ It("loreCollection", (id, nombre) => {
 });
 It("levelUp", () => {
   const S = x.S;
-  S && S.talentPts > 0 && ee("toast", `Punto de talento disponible · ${Tt.touchMode ? "toca TALENTO" : "pulsa T"} para gastarlo`, "quest");
+  S && S.talentPts > 0 && ee("toast", `Punto de talento disponible · ${Tt.touchMode ? "toca ▲ o TAL." : "pulsa T"} para gastarlo`, "quest");
 });
 
 // Tecla T (y botón táctil «TAL.»): se atiende desde el bucle de entrada Nb sin tocar 32-boot.

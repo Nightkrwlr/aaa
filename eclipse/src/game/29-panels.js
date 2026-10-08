@@ -8,8 +8,11 @@ var _t = (n) => document.querySelector(n),
     open(n, e, t = {}) {
       wr && (wr(), (wr = null));
       let i = _t("#panel");
+      // t.keep: refresco del MISMO panel (p. ej. subir un nivel en el laboratorio): la lista conserva el scroll en vez de volver al principio
+      let keepScroll = t.keep && x.uiOpen === n && !i.hidden ? uiScrollSave(i) : null;
       ((i.hidden = !1),
         (i.innerHTML = e),
+        keepScroll && uiScrollRestore(i, keepScroll),
         (x.uiOpen = n),
         (x.paused = !t.noPause),
         (i.onclick = (s) => {
@@ -29,6 +32,30 @@ var _t = (n) => document.querySelector(n),
       return `<div class="whead"><h2>${ke(n)}</h2>${e}${t}<button class="x" data-close aria-label="Cerrar">\u2715</button></div>`;
     },
   };
+
+
+// Guarda y restaura el scroll de los elementos desplazables de un panel que se redibuja entero (clave: etiqueta.clase + nº de aparición).
+function uiScrollSave(root) {
+  let out = [],
+    seen = {};
+  for (let el of root.querySelectorAll("*")) {
+    let k = el.tagName + "." + el.className,
+      i = (seen[k] = (seen[k] || 0) + 1) - 1;
+    (el.scrollTop > 0 || el.scrollLeft > 0) && out.push([k + "#" + i, el.scrollTop, el.scrollLeft]);
+  }
+  return out;
+}
+function uiScrollRestore(root, saved) {
+  if (!saved.length) return;
+  let want = new Map(saved.map(([k, t, l]) => [k, [t, l]])),
+    seen = {};
+  for (let el of root.querySelectorAll("*")) {
+    let k = el.tagName + "." + el.className,
+      i = (seen[k] = (seen[k] || 0) + 1) - 1,
+      v = want.get(k + "#" + i);
+    v && ((el.scrollTop = v[0]), (el.scrollLeft = v[1]));
+  }
+}
 
 
 // ════════ [662] FunctionDeclaration yb (216 bytes) ════════
@@ -571,7 +598,7 @@ function Gl(n, e) {
   }
   let l = `<div class="win">${Ze.head("M\xF3dulos \xB7 " + n.name, "")}<div class="wbody"><div class="grid2"><div style="min-width:0">${ql(n)}<div class="sec">Ranuras (${n.aff.length}/${Ga(n)})</div>${i.join("")}<div class="sec">Legendario</div>${a}<p class="muted" style="font-size:12px">Quitar un m\xF3dulo es gratis: vuelve a tu almac\xE9n. M\xE1s ranuras al ascender de rango en el banco de trabajo.</p><button class="btn" id="mBack">\u2190 Volver</button></div>
     <div style="min-width:0"><div class="sec" style="margin-top:0">Compatibles (${r.length})</div><div class="inv">${r.map(({ c: h, i: f }) => qp(h, Ti === h, f, "data-mc")).join("")}</div><div style="margin-top:10px">${o}</div></div></div></div></div>`;
-  Ze.open("mods", l, { silent: !!x.uiOpen });
+  Ze.open("mods", l, { silent: !!x.uiOpen, keep: !0 });
   let c = _t("#panel");
   (c.querySelectorAll("[data-mc]").forEach((h) =>
     h.addEventListener("click", () => {
@@ -940,7 +967,7 @@ function ch() {
         return `<div class="card${r ? " can" : ""}"><b>${ke(t.n)}</b> <span class="tag" style="color:var(--amber)">Nivel ${i}/${t.max}</span><div class="muted" style="font-size:13px;margin:4px 0">${ke(t.d)}</div>${s ? '<div class="cost" style="color:var(--good,#7ed957)">\u2713 Completado</div>' : `<div class="muted" style="font-size:11px;letter-spacing:.12em;margin-top:6px">NECESITAS</div>${Do(a)}<button class="btn${r ? " pri" : ""}" style="margin-top:8px;width:100%" data-r="${t.id}" ${r ? "" : "disabled"}>${r ? "Investigar" : "Faltan materiales"}</button>`}</div>`;
       },
     ).join("")}</div></div></div>`;
-  (Ze.open("research", e, { silent: x.uiOpen === "research" }),
+  (Ze.open("research", e, { silent: x.uiOpen === "research", keep: !0 }),
     _t("#panel")
       .querySelectorAll("[data-r]")
       .forEach((t) =>
@@ -972,7 +999,7 @@ function Vl() {
         : ""
     }
     <div class="sec">Disponibles</div><div class="cards">${e.list.map((a, r) => `<div class="card"><b>${ke(a.n)}</b><div class="muted" style="font-size:13px">${De[a.reg].n} \xB7 Nivel ${a.lvl}</div><p style="font-size:14px;margin:6px 0">${ke(a.intro)}</p><div class="cost">Pago: ${yt(a.rew.credits)} \xA4${a.rew.item ? " + objeto" : ""}</div><button class="btn" style="margin-top:6px" data-acc="${r}">Aceptar</button></div>`).join("") || '<span class="muted">No quedan contratos. Vuelve m\xE1s tarde.</span>'}</div></div></div>`;
-  Ze.open("board", i, { silent: x.uiOpen === "board" });
+  Ze.open("board", i, { silent: x.uiOpen === "board", keep: !0 });
   let s = _t("#panel");
   (s.querySelectorAll("[data-acc]").forEach((a) =>
     a.addEventListener("click", () => {
@@ -1014,7 +1041,7 @@ function Wl(n) {
       return `<div class="card"><div class="sec" style="margin-top:0">${Zi[r.theme].n}</div><b style="font-size:17px">${pr[r.obj].n}</b><div class="muted" style="font-size:13px">${pr[r.obj].d}</div><p style="margin:6px 0;font-size:14px">Nivel de amenaza: <b style="color:${c ? "var(--bad)" : "var(--text)"}">${r.lvl}</b></p>${r.mods.map((d) => `<div style="font-size:13px"><span style="color:var(--amber2)">${mr[d].n}:</span> ${mr[d].d}</div>`).join("") || '<div class="muted" style="font-size:13px">Sin modificadores</div>'}<div class="cost" style="margin-top:6px">Bot\xEDn \xD7${l.toFixed(2)}</div><button class="btn pri" style="margin-top:8px" data-go="${o}">Desplegar</button></div>`;
     }).join("")}</div>
     ${n.breach ? "" : '<div class="row" style="margin-top:10px"><button class="btn" id="dReroll">Buscar otras operaciones</button></div>'}</div></div>`;
-  (Ze.open("deploy", i, { silent: x.uiOpen === "deploy" }),
+  (Ze.open("deploy", i, { silent: x.uiOpen === "deploy", keep: !0 }),
     _t("#panel")
       .querySelectorAll("[data-go]")
       .forEach((r) =>

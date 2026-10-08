@@ -169,8 +169,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .perk.sel { border-color: var(--pc, var(--amber)); box-shadow: 0 0 0 2px var(--pc, var(--amber)) inset, 0 0 24px color-mix(in srgb, var(--pc, var(--amber)) 25%, transparent); background: color-mix(in srgb, var(--pc, var(--amber)) 10%, var(--panel2)); }
 .perk .ptx { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .lvbar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; position: sticky; bottom: 0; padding: 10px 0 2px; background: linear-gradient(transparent, var(--panel) 30%); }
-#hPerk { pointer-events: auto; display: none; margin-top: 2px; font: 700 12px var(--f-disp); letter-spacing: .1em; color: #0b1010; background: #5dff9a; border: 0; padding: 6px 10px; animation: perkP 1.4s ease-in-out infinite; align-self: flex-start; }
+/* punto de talento libre: pastilla pequeña en la esquina del panel del jugador, fuera del flujo (no empuja las misiones) */
+#hPerk { position: absolute; top: -7px; right: -9px; z-index: 2; pointer-events: auto; display: none; min-width: 26px; height: 22px; padding: 0 7px; border-radius: 11px; font: 700 12px/22px var(--f-disp); letter-spacing: .02em; color: #0b1010; background: #5dff9a; border: 0; animation: perkP 1.4s ease-in-out infinite; }
+#hPerk b { font-weight: 700; margin-left: 2px; }
+#hPerk::after { content: ""; position: absolute; inset: -10px; } /* zona táctil ampliada sin agrandar el botón */
 @keyframes perkP { 50% { box-shadow: 0 0 0 4px rgba(93,255,154,0.35); } }
+#tmenu button.has { color: #5dff9a; border-color: #5dff9a; animation: perkP 1.4s ease-in-out infinite; }
 @media (max-width: 760px) { .perks { grid-template-columns: minmax(0, 1fr); } }
 .perk { border: 1px solid var(--line2); background: var(--panel2); padding: 16px 14px; text-align: left; color: var(--text); display: flex; flex-direction: column; gap: 6px; min-height: 150px; transition: transform .12s; }
 .perk:hover { transform: translateY(-3px); border-color: var(--amber); }
@@ -372,6 +376,7 @@ body.touch .badge { width: 30px; height: 30px; font-size: 14px; }
 body.touch .who { gap: 7px; } body.touch .who .nm { font-size: 13px; } body.touch .who .rk { font-size: 9.5px; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 body.touch .bar { height: 12px; } body.touch .bar b { font-size: 10px; } body.touch .xpbar { height: 4px; }
 body.touch .buff { font-size: 10px; padding: 1px 4px; }
+body.touch #hPerk { top: -6px; right: -8px; min-width: 24px; height: 20px; font-size: 11px; line-height: 20px; padding: 0 6px; }
 body.touch #hTR { right: calc(10px + env(safe-area-inset-right)); top: calc(8px + env(safe-area-inset-top)); gap: 4px; }
 body.touch #mini { width: 96px; height: 96px; }
 body.touch #res { font-size: 10.5px; gap: 3px 7px; flex-wrap: wrap; justify-content: flex-end; max-width: 120px; }

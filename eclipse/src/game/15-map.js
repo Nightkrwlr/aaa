@@ -345,6 +345,8 @@ var fx = Object.fromEntries(Al.map((n) => [n.id, n])),
         if (c) {
           let d = new Pa(c, 1.75),
             h = Ei(0.42);
+          // sin contorno ni luz de borde permanentes: solo se ve su silueta cuando un muro u obstáculo lo tapa
+          (d.fx.setAura(0, 0).setRim(0, 0), d.addSilhouette());
           (d.root.add(h), (this.rig = { root: d.root, actor: d, recoil: 0, shadow: h }));
         } else if (Ln.has(e.char || br[0])) {
           let d = t ? t.col : 5200444,
