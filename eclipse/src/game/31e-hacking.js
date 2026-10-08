@@ -3101,7 +3101,8 @@ function hkDecryptChip(id, cb, opts) {
           console.warn("hackeo: loreApi.decrypt", e);
         }
       }
-      if (!res.ok) return [res.q > 0 ? `El chip resiste, pero queda legible al <b>${Math.round(res.q * 100)} %</b>: vuelve a intentarlo.` : "El chip resiste: puedes intentarlo de nuevo."];
+      // con lore:true es el Archivo quien decide la calidad final (cada fallo lo deja algo más legible): aquí no se promete un porcentaje
+      if (!res.ok) return [spec.lore ? "El chip resiste, pero el Archivo lo deja algo más legible: puedes intentarlo de nuevo." : res.q > 0 ? `El chip resiste, pero queda legible al <b>${Math.round(res.q * 100)} %</b>: vuelve a intentarlo.` : "El chip resiste: puedes intentarlo de nuevo."];
       const H = hkState();
       H.stats.chips++;
       if (typeof ecoGrantXp === "function") ecoGrantXp(HK_CFG.reward.chipXp, "chip");

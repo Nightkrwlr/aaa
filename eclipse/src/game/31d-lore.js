@@ -1381,23 +1381,33 @@ It("uiClosed", (k) => {
 });
 for (const ev of ["playerDied", "toMenu", "respawn"]) It(ev, () => loreVoiceStop(true));
 // — Descifrado de chips: hackApi (frente HACKEO) si existe; si no, un minijuego de terminal del juego base —
+// Contrato con HACKEO: cb(res) llega DESPUÉS de cerrar el panel de hackeo, con res = {ok, q, abortado?, …}. Una desconexión voluntaria
+// (✕, Esc, «Desconectar», o abrirse otro panel encima) trae abortado: no es un intento ni da calidad.
 function loreDecryptUi(id) {
   const e = LR.idx.get(id), L = loreS();
   if (!e) return;
   const tier = Math.max(1, Math.min(4, e.d || 2));
+  // una grabación sonando en el panel no debe seguir hablando (ni sus subtítulos tapar) por encima del minijuego
+  loreVoiceStop(true);
   const done = (res) => {
-    const ok = res === true || !!(res && (res.ok || res.success));
-    const prev = L.d[id] || 0, rq = res && typeof res === "object" ? (res.q ?? res.quality) : null;
-    let q = ok ? 1 : rq != null ? +rq || 0 : Math.min(0.85, prev + LORE_CFG.partialPerFail);
+    // si entre medias se ha abierto otro panel (muerte, pausa) o se ha vuelto al menú, el Archivo no debe pisarlo
+    const back = () => { if (x.started && x.player && !x.player.dead && !x.uiOpen) loreOpenArchive("chips", id); };
+    const obj = res && typeof res === "object" ? res : null;
+    if (obj && obj.abortado) return back();
+    const ok = res === true || !!(obj && (obj.ok || obj.success));
+    const prev = L.d[id] || 0, rq = obj ? (obj.q ?? obj.quality) : null;
+    // un fallo deja el chip algo más legible (partialPerFail) aunque el minijuego no devuelva calidad parcial; si la devuelve, gana la mejor
+    const step = Math.min(0.85, prev + LORE_CFG.partialPerFail);
+    let q = ok ? 1 : rq != null ? Math.max(Math.min(0.85, +rq || 0), step) : step;
     if (ok && rq != null) q = Math.max(+rq || 0, 0.999);
     const r = loreDecrypt(id, q);
     r.ok || la(`Descifrado fallido · el chip ya es legible al ${Math.round(r.q * 100)} %`, "warn");
-    loreOpenArchive("chips", id);
+    back();
   };
   if (x.hackApi && typeof x.hackApi.run === "function") {
     try {
-      x.hackApi.run({ kind: "chip", id, name: e.t, tier, diff: tier, lore: true }, done);
-      return;
+      if (x.hackApi.run({ kind: "chip", id, name: e.t, tier, diff: tier, lore: true }, done)) return;
+      // run() devuelve null si no puede abrir la sesión (partida sin empezar, sin estado de hackeo): cae al minijuego de reserva
     } catch (err) {
       console.warn("[lore] hackApi.run", err);
     }

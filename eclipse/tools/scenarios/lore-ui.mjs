@@ -55,11 +55,16 @@ export default async function (api) {
   await shot('chip');
   await tap('#panel [data-lo="decrypt"]');
   await page.waitForTimeout(400); await wait(6);
-  const hk = await ev(() => ({ ui: window.__G.uiOpen, box: (() => { const r = document.querySelector('#panel .win').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })() }));
-  check('el descifrado abre el minijuego y se puede cancelar con un toque', hk.ui === 'lorehack', JSON.stringify(hk));
+  // con el frente HACKEO el descifrado es una sesión «hack» (pantalla previa → capas); sin él, el minijuego de reserva «lorehack»
+  const hk = await ev(() => ({ ui: window.__G.uiOpen, real: !!window.__G.hackApi, box: (() => { const r = document.querySelector('#panel .win').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), Math.round(r.right), Math.round(r.bottom)]; })(), inside: (() => { const r = document.querySelector('#panel .win').getBoundingClientRect(); return r.left >= -1 && r.right <= innerWidth + 1 && r.top >= -1 && r.bottom <= innerHeight + 1; })() }));
+  check('el descifrado abre el minijuego (hackeo real o de reserva), dentro de la pantalla', (hk.real ? hk.ui === 'hack' : hk.ui === 'lorehack') && hk.inside, JSON.stringify(hk));
   await shot('descifrar');
-  await tap('#loAbort');
+  const tr0 = await ev(() => window.__lore.state().tr['d_geologo'] | 0);
+  // cancelar con un toque: «Cancelar» de la pantalla previa del hackeo o el botón del minijuego de reserva
+  await tap(hk.real ? '#hkNo' : '#loAbort');
+  await page.waitForTimeout(300); await wait(4);
   check('cancelar vuelve al chip en el Archivo', (await ev(() => window.__G.uiOpen)) === 'archive');
+  check('cancelar no cuenta como intento fallido ni cambia la legibilidad', (await ev(() => ({ tr: window.__lore.state().tr['d_geologo'] | 0, q: window.__lore.api.get('d_geologo').q }))).tr === tr0 && (await ev(() => window.__lore.api.get('d_geologo').q)) === 0.45);
   // grabaciones: reproducir con un toque
   await tap('#panel [data-lt="grab"]');
   await tap('#panel .lo-card[data-id="v_radio_reyes"]');

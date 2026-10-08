@@ -15,7 +15,7 @@ export default async function (api) {
   await boot(); await newGame();
 
   // ── 1. subir de nivel NO abre modal; da toast y punto; el botón #hPerk aparece
-  const lv = await ev(() => { const G = window.__G, p = G.player; window.__toasts = []; G.events.toast.push((t) => window.__toasts.push(t)); const l0 = G.S.lvl; for (let i = 0; i < 600 && G.S.lvl === l0; i++) p.addXp(20);   // la curva de XP de ECONOMÍA es otra: se sube de nivel sea cual sea return { l0, l1: G.S.lvl, pts: G.S.talentPts, ui: G.uiOpen, earned: G.S.talentEarned }; });
+  const lv = await ev(() => { const G = window.__G, p = G.player; window.__toasts = []; G.events.toast.push((t) => window.__toasts.push(t)); const l0 = G.S.lvl; for (let i = 0; i < 600 && G.S.lvl === l0; i++) p.addXp(20); /* la curva de XP de ECONOMÍA es otra: se sube de nivel sea cual sea */ return { l0, l1: G.S.lvl, pts: G.S.talentPts, ui: G.uiOpen, earned: G.S.talentEarned }; });
   await wait(6);
   const vis = await ev(() => { const b = document.querySelector('#hPerk'); return { disp: getComputedStyle(b).display, txt: b.textContent, toasts: window.__toasts }; });
   check('subir de nivel concede 1 punto y no abre ningún panel', lv.l1 === lv.l0 + 1 && lv.pts === 1 && lv.ui == null, JSON.stringify(lv));
