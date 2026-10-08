@@ -54,6 +54,90 @@ Normal: XP 1-3 orbes, créditos 40 %, chatarra 28 %, materiales por familia, vid
 ### 2.3 Ficheros
 Posee `31a-economy.js` (todo lo nuevo), y cirugía en: `20-pickups.js` (`Tx`, `Co`, `Ex`, `Sx`: delega en `rollLoot`), `08-stats-items.js` (`mt`, `Ct`, `Di`; el resto no), `18-enemy-defs.js` (campo `trophy`), `29-panels.js` (SOLO tienda, pestaña Botín y venta). Sin tocar talentos ni gadgets.
 
+### 2.4 Estado (frente Economía) — implementado
+
+**Dónde está todo:** `src/game/31a-economy.js` (≈1500 líneas, 10 secciones numeradas al principio del fichero). Datos en `x.cfg.econ`.
+Simulaciones: `node tools/sim/loot.mjs` y `node tools/sim/xp.mjs` (ejecutan la build real dentro de Chromium; cuestan ≈ 1 min). Escenarios:
+`economia-escenas` (30 muertes, hitos forzados, tienda, venta, ascenso, dificultad: 13 comprobaciones), `economia-hito` y `economia-ui`
+(capturas en móvil), `economia-migracion` (guardado antiguo).
+
+**Qué hace**
+- `rollLoot(src, lvl, ctx)`: API única, devuelve descriptores (`xp cr mat hp cons cap plan mod trophy gplan`) sin crear nada; `ecoSpawn` los
+  materializa. `Tx` y `Co` (20-pickups) solo llaman a `ecoKillLoot` / `ecoChestLoot`. Fuentes: `normal elite champion miniboss boss bossSecret
+  bossFinal chest1-3 secret event quest op`. La suerte (`Ex()`) se acota a ×1…×2 y solo multiplica los tramos ≥ Raro que la tabla ya permite.
+  `yo()` (rareza legada) delega en `ecoRoll`, así que cualquier llamador antiguo (recompensas de operación, misiones) usa las mismas tablas.
+- **Hitos** (`milestone(item, src, pickup)` + `drop(item, src)`): destello de pantalla, ralentización (0,35-0,7 s), sonido propio por rareza, banner no
+  modal (nunca se pinta detrás de un panel), pilar de luz de 22-37 m sobre la pieza, ping y flecha de borde en el minimapa mientras siga en el suelo,
+  aviso en el feed de botín y anotación en `S.hitos` (Registro, pestaña **Hitos** del Archivo). Los Legendarios y Míticos reciben nombre único
+  (30 × 30 combinaciones, sin repetir) y una frase (`item.uname`, `item.lore`; se ve en la ficha del objeto).
+- **XP:** `mt.xpToNext` sale de los tiempos objetivo (`cfg.xp.minutesTo`, interpolación monótona) y del XP medio por muerte de la región de cada
+  nivel; el 30 % de la barra se supone que llega por descubrimiento (primera visita, bestiario, lore, primera muerte de jefe, colección de trofeos).
+  La penalización por nivel superior se mide contra `min(nivel, 44)` (el techo del mundo es 46) para que el final del juego siga dando XP.
+- **Dificultad:** `mt.enemyDmg` ×1,4 en el nivel 1 que baja linealmente a ×1,0 en el 15. `Di` reescalado (ids intactos): Recluta 0,7/0,55 (cómodo),
+  **Soldado 1,3/1,35** (el reto que antes era Veterano), Veterano 1,75/1,8, Pesadilla 2,4/2,6 (vida/daño). Élites en manadas del mundo 4,5 % → 10 %
+  y en operaciones 7-8 % → 12 %; emboscadas cada 150-270 s (antes 200-360 s); suelo: vida 4,5 % → 2,2 %, botiquín comprable un 25 % más barato.
+- **Trofeos:** 51 enemigos + 14 jefes con trofeo propio (`def.trophy = {id, n, v}`, asignado al arrancar desde la tabla). Viven en una lista propia
+  (no ensucian `x.pickups`, se dibujan como orbes instanciados). `S.junk = {id: n, "id:p": n}` (`:p` = ejemplar perfecto, ×8, 1,5 % en normales).
+  Pestaña **Botín** del inventario (agrupada por región, progreso de colección, «Vender todo»), colecciones por región y **Comprador de curiosidades**
+  (×1,5, pestaña de la tienda). Los trofeos marcados «ingrediente» (`ing`) no entran en «Vender todo»; API para el Taller: `ecoJunkSpend(id, n)`.
+- **Venta arreglada:** `ecoCanSell()` = hay una tienda abierta o un PNJ con servicio `shop` a < 7 m (Vega en el Bastión, Bruno, ARGOS, mercader
+  errante…). Funciona en el inventario (botones de vender) y en la nueva pestaña **Vender** de la tienda (selección múltiple con confirmación si hay
+  piezas Épicas+). `Gi` ya no condiciona nada más.
+- **Tienda:** `lS`/`Oo` de 29-panels delegan en `ecoShopStock`/`ecoShopOpen`. 2 planos + 3 módulos por PNJ, rotación 45 min, planos solo Común/Poco
+  común, módulos T1/T2, precios ×2,5, existencias que se agotan al comprar; el guardado antiguo regenera su tienda (`v3`).
+- **Ascenso a Legendario:** Épico → Legendario cuesta 3 Sigilos de jefe + 1 Fragmento de Eclipse + créditos ×3 + 14 cristal + 10 núcleo + 8 datos.
+  Datos reales `S.sig = {jefe: n}` y `S.eclipseFrag = n`; además se exponen como materiales virtuales no enumerables (`S.mats.sigilo`, `S.mats.fragmento`)
+  para que el Taller, el pago de costes y la barra de recursos funcionen sin tocar su código. El Sigilo se concede ya en la primera muerte de cada jefe
+  principal (`ecoGrantSigil`); los Fragmentos esperan al frente de Eclipses (`ecoGrantFragment(n)`). Legendario → Mítico ya no se asciende.
+  Depuración: `__dbg.give('sigilo'|'fragmento'|'trofeos'|'creditos', n)`, `__dbg.drop('plan'|'modulo', rareza, fuente)`, `__dbg.openShop/openBotin/openHitos`.
+
+**Números reales** (`tools/sim/loot.mjs`, 300 000 muertes por fuente; modelo de actividad en la cabecera del script)
+| | resultado | objetivo |
+|---|---|---|
+| Recogidas por 100 muertes normales | créditos 20,3 · materiales 14,0 · trofeos 27,3 · consumibles 4,0 · módulos 0,49 · planos 0,16 | 20 · 15 · 30 · ≤ 5 · 0,5 · 0,15 |
+| Primer Raro (media de 20 000 partidas) | 25 min (mediana 29) | 25-40 min |
+| Primer Épico | 2,6 h (mediana 1,4 h) | 3-4 h |
+| Primer Legendario | mediana 26 h; llega en el 95 % de las partidas largas | 20-30 h |
+| Mítico | solo de jefes secretos y de la Mente: 8 % de las partidas lo ven alguna vez | 100 h + |
+| Trofeos sobre el total de créditos | 28 % (24-34 % según región) | 25-35 % |
+
+Esperanza por fuente (eventos hasta la primera pieza ≥ rareza): normal 4 762 muertes hasta un Raro (nunca Épico); élite 152 → Raro, 949 → Épico;
+campeón 4 → Raro, 18 → Épico, 532 → Legendario; cofre t3 2 → Raro, 6 → Épico, 211 → Legendario; jefe principal 1 → Raro, 5 → Épico, 33 → Legendario;
+jefe secreto 2 → Épico, 10 → Legendario, 118 → Mítico; la Mente 3 → Legendario, 25 → Mítico.
+
+`tools/sim/xp.mjs`: tiempos acumulados dentro del 1 % de los objetivos en las 8 anclas (L2 1,0 min · L5 10 min · L10 45 min · L20 4,0 h · L30 10 h ·
+L40 20 h · L48 30 h · L60 60 h). Muertes por nivel: L1→2 20, L5→6 117, L10→11 227, L20→21 629, L30→31 987, L45→46 1 518, L59→60 4 058. XP que
+no viene de matar: 27,5 % de la barra con 1 contrato/h (el tablón es opcional); las misiones ya escalan con `xpToNext`.
+
+**Ajustes al contrato y por qué**
+1. **Jefes:** una sola pieza «firma» (plano) con la tabla del jefe (30/50/17/3) + 2 módulos con la tabla normal (suelo Poco común). Con tres tiradas por
+   la tabla del jefe, el primer Épico caía a la hora de juego (los tres primeros jefes llegan en las 3 primeras horas) y no a las 3-4 h del contrato.
+   Jefes secretos y la Mente: 2 planos por la suya y los módulos por la tabla de campeón.
+2. **Cofre de tier 2** tiene tabla propia (62/29/8/1): el contrato no la define; con la de élite el primer Épico se adelantaba una hora.
+3. **Trofeos 24-36 %** (el contrato dice 18-30 %): con 18-30 % salen ≈ 21 por 100 muertes y el objetivo es ≈ 30; se subió la base y la pendiente.
+4. **Planos Raro+ no caen de enemigos normales** (regla del apartado «obtener equipo no es trivial»): sus planos se limitan a Poco común aunque la tabla
+   del contrato dé un 5 % de Raro a los módulos.
+5. La **ralentización** se hace escalando el reloj que recibe el bucle (`requestAnimationFrame` envuelto en 31a), porque `32-boot.js` no se toca. No
+   afecta al audio ni a `__step`.
+
+**Cirugía en ficheros antiguos** (todas mínimas): `08-stats-items` (`mt.xpToNext`, `mt.enemyDmg`, `Di`, `yo`, comentario en `Ct`), `19-arsenal` (`qd`: umbral y
+coste de Legendario; `Ol`: nombre único), `20-pickups` (`Tx`, `Co`), `26-spawner` (3 números: élites del mundo, élites de operación, intervalo de emboscadas, ahora en
+`x.cfg.econ.diff`), `27-hud` (1 línea en `ZE`: ping del minimapa), `29-panels` (`lS`/`Oo` → 31a; pestaña Botín; `ecoCanSell()` en 3 sitios; lore en `ql`; pestaña
+Hitos en el Archivo `No`; texto de «Rango máximo» en el Taller).
+
+**API para otros frentes:** `rollLoot`, `ecoRoll(src, luck, minR)`, `ecoChestLoot(x, z, tier, lvl, {src})`, `ecoGrantSigil(jefe)`, `ecoGrantFragment(n)`, `ecoJunkSpend(id, n)`,
+`ecoGrantXp(fracciónDeBarra, motivo)`, eventos `drop`, `milestone`, `junk`; si existe `gadgetPlanDrop(src, lvl)` se llama en cada botín y su resultado se emite como
+`gadgetPlanDrop(plan, {x, z}, src)` para que el frente de gadgets lo materialice. Los frentes de jefes pueden declarar su fuente con `ecoCfg.drop`/`ecoCfg.rar`.
+
+**Pendiente / no hecho**
+- El desguace devuelve igual que antes (`hr` está en 08-stats-items, fuera del alcance de este frente): pendiente de decidir si se reduce.
+- Fragmentos de Eclipse y Sigilos de guarida: solo existe la lógica de gasto y la API; el origen llega con los frentes de sorpresas y jefes. Hoy el Sigilo
+  se gana en la primera muerte de cada jefe principal.
+- Sin traducción a sonido de las celebraciones más allá de los tres temas sintetizados `hito3/4/5`; sin voz.
+- El tiempo hasta el primer Épico depende de cuándo se maten los primeros jefes; si se quiere un Épico más tardío, la palanca es `cfg.drop.boss.plan`
+  (probabilidad) o la hora del primer jefe, no las tablas del contrato.
+- `tour-lite`/`perf()`: no se añaden llamadas de dibujo por enemigo (trofeos como orbes instanciados); solo cada hito añade un haz alto (1 malla).
+
 ## 3. Frente TALENTOS (D2)
 
 Sustituye los 41 perks aleatorios (`Al`, `Wa`, `pb`, `S.pendingPerks`) por un **árbol de talentos**.

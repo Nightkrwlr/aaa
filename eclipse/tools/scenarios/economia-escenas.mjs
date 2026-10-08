@@ -76,7 +76,16 @@ export default async function (api) {
   await shot('inventario-botin');
   await page.keyboard.press('Escape'); await wait(3);
 
-  // ── 5. ruta de ascenso a Legendario
+  // ── 5. primera muerte de un jefe principal: Sigilo + XP de descubrimiento (y la segunda no repite)
+  const bs = await ev(() => {
+    const G = window.__G, S = G.S, p = G.player, mk = () => { const b = window.__spawn('reina', 6, p.x + 5, p.z + 5, { boss: true }); b.kill({}); };
+    const x0 = S.xp + S.lvl * 1e6; mk(); const afterFirst = { sig: S.sig.reina, count: window.__eco.ecoSigCount(), xpUp: S.xp + S.lvl * 1e6 > x0 };
+    mk(); return { first: afterFirst, again: S.sig.reina, junkBoss: Object.keys(S.junk).includes('reina') || window.__eco.ground.some((g) => g.id === 'reina') };
+  });
+  check('primera muerte de un jefe principal: 1 Sigilo (una sola vez), XP y trofeo de jefe', bs.first.sig === 1 && bs.first.count === 1 && bs.first.xpUp && bs.again === 1 && bs.junkBoss, JSON.stringify(bs));
+  await ev(() => { const S = window.__G.S; S.sig = {}; S.sigSeen = {}; window.__dbg.UI.close(); });
+
+  // ── 5b. ruta de ascenso a Legendario
   const asc = await ev(() => {
     const E = window.__eco, G = window.__G, S = G.S;
     const it = E.us(10, { type: 'weapon', rarity: 3 }); E.Ss(it, { silent: true });

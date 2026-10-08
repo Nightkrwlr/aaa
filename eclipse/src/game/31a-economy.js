@@ -219,8 +219,18 @@ function rollLoot(src, lvl, ctx = {}) {
   }
   // módulos y planos con la tabla de rarezas de la fuente
   for (let i = ecoCount(d.mod); i > 0; i--) out.push(ecoModDesc(ecoRoll(d.modSrc || src, luck, d.modFloor || 0)));
-  for (let i = ecoCount(d.plan); i > 0; i--) out.push({ k: "plan", r: ecoRoll(src, luck), fresh: src.startsWith("boss") });
+  // los planos de rareza ≥ Raro no caen de enemigos normales (solo de élites, cofres, jefes y misiones)
+  for (let i = ecoCount(d.plan); i > 0; i--) out.push({ k: "plan", r: src === "normal" ? Math.min(1, ecoRoll(src, luck)) : ecoRoll(src, luck), fresh: src.startsWith("boss") });
+  ecoGadgetPlan(out, src, lvl);
   return out;
+}
+
+// Gancho con el frente de gadgets (DEPTH_DESIGN §4): si existe gadgetPlanDrop(src, lvl) y devuelve un plano, se añade al botín
+// como {k:'gplan', plan}; al aparecer se emite 'gadgetPlanDrop'(plan, {x, z}) para que ese frente lo materialice.
+function ecoGadgetPlan(out, src, lvl) {
+  if (typeof gadgetPlanDrop !== "function") return;
+  let p = gadgetPlanDrop(src, lvl);
+  p && out.push({ k: "gplan", plan: p });
 }
 
 // Cofres: pocas recogidas pero con peso (créditos en 2 orbes, materiales una vez por tipo)
@@ -244,6 +254,7 @@ function ecoChestRolls(src, lvl, ctx, luck) {
   t >= 2 && ecoQ() < 0.5 && out.push({ k: "mat", mat: "data", val: 1 });
   ecoQ() < 0.5 && out.push({ k: "cons", cons: ecoPick(["grenade", "medkit", "stim"]) });
   ecoQ() < 0.25 + t * 0.1 && out.push({ k: "cap", life: 40 });
+  ecoGadgetPlan(out, src, lvl);
   return out;
 }
 
@@ -290,6 +301,8 @@ function ecoSpawn(d, at, lvl, src) {
       return Nt("cap", at.x, at.z, { buff: Yt(wo), life: d.life || 25, spd: at.spd });
     case "trophy":
       return ecoDropTrophy(d.id, d.perfect, at);
+    case "gplan":
+      return (ee("gadgetPlanDrop", d.plan, { x: at.x, z: at.z }, src), d.plan);
     case "plan": {
       let it = us(lvl, { rarity: d.r, newChance: d.fresh ? 0.9 : 0.75, luck: 0 });
       d.r >= 4 && ecoMakeUnique(it);
@@ -681,6 +694,7 @@ function ecoLoreHtml(it) {
 #ecoMile .rule{height:1px;width:min(420px,60vw);margin:6px auto;background:linear-gradient(90deg,transparent,var(--c),transparent)}
 .ecolore{font:italic 500 13px var(--f-body);color:var(--amber2);margin:2px 0 8px;line-height:1.35}
 body.touch #ecoMile{top:10%}
+body:has(#panel:not([hidden])) #ecoMile,body:has(#panel:not([hidden])) #ecoFlash{display:none}  /* nunca por detrás de un panel */
 .eco-tabs{margin-bottom:10px}
 .eco-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:5px 8px;border:1px solid var(--line2);background:var(--panel2);margin-bottom:4px}
 .eco-row .ic{width:26px;text-align:center;font-size:18px;flex:none}
@@ -788,7 +802,7 @@ function ecoCelebrate(it, src) {
   fl.style.setProperty("--a", r >= 4 ? "0.8" : "0.55");
   fl.style.setProperty("--d", r >= 5 ? "1.4s" : r >= 4 ? "1s" : "0.7s");
   fl.classList.remove("on");
-  void fl.offsetWidth;
+  void fl.offsetWidth; // fuerza el reflujo para reiniciar la animación
   fl.classList.add("on");
   // ralentización, sonido, cámara
   ecoSlowMo(...m.slow[r]);
@@ -1028,15 +1042,13 @@ function ecoAscendCost(n, base) {
 }
 It("bossKilled", (b) => {
   if (b.mini) return;
-  let S = x.S,
-    ec = ecoEnsure(),
+  let ec = ecoEnsure(),
     id = b.id;
   ec.bossXp || (ec.bossXp = {});
   if (ec.bossXp[id]) return;
   ec.bossXp[id] = 1;
   ecoGrantXp(b.def.secret ? ecoCfg.xp.firstSecretBoss : ecoCfg.xp.firstBoss, "jefe");
   ecoMainBosses.includes(id) && ecoGrantSigil(id);
-  void S;
 });
 
 
@@ -1178,9 +1190,6 @@ function ecoShopBuyBind(root, n, t) {
 }
 
 // Vender: equipo sin usar (selección múltiple, nada de lo bloqueado ★) y todo el botín
-function ecoSellable() {
-  return x.S.inv.filter((p) => !p.fav);
-}
 function ecoShopSellHtml() {
   let e = x.S,
     st = ecoShopSt,
