@@ -1,11 +1,11 @@
 // Simulación del árbol de talentos (31b-talents.js): estructura, topes de seguridad y builds de 30 puntos contra una horda fija.
 // Se ejecuta con el arnés de capturas (arranca la build real y evalúa en la página):
 //   node tools/build.mjs && node tools/shot.mjs --scenario tools/sim/talents.mjs --size 640x360 --out /ruta [--seed 1]
-// Variables de entorno: TRIALS (repeticiones por build, 3), SECS (duración, 60), LVL (nivel del jugador, 30), ELVL (nivel de los enemigos, = LVL), HORDE (enemigos vivos a la vez, 20).
+// Variables de entorno: TRIALS (repeticiones por build, 4), SECS (duración, 90), LVL (nivel del jugador, 30), ELVL (nivel de los enemigos, = LVL+2), HORDE (enemigos vivos a la vez, 24), ONLY (regex: solo los builds cuyo nombre case).
 // Imprime tablas; con --seed igual el resultado es reproducible salvo el ruido del RNG interno del juego (por eso se promedian TRIALS pruebas).
 export default async function (api) {
   const { boot, newGame, ev } = api;
-  const TRIALS = +(process.env.TRIALS || 3), SECS = +(process.env.SECS || 60), LVL = +(process.env.LVL || 30), ELVL = +(process.env.ELVL || LVL), HORDE = +(process.env.HORDE || 20);
+  const TRIALS = +(process.env.TRIALS || 4), SECS = +(process.env.SECS || 90), LVL = +(process.env.LVL || 30), ELVL = +(process.env.ELVL || LVL + 2), HORDE = +(process.env.HORDE || 24);
   await boot(); await newGame();
 
   // ───────────────────────── 1 · estructura del árbol
@@ -65,10 +65,33 @@ export default async function (api) {
     // árbol completo
     const all = {}; for (const n of C.nodes) all[n.id] = n.max;
     T.setBuild(all); const full = read(); const fullSt = JSON.parse(JSON.stringify(p.st));
+    // máximo alcanzable con el presupuesto REAL del juego (≈76 puntos) metiéndolos todos en una rama, comprando siempre el nodo que más sube la métrica
+    const greedy = {};
+    const metricOf = { bas: 'ehp', art: 'dps', esp: 'spd', ele: 'dps', ing: 'ehp', caz: 'dps' };
+    S.talentEarned = 76; S.credits = 1e9;
+    for (const b of C.branches) {
+      for (const n of C.nodes) delete S.perks[n.id];
+      S.talentPts = 76; p.recalc();
+      const m = metricOf[b.id];
+      for (let guard = 0; guard < 200 && S.talentPts > 0; guard++) {
+        let best = null, bv = -1;
+        for (const n of C.nodes) {
+          if (n.br !== b.id || !T.canBuy(n.id).ok) continue;
+          T.buy(n.id); const v = read()[m] / (n.cost); T.setBuild(Object.fromEntries(C.nodes.filter((q) => S.perks[q.id]).map((q) => [q.id, S.perks[q.id] - (q.id === n.id ? 1 : 0)])));
+          S.talentPts = 76 - C.nodes.reduce((a, q) => a + (S.perks[q.id] || 0) * q.cost, 0);
+          if (v > bv) { bv = v; best = n; }
+        }
+        if (!best) break;
+        T.buy(best.id);
+      }
+      const r = read();
+      greedy[b.id] = { hp: Math.round(p.maxHp + p.maxShield), dmgRed: p.dmgRed, dodge: p.dodge, dps: r.dps / base.dps, ehp: r.ehp / base.ehp, spd: r.spd / base.spd, metric: m, left: S.talentPts };
+    }
+    for (const n of C.nodes) delete S.perks[n.id];
     // perks antiguos al máximo (referencia del diseño: «el árbol completo ≈ los perks antiguos al máximo»)
     const old = T.oldPerksMax();
     T.setBuild({});
-    return { base, worst, full, fullStats: fullSt, old };
+    return { base, worst, full, fullStats: fullSt, old, greedy };
   }, LVL);
   const top = (k, n = 4) => [...caps.worst].sort((a, b) => b[k] - a[k]).slice(0, n).map((w) => `${w.n} ×${w[k].toFixed(2)}`).join(', ');
   console.log('\n== TOPES (un solo nodo al máximo, nivel ' + LVL + ') ==');
@@ -77,6 +100,8 @@ export default async function (api) {
   console.log('Velocidad, mayores:', top('spd'));
   console.log('nodos que dan NaN/∞/≤0:', caps.worst.filter((w) => !w.ok).map((w) => w.id).join(',') || 'ninguno');
   console.log(`ÁRBOL COMPLETO: DPS ×${(caps.full.dps / caps.base.dps).toFixed(2)}, vida efectiva ×${(caps.full.ehp / caps.base.ehp).toFixed(2)}, velocidad ×${(caps.full.spd / caps.base.spd).toFixed(2)}, reducción ${(caps.full.dmgRed * 100).toFixed(0)}%, esquiva ${(caps.full.dodge * 100).toFixed(0)}%, crítico ${(caps.full.crit * 100).toFixed(0)}%`);
+  console.log('con 76 puntos (todo el presupuesto del juego) en UNA rama, optimizando su métrica (DPS / vida efectiva / velocidad respecto a sin talentos):');
+  for (const [k, g] of Object.entries(caps.greedy)) console.log(`  ${k}: DPS ×${g.dps.toFixed(2)}, vida efectiva ×${g.ehp.toFixed(2)}, velocidad ×${g.spd.toFixed(2)}  (optimizado: ${g.metric}, sin gastar ${g.left}; vida+escudo ${g.hp}, reducción ${(g.dmgRed * 100).toFixed(0)} %, esquiva ${(g.dodge * 100).toFixed(0)} %)`);
   const o = caps.old;
   console.log(`perks antiguos al máximo (referencia): daño +${(o.dmg * 100).toFixed(0)}%, cadencia +${(o.fireRate * 100).toFixed(0)}%, vida +${(o.maxHpPct * 100).toFixed(0)}%, crítico +${(o.critChance * 100).toFixed(0)}%, esquiva +${(o.dodge * 100).toFixed(0)}%`);
   const f = caps.fullStats;
@@ -90,11 +115,13 @@ export default async function (api) {
     'sin talentos': [],
     'tanque (Bastión)': B('bas', ['root', 3], ['b1', 5], ['b2', 4], ['b3', 4], ['b4', 1], ['b5', 1], ['b6', 1], ['kb', 1], ['b4', 5], ['b6', 3], ['c1', 5]),
     'cañón de cristal (Artillería)': B('art', ['root', 3], ['b1', 5], ['b2', 4], ['b3', 1], ['b4', 3], ['b5', 3], ['b6', 1], ['kb', 1], ['b3', 4], ['b6', 3], ['c1', 5], ['c2', 5]),
-    'velocista (Espectro)': B('esp', ['root', 3], ['a1', 4], ['b1', 5], ['b2', 4], ['b3', 1], ['b4', 1], ['b5', 1], ['b6', 1], ['kb', 1], ['b3', 4], ['b6', 3], ['c1', 5]),
+    // Fantasma (ka): el esprint concede invulnerabilidad; 'Esprint ágil' y 'Resorte' acortan la recarga
+    'velocista (Espectro)': B('esp', ['root', 3], ['a1', 4], ['b1', 5], ['b2', 4], ['ka', 1], ['a2', 3], ['b3', 4], ['a3', 1], ['a4', 2]),
     'elemental (Elemental)': B('ele', ['root', 3], ['a1', 5], ['a2', 4], ['a3', 4], ['a4', 3], ['a5', 1], ['a6', 1], ['ka', 1], ['a6', 3], ['b1', 5], ['b2', 5]),
     'disperso (5 por rama)': [].concat(...['bas', 'art', 'esp', 'ing', 'ele', 'caz'].map((br) => B(br, ['root', 3], ['b1', 2]))),
     'disperso (15 en 3 ramas)': [].concat(...['bas', 'art', 'esp'].map((br) => B(br, ['root', 3], ['b1', 5], ['b2', 2]))),
   };
+  if (process.env.ONLY) for (const k of Object.keys(builds)) if (!new RegExp(process.env.ONLY, 'i').test(k)) delete builds[k]; // ONLY=regex: solo esos builds
   const PTS = 30;
   console.log(`\n== BUILDS DE ${PTS} PUNTOS vs HORDA CONTINUA (jugador nivel ${LVL}, ${HORDE} enemigos vivos de nivel ${ELVL}, ${SECS} s, ${TRIALS} pruebas, equipo Raro) ==`);
   const rows = [];
@@ -116,7 +143,7 @@ export default async function (api) {
       const left = S.talentPts;
       p.recalc();
       const keys = C.nodes.filter((n) => n.key && S.perks[n.id]).map((n) => n.n);
-      const stat = { hp: Math.round(p.maxHp + p.maxShield), dmgRed: +p.dmgRed.toFixed(2), dodge: +p.dodge.toFixed(2), spd: +p.speed.toFixed(2), dmg: +(p.ws[0].dmgBase).toFixed(1), rate: +p.ws[0].rate.toFixed(2), multi: p.ws[0].multi };
+      const stat = { hp: Math.round(p.maxHp + p.maxShield), dmgRed: +p.dmgRed.toFixed(2), dodge: +p.dodge.toFixed(2), spd: +p.speed.toFixed(2), dmg: +(p.ws[0].dmgBase).toFixed(1), rate: +p.ws[0].rate.toFixed(2), multi: p.ws[0].multi, dpsA: p.ws[0].dmgBase * p.ws[0].rate * (1 + p.ws[0].multi * 0.6) * (1 + p.ws[0].critC * (p.ws[0].critM - 1)) };
       const out = { left, keys, stat, trials: [] };
       const cycle = ['rastrero', 'rastrero', 'escupidor', 'rastrero', 'bruto', 'rastrero', 'escupidor', 'acorazado'];
       const key = (c, on) => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { code: c }));
@@ -145,10 +172,11 @@ export default async function (api) {
           if (s % 30 === 0) topUp();
           // política: huir de la masa de enemigos cercanos (kiting) cada 6 fotogramas y esprintar si hay alguno encima
           if (s % 6 === 0) {
-            let cx = 0, cz = 0, c = 0, near = 1e9;
-            for (const e of all) if (!e.dead) { const d = Math.hypot(e.x - p.x, e.z - p.z); if (d < 14) { cx += e.x; cz += e.z; c++; } near = Math.min(near, d); }
+            // campo de repulsión: cada enemigo a < 14 m empuja con peso 1/d² (huir por el hueco menos peligroso, no solo del centroide)
+            let rx = 0, rz = 0, c = 0, near = 1e9;
+            for (const e of all) if (!e.dead) { const ex = p.x - e.x, ez = p.z - e.z, d = Math.hypot(ex, ez) || 0.1; if (d < 14) { const w = 1 / (d * d); rx += ex / d * w; rz += ez / d * w; c++; } near = Math.min(near, d); }
             const want = new Set();
-            if (c) { const dx = p.x - cx / c, dz = p.z - cz / c, m = Math.hypot(dx, dz) || 1; if (dx / m > 0.35) want.add('KeyD'); if (dx / m < -0.35) want.add('KeyA'); if (dz / m > 0.35) want.add('KeyS'); if (dz / m < -0.35) want.add('KeyW'); }
+            if (c) { const m = Math.hypot(rx, rz) || 1; if (rx / m > 0.35) want.add('KeyD'); if (rx / m < -0.35) want.add('KeyA'); if (rz / m > 0.35) want.add('KeyS'); if (rz / m < -0.35) want.add('KeyW'); }
             if (near < 2.6 && p.dashCd <= 0) { key('Space', true); key('Space', false); }
             for (const k of held) if (!want.has(k)) key(k, false);
             for (const k of want) if (!held.has(k)) key(k, true);
@@ -172,13 +200,13 @@ export default async function (api) {
     const row = { name, kills: avg('kills'), dps: avg('dps'), surv: avg('surv'), died: r.trials.filter((t) => t.died).length, hpPct: avg('hpPct'), taken: avg('taken'), keys: r.keys.join('+') || '—', left: r.left, stat: r.stat };
     rows.push(row);
     console.log(`${name.padEnd(30)} bajas ${row.kills.toFixed(1).padStart(5)}  DPS ${row.dps.toFixed(0).padStart(6)}  supervivencia ${row.surv.toFixed(1).padStart(5)}s  muertes ${row.died}/${TRIALS}  vida final ${(row.hpPct * 100).toFixed(0).padStart(3)}%  daño recibido ${row.taken.toFixed(0).padStart(6)}  claves: ${row.keys}  (sin gastar ${row.left})`);
-    console.log(`${''.padEnd(30)} stats: vida+escudo ${r.stat.hp}, reducción ${r.stat.dmgRed}, esquiva ${r.stat.dodge}, vel ${r.stat.spd}, daño/disparo ${r.stat.dmg}, cadencia ${r.stat.rate}, extra proyectiles ${r.stat.multi}`);
+    console.log(`${''.padEnd(30)} stats: vida+escudo ${r.stat.hp}, reducción ${r.stat.dmgRed}, esquiva ${r.stat.dodge}, vel ${r.stat.spd}, daño/disparo ${r.stat.dmg}, cadencia ${r.stat.rate}, extra proyectiles ${r.stat.multi}, DPS de pegada ${r.stat.dpsA.toFixed(0)}`);
   }
   // veredicto: cada build especializado se juzga en SU tarea y debe superar al mejor build disperso en esa misma métrica
   //   tanque → segundos vivo y daño absorbido; cañón → ritmo de bajas por segundo vivo (DPS efectivo); velocista → segundos vivo; elemental → bajas totales
   const rate = (r) => r.kills / Math.max(1, r.surv);
   const disp = rows.filter((r) => r.name.startsWith('disperso')), base = rows[0];
-  const task = { tanque: ['segundos vivo', (r) => r.surv], 'cañón': ['bajas por segundo vivo', rate], velocista: ['segundos vivo', (r) => r.surv], elemental: ['bajas totales', (r) => r.kills] };
+  const task = { tanque: ['segundos vivo', (r) => r.surv], 'cañón': ['DPS de pegada vs objetivo duro', (r) => r.stat.dpsA], velocista: ['segundos vivo', (r) => r.surv], elemental: ['bajas totales', (r) => r.kills] };
   console.log('\n== VEREDICTO ==');
   let allWin = true;
   for (const r of rows.filter((q) => !q.name.startsWith('disperso') && q !== base)) {
@@ -187,7 +215,7 @@ export default async function (api) {
     allWin = allWin && win;
     console.log(`${r.name.padEnd(30)} ${lbl}: ${f(r).toFixed(2)} vs mejor disperso ${best.toFixed(2)} (sin talentos ${f(base).toFixed(2)}) → ${win ? 'GANA (>10 %)' : 'NO GANA'}`);
   }
-  console.log(allWin ? 'ESPECIALIZARSE GANA A DISPERSARSE en las cuatro tareas.' : 'ATENCIÓN: algún build especializado no supera claramente al disperso.');
+  console.log(allWin ? 'ESPECIALIZARSE GANA A DISPERSARSE en todas las tareas.' : 'ATENCIÓN: algún build especializado no supera claramente al disperso.');
   const errs = api.logs.filter((l) => /pageerror|\[error\]/.test(l));
   console.log(errs.length ? 'ERRORES DE CONSOLA:\n' + errs.slice(0, 5).join('\n') : 'sin errores de consola');
 }

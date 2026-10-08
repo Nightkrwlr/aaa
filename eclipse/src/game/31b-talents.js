@@ -86,6 +86,7 @@ var TL_PARAMS = {
   doubleDashGap: 0.35, // retardo entre el primer y el segundo esprint
   conductN: 3, conductR: 7, conductDmg: 0.6, // descarga que salta entre ralentizados/congelados
   pyroR: 2.6, pyroDmg: 1.2, plagueR: 6, plagueMul: 1.25,
+  dotElemCap: 1.5, // tope del «daño elemental» que potencia quemadura y veneno de armas no elementales (×2,5 como máximo)
   senseEvery: 2.2, // segundos entre pulsos de «Instinto»
 };
 
@@ -99,31 +100,31 @@ var TL_SPEC = [
   {
     id: "bas", n: "Bastión", sub: "Tanque", col: "#5aa9ff", ax: 0,
     d: "Aguanta lo que sea: vida, blindaje, escudo, regeneración y represalia.",
-    mast: [{ st: { dmgRed: 0.03 } }, { st: { maxHpPct: 0.1 } }, { st: { dmgRed: 0.04, shieldPct: 0.1 } }],
+    mast: [{ st: { dmgRed: 0.02 } }, { st: { maxHpPct: 0.1 } }, { st: { dmgRed: 0.03, shieldPct: 0.1 } }],
     root: ["Entrenamiento de resistencia", { maxHpPct: 0.04 }, 3],
     A: [
-      ["Placas de cerámica", { dmgRed: 0.015 }, 5],
+      ["Placas de cerámica", { dmgRed: 0.012 }, 5],
       ["Blindaje reactivo", { armor: 15 }, 4],
-      ["Placas dobles", { dmgRed: 0.02 }, 4],
+      ["Placas dobles", { dmgRed: 0.015 }, 4],
       ["Aislamiento ambiental", { resHeat: 0.08, resCold: 0.08, resToxic: 0.08, resRad: 0.08, resElec: 0.08 }, 3],
-      ["Piel de acero", { dmgRed: 0.025 }, 3],
-      ["Fortaleza", { armor: 30, dmgRed: 0.02 }, 3],
+      ["Piel de acero", { dmgRed: 0.02 }, 3],
+      ["Fortaleza", { armor: 30, dmgRed: 0.015 }, 3],
     ],
     B: [
-      ["Constitución", { maxHpPct: 0.05 }, 5],
-      ["Corazón reforzado", { maxHpPct: 0.06 }, 4],
+      ["Constitución", { maxHpPct: 0.04 }, 5],
+      ["Corazón reforzado", { maxHpPct: 0.05 }, 4],
       ["Cicatrización", { healBonus: 0.1 }, 4],
       ["Metabolismo acelerado", { regenPct: 0.002 }, 5],
       ["Fénix", {}, 1, { pow: "phoenix", d: "Al caer, revives con el 50 % de vida (una vez cada 3 minutos)." }],
-      ["Reserva vital", { maxHpPct: 0.08 }, 3],
+      ["Reserva vital", { maxHpPct: 0.06 }, 3],
     ],
     C: [
-      ["Condensador de escudo", { shieldPct: 0.06 }, 5],
+      ["Condensador de escudo", { shieldPct: 0.05 }, 5],
       ["Generador de barrera", { shield: 30 }, 3],
       ["Amortiguadores", { dodge: 0.02 }, 3],
-      ["Matriz de escudo", { shieldPct: 0.08 }, 4],
+      ["Matriz de escudo", { shieldPct: 0.06 }, 4],
       ["Núcleo regenerativo", { hpRegen: 1.2 }, 4],
-      ["Sobrecarga defensiva", { shieldPct: 0.1 }, 3],
+      ["Sobrecarga defensiva", { shieldPct: 0.08 }, 3],
     ],
     K: [
       ["Represalia", { moveSpeed: -0.1 }, 1, {
@@ -307,7 +308,7 @@ var TL_SPEC = [
   },
   {
     id: "ele", n: "Elemental", sub: "Estados", col: "#b484ff", ax: 240,
-    d: "Fuego, hielo, descarga y veneno: estados alterados y combos.",
+    d: "Fuego, hielo, descarga y veneno: estados alterados y combos. El daño elemental potencia quemaduras y veneno con cualquier arma.",
     mast: [{ st: { elemDmg: 0.1 } }, { st: { burnChance: 0.03, freezeChance: 0.03, shockChance: 0.03, poisonChance: 0.03 } }, { st: { elemDmg: 0.2 } }],
     root: ["Catalizador básico", { elemDmg: 0.06 }, 3],
     A: [
@@ -668,14 +669,20 @@ const tlTmp = [];
   // Ejecutor y Conductor envuelven el daño a enemigos (hs es una declaración: el enlace es reasignable).
   const _hs = hs;
   hs = function (n, e, t) {
-    const p = x.player;
+    const p = x.player, e0 = e;
     if (n && !n.dead && p && p.powers) {
       if (p.powers.has("executor") && !n.boss && !(t && t.thorns)) {
         const mul = n.dmgTakenMul() || 1;
         if (n.hp > 0 && n.hp - e * mul < n.maxHp * (n.elite ? P.executeElite : P.executeNormal)) e = n.hp / mul + 1;
       }
     }
-    const r = _hs(n, e, t);
+    const r = _hs(n, e0, t);
+    // El daño elemental potencia también la quemadura y el veneno de las armas NO elementales (el juego base solo lo aplicaba al impacto de las elementales).
+    if (p && t && t.ws && !t.elem && !t.thorns && n.st && (t.burn || t.poison) && p.st.elemDmg > 0) {
+      const k = 1 + Math.min(P.dotElemCap, p.st.elemDmg);
+      t.burn && (n.st.burnDps = Math.max(n.st.burnDps || 0, e0 * 0.35 * k));
+      t.poison && (n.st.poisonDps = Math.max(n.st.poisonDps || 0, e0 * 0.22 * k));
+    }
     if (p && p.powers && t && t.shock && !t.conduct && p.powers.has("conductor") && n.st && (n.st.frozen > 0 || n.st.slow > 0)) {
       const near = rn(n.x, n.z, P.conductR, []);
       let c = 0;
@@ -684,7 +691,7 @@ const tlTmp = [];
         if (q === n || q.dead || !q.st || !(q.st.frozen > 0 || q.st.slow > 0)) continue;
         c++;
         x.fx.zap(n.x, n.z, q.x, q.z, 9426175, 0.9);
-        _hs(q, e * P.conductDmg, { elem: "shock", shock: true, conduct: true });
+        _hs(q, e0 * P.conductDmg, { elem: "shock", shock: true, conduct: true });
       }
     }
     return r;
@@ -808,6 +815,10 @@ x.migrations.push((S) => {
 It("bossKilled", (b) => {
   if (!b || b.mini || (b.arena && b.arena.op) || !tlMainBosses().has(b.id)) return;
   grantTalentPoint("boss", b.id, b.name || (b.def && b.def.n));
+});
+// Contrato con el frente de lore: ee("loreCollection", idColeccion, nombre) al completar una colección (1 punto, una sola vez por id).
+It("loreCollection", (id, nombre) => {
+  id != null && grantTalentPoint("lore", id, nombre);
 });
 It("levelUp", () => {
   const S = x.S;
