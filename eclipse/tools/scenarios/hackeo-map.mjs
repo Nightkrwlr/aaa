@@ -11,7 +11,7 @@ export default async function ({ boot, newGame, ev }) {
     const ter = m.ter || [];
     for (let i = 0; i < ter.length; i++) { h = fnv(h, ter[i]); n++; }
     let he = 2166136261, ne = 0;
-    for (const e of (m.ents || [])) {
+    for (const e of (m.ents || []).filter((q) => q.k !== 'lore')) { // los nodos de lore (frente LORE) se añaden después de generar el mapa: no cuentan
       he = fnv(he, Math.round((e.x || 0) * 100)); he = fnv(he, Math.round((e.z || 0) * 100));
       const k = String(e.k) + String(e.id || '') + String(e.eff || '');
       for (let i = 0; i < k.length; i++) he = fnv(he, k.charCodeAt(i));

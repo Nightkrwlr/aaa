@@ -59,7 +59,7 @@ export default async function (api) {
   check('pulsar «Descifrar chip» abre el hackeo (chip, dos capas) con el nombre real de la entrada', f1.boton && f1.abre && f1.sub.length > 3 && f1.res && f1.res.ok && f1.res.q === 1 && f1.res.capas >= 2, JSON.stringify(f1));
   check('al cerrar el resultado el Archivo marca el chip como descifrado (q = 1, legible) y se reabre en su pestaña', f2.q === 1 && f2.readable === true && f2.ui === 'archive', JSON.stringify(f2));
 
-  // 3 · fallo y desconexión: el Archivo anota el intento (q 0) sin avance gratis
+  // 3 · fallo: el Archivo anota el intento y lo deja un 15 % más legible (LORE_CFG.partialPerFail); la desconexión voluntaria no cuenta (ver lore-hackeo-integracion)
   const pick2 = await ev(() => {
     const A = window.__G.loreApi;
     const e = A.entries.find((q) => q.k === 'chip' && !q.boss && !q.secret && A.get(q.id).q === 0);
@@ -78,7 +78,7 @@ export default async function (api) {
   });
   await wait(3);
   const g2 = await ev((id) => { const A = window.__G.loreApi; return { q: A.get(id).q, readable: A.get(id).readable, tr: window.__lore.state().tr && window.__lore.state().tr[id], ui: window.__G.uiOpen }; }, pick2);
-  check('chip fallido: el Archivo no lo da por descifrado (q 0, un intento anotado) y vuelve a su pestaña', g1.last && g1.last.ok === false && g1.last.q === 0 && g2.q === 0 && g2.readable === false && g2.ui === 'archive', JSON.stringify({ g1, g2 }));
+  check('chip fallido: el Archivo no lo da por descifrado (legible al 15 %, un intento anotado) y vuelve a su pestaña', g1.last && g1.last.ok === false && g1.last.q === 0 && Math.abs(g2.q - 0.15) < 1e-9 && g2.readable === false && g2.tr === 1 && g2.ui === 'archive', JSON.stringify({ g1, g2 }));
 
   // 4 · chip como botín de cámara acorazada (loreApi.next + grant reales)
   const r4 = await ev(() => {
