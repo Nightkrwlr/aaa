@@ -320,6 +320,7 @@ PZ_GENS.mirrors = {
       for (let i = 0; i < mir.length; i++) if (!mir[i].p) ori0[i] = r.int(0, 1);
       mir.forEach((m, i) => (m.o = ori0[i]));
       const spec = { kind: "mirrors", seed, tier, w, h, em, tg, mir, walls, sol };
+      if (!pzAccess(this, spec).ok) continue; // ningún espejo puede quedar encerrado entre pilares
       const ix = mirIndex(spec),
         lit = new Uint8Array(tg.length);
       if (mirTrace(spec, ix, sol, lit) !== tg.length) continue; // la solución guardada ha de funcionar
@@ -402,6 +403,14 @@ PZ_GENS.mirrors = {
     for (let i = 0; i < spec.mir.length; i++) if (spec.mir[i].p && st.ori[i] !== spec.sol[i]) return { id: i, text: "Pista: ese espejo no está bien orientado." };
     return null;
   },
+  spots(spec) {
+    return spec.mir.map((m) => [m.x, m.z]);
+  },
+  solve(spec, st) {
+    st.ori = spec.sol.slice();
+    st.nlit = mirTrace(spec, st.ix, st.ori, st.lit, st.segs);
+    st.rev++;
+  },
   bot(spec, st) {
     // espejos del camino que difieren de la solución guardada
     const acts = [];
@@ -462,9 +471,13 @@ function sokFlood(w, h, blk, p, reach, qa) {
   return rep;
 }
 // BFS sobre estados {cajas ordenadas, región del jugador}. Devuelve {ok, pushes, sol:[[caja, dir]…], states}
+// La rejilla se amplía con un anillo exterior libre (el jugador entra por cualquier borde libre y puede salir y volver a entrar):
+// así la prueba modela lo que pasa de verdad al jugar. p0 = celda del puzle donde está el jugador (-1 o sin dato: fuera).
 function sokSolve(spec, cap, boxes0, p0) {
-  const w = spec.w,
-    h = spec.h,
+  const w0 = spec.w,
+    h0 = spec.h,
+    w = w0 + 2,
+    h = h0 + 2,
     n = w * h,
     nb = spec.goals.length,
     wall = new Uint8Array(n),
@@ -472,8 +485,10 @@ function sokSolve(spec, cap, boxes0, p0) {
     reach = new Uint8Array(n),
     blk = new Uint8Array(n),
     qa = new Int32Array(n);
-  for (const q of spec.walls) wall[q] = 1;
-  for (const q of spec.goals) goal[q] = 1;
+  const E = (c) => (((c / w0) | 0) + 1) * w + (c % w0) + 1, // celda del puzle → celda ampliada
+    U = (c) => ((c / w) | 0) * w0 - w0 + (c % w) - 1; // y al revés
+  for (const q of spec.walls) wall[E(q)] = 1;
+  for (const q of spec.goals) goal[E(q)] = 1;
   const flood = (boxes, p) => {
     blk.set(wall);
     for (const b of boxes) blk[b] = 1;
@@ -481,16 +496,16 @@ function sokSolve(spec, cap, boxes0, p0) {
   };
   const keyOf = (boxes, rep) => {
     let k = 0;
-    for (const b of boxes) k = k * 64 + b;
-    return k * 64 + rep;
+    for (const b of boxes) k = k * 128 + b;
+    return k * 128 + rep;
   };
   const isGoal = (boxes) => {
     for (const b of boxes) if (!goal[b]) return false;
     return true;
   };
-  const start = (boxes0 || spec.boxes).slice().sort((a, b) => a - b);
+  const start = (boxes0 || spec.boxes).map(E).sort((a, b) => a - b);
   if (isGoal(start)) return { ok: true, pushes: 0, sol: [], states: 1 };
-  const rep0 = flood(start, p0 === undefined ? spec.player : p0);
+  const rep0 = flood(start, p0 === undefined || p0 < 0 ? 0 : E(p0));
   const seen = new Map(),
     nodes = [{ boxes: start, rep: rep0, par: -1, act: null }];
   seen.set(keyOf(start, rep0), 0);
@@ -508,7 +523,8 @@ function sokSolve(spec, cap, boxes0, p0) {
           pz = cz - PZ_DZ[d],
           tx = cx + PZ_DX[d],
           tz = cz + PZ_DZ[d];
-        if (px < 0 || pz < 0 || px >= w || pz >= h || tx < 0 || tz < 0 || tx >= w || tz >= h) continue;
+        // la caja solo se mueve dentro del puzle (no sobre el anillo exterior)
+        if (px < 0 || pz < 0 || px >= w || pz >= h || tx < 1 || tz < 1 || tx > w0 || tz > h0) continue;
         if (!regionCopy[pz * w + px]) continue;
         const t = tz * w + tx;
         if (wall[t] || nd.boxes.indexOf(t) >= 0) continue;
@@ -519,7 +535,7 @@ function sokSolve(spec, cap, boxes0, p0) {
           k = keyOf(nbx, rep);
         if (seen.has(k)) continue;
         seen.set(k, nodes.length);
-        nodes.push({ boxes: nbx, rep, par: qi, act: [c, d] });
+        nodes.push({ boxes: nbx, rep, par: qi, act: [U(c), d] });
         if (isGoal(nbx)) {
           const sol = [];
           for (let j = nodes.length - 1; j > 0; j = nodes[j].par) sol.push(nodes[j].act);
@@ -652,15 +668,22 @@ PZ_GENS.boxes = {
     const c = cz * spec.w + cx;
     return st.wall[c] === 1 || st.boxes.indexOf(c) >= 0;
   },
-  pick(spec, st, px, pz) {
+  // Empuja la caja que tienes al lado, en la dirección jugador → caja. Si hay dos a tiro, manda hacia dónde miras (fx, fz).
+  pick(spec, st, px, pz, fx, fz) {
+    let best = -1,
+      bs = 9;
     for (let i = 0; i < st.boxes.length; i++) {
       const b = st.boxes[i],
         dx = (b % spec.w) + 0.5 - px,
         dz = ((b / spec.w) | 0) + 0.5 - pz;
-      if (Math.abs(dx) <= 1.6 && Math.abs(dz) <= 0.65 && Math.abs(dx) > Math.abs(dz)) return i * 4 + (dx > 0 ? 0 : 2);
-      if (Math.abs(dz) <= 1.6 && Math.abs(dx) <= 0.65 && Math.abs(dz) >= Math.abs(dx)) return i * 4 + (dz > 0 ? 1 : 3);
+      let d = -1;
+      if (Math.abs(dx) <= 1.6 && Math.abs(dz) <= 0.65 && Math.abs(dx) > Math.abs(dz)) d = dx > 0 ? 0 : 2;
+      else if (Math.abs(dz) <= 1.6 && Math.abs(dx) <= 0.65 && Math.abs(dz) >= Math.abs(dx)) d = dz > 0 ? 1 : 3;
+      if (d < 0) continue;
+      const sc = Math.hypot(dx, dz) - (fx !== undefined ? 0.45 * (PZ_DX[d] * fx + PZ_DZ[d] * fz) : 0);
+      if (sc < bs) ((bs = sc), (best = i * 4 + d));
     }
-    return -1;
+    return best;
   },
   label(spec, st, id) {
     return this.canPush(spec, st, id >> 2, id & 3) ? "Empujar caja" : "Caja bloqueada";
@@ -699,18 +722,25 @@ PZ_GENS.boxes = {
     return [`Cajas en su placa: ${on}/${st.boxes.length}`, `Empujes: ${st.moves}`];
   },
   hint(spec, st, ctx) {
-    const s = sokSolve(spec, 80000, st.boxes, ctx && ctx.cell !== undefined ? ctx.cell : spec.player);
+    const s = sokSolve(spec, 80000, st.boxes, ctx && ctx.cell !== undefined ? ctx.cell : -1);
     if (!s.ok || !s.sol.length) return { text: "Pista: esta posición no tiene salida; usa «Deshacer» o «Reiniciar»." };
     const [c, d] = s.sol[0];
     const dir = ["derecha", "abajo", "izquierda", "arriba"][d];
     return { id: st.boxes.indexOf(c) * 4 + d, text: `Pista: empuja la caja marcada hacia ${dir}.` };
   },
+  solve(spec, st) {
+    st.boxes = spec.goals.slice();
+    st.hist.length = 0;
+    st.tw.i = -1;
+    st.tween = 0;
+    st.rev++;
+  },
   bot(spec, st, px, pz) {
-    const cell = Math.max(0, Math.min(spec.h - 1, Math.floor(pz))) * spec.w + Math.max(0, Math.min(spec.w - 1, Math.floor(px)));
+    const cell = px === undefined ? -1 : Math.max(0, Math.min(spec.h - 1, Math.floor(pz))) * spec.w + Math.max(0, Math.min(spec.w - 1, Math.floor(px)));
     const s = sokSolve(spec, 250000, st.boxes, cell);
     if (!s.ok) return null;
-    // cada acción: ponte en la celda de detrás de la caja y pulsa
-    return s.sol.map(([c, d]) => ({ id: st.boxes.indexOf(c) * 4 + d, box: c, dir: d, at: [(c % spec.w) + 0.5 - PZ_DX[d], ((c / spec.w) | 0) + 0.5 - PZ_DZ[d]] }));
+    // cada acción: ponte en la celda de detrás de la caja y pulsa (el índice de la caja se resuelve al ejecutar: las cajas cambian de sitio)
+    return s.sol.map(([c, d]) => ({ dyn: (st2) => st2.boxes.indexOf(c) * 4 + d, at: [(c % spec.w) + 0.5 - PZ_DX[d], ((c / spec.w) | 0) + 0.5 - PZ_DZ[d]], face: [PZ_DX[d], PZ_DZ[d]] }));
   },
   draw(spec, st, g, t) {
     const w = spec.w,
@@ -902,6 +932,11 @@ PZ_GENS.timed = {
     const o = spec.sol;
     return { id: o[0], text: `Pista: empieza por la placa marcada y sigue el camino más corto.` };
   },
+  solve(spec, st) {
+    st.lit.fill(spec.dur);
+    st.rev++;
+  },
+  botMode: "walk",
   bot(spec) {
     const D = tmTimes(spec),
       o = spec.sol,
@@ -938,15 +973,16 @@ function pzFact(n) {
 // ───────── 3.4 RUNAS EN EL ORDEN QUE DICTA LA INSCRIPCIÓN ─────────
 // Las runas se activan en un orden único que se deduce de las pistas de la inscripción (y, si el Archivo tiene algo, de una nota extra).
 // validate() enumera TODAS las permutaciones: exactamente una cumple las pistas y es la guardada.
+// Los mismos ocho glifos que el vocabulario del Archivo (LORE_GLYPHS): así el orden que dicta un documento se traduce 1:1 a runas
 var PZ_RUNES = [
   { n: "Sol", g: "●", col: 0xffc94a, sh: "sph" },
-  { n: "Luna", g: "○", col: 0xbcd6ff, sh: "ring" },
-  { n: "Marea", g: "◆", col: 0x4fe0ff, sh: "oct" },
-  { n: "Ceniza", g: "▲", col: 0xb8a89a, sh: "cone" },
-  { n: "Hueso", g: "■", col: 0xf2efe6, sh: "box" },
-  { n: "Raíz", g: "✚", col: 0x6fdc6a, sh: "cross" },
-  { n: "Brasa", g: "▼", col: 0xff5a3c, sh: "cone2" },
-  { n: "Eco", g: "◉", col: 0xc58bff, sh: "cyl" },
+  { n: "Luna", g: "◑", col: 0xbcd6ff, sh: "ring" },
+  { n: "Serpiente", g: "≈", col: 0x6fdc6a, sh: "cyl" },
+  { n: "Ojo", g: "◉", col: 0xf2efe6, sh: "box" },
+  { n: "Cristal", g: "◆", col: 0x4fe0ff, sh: "oct" },
+  { n: "Raíz", g: "✚", col: 0xc58a4a, sh: "cross" },
+  { n: "Llama", g: "▲", col: 0xff5a3c, sh: "cone" },
+  { n: "Onda", g: "≋", col: 0xc58bff, sh: "cone2" },
 ];
 var PZ_ORD = ["", "", "segunda", "tercera", "cuarta", "quinta", "sexta", "séptima"];
 // Pistas: [tipo, a, b] con a, b = índices de runa. tipos: 0 antes · 1 justo después · 2 primera · 3 última · 4 no primera · 5 no última · 6 n-ésima (b = posición) · 7 no seguidas
@@ -1120,6 +1156,14 @@ PZ_GENS.runes = {
   },
   clueLines(spec) {
     return spec.text;
+  },
+  spots(spec) {
+    return spec.cells.map((c) => [c % spec.w, (c / spec.w) | 0]);
+  },
+  solve(spec, st) {
+    st.k = spec.n;
+    st.lit.fill(1);
+    st.rev++;
   },
   hint(spec, st) {
     const next = spec.order[st.k];
@@ -1405,6 +1449,11 @@ PZ_GENS.circuit = {
     for (let c = 0; c < spec.w * spec.h; c++) if (st.mask[c] !== spec.sol[c]) return { id: c, text: "Pista: esa baldosa no está en su posición." };
     return null;
   },
+  solve(spec, st) {
+    st.mask.set(spec.sol);
+    st.npw = ciPower(spec, st.mask, st.pw);
+    st.rev++;
+  },
   bot(spec, st) {
     const acts = [];
     for (let c = 0; c < spec.w * spec.h; c++) {
@@ -1614,6 +1663,11 @@ PZ_GENS.lasers = {
   status(spec, st) {
     return [`Cruza el pasillo hasta la salida`, ...(st.hits ? [`Descargas recibidas: ${st.hits}`] : [])];
   },
+  solve(spec, st) {
+    st.reached = true;
+    st.rev++;
+  },
+  botMode: "phase",
   hint() {
     return { text: "Pista: los hilos amarillos son rejas que se cierran en el siguiente instante; avanza una celda por parpadeo." };
   },
@@ -1845,8 +1899,18 @@ PZ_GENS.memory = {
   hint(spec, st) {
     return { text: "Pista: vuelve a la fila de entrada y pulsa USAR para ver el camino otra vez." };
   },
+  solve(spec, st) {
+    st.reached = true;
+    st.prog = spec.path.length - 1;
+    st.show = 0;
+    st.rev++;
+  },
+  botMode: "walk",
   bot(spec) {
-    return spec.path.map((c) => ({ at: [(c % spec.w) + 0.5, ((c / spec.w) | 0) + 0.5] })).concat([{ at: [(spec.path[spec.path.length - 1] % spec.w) + 0.5, spec.h - 0.5] }]);
+    const c0 = spec.path[0];
+    return [{ at: [(c0 % spec.w) + 0.5, 0.5] }]
+      .concat(spec.path.map((c) => ({ at: [(c % spec.w) + 0.5, ((c / spec.w) | 0) + 0.5] })))
+      .concat([{ at: [(spec.path[spec.path.length - 1] % spec.w) + 0.5, spec.h - 0.5] }]);
   },
   draw(spec, st, g, t) {
     const { w, h } = spec,
@@ -2046,6 +2110,14 @@ PZ_GENS.valves = {
     for (let v = 0; v < spec.valves.length; v++) if ((diff >> v) & 1) return { id: v, text: "Pista: esa válvula está mal puesta." };
     return null;
   },
+  spots(spec) {
+    return spec.valves.map((v) => [v.x, v.i]);
+  },
+  solve(spec, st) {
+    st.mask = spec.sol;
+    st.out = vaRun(spec, st.mask, st.cols);
+    st.rev++;
+  },
   bot(spec, st) {
     const ctl = vaControls(spec);
     let best = null;
@@ -2176,6 +2248,257 @@ PZ_GENS.sequence = {
     const ok = spec.seq.length >= 3 && spec.seq.length <= 6 && spec.seq.every((v, i) => v >= 0 && v < spec.n && (i === 0 || v !== spec.seq[i - 1]));
     return { ok, why: ok ? "" : "secuencia inválida", len: spec.seq.length };
   },
+};
+// ═══ 4. REGISTRO, API Y PRUEBAS ═════════════════════════════════════════════════════════════════════════
+// Un generador nuevo (de este u otro frente) se añade con x.puzzleApi.register(tipo, generador). Contrato mínimo: make(seed, tier) → spec
+// (JSON puro) y validate(spec) → {ok, why}. Para poder jugarlo en el mundo también necesita init/solved/pick/label/act/draw (ver arriba).
+var PZ_CACHE = new Map();
+function pzValidGen(g) {
+  return !!g && typeof g.make === "function" && typeof g.validate === "function";
+}
+function pzPlayable(g) {
+  return !!g && typeof g.init === "function" && typeof g.solved === "function" && typeof g.draw === "function" && typeof g.act === "function";
+}
+function pzRegister(kind, gen) {
+  if (typeof kind !== "string" || !/^[a-z][\w-]*$/i.test(kind) || !pzValidGen(gen)) return false;
+  gen.id = kind;
+  if (!gen.dims) gen.dims = {};
+  if (!gen.lv) gen.lv = {};
+  PZ_GENS[kind] = gen;
+  for (const k of Array.from(PZ_CACHE.keys())) if (k.indexOf(kind + "|") === 0) PZ_CACHE.delete(k);
+  x.puzzleApi && x.puzzleApi.kinds && x.puzzleApi.kinds.indexOf(kind) < 0 && x.puzzleApi.kinds.push(kind);
+  return true;
+}
+// spec de (tipo, índice de semilla, nivel), con memoria: lo que se juega siempre sale de aquí (y validateAll() recorre todo ese universo)
+function pzSpec(kind, idx, tier) {
+  const key = kind + "|" + idx + "|" + tier;
+  let sp = PZ_CACHE.get(key);
+  if (sp === undefined) {
+    const g = PZ_GENS[kind];
+    sp = g ? g.make(idx, tier) : null;
+    PZ_CACHE.set(key, sp);
+  }
+  return sp;
+}
+function pzTierOf(lvl) {
+  let t = 1;
+  for (const [m, tt] of PZ_CFG.tierByLvl) if (lvl >= m) t = tt;
+  return t;
+}
+// Elige tipo (por peso del tema), nivel (±1 por azar) e índice de semilla a partir de un hash. Puro y determinista.
+function pzChoose(hash, theme, lvl, only) {
+  const r = pzRng(pzMix(hash, 0x4348)),
+    W = PZ_CFG.weights[theme] || PZ_CFG.weights.default,
+    kinds = (only || Object.keys(PZ_GENS)).filter((k) => !PZ_GENS[k].legacy && pzPlayable(PZ_GENS[k]) && (W[k] === undefined ? 1 : W[k]) > 0);
+  let tot = 0;
+  for (const k of kinds) tot += W[k] === undefined ? 1 : W[k];
+  let q = r() * tot,
+    kind = kinds[kinds.length - 1];
+  for (const k of kinds) {
+    q -= W[k] === undefined ? 1 : W[k];
+    if (q <= 0) {
+      kind = k;
+      break;
+    }
+  }
+  let tier = pzTierOf(lvl);
+  const j = r();
+  tier = Math.max(1, Math.min(3, tier + (j < 0.2 ? -1 : j > 0.85 ? 1 : 0)));
+  return { kind, tier, idx: Math.floor(r() * PZ_CFG.pool) };
+}
+
+// ¿Se llega a cada objeto desde fuera? Rejilla ampliada con un anillo libre; solo cuentan las celdas sólidas del estado inicial.
+function pzAccess(gen, spec) {
+  if (!gen.spots || !gen.solid) return { ok: true };
+  const st = gen.init(spec),
+    w = spec.w,
+    h = spec.h,
+    W = w + 2,
+    H = h + 2,
+    blk = new Uint8Array(W * H),
+    reach = new Uint8Array(W * H),
+    qa = new Int32Array(W * H);
+  for (let z = 0; z < h; z++) for (let xx = 0; xx < w; xx++) if (gen.solid(spec, st, xx, z)) blk[(z + 1) * W + xx + 1] = 1;
+  sokFlood(W, H, blk, 0, reach, qa);
+  for (const [cx, cz] of gen.spots(spec)) {
+    let ok = false;
+    for (let dz = -1; dz <= 1; dz++)
+      for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dz) continue;
+        const ex = cx + dx + 1,
+          ez = cz + dz + 1;
+        if (ex >= 0 && ez >= 0 && ex < W && ez < H && reach[ez * W + ex]) ok = true;
+      }
+    if (!ok) return { ok: false, why: `objeto inalcanzable en ${cx},${cz}` };
+  }
+  return { ok: true };
+}
+
+// Ejecuta el bot del generador sobre su mecánica REAL (init/pick/act/step), sin gráficos ni jugador: prueba que se puede ganar jugando,
+// no solo que el spec es resoluble. Modos: acciones (por defecto), «walk» (puntos de paso y relojes) y «phase» (pasillo láser).
+function pzBotRun(gen, spec) {
+  const st = gen.init(spec),
+    log = { hurt: 0, tele: 0, snd: 0 },
+    ctx = {
+      px: -9,
+      pz: -9,
+      inside: false,
+      cell: -1,
+      snd() {
+        log.snd++;
+      },
+      toast() {},
+      hurt(f) {
+        log.hurt += f;
+      },
+      teleport() {
+        log.tele++;
+      },
+    },
+    DT = 1 / 30;
+  if (gen.solved(spec, st)) return { ok: false, why: "ya resuelto al empezar" };
+  const plan = gen.bot ? gen.bot(spec, st) : null;
+  if (!plan || !plan.length) return { ok: false, why: "el bot no encuentra plan" };
+  let frames = 0;
+  const stepN = (n) => {
+    for (let i = 0; i < n; i++) {
+      gen.step && gen.step(spec, st, DT, ctx);
+      frames++;
+    }
+  };
+  if (gen.botMode === "phase") {
+    for (const p of plan) {
+      st.t = p.k * PZ_LASER_DT + 0.02;
+      ctx.px = p.x + 0.5;
+      ctx.pz = p.z + 0.5;
+      ctx.inside = true;
+      stepN(1);
+      if (st.reached) break;
+    }
+  } else if (gen.botMode === "walk") {
+    let clock = 0;
+    for (const a of plan) {
+      if (a.t !== undefined && a.t > clock) {
+        ctx.inside = false; // de camino: nadie pisa nada mientras tanto
+        stepN(Math.round((a.t - clock) / DT));
+        clock = a.t;
+      }
+      ctx.px = a.at[0];
+      ctx.pz = a.at[1];
+      ctx.inside = true;
+      stepN(2);
+      clock += 2 * DT;
+    }
+  } else {
+    for (const a of plan) {
+      const id = a.dyn ? a.dyn(st) : a.id;
+      ctx.px = a.at[0];
+      ctx.pz = a.at[1];
+      ctx.inside = true;
+      const pk = gen.pick ? gen.pick(spec, st, ctx.px, ctx.pz, a.face && a.face[0], a.face && a.face[1]) : id;
+      if (pk !== id) return { ok: false, why: `el jugador en ${a.at.map((v) => v.toFixed(1))} no apunta al objeto ${id} sino al ${pk}` };
+      gen.act(spec, st, id, ctx);
+      stepN(1);
+    }
+  }
+  const ok = !!gen.solved(spec, st) && st.errors === 0 && log.tele === 0;
+  return { ok, why: ok ? "" : st.errors ? "el bot cometió errores" : log.tele ? "el bot fue teletransportado" : "el bot no resolvió", acts: plan.length, frames, moves: st.moves | 0 };
+}
+
+// Recorre TODAS las semillas y tamaños que el juego puede usar (pool × niveles × tipos) y comprueba, para cada puzle:
+// que make es determinista y su spec es JSON puro · validate() · que cada objeto es alcanzable · que el bot lo resuelve jugando de verdad.
+function pzValidateAll(opts) {
+  opts = opts || {};
+  const t0 = Date.now(),
+    pool = opts.pool || PZ_CFG.pool,
+    out = { total: 0, ok: 0, fails: 0, failures: [], byKind: {}, ms: 0, sum: 0 };
+  let sum = 0x811c9dc5;
+  for (const kind of opts.kinds || Object.keys(PZ_GENS)) {
+    const g = PZ_GENS[kind];
+    if (!g) continue;
+    const bk = (out.byKind[kind] = { total: 0, ok: 0, fails: 0, ms: 0, stat: {} }),
+      tk = Date.now();
+    for (const tier of opts.tiers || g.tiers || [1, 2, 3]) {
+      for (let idx = 0; idx < pool; idx++) {
+        out.total++;
+        bk.total++;
+        let why = "";
+        try {
+          const sp = pzSpec(kind, idx, tier);
+          if (!sp || typeof sp !== "object") why = "make no devuelve un puzle";
+          else {
+            const js = JSON.stringify(sp);
+            if (!opts.fast) {
+              const sp2 = g.make(idx, tier);
+              if (JSON.stringify(sp2) !== js) why = "make no es determinista";
+            }
+            if (!why && JSON.parse(js).kind !== kind) why = "el spec no lleva su tipo";
+            if (!why) {
+              const v = g.validate(JSON.parse(js));
+              if (!v || !v.ok) why = "validate: " + ((v && v.why) || "falla");
+              else
+                for (const f in v) {
+                  const n = v[f];
+                  if (typeof n !== "number" || !isFinite(n)) continue;
+                  const a = bk.stat[f] || (bk.stat[f] = { min: n, max: n, sum: 0, n: 0 });
+                  a.min = Math.min(a.min, n);
+                  a.max = Math.max(a.max, n);
+                  a.sum += n;
+                  a.n++;
+                }
+            }
+            if (!why && pzPlayable(g)) {
+              if (g.dims && g.dims[tier] && (sp.w !== g.dims[tier][0] || sp.h !== g.dims[tier][1])) why = "tamaño distinto del declarado";
+              if (!why) {
+                const a = pzAccess(g, sp);
+                if (!a.ok) why = a.why;
+              }
+              if (!why && !opts.noBot) {
+                const b = pzBotRun(g, sp);
+                if (!b.ok) why = "bot: " + b.why;
+                else for (const f of ["acts", "frames", "moves"]) {
+                  const a = bk.stat["bot_" + f] || (bk.stat["bot_" + f] = { min: b[f], max: b[f], sum: 0, n: 0 });
+                  a.min = Math.min(a.min, b[f]);
+                  a.max = Math.max(a.max, b[f]);
+                  a.sum += b[f];
+                  a.n++;
+                }
+              }
+            }
+            for (let i = 0; i < js.length; i++) sum = Math.imul(sum ^ js.charCodeAt(i), 16777619);
+          }
+        } catch (err) {
+          why = "excepción: " + (err && err.message ? err.message : err);
+        }
+        if (why) {
+          out.fails++;
+          bk.fails++;
+          out.failures.length < 60 && out.failures.push({ kind, tier, seed: idx, why });
+        } else {
+          out.ok++;
+          bk.ok++;
+        }
+      }
+    }
+    bk.ms = Date.now() - tk;
+  }
+  out.ms = Date.now() - t0;
+  out.sum = (sum >>> 0).toString(16);
+  return out;
+}
+
+x.puzzleApi = {
+  version: 1,
+  gens: PZ_GENS,
+  kinds: Object.keys(PZ_GENS),
+  register: pzRegister,
+  make: (kind, seed, tier) => (PZ_GENS[kind] ? PZ_GENS[kind].make(seed, tier) : null),
+  validate: (spec) => (spec && PZ_GENS[spec.kind] ? PZ_GENS[spec.kind].validate(spec) : { ok: false, why: "tipo desconocido" }),
+  validateAll: pzValidateAll,
+  spec: pzSpec,
+  choose: pzChoose,
+  botRun: (spec) => (spec && PZ_GENS[spec.kind] ? pzBotRun(PZ_GENS[spec.kind], spec) : { ok: false, why: "tipo desconocido" }),
+  cfg: PZ_CFG,
 };
 // ▲▲ PURO ▲▲
 // @@FIN@@
