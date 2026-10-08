@@ -2963,7 +2963,10 @@ var PZ_CTX = {
     ae.play(name, o);
   },
   toast(m, t) {
-    ee("toast", m, t || "quest");
+    // dentro de la tarjeta del acertijo (los avisos flotantes caen justo debajo de ella en pantallas bajas)
+    const z = this.rt && this.rt.pz;
+    if (z) z.msg = { text: m, type: t || "quest", t: 4.5 };
+    else ee("toast", m, t || "quest");
   },
   hurt(f) {
     const p = x.player;
@@ -3129,6 +3132,8 @@ function pzTick(dt) {
     if (z.st.rev !== z.rev) pzApplyBlk(rt);
     if (!rt.pzDone && z.gen.solved(z.spec, z.st)) pzSolve(rt, "play");
     if (z.hintFocus && (z.hintFocus.t -= dt) <= 0) z.hintFocus = null;
+    if (z.msg && (z.msg.t -= dt) <= 0) z.msg = null;
+    if (z.introT > 0) z.introT -= dt;
   }
   if (PZ.active !== best) {
     PZ.active = best;
@@ -3172,9 +3177,10 @@ yw.KeyN = "pzHint";
 // Introducción (una vez por montaje): qué es y cómo se maneja, según el dispositivo
 function pzIntro(rt) {
   rt.pzIntro = true;
-  const z = rt.pz;
-  if (rt.pzDone) return;
-  ee("toast", `${z.gen.icon || "◈"} ${z.gen.n} · ${z.gen.d}`, "quest");
+  if (!rt.pzDone) rt.pz.introT = 9; // la tarjeta enseña la descripción unos segundos (en móvil apaisado va oculta el resto del tiempo)
+}
+function pzMsg(rt, text, type) {
+  rt.pz.msg = { text, type: type || "quest", t: 4.5 };
 }
 // Acciones del panel: reiniciar · deshacer · pista · hackear
 function pzAction(rt, what) {
@@ -3190,23 +3196,23 @@ function pzAction(rt, what) {
     g.reset(z.spec, st);
     st.resets = (st.resets | 0) + 1;
     ae.play("close");
-    ee("toast", "Acertijo reiniciado", "quest");
+    pzMsg(rt, "Acertijo reiniciado");
   } else if (what === "undo" && g.undo) {
     if (g.undo(z.spec, st)) ae.play("close");
-    else ee("toast", "No hay nada que deshacer", "warn");
+    else pzMsg(rt, "No hay nada que deshacer", "warn");
   } else if (what === "hint" && g.hint) {
     const h = g.hint(z.spec, st, PZ_CTX);
     if (h) {
       st.hints++;
       z.hinted = true;
-      ee("toast", h.text, "quest");
+      pzMsg(rt, h.text);
       if (h.id !== undefined && g.focus) {
         const f = g.focus(z.spec, st, h.id);
         f && (z.hintFocus = { cx: f[0] + 0.5, cz: f[1] + 0.5, t: 4 });
       }
       ae.play("beep", { p: 1.4 });
       z.gen.hintLore && z.gen.hintLore(z.spec, st);
-    } else ee("toast", "No hay pista que dar ahora", "warn");
+    } else pzMsg(rt, "No hay pista que dar ahora", "warn");
   } else if (what === "hack") pzHack(rt);
   else return;
   if (st.rev !== z.rev) pzApplyBlk(rt);
@@ -3222,10 +3228,10 @@ function pzHack(rt) {
       (res) => {
         if (!rt.pz || rt.pzDone) return;
         if (res && res.ok) pzSolve(rt, "hack");
-        else ee("toast", "El panel sigue bloqueado. Puedes resolverlo a mano.", "warn");
+        else pzMsg(rt, "El panel sigue bloqueado. Puedes resolverlo a mano.", "warn");
       },
     );
-    if (!s) ee("toast", "No se puede hackear ahora mismo", "warn");
+    if (!s) pzMsg(rt, "No se puede hackear ahora mismo", "warn");
   } catch (err) {
     console.warn("[puzles] hackeo", err);
   }
@@ -3249,6 +3255,9 @@ function pzInteract(rt) {
 // ── Premio ──
 function pzTierStars(t) {
   return "★".repeat(t) + "☆".repeat(3 - t);
+}
+function pzTierHtml(t) {
+  return `<span aria-label="Nivel ${t} de 3">${"★".repeat(t)}<span style="opacity:.28">${"★".repeat(3 - t)}</span></span>`;
 }
 function pzPar(z) {
   // movimientos de referencia: lo que tarda el bot (solo en los que el nº de acciones es significativo)
@@ -3288,7 +3297,7 @@ function pzSolve(rt, how) {
   x.fx.ring(px, pzz, 3.2, 0x9ad8ff, 0.7);
   x.fx.burst(px, 1.1, pzz, 36, { color: 0x9ad8ff, speed: 4.5, life: 0.9, size: 0.28, up: 1.2 });
   x.R.addShake(0.2);
-  ee("banner", "ACERTIJO RESUELTO", `${z.gen.n} · ${pzTierStars(d.tier)}${perfect ? " · PERFECTO" : ""}`, perfect ? "#ffd447" : "#9ad8ff");
+  ee("banner", "ACERTIJO RESUELTO", `${z.gen.n} · nivel ${["I", "II", "III"][d.tier - 1]}${perfect ? " · PERFECTO" : ""}`, perfect ? "#ffd447" : "#9ad8ff");
   // botín por tier con el sistema de ECONOMÍA (cofre de nivel d.tier) + extras
   const R = PZ_CFG.reward;
   const n0 = x.pickups.length;
@@ -3352,12 +3361,14 @@ function pzCss() {
   const st = document.createElement("style");
   st.id = "pzCss";
   st.textContent = `
-#pzHud{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);width:min(380px,calc(100vw - 24px));z-index:21;display:none;pointer-events:none;font-family:var(--f-disp,sans-serif);color:#dfe9ee}
+#pzHud{position:fixed;left:calc(354px + (100vw - 354px - 196px) / 2);top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);width:min(400px,calc(100vw - 354px - 196px));z-index:21;display:none;pointer-events:none;font-family:var(--f-disp,sans-serif);color:#dfe9ee}
 #pzHud .pzcard{background:linear-gradient(180deg,rgba(10,14,16,.9),rgba(10,14,16,.74));border:1px solid var(--line2,#2a3a40);border-left:3px solid #9ad8ff;padding:7px 10px 8px;backdrop-filter:blur(3px)}
 #pzHud .pzh{display:flex;align-items:center;gap:8px;font:700 14px var(--f-disp,sans-serif);letter-spacing:.04em}
 #pzHud .pzh i{font-style:normal;font-size:18px;color:#9ad8ff}
 #pzHud .pzh em{margin-left:auto;font-style:normal;color:#ffd447;font-size:13px;letter-spacing:.1em}
 #pzHud .pzd{font-size:12px;color:#9fb1b8;margin:2px 0 4px;line-height:1.25}
+#pzHud .pzm{margin:2px 0 3px;padding:3px 6px;font:600 12.5px var(--f-disp,sans-serif);background:rgba(154,216,255,.14);border-left:2px solid #9ad8ff;color:#e8f6ff}
+#pzHud .pzm.bad{background:rgba(255,80,80,.16);border-left-color:#ff5a5a;color:#ffd7d7}#pzHud .pzm.warn{background:rgba(255,207,64,.14);border-left-color:#ffcf40}
 #pzHud .pzs{font:600 13px var(--f-disp,sans-serif);color:#e8f4f8;line-height:1.35}
 #pzHud .pzc{margin:5px 0 0;padding:5px 0 0 16px;border-top:1px solid rgba(255,255,255,.1);font-size:12.5px;line-height:1.3;color:#d6e6ec}
 #pzHud .pzc li{margin:1px 0}
@@ -3369,8 +3380,19 @@ function pzCss() {
 #pzHud.done .pzcard{border-left-color:#5fd35a}
 #pzLab{position:fixed;inset:0;pointer-events:none;z-index:19;overflow:hidden}
 #pzLab b{position:absolute;left:0;top:0;font:700 11px var(--f-disp,sans-serif);padding:1px 5px;background:rgba(8,12,14,.78);border:1px solid currentColor;white-space:nowrap;will-change:transform}
-@media (max-width:820px) and (orientation:landscape){#pzHud{top:max(4px,env(safe-area-inset-top));width:min(330px,calc(100vw - 420px))}#pzHud .pzd{display:none}#pzHud .pzcard{padding:5px 8px 6px}#pzHud .pzb button{min-height:40px}}
-@media (orientation:portrait){#pzHud{top:auto;bottom:calc(196px + env(safe-area-inset-bottom));width:min(400px,calc(100vw - 20px))}}
+body.touch #pzHud .pzb button .ic{font-size:17px}
+body.touch #pzHud .pzd{display:none}body.touch #pzHud .pzcard.intro .pzd{display:block}
+body.touch #pzHud .pzcard{position:relative;min-height:54px}
+body.touch #pzHud .pzh{padding-right:150px}body.touch #pzHud .pzh em{display:none}
+body.touch #pzHud .pzb{position:absolute;top:5px;right:6px;margin:0;gap:4px}
+body.touch #pzHud .pzb button{flex:none;width:46px;padding:0}body.touch #pzHud .pzb .l{display:none}
+body.touch #pzHud .pzs,body.touch #pzHud .pzm,body.touch #pzHud .pzd,body.touch #pzHud .pzc{margin-right:150px}
+@media (max-width:960px) and (orientation:landscape){#pzHud .pzd{display:none}#pzHud .pzcard.intro .pzd{display:block}#pzHud .pzcard{padding:5px 8px 6px}#pzHud .pzb{margin-top:4px}}
+@media (orientation:landscape) and (max-height:520px){
+body.touch #pzHud{left:calc(min(230px,30vw) + 22px + env(safe-area-inset-left));top:calc(48px + env(safe-area-inset-top));transform:none;width:min(380px,calc(100vw - min(230px,30vw) - 22px - 104px))}
+}
+@media (max-width:760px) and (orientation:landscape) and (min-height:521px){#pzHud{left:50%;top:auto;bottom:calc(86px + env(safe-area-inset-bottom));width:min(430px,calc(100vw - 24px))}}
+@media (orientation:portrait){#pzHud{left:50%;top:auto;bottom:calc(250px + env(safe-area-inset-bottom));width:min(400px,calc(100vw - 20px))}body.touch #pzHud .pzb{top:auto;bottom:5px}}
 `;
   document.head.appendChild(st);
 }
@@ -3423,12 +3445,12 @@ function pzHud(rt) {
       h = `<div class="pzcard"><div class="pzh"><i>${g.icon || "◈"}</i><b>${pzEsc(g.n)}</b><em>✔ Resuelto</em></div></div>`;
       el.className = "done";
     } else {
-      h = `<div class="pzcard"><div class="pzh"><i>${g.icon || "◈"}</i><b>${pzEsc(g.n)}</b><em>${pzTierStars(z.d.tier)}</em></div>`;
-      h += `<div class="pzd">${pzEsc(g.d)}</div><div class="pzs"></div><ol class="pzc"></ol><div class="pzb">`;
-      if (g.reset) h += `<button type="button" data-pz="reset" aria-label="Reiniciar el acertijo">↺ Reiniciar</button>`;
-      if (g.undo) h += `<button type="button" data-pz="undo" aria-label="Deshacer el último movimiento">↶ Deshacer</button>`;
-      if (g.hint) h += `<button type="button" data-pz="hint" aria-label="Pedir una pista">? Pista</button>`;
-      if (g.hackable && x.hackApi) h += `<button type="button" class="hk" data-pz="hack" aria-label="Hackear el panel">⌁ Hackear</button>`;
+      h = `<div class="pzcard"><div class="pzh"><i>${g.icon || "◈"}</i><b>${pzEsc(g.n)}</b><em>${pzTierHtml(z.d.tier)}</em></div>`;
+      h += `<div class="pzd">${pzEsc(g.d)}</div><div class="pzm"></div><div class="pzs"></div><ol class="pzc"></ol><div class="pzb">`;
+      if (g.reset) h += `<button type="button" data-pz="reset" aria-label="Reiniciar el acertijo"><span class="ic">↺</span><span class="l"> Reiniciar</span></button>`;
+      if (g.undo) h += `<button type="button" data-pz="undo" aria-label="Deshacer el último movimiento"><span class="ic">↶</span><span class="l"> Deshacer</span></button>`;
+      if (g.hint) h += `<button type="button" data-pz="hint" aria-label="Pedir una pista"><span class="ic">?</span><span class="l"> Pista</span></button>`;
+      if (g.hackable && x.hackApi) h += `<button type="button" class="hk" data-pz="hack" aria-label="Hackear el panel"><span class="ic">⌁</span><span class="l"> Hackear</span></button>`;
       h += `</div>`;
       if (!touch) h += `<div class="pzk">E usar · U deshacer · Y reiniciar · N pista</div>`;
       h += `</div>`;
@@ -3439,13 +3461,21 @@ function pzHud(rt) {
   }
   if (!rt.pzDone) {
     // el contenido (estado e inscripción) se actualiza en su sitio, solo si cambia
-    const ckey = st.rev + "|" + st.errors + "|" + st.hints + "|" + (g.animated ? Math.floor(x.time * 4) : 0);
+    const ckey = st.rev + "|" + st.errors + "|" + st.hints + "|" + (g.animated ? Math.floor(x.time * 4) : 0) + "|" + (z.msg ? z.msg.text : "") + "|" + (z.introT > 0 ? 1 : 0);
     if (ckey !== el._ckey) {
       el._ckey = ckey;
       const lines = g.status ? g.status(z.spec, st) : [],
         clues = g.clueLines ? g.clueLines(z.spec, st) : null,
         sEl = el.querySelector(".pzs"),
         cEl = el.querySelector(".pzc");
+      const card = el.firstChild,
+        mEl = el.querySelector(".pzm");
+      card && card.classList.toggle("intro", z.introT > 0);
+      if (mEl) {
+        mEl.textContent = z.msg ? z.msg.text : "";
+        mEl.className = "pzm" + (z.msg ? " " + z.msg.type : "");
+        mEl.style.display = z.msg ? "" : "none";
+      }
       const sh = lines.map(pzEsc).join("<br>");
       if (sEl && sEl._h !== sh) ((sEl._h = sh), (sEl.innerHTML = sh));
       const ch = clues && clues.length ? clues.map((c) => `<li>${pzEsc(c)}</li>`).join("") : "";
@@ -3511,6 +3541,28 @@ if (typeof document !== "undefined") {
   document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", initHud) : initHud();
 }
 
+// Marca en el minimapa los acertijos sin resolver a menos de 60 m (se encadena tras la de LORE y la de ECONOMÍA)
+if (typeof ecoMinimapPings === "function") {
+  const _emp = ecoMinimapPings;
+  ecoMinimapPings = function (c, size, s) {
+    _emp(c, size, s);
+    if (!x.world || !x.player) return;
+    const p = x.player,
+      ph = (x.time * 0.8) % 1;
+    for (const r of x.world.rt.values()) {
+      const o = r.e;
+      if (o.k !== "puzzle" || r.pzDone || (o.pz.sid && pzDoneRecently(o.pz.sid)) || Math.hypot(o.x - p.x, o.z - p.z) > 60) continue;
+      c.save();
+      c.strokeStyle = c.fillStyle = "#9ad8ff";
+      c.lineWidth = 1 / s;
+      c.globalAlpha = 1 - ph;
+      c.strokeRect(o.x - 1.4 - ph * 3, o.z - 1.4 - ph * 3, 2.8 + ph * 6, 2.8 + ph * 6);
+      c.globalAlpha = 1;
+      c.fillRect(o.x - 1.4, o.z - 1.4, 2.8, 2.8);
+      c.restore();
+    }
+  };
+}
 // ── Enganches en el director del mundo (26-spawner): por envoltorio de métodos, sin tocar el fichero ──
 (function () {
   const P = ih.prototype;
