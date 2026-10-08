@@ -640,7 +640,7 @@ function oS() {
     r = Di[n.diff];
   return `<div class="grid2"><div><div class="sec">${ke(n.name)} \xB7 ${vo(n.lvl)}</div><div class="stats">
     <span>Nivel</span><span class="v">${n.lvl}</span><span>Experiencia</span><span class="v">${yt(n.xp)} / ${yt(mt.xpToNext(n.lvl))}</span><span>Dificultad</span><span class="v">${r.n}</span>
-    <span>Tiempo de juego</span><span class="v">${Xs(n.playTime)}</span><span>Bajas</span><span class="v">${yt(n.stats.kills)}</span><span>\xC9lites abatidos</span><span class="v">${yt(n.stats.elites)}</span><span>Jefes abatidos</span><span class="v">${n.stats.bosses}</span><span>Operaciones</span><span class="v">${n.stats.ops}</span><span>Terminales</span><span class="v">${n.stats.terminals}</span><span>Distancia</span><span class="v">${yt(n.stats.dist)} m</span><span>Ca\xEDdas</span><span class="v">${n.stats.deaths}</span></div>
+    <span>Tiempo de juego</span><span class="v">${Xs(n.playTime)}</span><span>Bajas</span><span class="v">${yt(n.stats.kills)}</span><span>\xC9lites abatidos</span><span class="v">${yt(n.stats.elites)}</span><span>Jefes abatidos</span><span class="v">${n.stats.bosses}</span><span>Operaciones</span><span class="v">${n.stats.ops}</span><span>Terminales</span><span class="v">${n.stats.terminals}</span><span>Hackeo</span><span class="v">${hackSummaryText()}</span><span>Distancia</span><span class="v">${yt(n.stats.dist)} m</span><span>Ca\xEDdas</span><span class="v">${n.stats.deaths}</span></div>
     <div class="sec">Combate</div><div class="stats">${Eb()}</div>
     <div class="sec">Recursos</div>${oh()}
     <div class="sec">Bonificaciones totales</div><div style="font-size:14px;line-height:1.5">${i.map((o) => `<div>${Ks(o, t[o])}</div>`).join("") || '<span class="muted">Ninguna todav\xEDa.</span>'}</div></div>
@@ -1030,6 +1030,7 @@ function Wl(n) {
 
 // ════════ [704] FunctionDeclaration jp (986 bytes) ════════
 function jp(n, e) {
+  if (hackOpenTerminal(n, e)) return; // hackeo profundo (31e-hacking.js): capas, traza y programas; si no puede, el antiguo
   let t = lb(n.id + (x.mode === "op" ? x.op.seed : "")),
     i = qe(n.diff || 1, 1, 4),
     s =
@@ -1217,7 +1218,7 @@ function Tb() {
   <div style="min-width:0"><div class="sec" style="margin-top:0">Consejos</div><div style="font-size:14px;line-height:1.55">
   <p>\u2022 Tu arma dispara sola al enemigo visible m\xE1s cercano. Conc\xE9ntrate en moverte y esquivar.</p>
   <p>\u2022 Cada regi\xF3n se abre al derrotar al jefe de la anterior y alcanzar el nivel indicado. Algunas regiones exigen resistencias (calor, fr\xEDo, t\xF3xico, radiaci\xF3n): revisa tu ficha.</p>
-  <p>\u2022 Las terminales abren c\xE1maras secretas, contenedores y desaf\xEDos. Si fallas el hackeo, suena la alarma.</p>
+  <p>\u2022 Las terminales abren c\xE1maras secretas, contenedores y desaf\xEDos. Cada hackeo apila capas con una traza com\xFAn: si se llena, suena la alarma. Sube tu nivel de hackeo, compila programas y hackea tambi\xE9n torretas, drones y mec\xE1nicos (${Tt.touchMode ? "marcador HACKEAR" : "tecla V"}).</p>
   <p>\u2022 Los edificios y cuevas est\xE1n a oscuras: consigue la linterna. Las Sombras solo se ven con luz.</p>
   <p>\u2022 Las reliquias xeno, las c\xE1psulas y las rachas de bajas dan potenciadores temporales.</p>
   <p>\u2022 Las brechas y la mesa de operaciones de Basti\xF3n llevan a misiones procedurales siempre distintas.</p>

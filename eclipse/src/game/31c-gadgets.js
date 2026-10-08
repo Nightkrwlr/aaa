@@ -1524,6 +1524,7 @@ function gdPlanPrice(id) {
   return b ? Math.round(b * mt.credits(x.S.lvl)) : 0;
 }
 function gdStatLine(d) {
+  if (d.statText) return d.statText; // gadgets añadidos por otros frentes (p. ej. el Módulo Hacker de 31e-hacking.js)
   const f = (v) => String(Math.round(v * 100) / 100).replace(".", ",");
   const p = [];
   if (d.kind === "turret") {
