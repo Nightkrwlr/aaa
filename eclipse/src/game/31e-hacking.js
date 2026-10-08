@@ -1716,6 +1716,10 @@ HK_GAMES.brute = {
   time(diff, seed) {
     return Math.ceil(hkBruteGen(seed || 1, diff).len + 8);
   },
+  // tiempo mínimo jugable: lo que dura la pista más un margen para la última nota (ver hkLayerLimit)
+  minTime(diff, seed) {
+    return Math.ceil(hkBruteGen(seed || 1, diff).len + 2);
+  },
   validate(seed, diff) {
     const L = hkBruteGen(seed, diff);
     // huecos entre notas del mismo carril ≥ 2 ventanas buenas, y un jugador casi perfecto (σ = 0,05 s) gana
@@ -1979,9 +1983,13 @@ function hkStartTrace(s) {
 function hkLayerLimit(s, L, seed) {
   const G = HK_GAMES[L.kind],
     cfg = HK_CFG.games[L.kind];
-  const base = G.time ? G.time(L.diff, seed == null ? L.seed : seed) : cfg.time[L.diff - 1];
+  const sd = seed == null ? L.seed : seed;
+  const base = G.time ? G.time(L.diff, sd) : cfg.time[L.diff - 1];
   if (!base) return 0;
-  return base * s.mods.speed * HK_CFG.risk[s.risk].time * (1 - HK_CFG.trace.shortfall.time * hkShortfall(s));
+  const lim = base * s.mods.speed * HK_CFG.risk[s.risk].time * (1 - HK_CFG.trace.shortfall.time * hkShortfall(s));
+  // los modificadores (Agresivo, falta de nivel) recortan el tiempo, pero nunca por debajo de lo que dura el propio patrón:
+  // sin este suelo la fuerza bruta era imposible de ganar con Agresivo y 5 niveles de déficit (límite < duración de la pista)
+  return G.minTime ? Math.max(lim, G.minTime(L.diff, sd)) : lim;
 }
 // ¿Hay una sesión abierta?
 function hkBusy() {
