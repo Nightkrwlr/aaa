@@ -41,6 +41,8 @@ export default async function (api) {
   console.log(JSON.stringify(table));
   check('cada puzle añade ≤ 25 llamadas de dibujo (≤ 8 % de la escena; mallas instanciadas compartidas, nunca por baldosa)', worst <= 25 && worst / p0.calls <= 0.1, `peor caso +${worst} (de ${p0.calls})`);
   check('las mallas del puzle son ≤ 16 en total, sea cual sea el tamaño', Object.values(table).every((t) => typeof t === 'string' || t.mallas <= 16), JSON.stringify(Object.values(table).map((t) => t.mallas)));
+  // pzTick (que oculta las mallas) corre en el paso de simulación: se avanzan unos pasos tras quitar el último puzle, como en el juego real
+  await ev(() => window.__step(3, 1 / 30)); await wait(3);
   const p1 = await perf();
   check('al quitar el puzle las llamadas de dibujo vuelven a las de antes', Math.abs(p1.calls - p0.calls) <= 2, `${p0.calls} → ${p1.calls}`);
 
@@ -94,6 +96,8 @@ export default async function (api) {
   check('pzTick con dos puzles montados (y uno activo) cuesta < 150 µs por fotograma', cpu.us < 150 && cpu.mounted === 2, `${cpu.us.toFixed(1)} µs · ${cpu.inst} instancias`);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('HeapProfiler.enable');
+  // calentamiento: los primeros miles de llamadas corren en el intérprete (V8 encaja los dobles en cajas) y no son lo que cuesta en régimen estable
+  await ev(() => { const P = window.__puzzles; for (let i = 0; i < 3000; i++) P.tick(1 / 60); });
   await cdp.send('HeapProfiler.startSampling', { samplingInterval: 64 });
   await ev(() => { const P = window.__puzzles; for (let i = 0; i < 1500; i++) P.tick(1 / 60); });
   const prof = (await cdp.send('HeapProfiler.stopSampling')).profile;
