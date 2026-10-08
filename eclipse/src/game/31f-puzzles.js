@@ -2352,7 +2352,7 @@ function pzValidGen(g) {
   return !!g && typeof g.make === "function" && typeof g.validate === "function";
 }
 function pzPlayable(g) {
-  return !!g && typeof g.init === "function" && typeof g.solved === "function" && typeof g.draw === "function" && typeof g.act === "function";
+  return !!g && typeof g.init === "function" && typeof g.solved === "function" && typeof g.draw === "function";
 }
 function pzRegister(kind, gen) {
   if (typeof kind !== "string" || !/^[a-z][\w-]*$/i.test(kind) || !pzValidGen(gen)) return false;
@@ -2492,6 +2492,7 @@ function pzBotRun(gen, spec) {
       ctx.inside = true;
       const pk = gen.pick ? gen.pick(spec, st, ctx.px, ctx.pz, a.face && a.face[0], a.face && a.face[1]) : id;
       if (pk !== id) return { ok: false, why: `el jugador en ${a.at.map((v) => v.toFixed(1))} no apunta al objeto ${id} sino al ${pk}` };
+      if (!gen.act) return { ok: false, why: "el generador no tiene act" };
       gen.act(spec, st, id, ctx);
       stepN(1);
     }
@@ -2604,4 +2605,1256 @@ x.puzzleApi = {
   cfg: PZ_CFG,
 };
 // ▲▲ PURO ▲▲
+
+// ═══ 5. GUARDADO ════════════════════════════════════════════════════════════════════════════════════════
+// S.puzzles = {id: {t, k, tier, p}}  puzles resueltos y cuándo (t en ms); el id es «sub:<id de la escalera>» (se repueblan a los 120 min,
+//                                    como los cofres) o «leg:<id>» (la cámara sellada clásica). Las operaciones no se guardan (son únicas).
+// S.puzzleStats = {n, perfect, hints, errors, hack, byKind:{tipo: n}}      S.puzzleV = 1
+function pzMigrate(S) {
+  if (!S || typeof S !== "object") return;
+  if (!S.puzzles || typeof S.puzzles !== "object" || Array.isArray(S.puzzles)) S.puzzles = {};
+  const now = Date.now(),
+    keep = PZ_CFG.respawnMin * 6e4 * 6;
+  for (const id of Object.keys(S.puzzles)) {
+    const p = S.puzzles[id];
+    if (!p || typeof p !== "object" || !isFinite(p.t) || p.t > now + 864e5 || now - p.t > keep) delete S.puzzles[id];
+    else {
+      p.k = String(p.k || "");
+      p.tier = Math.max(1, Math.min(3, p.tier | 0 || 1));
+    }
+  }
+  const T = S.puzzleStats;
+  if (!T || typeof T !== "object" || Array.isArray(T)) S.puzzleStats = { n: 0, perfect: 0, hints: 0, errors: 0, hack: 0, byKind: {} };
+  else {
+    for (const f of ["n", "perfect", "hints", "errors", "hack"]) T[f] = Math.max(0, T[f] | 0);
+    if (!T.byKind || typeof T.byKind !== "object" || Array.isArray(T.byKind)) T.byKind = {};
+  }
+  S.puzzleV = 1;
+}
+x.migrations.push(pzMigrate);
+function pzS() {
+  const S = x.S;
+  if (!S) return null;
+  if (S.puzzleV !== 1 || !S.puzzles || !S.puzzleStats) pzMigrate(S);
+  return S;
+}
+// ¿Resuelto hace menos de respawnMin minutos? (sid = id guardado, o null si no se guarda)
+function pzDoneRecently(sid) {
+  const S = pzS(),
+    p = S && sid ? S.puzzles[sid] : null;
+  return !!p && Date.now() - p.t < PZ_CFG.respawnMin * 6e4;
+}
+
+// ═══ 6. COLOCACIÓN EN MAZMORRAS ═════════════════════════════════════════════════════════════════════════
+// Las dos funciones de mazmorra del mundo (_x: subterráneos de edificios y cuevas · yx: operaciones) se envuelven: al terminar el mapa, y
+// SIN llamar a su generador aleatorio (el RNG del mundo no se toca), se busca un hueco en una sala y se añade UNA entidad «puzzle».
+// El azar de aquí es propio: el tipo, el nivel y la semilla del puzle salen de un hash del id de la escalera (siempre el mismo acertijo en la
+// misma escalera) o, en las operaciones, de la semilla de la operación; la sala y la posición, de un RNG sembrado con la semilla del mapa.
+var PZ_THEME_OP = { ruinas: "sotano", bunker: "sotano", laboratorio: "planta", fabrica: "planta", caverna: "gruta", magma: "gruta", colmena: "colmena" };
+var PZ_LORE_KEYS = { desierto: "desierto.runas", colmena: "colmena.canto" }; // pistas del Archivo (31d) que dictan el orden de las runas
+function pzTransform(d) {
+  const lw = d.lw,
+    lh = d.lh,
+    x0 = d.x0,
+    z0 = d.z0;
+  switch (d.rot & 3) {
+    case 0:
+      return { m00: 1, m01: 0, m10: 0, m11: 1, tx: x0, tz: z0, ang: 0 };
+    case 1:
+      return { m00: 0, m01: 1, m10: -1, m11: 0, tx: x0, tz: z0 + lw, ang: Math.PI / 2 };
+    case 2:
+      return { m00: -1, m01: 0, m10: 0, m11: -1, tx: x0 + lw, tz: z0 + lh, ang: Math.PI };
+    default:
+      return { m00: 0, m01: -1, m10: 1, m11: 0, tx: x0 + lh, tz: z0, ang: -Math.PI / 2 };
+  }
+}
+// Busca un rectángulo (W×H, con las 4 rotaciones) de suelo libre rodeado de un anillo también libre, dentro de una sala.
+// `near` (opcional) = {x, z, r}: solo posiciones a menos de r metros (pruebas). Devuelve {x0, z0, rot, room} o null.
+function pzFindSite(map, rooms, skip, dims, r, near, props) {
+  const w = map.w,
+    fl = map.floorT;
+  // celdas ocupadas por entidades físicas (cofres, escaleras, paquetes de aparición…): el puzle no se les pone encima
+  const busy = new Uint8Array(w * map.h);
+  const mark = (px, pz, rad) => {
+    for (let dz = -rad; dz <= rad; dz++)
+      for (let dx = -rad; dx <= rad; dx++) {
+        const cx = Math.floor(px) + dx,
+          cz = Math.floor(pz) + dz;
+        if (map.inb(cx, cz)) busy[cz * w + cx] = 1;
+      }
+  };
+  // los puntos de aparición de enemigos no son obstáculos (los guardianes pueden salir dentro del acertijo)
+  for (const en of map.ents) if (en.k !== "light" && en.k !== "encounter" && en.k !== "vault" && en.k !== "spawnpack" && en.k !== "spawnpt") mark(en.x, en.z, 1);
+  if (map.spawnBase) mark(map.spawnBase[0], map.spawnBase[1], 2);
+  // atrezo de la sala (cajas, taquillas…): estorba pero se puede quitar; solo en mazmorras (props = true)
+  const propAt = props ? new Uint8Array(w * map.h) : null;
+  if (props) for (const p of map.props) if (p.blk) propAt[Math.floor(p.z) * w + Math.floor(p.x)] = 1;
+  // suelo válido: en mazmorras, exactamente el suelo de la mazmorra (floorT); en el mundo abierto (solo pruebas), cualquier suelo seco
+  const okTer = fl !== undefined ? (t) => t === fl : (t) => !Ua[t] && t !== F.WATER && t !== F.LAVA && t !== F.ACID;
+  const free = (cx, cz) => {
+    if (!map.inb(cx, cz)) return false;
+    const i = cz * w + cx;
+    return okTer(map.ter[i]) && (!map.blk[i] || (propAt && propAt[i])) && !busy[i];
+  };
+  const rs = (rooms || []).filter((rm) => rm && !(skip && skip.has(rm)));
+  for (const rm of r.shuffle(rs.slice())) {
+    for (const rot of r.shuffle([0, 1, 2, 3])) {
+      const Wr = rot & 1 ? dims[1] : dims[0],
+        Hr = rot & 1 ? dims[0] : dims[1];
+      if (Wr + 2 > rm.w || Hr + 2 > rm.h) continue;
+      const found = [];
+      for (let z0 = rm.z0 + 1; z0 + Hr <= rm.z1; z0++)
+        for (let x0 = rm.x0 + 1; x0 + Wr <= rm.x1; x0++) {
+          if (near && Math.hypot(x0 + Wr / 2 - near.x, z0 + Hr / 2 - near.z) > near.r) continue;
+          let ok = true;
+          for (let cz = z0 - 1; cz <= z0 + Hr && ok; cz++)
+            for (let cx = x0 - 1; cx <= x0 + Wr; cx++)
+              if (!free(cx, cz) || (rm.tiles && !rm.tiles.has(cz * w + cx))) {
+                ok = false;
+                break;
+              }
+          if (ok) found.push([x0, z0]);
+        }
+      if (found.length) {
+        const [x0, z0] = r.pick(found);
+        return { x0, z0, rot, room: rm };
+      }
+    }
+  }
+  return null;
+}
+// Quita el atrezo (props y decorado) que cae dentro del rectángulo del puzle más su anillo, y libera las celdas que bloqueaban
+function pzClearSite(map, site, dims) {
+  const W = site.rot & 1 ? dims[1] : dims[0],
+    H = site.rot & 1 ? dims[0] : dims[1],
+    w = map.w;
+  const inside = (px, pz) => px >= site.x0 - 1 && px < site.x0 + W + 1 && pz >= site.z0 - 1 && pz < site.z0 + H + 1;
+  map.props = map.props.filter((p) => {
+    if (!inside(Math.floor(p.x), Math.floor(p.z))) return true;
+    if (p.blk) map.blk[Math.floor(p.z) * w + Math.floor(p.x)] = 0;
+    return false;
+  });
+  map.decor = map.decor.filter((d) => !inside(Math.floor(d.x), Math.floor(d.z)));
+}
+// Construye la entidad del puzle y la añade al mapa. Devuelve la entidad o null.
+function pzAddEnt(map, id, kind, tier, idx, site, extra) {
+  const g = PZ_GENS[kind],
+    dims = extra && extra.dims ? extra.dims : g.dims[tier];
+  const lw = dims[0],
+    lh = dims[1],
+    W = site.rot & 1 ? lh : lw,
+    H = site.rot & 1 ? lw : lh;
+  const ent = {
+    k: "puzzle",
+    id,
+    x: site.x0 + W / 2,
+    z: site.z0 + H / 2,
+    pz: Object.assign({ kind, tier, idx, rot: site.rot, x0: site.x0, z0: site.z0, lw, lh, W, H }, extra || {}),
+  };
+  map.ents.push(ent);
+  // una luz propia: el acertijo se ve aunque la sala esté a oscuras (usa el grupo de luces cercanas del director del mundo)
+  map.ents.push({ k: "light", id: id + "_l", x: ent.x, z: ent.z, c: 0xbfe6ff, model: "none" });
+  return ent;
+}
+function pzPlace(map, n) {
+  if (!map || !map.ents || !map.rooms || !n) return null;
+  const sub = !!n.sub,
+    sid = sub && n.ent && n.ent.id ? "sub:" + n.ent.id : null;
+  if (sub && n.enc === "puzzle") return null; // la «cámara sellada» ya es un acertijo
+  const theme = sub ? vE[n.ent.kind] || "sotano" : PZ_THEME_OP[n.theme] || "sotano",
+    base = sid ? pzMix(sid, 0x50) : pzMix(n.seed | 0, 0x4f50),
+    rc = pzRng(pzMix(base, 0x43)); // ¿hay acertijo aquí? (estable por escalera)
+  if (rc() >= (sub ? PZ_CFG.chance : PZ_CFG.chanceOp)) return null;
+  const lvl = n.lvl | 0 || 1,
+    reg = De[n.reg] ? n.reg : 0,
+    regKey = De[reg].key;
+  let ch = pzChoose(base, theme, lvl),
+    lore = null;
+  // regiones con una pista de runas en el Archivo: el acertijo de runas lo dicta el documento (si el Archivo existe)
+  if (x.loreApi && PZ_LORE_KEYS[regKey] && pzRng(pzMix(base, 0x4c))() < PZ_CFG.loreChance) {
+    try {
+      const h = x.loreApi.hintFor(PZ_LORE_KEYS[regKey]);
+      if (h && h.seq && h.seq.length >= 3 && h.seq.length <= 5) {
+        lore = { key: PZ_LORE_KEYS[regKey], len: h.seq.length };
+        ch = { kind: "runes", tier: h.seq.length >= 5 ? 3 : 2, idx: pzMix(base, 0x4d) % PZ_CFG.pool };
+      }
+    } catch (err) {
+      lore = null;
+    }
+  }
+  const r = pzRng(pzMix(n.seed | 0, base, 0x53)); // sala y posición: dependen del mapa (que en las escaleras cambia en cada visita)
+  const skip = new Set();
+  if (sub) {
+    if (map.encRoom) skip.add(map.encRoom);
+    if (map.rooms[0]) skip.add(map.rooms[0]); // sala de entrada
+  } else {
+    if (map.rooms[0]) skip.add(map.rooms[0]);
+    if (n.obj === "boss") for (const rm of map.rooms) if (rm.w >= 13 && rm.h >= 13 && map.ents.some((en) => en.k === "bossarena" && Math.abs(en.x - rm.cx) < 1 && Math.abs(en.z - rm.cz) < 1)) skip.add(rm);
+  }
+  // si no hay hueco para el tipo elegido, se prueba con los demás y con tamaños menores (tipo y nivel siguen siendo deterministas)
+  const tries = [[ch.kind, ch.tier, ch.idx]];
+  if (!lore) {
+    const others = r.shuffle(Object.keys(PZ_GENS).filter((q) => q !== ch.kind && !PZ_GENS[q].legacy && pzPlayable(PZ_GENS[q])));
+    for (let t = ch.tier; t >= 1; t--) {
+      t < ch.tier && tries.push([ch.kind, t, ch.idx]);
+      for (const k of others) tries.push([k, t, pzMix(base, k, t) % PZ_CFG.pool]);
+    }
+  }
+  for (const [kind, tier, idx] of tries) {
+    const g = PZ_GENS[kind],
+      dims = lore && kind === "runes" ? g.dims[tier] : g.dims[tier];
+    if (!g || !dims) continue;
+    const site = pzFindSite(map, map.rooms, skip, dims, r, null, true);
+    if (!site) continue;
+    pzClearSite(map, site, dims);
+    const ent = pzAddEnt(map, "pz_" + (sub ? "s" : "o"), kind, tier, idx, site, { sid, theme, lvl, reg, lore });
+    if (ent) {
+      x.puzzleApi.last = ent;
+      return ent;
+    }
+  }
+  return null;
+}
+var PZ_RAW = { sub: _x, op: yx }; // las originales, para pruebas
+(function () {
+  const _sub = _x,
+    _op = yx;
+  _x = function (n) {
+    const m = _sub.apply(this, arguments);
+    try {
+      pzPlace(m, n);
+    } catch (err) {
+      console.warn("[puzles] colocación", err);
+    }
+    return m;
+  };
+  yx = function (n) {
+    const m = _op.apply(this, arguments);
+    try {
+      pzPlace(m, n);
+    } catch (err) {
+      console.warn("[puzles] colocación", err);
+    }
+    return m;
+  };
+})();
+
+// ═══ 7. GRÁFICOS ════════════════════════════════════════════════════════════════════════════════════════
+// Todos los puzles montados comparten 16 mallas instanciadas (8 formas × {mate, brillo}), con geometrías y materiales que viven toda la sesión:
+// montar y desmontar solo cambia cuántas instancias se pintan (nada se crea ni se libera, así no hay fugas) y el coste es de ≤ 16 llamadas de
+// dibujo por pantalla, nunca por baldosa. Los generadores dibujan con `g.box/cyl/sph/cone/oct/ring` en coordenadas de celda del puzle; aquí
+// se transforman a coordenadas del mundo según la rotación con la que se colocó (PZG.T).
+var PZ_KINDS = ["box", "cyl", "sph", "cone", "cone2", "oct", "ringH", "ringV"];
+var PZ_CAP = { box: [1000, 600], cyl: [240, 140], sph: [100, 260], cone: [70, 70], cone2: [50, 50], oct: [50, 50], ringH: [70, 140], ringV: [24, 24] }; // [mate, brillo]
+var PZR = { ready: false, b: {}, shown: false, drawn: 0 };
+var pzM = new at(),
+  pzQ = new Bn(),
+  pzP = new U(),
+  pzSc = new U(),
+  pzCol = new Ee(),
+  pzAxisY = new U(0, 1, 0);
+function pzGfxInit() {
+  if (PZR.ready) return true;
+  if (!x.R || !x.R.scene) return false;
+  try {
+    const rh = new Yi(1, 0.085, 6, 24);
+    rh.rotateX(Math.PI / 2);
+    const ci = new oo(1, 1, 12);
+    ci.rotateX(Math.PI);
+    const G = { box: new kn(1, 1, 1), cyl: new ni(1, 1, 1, 12), sph: new rr(1, 12, 8), cone: new oo(1, 1, 12), cone2: ci, oct: new _a(1, 0), ringH: rh, ringV: new Yi(1, 0.085, 6, 24) };
+    const lit = new Xt({ color: 0xffffff, roughness: 0.55, metalness: 0.2, flatShading: true }),
+      glow = new vt({ color: 0xffffff, toneMapped: false });
+    for (const k of PZ_KINDS) {
+      const a = new cs(x.R.scene, G[k], lit, PZ_CAP[k][0]),
+        b = new cs(x.R.scene, G[k], glow, PZ_CAP[k][1]);
+      a.mesh.name = "puzzle-" + k;
+      b.mesh.name = "puzzle-" + k + "-glow";
+      a.mesh.receiveShadow = true;
+      a.mesh.visible = b.mesh.visible = false;
+      PZR.b[k] = [a, b];
+    }
+    PZR.ready = true;
+  } catch (err) {
+    console.warn("[puzles] sin mallas instanciadas", err);
+  }
+  return PZR.ready;
+}
+var PZG = {
+  T: null,
+  _p(k, cx, cz, y, sx, sy, sz, col, gl, ry) {
+    const T = this.T,
+      B = PZR.b[k][gl > 0 ? 1 : 0];
+    pzQ.setFromAxisAngle(pzAxisY, T.ang + (ry || 0));
+    pzP.set(T.tx + T.m00 * cx + T.m01 * cz, y, T.tz + T.m10 * cx + T.m11 * cz);
+    pzSc.set(sx, sy, sz);
+    pzM.compose(pzP, pzQ, pzSc);
+    pzCol.setHex(col);
+    gl > 0 && pzCol.multiplyScalar(0.55 + gl * 0.55); // el brillo se pinta por encima de 1 (HDR): alimenta el bloom
+    B.push(pzM, pzCol);
+  },
+  box(cx, cz, y, sx, sy, sz, col, gl, ry) {
+    this._p("box", cx, cz, y, sx, sy, sz, col, gl || 0, ry);
+  },
+  cyl(cx, cz, y, r, h, col, gl) {
+    this._p("cyl", cx, cz, y, r, h, r, col, gl || 0, 0);
+  },
+  sph(cx, cz, y, r, col, gl) {
+    this._p("sph", cx, cz, y, r, r, r, col, gl || 0, 0);
+  },
+  cone(cx, cz, y, r, h, col, gl, inv) {
+    this._p(inv ? "cone2" : "cone", cx, cz, y, r, h, r, col, gl || 0, 0);
+  },
+  oct(cx, cz, y, r, col, gl) {
+    this._p("oct", cx, cz, y, r, r, r, col, gl || 0, 0);
+  },
+  ring(cx, cz, y, r, col, gl, vertical) {
+    this._p(vertical ? "ringV" : "ringH", cx, cz, y, r, r, r, col, gl || 0, vertical ? Math.PI / 4 : 0);
+  },
+};
+// Pinta todos los puzles montados (una vez por fotograma de simulación)
+function pzDrawAll(t) {
+  if (!PZ.mounted.size) {
+    if (PZR.shown) {
+      for (const k of PZ_KINDS) PZR.b[k][0].mesh.visible = PZR.b[k][1].mesh.visible = false;
+      PZR.shown = false;
+    }
+    return;
+  }
+  if (!pzGfxInit()) return;
+  for (const k of PZ_KINDS) {
+    PZR.b[k][0].begin();
+    PZR.b[k][1].begin();
+  }
+  for (const rt of PZ.mounted) {
+    const z = rt.pz;
+    PZG.T = z.T;
+    try {
+      z.gen.draw(z.spec, z.st, PZG, t);
+      // anillo de foco sobre el objeto que se usaría con USAR
+      if (PZ.focus && PZ.focus.rt === rt) PZG.ring(PZ.focus.cx, PZ.focus.cz, 0.07, 0.62 + Math.sin(t * 7) * 0.04, 0xffe27a, 1.5);
+      if (z.hintFocus) PZG.ring(z.hintFocus.cx, z.hintFocus.cz, 0.09, 0.78 + Math.sin(t * 9) * 0.06, 0x5dff9a, 2);
+    } catch (err) {
+      if (!z.drawErr) {
+        z.drawErr = true;
+        console.warn("[puzles] dibujo", z.d.kind, err);
+      }
+    }
+  }
+  let n = 0;
+  for (const k of PZ_KINDS)
+    for (let j = 0; j < 2; j++) {
+      const b = PZR.b[k][j];
+      b.end();
+      b.mesh.visible = b.n > 0;
+      n += b.n > 0 ? 1 : 0;
+    }
+  PZR.drawn = n;
+  PZR.shown = true;
+}
+
+// ═══ 8. EJECUCIÓN ═══════════════════════════════════════════════════════════════════════════════════════
+// Estado de ejecución: puzles montados (los que están a < 42 m: lo decide el director del mundo al crear/quitar «mallas» de sus entidades),
+// el activo (el que tienes encima o al lado), el objeto que apuntarías con USAR y el HUD.
+var PZ = { mounted: new Set(), active: null, pickId: -1, pickRt: null, pickText: "", focus: null, hud: null, hudKey: "", lab: null, stats: { mounts: 0, unmounts: 0, solved: 0 } };
+var PZ_TOKEN = { userData: {}, isPuzzle: true }; // «malla» de mentira: el director solo necesita que exista y tenga userData
+var PZ_CTX = {
+  rt: null,
+  px: 0,
+  pz: 0,
+  fx: 0,
+  fz: 0,
+  inside: false,
+  cell: -1,
+  snd(name, o) {
+    ae.play(name, o);
+  },
+  toast(m, t) {
+    ee("toast", m, t || "quest");
+  },
+  hurt(f) {
+    const p = x.player;
+    if (!p || p.dead) return;
+    // un fallo de acertijo duele pero nunca mata
+    const d = Math.min(p.hp - 1, p.maxHp * f);
+    if (d > 0.5) {
+      p.hp -= d;
+      p.hurtFlash = Math.min(1, (p.hurtFlash || 0) + 0.4);
+      x.R.addShake(0.15);
+      x.fx.text(p.x, 1.9, p.z, "-" + Math.round(d), "#ff6b6b", 13);
+    }
+  },
+  teleport(lx, lz) {
+    const z = this.rt && this.rt.pz,
+      p = x.player;
+    if (!z || !p) return;
+    const T = z.T;
+    p.x = T.tx + T.m00 * lx + T.m01 * lz;
+    p.z = T.tz + T.m10 * lx + T.m11 * lz;
+    p.vx = p.vz = 0;
+    x.fx.burst(p.x, 0.8, p.z, 14, { color: 0xffd04a, speed: 3, life: 0.5, size: 0.2, up: 1 });
+  },
+  occupied(cx, cz) {
+    return Math.floor(this.px) === cx && Math.floor(this.pz) === cz;
+  },
+};
+function pzLevel(rt) {
+  return rt.pz && rt.pz.d.lvl ? rt.pz.d.lvl : x.S.lvl;
+}
+// Variante «dictada por el Archivo» del puzle de runas: el orden sale de la pista del documento (x.loreApi.hintFor), el resto son señuelos
+function pzLoreSpec(gen, d) {
+  try {
+    const h = x.loreApi && x.loreApi.hintFor(d.lore.key);
+    if (!h || !h.seq || !gen.makeLore) return null;
+    // los ocho glifos del Archivo coinciden, en orden, con las ocho runas del puzle (se comprueba por nombre)
+    const gl = x.loreApi.vocab && x.loreApi.vocab.glyphs;
+    if (gl && gl.some((n, i) => PZ_RUNES[i] && PZ_RUNES[i].n !== n)) return null;
+    return gen.makeLore(d.idx, d.tier, h.seq.slice(), d.lore.key);
+  } catch (err) {
+    return null;
+  }
+}
+function pzMount(rt) {
+  const d = rt.e.pz,
+    gen = PZ_GENS[d.kind];
+  if (!gen || !pzPlayable(gen) || !x.map) return false;
+  const keep = rt.pzKeep;
+  let spec = keep ? keep.spec : d.lore ? pzLoreSpec(gen, d) : pzSpec(d.kind, d.idx, d.tier);
+  if (!spec && d.lore) spec = pzSpec(d.kind, d.idx, d.tier); // sin Archivo: el puzle de runas con pistas de la inscripción
+  if (!spec) return false;
+  const st = keep ? keep.st : gen.init(spec);
+  if (!keep) {
+    rt.pzKeep = { spec, st };
+    if ((d.sid && pzDoneRecently(d.sid)) || rt.pzDone) {
+      rt.pzDone = true;
+      gen.solve && gen.solve(spec, st);
+    }
+  }
+  const z = (rt.pz = { d, gen, spec, st, T: pzTransform(d), map: x.map, blk: new Uint8Array(d.lw * d.lh), rev: -1, lx: -9, lz: -9, inside: false, near: false, drawErr: false });
+  PZ.mounted.add(rt);
+  PZ.stats.mounts++;
+  pzApplyBlk(rt);
+  z.rev = st.rev;
+  return true;
+}
+function pzUnmount(rt) {
+  const z = rt.pz;
+  if (!z) return;
+  if (x.map === z.map) {
+    const w = z.map.w,
+      T = z.T,
+      d = z.d;
+    for (let cz = 0; cz < d.lh; cz++)
+      for (let cx = 0; cx < d.lw; cx++)
+        if (z.blk[cz * d.lw + cx]) z.map.blk[Math.floor(T.tz + T.m10 * (cx + 0.5) + T.m11 * (cz + 0.5)) * w + Math.floor(T.tx + T.m00 * (cx + 0.5) + T.m01 * (cz + 0.5))] = 0;
+  }
+  PZ.mounted.delete(rt);
+  PZ.stats.unmounts++;
+  if (PZ.active === rt) {
+    PZ.active = null;
+    PZ.pickId = -1;
+    PZ.pickRt = null;
+    PZ.focus = null;
+  }
+  rt.pz = null;
+}
+// Las celdas sólidas del puzle (cajas, espejos, muros…) bloquean al jugador y a los enemigos: se reflejan en map.blk
+function pzApplyBlk(rt) {
+  const z = rt.pz,
+    map = z.map,
+    d = z.d,
+    T = z.T,
+    w = map.w;
+  for (let cz = 0; cz < d.lh; cz++)
+    for (let cx = 0; cx < d.lw; cx++) {
+      const v = z.gen.solid(z.spec, z.st, cx, cz) ? 1 : 0,
+        k = cz * d.lw + cx;
+      if (z.blk[k] === v) continue;
+      z.blk[k] = v;
+      map.blk[Math.floor(T.tz + T.m10 * (cx + 0.5) + T.m11 * (cz + 0.5)) * w + Math.floor(T.tx + T.m00 * (cx + 0.5) + T.m01 * (cz + 0.5))] = v;
+    }
+  z.rev = z.st.rev;
+  // si algo sólido aparece bajo los pies del jugador, se le saca (no debería: las acciones lo evitan)
+  const p = x.player;
+  if (p && map.circleHits(p.x, p.z, p.r * 0.6)) {
+    const [fx, fz] = map.findFree(p.x, p.z, 3, p.r);
+    p.x = fx;
+    p.z = fz;
+  }
+}
+function pzToLocal(z, wx, wz, out) {
+  const T = z.T,
+    dx = wx - T.tx,
+    dz = wz - T.tz;
+  out.x = T.m00 * dx + T.m10 * dz;
+  out.z = T.m01 * dx + T.m11 * dz;
+  return out;
+}
+var pzTmp = { x: 0, z: 0 };
+function pzTick(dt) {
+  const p = x.player;
+  if (!PZ.mounted.size || !p) {
+    PZ.active = null;
+    PZ.pickId = -1;
+    PZ.pickRt = null;
+    PZ.focus = null;
+    pzHud(null);
+    pzDrawAll(x.time);
+    return;
+  }
+  let best = null,
+    bd = 1e9;
+  for (const rt of PZ.mounted) {
+    const z = rt.pz,
+      d = z.d;
+    pzToLocal(z, p.x, p.z, pzTmp);
+    z.lx = pzTmp.x;
+    z.lz = pzTmp.z;
+    z.inside = z.lx >= 0 && z.lz >= 0 && z.lx < d.lw && z.lz < d.lh;
+    // distancia del jugador al rectángulo (0 si está dentro)
+    const dx = Math.max(0, -z.lx, z.lx - d.lw),
+      dz = Math.max(0, -z.lz, z.lz - d.lh),
+      dist = Math.hypot(dx, dz);
+    z.near = dist < PZ_CFG.nearM;
+    if (z.near && dist < bd) {
+      bd = dist;
+      best = rt;
+    }
+    // el tiempo de cada puzle corre (placas, láseres…) mientras está montado; el jugador solo cuenta si no está muerto
+    PZ_CTX.rt = rt;
+    PZ_CTX.px = z.lx;
+    PZ_CTX.pz = z.lz;
+    PZ_CTX.inside = z.inside && !p.dead && !rt.pzDone;
+    PZ_CTX.cell = z.inside ? Math.floor(z.lz) * d.lw + Math.floor(z.lx) : -1;
+    if (!rt.pzDone && z.gen.step) {
+      try {
+        z.gen.step(z.spec, z.st, dt, PZ_CTX);
+      } catch (err) {
+        console.warn("[puzles] step", d.kind, err);
+      }
+    }
+    if (z.st.rev !== z.rev) pzApplyBlk(rt);
+    if (!rt.pzDone && z.gen.solved(z.spec, z.st)) pzSolve(rt, "play");
+    if (z.hintFocus && (z.hintFocus.t -= dt) <= 0) z.hintFocus = null;
+  }
+  if (PZ.active !== best) {
+    PZ.active = best;
+    PZ.hudKey = "";
+    best && !best.pzIntro && pzIntro(best);
+  }
+  // objeto al que apuntaría USAR
+  PZ.pickId = -1;
+  PZ.pickRt = null;
+  PZ.focus = null;
+  const rt = PZ.active;
+  if (rt && !rt.pzDone && !p.dead) {
+    const z = rt.pz,
+      T = z.T;
+    // hacia dónde mira el jugador, en coordenadas del puzle
+    const sx = Math.sin(p.face),
+      sz = Math.cos(p.face);
+    PZ_CTX.fx = T.m00 * sx + T.m10 * sz;
+    PZ_CTX.fz = T.m01 * sx + T.m11 * sz;
+    const id = z.gen.pick ? z.gen.pick(z.spec, z.st, z.lx, z.lz, PZ_CTX.fx, PZ_CTX.fz) : -1;
+    if (id >= 0) {
+      PZ.pickId = id;
+      PZ.pickRt = rt;
+      PZ.pickText = z.gen.label(z.spec, z.st, id);
+      const f = z.gen.focus ? z.gen.focus(z.spec, z.st, id) : null;
+      if (f) PZ.focus = { rt, cx: f[0] + 0.5, cz: f[1] + 0.5 };
+    }
+    // atajos de teclado (en táctil están los botones del panel)
+    if (Tt.hit("pzUndo")) pzAction(rt, "undo");
+    if (Tt.hit("pzReset")) pzAction(rt, "reset");
+    if (Tt.hit("pzHint")) pzAction(rt, "hint");
+  }
+  pzHud(PZ.active);
+  pzDrawAll(x.time);
+}
+x.tick.push(pzTick);
+// Teclas de acertijo (solo hacen algo cuando hay uno activo; U, Y y N estaban libres)
+yw.KeyU = "pzUndo";
+yw.KeyY = "pzReset";
+yw.KeyN = "pzHint";
+// Introducción (una vez por montaje): qué es y cómo se maneja, según el dispositivo
+function pzIntro(rt) {
+  rt.pzIntro = true;
+  const z = rt.pz;
+  if (rt.pzDone) return;
+  ee("toast", `${z.gen.icon || "◈"} ${z.gen.n} · ${z.gen.d}`, "quest");
+}
+// Acciones del panel: reiniciar · deshacer · pista · hackear
+function pzAction(rt, what) {
+  const z = rt && rt.pz;
+  if (!z || rt.pzDone) return;
+  PZ_CTX.rt = rt;
+  PZ_CTX.px = z.lx;
+  PZ_CTX.pz = z.lz;
+  PZ_CTX.cell = z.inside ? Math.floor(z.lz) * z.d.lw + Math.floor(z.lx) : -1;
+  const g = z.gen,
+    st = z.st;
+  if (what === "reset" && g.reset) {
+    g.reset(z.spec, st);
+    st.resets = (st.resets | 0) + 1;
+    ae.play("close");
+    ee("toast", "Acertijo reiniciado", "quest");
+  } else if (what === "undo" && g.undo) {
+    if (g.undo(z.spec, st)) ae.play("close");
+    else ee("toast", "No hay nada que deshacer", "warn");
+  } else if (what === "hint" && g.hint) {
+    const h = g.hint(z.spec, st, PZ_CTX);
+    if (h) {
+      st.hints++;
+      z.hinted = true;
+      ee("toast", h.text, "quest");
+      if (h.id !== undefined && g.focus) {
+        const f = g.focus(z.spec, st, h.id);
+        f && (z.hintFocus = { cx: f[0] + 0.5, cz: f[1] + 0.5, t: 4 });
+      }
+      ae.play("beep", { p: 1.4 });
+      z.gen.hintLore && z.gen.hintLore(z.spec, st);
+    } else ee("toast", "No hay pista que dar ahora", "warn");
+  } else if (what === "hack") pzHack(rt);
+  else return;
+  if (st.rev !== z.rev) pzApplyBlk(rt);
+  PZ.hudKey = "";
+}
+// Atajo electrónico: un hackeo de una capa abre el panel (arriesgado: la traza puede dar la alarma). Sin premio de «perfecto».
+function pzHack(rt) {
+  const z = rt.pz;
+  if (!x.hackApi || !x.hackApi.run || !z.gen.hackable) return;
+  try {
+    const s = x.hackApi.run(
+      { title: "Panel del acertijo", sub: z.gen.n, objetivo: "personalizado", diff: Math.min(4, z.d.tier + 1), layers: 1, noPre: true, risk: 1, loot: false, at: { x: rt.e.x, z: rt.e.z }, seed: 1 + z.d.idx },
+      (res) => {
+        if (!rt.pz || rt.pzDone) return;
+        if (res && res.ok) pzSolve(rt, "hack");
+        else ee("toast", "El panel sigue bloqueado. Puedes resolverlo a mano.", "warn");
+      },
+    );
+    if (!s) ee("toast", "No se puede hackear ahora mismo", "warn");
+  } catch (err) {
+    console.warn("[puzles] hackeo", err);
+  }
+}
+// USAR sobre el objeto apuntado
+function pzInteract(rt) {
+  const z = rt && rt.pz;
+  if (!z || rt.pzDone || PZ.pickRt !== rt || PZ.pickId < 0) return;
+  PZ_CTX.rt = rt;
+  PZ_CTX.px = z.lx;
+  PZ_CTX.pz = z.lz;
+  try {
+    z.gen.act(z.spec, z.st, PZ.pickId, PZ_CTX);
+  } catch (err) {
+    console.warn("[puzles] act", z.d.kind, err);
+  }
+  if (z.st.rev !== z.rev) pzApplyBlk(rt);
+  if (!rt.pzDone && z.gen.solved(z.spec, z.st)) pzSolve(rt, "play");
+  PZ.hudKey = "";
+}
+// ── Premio ──
+function pzTierStars(t) {
+  return "★".repeat(t) + "☆".repeat(3 - t);
+}
+function pzPar(z) {
+  // movimientos de referencia: lo que tarda el bot (solo en los que el nº de acciones es significativo)
+  if (!z.gen.par) return null;
+  try {
+    return z.gen.par(z.spec);
+  } catch (err) {
+    return null;
+  }
+}
+function pzSolve(rt, how) {
+  const z = rt.pz;
+  if (!z || rt.pzDone) return;
+  rt.pzDone = true;
+  z.st.done = true;
+  const S = pzS(),
+    d = z.d,
+    st = z.st,
+    lvl = d.lvl || S.lvl,
+    hack = how === "hack",
+    par = pzPar(z),
+    perfect = !hack && !z.hinted && st.errors === 0 && (par == null || st.moves <= Math.ceil(par * PZ_CFG.parSlack) + 2);
+  const p = { id: d.sid || rt.e.id, kind: d.kind, tier: d.tier, perfect, errors: st.errors | 0, moves: st.moves | 0, hints: st.hints | 0, resets: st.resets | 0, time: Math.round(st.t * 10) / 10, how, lvl, reg: d.reg | 0, x: rt.e.x, z: rt.e.z, legacy: false };
+  const T = S.puzzleStats;
+  T.n++;
+  perfect && T.perfect++;
+  T.hints += p.hints;
+  T.errors += p.errors;
+  hack && T.hack++;
+  T.byKind[d.kind] = (T.byKind[d.kind] | 0) + 1;
+  if (d.sid) S.puzzles[d.sid] = { t: Date.now(), k: d.kind, tier: d.tier, p: perfect ? 1 : 0 };
+  PZ.stats.solved++;
+  // efectos
+  const [px, pzz] = x.map.findFree(rt.e.x, rt.e.z, 4, 0.5);
+  ae.play("success");
+  ae.play("legend", { v: 0.35 });
+  x.fx.ring(px, pzz, 3.2, 0x9ad8ff, 0.7);
+  x.fx.burst(px, 1.1, pzz, 36, { color: 0x9ad8ff, speed: 4.5, life: 0.9, size: 0.28, up: 1.2 });
+  x.R.addShake(0.2);
+  ee("banner", "ACERTIJO RESUELTO", `${z.gen.n} · ${pzTierStars(d.tier)}${perfect ? " · PERFECTO" : ""}`, perfect ? "#ffd447" : "#9ad8ff");
+  // botín por tier con el sistema de ECONOMÍA (cofre de nivel d.tier) + extras
+  const R = PZ_CFG.reward;
+  try {
+    Co(px, pzz + 0.4, d.tier, lvl, { src: "chest" + d.tier });
+    if (perfect) Co(px, pzz - 0.4, 1, lvl, { src: "chest1" }); // bonus por resolverlo limpio
+  } catch (err) {
+    console.warn("[puzles] botín", err);
+  }
+  const xpf = (R.xp[d.tier] + (perfect ? R.perfectXp : 0)) * (hack ? R.hackMul : 1);
+  if (typeof ecoGrantXp === "function") ecoGrantXp(xpf, "acertijo");
+  else if (x.player && mt.xpToNext) x.player.addXp(xpf * mt.xpToNext(S.lvl));
+  const cr = Math.round(R.credits[d.tier] * mt.credits(lvl) * (perfect ? 1 + R.perfectCredits : 1) * (1 + (x.player.st.credits || 0)));
+  S.credits += cr;
+  x.fx.text(px, 2.2, pzz, "+" + cr + " ¤", "#ffd447", 13, { life: 1.4 });
+  // el Archivo: a veces el acertijo esconde un documento de la región
+  if (x.loreApi && !hack && pzRng(pzMix(d.idx, st.moves, 0x4c4f))() < R.lore[d.tier]) {
+    try {
+      const id = x.loreApi.next(d.tier >= 3 ? "chip" : "libro", d.reg) || x.loreApi.next(null, d.reg);
+      if (id && x.loreApi.grant(id, { quiet: true, src: "puzzle" })) ee("toast", "El mecanismo guardaba un documento: " + ((x.loreApi.get(id) || {}).t || "Archivo"), "quest");
+    } catch (err) {
+      /* sin Archivo: nada */
+    }
+  }
+  ee("puzzleSolved", p);
+  ee("save");
+  PZ.hudKey = "";
+  return p;
+}
+// La cámara sellada clásica (switch / sequence, 22-quests) también cuenta como acertijo resuelto
+function pzLegacySolved(st) {
+  const S = pzS(),
+    sid = "leg:" + (st.op && st.op.ent ? st.op.ent.id : "op"),
+    tier = pzTierOf(st.lvl | 0);
+  S.puzzles[sid] = { t: Date.now(), k: st.mode, tier, p: 0 };
+  S.puzzleStats.n++;
+  S.puzzleStats.byKind[st.mode] = (S.puzzleStats.byKind[st.mode] | 0) + 1;
+  ee("puzzleSolved", { id: sid, kind: st.mode, tier, perfect: false, errors: 0, moves: st.presses | 0, hints: 0, how: "play", lvl: st.lvl, reg: st.op ? st.op.reg | 0 : 0, legacy: true });
+}
+(function () {
+  const _fin = Ni.finish;
+  Ni.finish = function (ok) {
+    const st = this.st,
+      was = !!(st && !st.done && !st.failed && st.enc === "puzzle");
+    const r = _fin.apply(this, arguments);
+    if (ok && was && st.done)
+      try {
+        pzLegacySolved(st);
+      } catch (err) {
+        console.warn("[puzles] cámara sellada", err);
+      }
+    return r;
+  };
+})();
+
+// ═══ 9. HUD, ETIQUETAS Y ENGANCHES ══════════════════════════════════════════════════════════════════════
+// Tarjeta no modal con lo que hace falta mientras se está en el acertijo: nombre, estado, inscripción y botones (≥ 44 px, sin teclas fijas en táctil).
+function pzCss() {
+  if (document.getElementById("pzCss")) return;
+  const st = document.createElement("style");
+  st.id = "pzCss";
+  st.textContent = `
+#pzHud{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);width:min(380px,calc(100vw - 24px));z-index:21;display:none;pointer-events:none;font-family:var(--f-disp,sans-serif);color:#dfe9ee}
+#pzHud .pzcard{background:linear-gradient(180deg,rgba(10,14,16,.9),rgba(10,14,16,.74));border:1px solid var(--line2,#2a3a40);border-left:3px solid #9ad8ff;padding:7px 10px 8px;backdrop-filter:blur(3px)}
+#pzHud .pzh{display:flex;align-items:center;gap:8px;font:700 14px var(--f-disp,sans-serif);letter-spacing:.04em}
+#pzHud .pzh i{font-style:normal;font-size:18px;color:#9ad8ff}
+#pzHud .pzh em{margin-left:auto;font-style:normal;color:#ffd447;font-size:13px;letter-spacing:.1em}
+#pzHud .pzd{font-size:12px;color:#9fb1b8;margin:2px 0 4px;line-height:1.25}
+#pzHud .pzs{font:600 13px var(--f-disp,sans-serif);color:#e8f4f8;line-height:1.35}
+#pzHud .pzc{margin:5px 0 0;padding:5px 0 0 16px;border-top:1px solid rgba(255,255,255,.1);font-size:12.5px;line-height:1.3;color:#d6e6ec}
+#pzHud .pzc li{margin:1px 0}
+#pzHud .pzk{font-size:11px;color:#7f939b;margin-top:4px}
+#pzHud .pzb{display:flex;gap:6px;margin-top:6px;pointer-events:auto}
+#pzHud .pzb button{flex:1;min-height:44px;min-width:44px;padding:4px 6px;background:#16262c;color:#dff3fb;border:1px solid #3a5560;font:700 13px var(--f-disp,sans-serif);touch-action:manipulation;cursor:pointer}
+#pzHud .pzb button:active{background:#244a58}
+#pzHud .pzb button.hk{color:#9affc8;border-color:#3f7a5c}
+#pzHud.done .pzcard{border-left-color:#5fd35a}
+#pzLab{position:fixed;inset:0;pointer-events:none;z-index:19;overflow:hidden}
+#pzLab b{position:absolute;left:0;top:0;font:700 11px var(--f-disp,sans-serif);padding:1px 5px;background:rgba(8,12,14,.78);border:1px solid currentColor;white-space:nowrap;will-change:transform}
+@media (max-width:820px) and (orientation:landscape){#pzHud{top:max(4px,env(safe-area-inset-top));width:min(330px,calc(100vw - 420px))}#pzHud .pzd{display:none}#pzHud .pzcard{padding:5px 8px 6px}#pzHud .pzb button{min-height:40px}}
+@media (orientation:portrait){#pzHud{top:auto;bottom:calc(196px + env(safe-area-inset-bottom));width:min(400px,calc(100vw - 20px))}}
+`;
+  document.head.appendChild(st);
+}
+function pzEsc(s) {
+  return typeof ke === "function" ? ke(String(s)) : String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+}
+function pzHudBuild() {
+  if (PZ.hud) return PZ.hud;
+  pzCss();
+  const el = document.createElement("div");
+  el.id = "pzHud";
+  el.setAttribute("role", "status");
+  el.setAttribute("aria-live", "polite");
+  document.body.appendChild(el);
+  el.addEventListener("click", (ev) => {
+    const b = ev.target.closest && ev.target.closest("button[data-pz]");
+    if (!b || !PZ.active) return;
+    ev.preventDefault();
+    pzAction(PZ.active, b.dataset.pz);
+  });
+  el.addEventListener("touchstart", (ev) => ev.stopPropagation(), { passive: true });
+  const lab = document.createElement("div");
+  lab.id = "pzLab";
+  document.body.appendChild(lab);
+  PZ.hud = el;
+  PZ.lab = lab;
+  return el;
+}
+function pzHud(rt) {
+  if (!rt && !PZ.hud) return;
+  const el = pzHudBuild();
+  if (!rt || x.uiOpen || !x.started) {
+    if (el._v) {
+      el.style.display = "none";
+      el._v = false;
+    }
+    pzLabels(null);
+    return;
+  }
+  const z = rt.pz,
+    g = z.gen,
+    st = z.st,
+    touch = Tt.touchMode;
+  // La estructura (botones) solo se rebuelve cuando cambia de verdad: reconstruir el DOM entre el toque y el soltar perdería el clic.
+  const skey = z.d.kind + "|" + rt.pzDone + "|" + touch + "|" + !!x.hackApi + "|" + (rt.e.id || "");
+  if (skey !== el._skey) {
+    el._skey = skey;
+    let h = "";
+    if (rt.pzDone) {
+      h = `<div class="pzcard"><div class="pzh"><i>${g.icon || "◈"}</i><b>${pzEsc(g.n)}</b><em>✔ Resuelto</em></div></div>`;
+      el.className = "done";
+    } else {
+      h = `<div class="pzcard"><div class="pzh"><i>${g.icon || "◈"}</i><b>${pzEsc(g.n)}</b><em>${pzTierStars(z.d.tier)}</em></div>`;
+      h += `<div class="pzd">${pzEsc(g.d)}</div><div class="pzs"></div><ol class="pzc"></ol><div class="pzb">`;
+      if (g.reset) h += `<button type="button" data-pz="reset" aria-label="Reiniciar el acertijo">↺ Reiniciar</button>`;
+      if (g.undo) h += `<button type="button" data-pz="undo" aria-label="Deshacer el último movimiento">↶ Deshacer</button>`;
+      if (g.hint) h += `<button type="button" data-pz="hint" aria-label="Pedir una pista">? Pista</button>`;
+      if (g.hackable && x.hackApi) h += `<button type="button" class="hk" data-pz="hack" aria-label="Hackear el panel">⌁ Hackear</button>`;
+      h += `</div>`;
+      if (!touch) h += `<div class="pzk">E usar · U deshacer · Y reiniciar · N pista</div>`;
+      h += `</div>`;
+      el.className = "";
+    }
+    el.innerHTML = h;
+    el._ckey = "";
+  }
+  if (!rt.pzDone) {
+    // el contenido (estado e inscripción) se actualiza en su sitio, solo si cambia
+    const ckey = st.rev + "|" + st.errors + "|" + st.hints + "|" + (g.animated ? Math.floor(x.time * 4) : 0);
+    if (ckey !== el._ckey) {
+      el._ckey = ckey;
+      const lines = g.status ? g.status(z.spec, st) : [],
+        clues = g.clueLines ? g.clueLines(z.spec, st) : null,
+        sEl = el.querySelector(".pzs"),
+        cEl = el.querySelector(".pzc");
+      const sh = lines.map(pzEsc).join("<br>");
+      if (sEl && sEl._h !== sh) ((sEl._h = sh), (sEl.innerHTML = sh));
+      const ch = clues && clues.length ? clues.map((c) => `<li>${pzEsc(c)}</li>`).join("") : "";
+      if (cEl && cEl._h !== ch) {
+        cEl._h = ch;
+        cEl.innerHTML = ch;
+        cEl.style.display = ch ? "" : "none";
+      }
+    }
+  }
+  if (!el._v) {
+    el.style.display = "block";
+    el._v = true;
+  }
+  pzLabels(rt);
+}
+// Etiquetas flotantes (glifo + nombre de cada runa): texto del DOM, sin mallas ni texturas
+function pzLabels(rt) {
+  const lab = PZ.lab;
+  if (!lab) return;
+  const z = rt && rt.pz,
+    g = z && z.gen,
+    list = g && g.glyphs && !rt.pzDone ? g.glyphs(z.spec) : null;
+  if (!list) {
+    if (lab._n) {
+      lab.textContent = "";
+      lab._n = 0;
+    }
+    return;
+  }
+  if (lab._n !== list.length || lab._rt !== rt) {
+    lab._rt = rt;
+    lab._n = list.length;
+    lab.textContent = "";
+    for (const q of list) {
+      const b = document.createElement("b");
+      b.textContent = q.t + " " + (q.n || "");
+      b.style.color = "#" + q.col.toString(16).padStart(6, "0");
+      lab.appendChild(b);
+    }
+  }
+  const T = z.T;
+  for (let i = 0; i < list.length; i++) {
+    const q = list[i],
+      b = lab.children[i];
+    x.R.project(T.tx + T.m00 * q.cx + T.m01 * q.cz, q.y, T.tz + T.m10 * q.cx + T.m11 * q.cz, pzScr);
+    const tr = pzScr.vis ? `translate(${Math.round(pzScr.x)}px,${Math.round(pzScr.y)}px) translate(-50%,-100%)` : "translate(-999px,-999px)";
+    if (b._tr !== tr) {
+      b._tr = tr;
+      b.style.transform = tr;
+    }
+  }
+}
+var pzScr = { x: 0, y: 0, vis: false };
+if (typeof document !== "undefined") {
+  const initHud = () => {
+    try {
+      pzHudBuild();
+    } catch (err) {
+      /* el DOM aún no está: se crea al primer uso */
+    }
+  };
+  document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", initHud) : initHud();
+}
+
+// ── Enganches en el director del mundo (26-spawner): por envoltorio de métodos, sin tocar el fichero ──
+(function () {
+  const P = ih.prototype;
+  const _create = P.createMesh,
+    _remove = P.removeMesh,
+    _prompt = P.updatePrompt,
+    _interact = P.interact;
+  P.createMesh = function (r) {
+    if (r.e.k === "puzzle") {
+      // el puzle se monta cuando su entidad entra en el radio de creación de mallas y se desmonta al salir
+      if (pzMount(r)) r.mesh = PZ_TOKEN;
+      return;
+    }
+    return _create.apply(this, arguments);
+  };
+  P.removeMesh = function (r) {
+    if (r && r.e && r.e.k === "puzzle") {
+      pzUnmount(r);
+      r.mesh = null;
+      return;
+    }
+    return _remove.apply(this, arguments);
+  };
+  P.updatePrompt = function () {
+    const r = _prompt.apply(this, arguments);
+    // el objeto de acertijo que apuntas pasa por delante de cualquier otro aviso
+    if (PZ.pickRt && PZ.pickRt.pz && PZ.pickId >= 0 && !x.uiOpen) x.prompt = { r: PZ.pickRt, text: PZ.pickText };
+    return r;
+  };
+  P.interact = function () {
+    const p = x.prompt;
+    if (p && p.r && p.r.e && p.r.e.k === "puzzle") return pzInteract(p.r);
+    return _interact.apply(this, arguments);
+  };
+})();
+
+// ═══ 10. PRUEBAS Y API EN EJECUCIÓN ════════════════════════════════════════════════════════════════════
+// Pone un puzle junto al jugador (para escenarios y simulaciones; también funciona en el mundo abierto) y lo monta.
+function pzSpawn(kind, tier, idx, o) {
+  o = o || {};
+  const g = PZ_GENS[kind],
+    map = x.map,
+    p = x.player;
+  if (!g || !pzPlayable(g) || !map || !p) return null;
+  tier = tier || 1;
+  const dims = g.dims[tier];
+  if (!dims) return null;
+  const R = o.radius || 14,
+    room = { x0: Math.max(1, Math.floor(p.x - R)), z0: Math.max(1, Math.floor(p.z - R)), x1: Math.min(map.w - 2, Math.floor(p.x + R)), z1: Math.min(map.h - 2, Math.floor(p.z + R)), tiles: null };
+  room.w = room.x1 - room.x0 + 1;
+  room.h = room.z1 - room.z0 + 1;
+  const site = pzFindSite(map, [room], null, dims, pzRng(pzMix(idx | 0, tier, o.rot === undefined ? 0x5350 : o.rot)), { x: p.x + (o.dx || 0), z: p.z + (o.dz || 0), r: R });
+  if (!site) return null;
+  if (o.rot !== undefined) site.rot = o.rot & 3;
+  const id = o.id || "pz_t" + (pzSpawn.n = (pzSpawn.n | 0) + 1);
+  const ent = pzAddEnt(map, id, kind, tier, idx | 0, site, { sid: o.sid || null, theme: "sotano", lvl: o.lvl || x.S.lvl, reg: o.reg | 0, lore: o.lore || null });
+  x.world.check(true);
+  return x.world.rt.get(id) || null;
+}
+function pzRemove(id) {
+  const w = x.world,
+    rt = w.rt.get(id),
+    map = x.map;
+  if (rt) {
+    w.removeMesh(rt);
+    w.rt.delete(id);
+  }
+  for (const k of [id, id + "_l"]) {
+    const i = map.ents.findIndex((e) => e.id === k);
+    i >= 0 && map.ents.splice(i, 1);
+  }
+}
+// Celda libre desde la que se alcanza un objeto (para que el bot de pruebas no se plante dentro de una caja)
+function pzStandAt(z, ax, az) {
+  const g = z.gen,
+    d = z.d;
+  const cx = Math.floor(ax),
+    cz = Math.floor(az),
+    inb = (a, b) => a >= 0 && b >= 0 && a < d.lw && b < d.lh;
+  if (!inb(cx, cz) || !g.solid(z.spec, z.st, cx, cz)) return [ax, az];
+  for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+    const a = cx + dx,
+      b = cz + dz;
+    if (!inb(a, b) || !g.solid(z.spec, z.st, a, b)) return [a + 0.5, b + 0.5];
+  }
+  return [ax, az];
+}
+function pzLocalToWorld(z, lx, lz) {
+  const T = z.T;
+  return [T.tx + T.m00 * lx + T.m01 * lz, T.tz + T.m10 * lx + T.m11 * lz];
+}
+// Resuelve un puzle montado como lo haría el jugador: se coloca, mira, ve el aviso y pulsa USAR (o espera, o cruza), con el bucle real
+function pzBotLive(rt, o) {
+  o = o || {};
+  const z = rt.pz,
+    g = z.gen,
+    p = x.player,
+    DT = 1 / 30;
+  const stepN = (n) => window.__step(n, DT);
+  const put = (lx, lz) => {
+    const [wx, wz] = pzLocalToWorld(z, lx, lz);
+    p.x = wx;
+    p.z = wz;
+    p.vx = p.vz = 0;
+  };
+  p.inv = 9999; // el bot no muere por el camino
+  p.hp = p.maxHp;
+  let acted = 0,
+    fail = "";
+  const plan = g.bot(z.spec, z.st, undefined, undefined);
+  if (!plan) return { ok: false, why: "sin plan" };
+  if (g.botMode === "phase") {
+    // pasillo láser: se avanza una celda por fase real del reloj del puzle
+    for (const q of plan) {
+      let guard = 0;
+      while (Math.floor(z.st.t / PZ_LASER_DT) % z.spec.P !== q.k && guard++ < 400) stepN(1);
+      put(q.x + 0.5, q.z + 0.5);
+      stepN(1);
+      if (rt.pzDone) break;
+    }
+  } else if (g.botMode === "walk") {
+    const t0 = z.st.t;
+    for (const a of plan) {
+      if (a.t !== undefined) {
+        let guard = 0;
+        put(-3, -3); // de camino
+        while (z.st.t - t0 < a.t - 0.001 && guard++ < 4000) stepN(1);
+      }
+      put(a.at[0], a.at[1]);
+      stepN(2);
+      acted++;
+    }
+    stepN(2);
+  } else {
+    for (const a of plan) {
+      const id = a.dyn ? a.dyn(z.st) : a.id;
+      let [ax, az] = a.at;
+      [ax, az] = pzStandAt(z, ax, az);
+      put(ax, az);
+      // mirar hacia el objeto (las cajas piden dirección)
+      if (a.face) {
+        const [fx, fz] = pzLocalToWorld(z, 0, 0),
+          [gx, gz] = pzLocalToWorld(z, a.face[0], a.face[1]);
+        p.face = Math.atan2(gx - fx, gz - fz);
+      }
+      stepN(1);
+      if (PZ.pickId !== id || PZ.pickRt !== rt) {
+        fail = `en ${ax.toFixed(1)},${az.toFixed(1)} el aviso apunta a ${PZ.pickId} y se esperaba ${id}`;
+        break;
+      }
+      x.world.updatePrompt();
+      if (!x.prompt || !x.prompt.r || x.prompt.r !== rt) {
+        fail = "no hay aviso de USAR";
+        break;
+      }
+      if (o.key) Tt.press("interact");
+      else x.world.interact();
+      stepN(2);
+      acted++;
+      if (rt.pzDone) break;
+    }
+  }
+  return { ok: rt.pzDone === true && !fail, why: fail || (rt.pzDone ? "" : "no resuelto"), acted, errors: z.st.errors, moves: z.st.moves };
+}
+// ── Simulación de colocación: genera mazmorras con las funciones reales del mundo y mide dónde caen los puzles ──
+// Comprueba además que el puzle cabe de verdad (suelo libre + anillo), que no pisa ninguna entidad y que, con TODAS sus celdas sólidas
+// iniciales ya aplicadas, siguen siendo alcanzables todas las entidades que lo eran antes (la mazmorra no se parte en dos).
+function pzFlood(map, from, extra) {
+  const w = map.w,
+    seen = new Uint8Array(w * map.h),
+    q = [from];
+  seen[from] = 1;
+  for (let i = 0; i < q.length; i++) {
+    const c = q[i],
+      cx = c % w,
+      cz = (c / w) | 0;
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = cx + dx,
+        nz = cz + dz;
+      if (!map.inb(nx, nz) || map.solidAt(nx, nz)) continue;
+      const k = nz * w + nx;
+      if (seen[k] || (extra && extra[k])) continue;
+      seen[k] = 1;
+      q.push(k);
+    }
+  }
+  return seen;
+}
+function pzVerifyPlacement(map, ent) {
+  const d = ent.pz,
+    g = PZ_GENS[d.kind],
+    w = map.w,
+    out = { ok: true, why: "" };
+  const spec = pzSpec(d.kind, d.idx, d.tier);
+  if (!spec) return { ok: false, why: "sin spec" };
+  const T = pzTransform(d),
+    st = g.init(spec),
+    extra = new Uint8Array(w * map.h);
+  for (let z = -1; z <= d.H; z++)
+    for (let xx = -1; xx <= d.W; xx++) {
+      const cx = d.x0 + xx,
+        cz = d.z0 + z,
+        ring = xx < 0 || z < 0 || xx >= d.W || z >= d.H;
+      if (!map.inb(cx, cz) || map.ter[cz * w + cx] !== map.floorT || map.blk[cz * w + cx]) return { ok: false, why: ring ? "anillo ocupado" : "suelo ocupado" };
+    }
+  for (let cz = 0; cz < d.lh; cz++)
+    for (let cx = 0; cx < d.lw; cx++)
+      if (g.solid(spec, st, cx, cz)) extra[Math.floor(T.tz + T.m10 * (cx + 0.5) + T.m11 * (cz + 0.5)) * w + Math.floor(T.tx + T.m00 * (cx + 0.5) + T.m01 * (cz + 0.5))] = 1;
+  // entidades físicas dentro del rectángulo
+  for (const en of map.ents) {
+    if (en.k === "light" || en.k === "encounter" || en.k === "vault" || en.k === "spawnpack" || en.k === "spawnpt" || en === ent) continue;
+    if (en.x > d.x0 - 0.5 && en.x < d.x0 + d.W + 0.5 && en.z > d.z0 - 0.5 && en.z < d.z0 + d.H + 0.5) return { ok: false, why: "entidad " + en.k + " dentro" };
+  }
+  const s0 = map.spawnBase ? Math.floor(map.spawnBase[1]) * w + Math.floor(map.spawnBase[0]) : -1;
+  if (s0 < 0) return out;
+  const a = pzFlood(map, s0, null),
+    b = pzFlood(map, s0, extra);
+  for (const en of map.ents) {
+    if (en.k === "light" || en === ent || en.k === "encounter" || en.k === "vault" || en.k === "spawnpack" || en.k === "spawnpt") continue;
+    const i = Math.floor(en.z) * w + Math.floor(en.x);
+    // una entidad se considera alcanzable si ella o una vecina lo es
+    const reach = (S) => S[i] || S[i + 1] || S[i - 1] || S[i + w] || S[i - w];
+    if (reach(a) && !reach(b)) return { ok: false, why: "la mazmorra se parte: " + en.k + " queda inalcanzable" };
+  }
+  return out;
+}
+function pzSimDungeons(N, o) {
+  o = o || {};
+  const stairs = (x.mode === "world" ? x.map : window.__G.world.map).ents.filter((e) => e.k === "stairs");
+  const t0 = performance.now(),
+    R = pzRng(o.seed || 12345),
+    out = { n: 0, placed: 0, none: 0, nosite: 0, bad: [], byKind: {}, byTier: {}, byTheme: {}, byRot: {}, sub: { n: 0, placed: 0 }, op: { n: 0, placed: 0 }, ms: 0, loreMode: 0, stairs: stairs.length, stairsEnc: {} };
+  for (const e of stairs) out.stairsEnc[e.enc] = (out.stairsEnc[e.enc] | 0) + 1;
+  const themes = Object.keys(PZ_THEME_OP);
+  for (let i = 0; i < N; i++) {
+    const isOp = o.ops ? R() < 0.5 : false;
+    let n, m;
+    if (!isOp) {
+      const e = R.pick(stairs),
+        reg = e.reg | 0,
+        t = De[reg] || De[0];
+      n = { sub: true, ent: e, enc: e.enc, reg, lvl: qe(10 + reg * 4 + R.int(-1, 3), t.lvl[0], t.lvl[1] + 1), mods: [], theme: null, obj: "sub", pool: t, seed: R.int(1, 1e9) };
+      if (o.noPuzzleEnc && n.enc === "puzzle") continue;
+      m = _x(n);
+    } else {
+      const reg = R.int(0, 8),
+        t = De[reg];
+      n = { seed: R.int(1, 1e9), theme: R.pick(themes), lvl: qe(R.int(3, 40), t.lvl[0], t.lvl[1] + 2), obj: R.pick(["boss", "data", "rescue", "nests", "exterminate"]), mods: [], reg, pool: t, boss: "garra", nestSpawn: "rastrero" };
+      m = yx(n);
+    }
+    out.n++;
+    const bucket = isOp ? out.op : out.sub;
+    bucket.n++;
+    const ent = m.ents.find((e) => e.k === "puzzle");
+    if (!ent) {
+      const sid = !isOp && n.ent && n.ent.id ? "sub:" + n.ent.id : null,
+        base = sid ? pzMix(sid, 0x50) : pzMix(n.seed | 0, 0x4f50);
+      if (!isOp && n.enc === "puzzle") out.noneEnc = (out.noneEnc | 0) + 1;
+      else if (pzRng(pzMix(base, 0x43))() >= (isOp ? PZ_CFG.chanceOp : PZ_CFG.chance)) out.none++;
+      else {
+        out.nosite++;
+        (isOp ? (out.nositeOp = (out.nositeOp | 0) + 1) : (out.nositeSub = (out.nositeSub | 0) + 1));
+      }
+      continue;
+    }
+    out.placed++;
+    bucket.placed++;
+    const d = ent.pz;
+    out.byKind[d.kind] = (out.byKind[d.kind] | 0) + 1;
+    out.byTier[d.tier] = (out.byTier[d.tier] | 0) + 1;
+    out.byTheme[d.theme] = (out.byTheme[d.theme] | 0) + 1;
+    out.byRot[d.rot] = (out.byRot[d.rot] | 0) + 1;
+    d.lore && out.loreMode++;
+    const v = pzVerifyPlacement(m, ent);
+    if (!v.ok && out.bad.length < 20) out.bad.push({ why: v.why, kind: d.kind, op: isOp, seed: n.seed });
+    else if (!v.ok) out.bad.push(null);
+  }
+  out.bad = out.bad.filter(Boolean);
+  out.ms = Math.round(performance.now() - t0);
+  return out;
+}
+// ¿Esta escalera (subterráneo) esconde un acertijo? Es estable: depende solo del id de la escalera y de la configuración.
+function pzStairsHave(e) {
+  if (!e || e.enc === "puzzle") return false;
+  return pzRng(pzMix(pzMix("sub:" + e.id, 0x50), 0x43))() < PZ_CFG.chance;
+}
+Object.assign(x.puzzleApi, {
+  place: pzPlace,
+  stairsHave: pzStairsHave,
+  doneRecently: pzDoneRecently,
+  solveNow: (rt) => {
+    const z = rt && rt.pz;
+    if (!z || rt.pzDone) return null;
+    z.gen.solve && z.gen.solve(z.spec, z.st);
+    return pzSolve(rt, "play");
+  },
+  mounted: () => Array.from(PZ.mounted).map((rt) => ({ id: rt.e.id, kind: rt.pz.d.kind, tier: rt.pz.d.tier, done: !!rt.pzDone, x: rt.e.x, z: rt.e.z, rot: rt.pz.d.rot })),
+  stats: () => (pzS() ? pzS().puzzleStats : null),
+});
+window.__puzzles = {
+  api: x.puzzleApi,
+  PZ,
+  PZR,
+  cfg: PZ_CFG,
+  gens: PZ_GENS,
+  spawn: pzSpawn,
+  remove: pzRemove,
+  bot: pzBotLive,
+  solved: pzSolve,
+  mount: pzMount,
+  unmount: pzUnmount,
+  action: pzAction,
+  tick: pzTick,
+  place: pzPlace,
+  migrate: pzMigrate,
+  findSite: pzFindSite,
+  transform: pzTransform,
+  pure: { rng: pzRng, mix: pzMix, spec: pzSpec, choose: pzChoose, botRun: pzBotRun, access: pzAccess },
+  rt: (id) => x.world.rt.get(id),
+  gfx() {
+    let inst = 0,
+      meshes = 0;
+    for (const k of PZ_KINDS) {
+      if (!PZR.b[k]) continue;
+      for (const b of PZR.b[k]) {
+        inst += b.n;
+        b.n > 0 && meshes++;
+      }
+    }
+    return { ready: PZR.ready, instances: inst, drawn: meshes, total: PZR.ready ? PZ_KINDS.length * 2 : 0 };
+  },
+  // huella del renderer (geometrías y texturas vivas): para comprobar que montar y desmontar no deja restos
+  rawSub: (n) => PZ_RAW.sub(n),
+  rawOp: (n) => PZ_RAW.op(n),
+  simDungeons: pzSimDungeons,
+  verify: pzVerifyPlacement,
+  mem() {
+    const i = x.R.r.info;
+    return { geometries: i.memory.geometries, textures: i.memory.textures, children: x.R.scene.children.length };
+  },
+};
+
 // @@FIN@@
