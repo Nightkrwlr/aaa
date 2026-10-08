@@ -1,7 +1,7 @@
 // 31d-lore.js — Lore coleccionable: libros, chips cifrados y grabaciones con voz (D5)
 // Fragmento reservado: comparte ámbito con el resto del juego (ver README.md). Se evalúa ANTES de 32-boot.js.
 // Todo lo nuevo vive aquí y en src/engine/lore-data.js (contenido y funciones puras, importado en _prelude.lore.js). Los ficheros
-// antiguos no se tocan salvo una línea de cirugía en 32-boot.js (ver docs/frente-lore.md). Los nombres propios llevan prefijo lore / LR.
+// antiguos no se tocan: todo se engancha envolviendo métodos y funciones desde aquí (ver docs/frente-lore.md). Los nombres propios llevan prefijo lore / LR.
 //
 // Resumen de piezas:
 //   1. Datos            x.cfg.lore (afinados con tools/sim/lore.mjs) + contenido en lore-data.js (70 entradas, 11 colecciones)
@@ -1475,7 +1475,7 @@ function loreAnnounce(n) {
         const b = document.createElement("button");
         b.className = "tab";
         b.dataset.lore = "1";
-        b.textContent = "◂ Libros, chips y voces";
+        b.textContent = "◂ Libros y voces";
         b.addEventListener("click", () => loreOpenArchive(undefined, null));
         t.insertBefore(b, t.firstChild);
       }
@@ -1581,5 +1581,7 @@ window.__lore = {
   hint: loreHintFor,
   colProgress: loreProgress,
   announce: loreAnnounce,
+  /** dibuja los puntos del minimapa (Instinto) sobre un contexto 2D falso: para pruebas */
+  minimapPings: (c, size = 120, s = 2) => typeof ecoMinimapPings === "function" && ecoMinimapPings(c, size, s),
   voiceAt: () => (LR.voice ? loreVoiceAt(LR.voice) : null),
 };

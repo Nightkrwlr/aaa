@@ -186,12 +186,34 @@ export default async function (api) {
   const pp = await ev(() => { const L = window.__lore, n = L.nodes().find((e) => e.form === 'rec' || e.form === 'shelf' || e.form === 'body'); return n ? { id: n.lid, x: n.x, z: n.z } : null; });
   if (pp) {
     await stand(pp.id); await wait(6);
+    await api.freeze(true);   // escena quieta: la diferencia de llamadas es solo la del nodo (sin enemigos ni partículas que cambien entre medidas)
     const withNode = await api.perf();
     await ev((id) => window.__lore.grant(id, { quiet: true }), pp.id); await wait(4);
     const without = await api.perf();
+    await api.freeze(false);
     console.log('PERF con nodo', JSON.stringify(withNode), 'sin nodo', JSON.stringify(without));
     check('un nodo cercano cuesta ≤ 2 llamadas de dibujo', withNode.calls - without.calls <= 2, `${withNode.calls} → ${without.calls}`);
   }
+
+  // ── 13. Instinto (Cazador): con chestSense los nodos cercanos salen como puntos de su color en el minimapa (y no sin el talento) ──
+  const sn = await ev(() => {
+    const G = window.__G, L = window.__lore, n = L.nodes().find((e) => e.kind);
+    if (!n) return null;
+    G.player.x = n.x + 3; G.player.z = n.z + 3;
+    const fx = G.S.talentFx || (G.S.talentFx = {}), keep = fx.chestSense;
+    const dots = (sense) => {
+      fx.chestSense = sense;
+      const fills = [], st = {};
+      const c = new Proxy(st, { get: (t, k) => (k in t ? t[k] : k === 'fill' ? () => fills.push(t.fillStyle) : () => {}), set: (t, k, v) => ((t[k] = v), true) });
+      L.minimapPings(c);
+      return fills.length;
+    };
+    const sin = dots(0), con = dots(40);
+    window.__step(40, 1 / 30);   // varios barridos de loreScan con el pulso de Instinto activo: no debe fallar
+    fx.chestSense = keep;
+    return { sin, con, nodes: L.nodes().length };
+  });
+  check('Instinto: los nodos de lore cercanos salen en el minimapa solo con el talento', sn && sn.sin === 0 && sn.con >= 1, JSON.stringify(sn));
 
   const errors = logs.filter((l) => /pageerror|\[error\]/.test(l) && !/ERR_FAILED|net::/.test(l));
   check('sin errores de página', errors.length === 0, errors.slice(0, 3).join(' | '));

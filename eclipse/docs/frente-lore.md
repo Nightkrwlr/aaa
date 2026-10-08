@@ -36,7 +36,43 @@ Pruebas: `tools/scenarios/lore-demo.mjs`, `lore-ui.mjs`, `lore-migrate.mjs`, `lo
 colecciones cobradas · mapas pendientes · semilla · opciones. `S.lore` antes era una lista de índices: el objeto lleva `length/includes/push/indexOf` **no enumerables** que apuntan a `S.lore.pads`, de modo que
 `takeDatapad` (26-spawner) y la pestaña «Registros» (29-panels) funcionan sin cambios y el JSON no los lleva.
 
-NUMEROS_AQUI
+## Números medidos
+
+Todo medido en esta máquina (GL por software, compartida con otros agentes) con `tools/sim/lore.mjs` y los escenarios. Nada de lo de abajo está estimado.
+
+| qué | cifra |
+|---|---|
+| Contenido | 70 entradas: 25 libros · 23 chips · 22 grabaciones; 4 599 palabras (libros 1 625 · chips 1 470 · grabaciones 1 504); por región 8·9·7·8·7·9·7·7·8 |
+| Tiempo de consumo | leer libros y chips a 200 palabras/min ≈ 15,5 min; escuchar las 22 grabaciones ≈ 11,2 min (media 30,4 s; de 22,5 a 48,5 s) |
+| Reparto | 47 entradas de mundo por partida (37 nodos + 10 en terminales) + 9 de operación/mazmorra + 14 expedientes de jefe = 70. En 60 semillas: 0 caídas al respaldo aleatorio, 0 inalcanzables, 0 fuera de su región |
+| Distancias | separación mínima entre nodos de una región 26,1 m (vecino más cercano de media 70,5 m); mínimo a la base 30,2 m; con otra semilla el 96 % de las entradas se mueve > 6 m |
+| Ruta | recorrido voraz por las 9 regiones ≈ 3,60 km ≈ 11,5 min andando a 5,2 m/s, sin combate |
+| Pistas | 9 claves deterministas; valores distintos en 200 semillas: 196 · 88 · 186 · 156 · 138 · 24 · 24 · 200 · 195 (el 24 de `complejo.clave` es el tamaño de su lista de palabras; el de `caldera.valvulas`, 4! = 24, el máximo posible) |
+| Voz (render fuera de línea, 22 050 Hz) | rms 0,096-0,138 · pico máximo 0,96 (ARGOS; el bus `dr`/compresor del juego deja margen) · modulación silábica 4,6-5,7 Hz · 0 muestras no finitas |
+| XP | las 70 entradas valen 1,63 % del XP de los niveles 1-60 y las recompensas de colección 2,16 %: 3,78 % en total (los 45 registros antiguos, 0,84 %); la curva de ECONOMÍA reserva ≈ 25-35 % a todo lo que no es matar, así que el lore no la desequilibra |
+| Recompensas | 11 colecciones: 9 puntos de talento (TALENTOS esperaba ≈ 8) · 9 planos de gadget · 5 mapas revelados |
+| CPU | colocación completa del mundo 0,77 ms (solo al cargar la partida); barrido por fotograma 0,2 µs; cada nodo cercano son 2 llamadas de dibujo (el escenario lo mide con la escena congelada) |
+| Render | tour-lite con `api.perf()` en 9 paradas: 3 135 llamadas de dibujo sin lore frente a 3 124 con lore (ruido de animación; sin regresión), 3,05 M frente a 3,00 M triángulos |
+| Mapa | hash de terreno, regiones, bloqueos, props, decorado, entidades (sin nodos de lore) y POIs **idéntico** al de la build anterior; `mapV` sigue en 3 |
+| Tamaño | artefacto minificado 12,52 MB → 12,61 MB (+≈ 90 KB, todo texto y código; ningún recurso binario) |
+
+Escenarios que pasan (todos con la build final, salvo lo indicado): `lore-demo` 29 comprobaciones · `lore-ui` 17 comprobaciones en Pixel 7 apaisado y otras 17 en vertical · `lore-migrate` 6 · `lore-mapa` (mapa idéntico) ·
+humo 13/13 con la build minificada · `tools/sim/lore.mjs` todas. Regresión de otros frentes contra la build nueva: `economia-escenas` 16/16, `economia-migracion` 6/6, `talents-revision`, `gadgets-migrate`,
+`talents-ui` 17/17 y `gadgets-demo` 15/16.
+
+## Pendiente / no probado (honestidad)
+
+- **La voz no se ha escuchado.** El entorno no tiene audio: la síntesis se valida con métricas de señal (finita, nivel, ritmo silábico, sin saturación) y con los `.wav` que escribe la simulación, no de oído. Es una voz de
+  «radio de campaña» que dibuja el ritmo del castellano, no habla inteligible: el sentido lo dan los subtítulos. La opción «voz del sistema» (`speechSynthesis`, solo voces locales en español) no se ha podido probar
+  en este entorno: el código la ofrece solo si el navegador trae una voz local española y, si no, usa la voz de radio.
+- **`x.hackApi` real:** el descifrado llama a `x.hackApi.run({kind:'chip', …}, cb)` si existe, pero esta rama no contiene el frente de HACKEO: solo se ha probado el minijuego de reserva del juego base (`db`) y `decrypt()` llamado a mano.
+  El formato de `cb` (`true|false` o `{ok, q|quality}`) es lo que entiende el Archivo; si HACKEO devuelve otra cosa habrá que ajustar `loreDecryptUi`.
+- **Jefes:** los expedientes se prueban emitiendo `bossKilled` (el evento real que emite el juego), no abatiendo jefes de verdad.
+- **Instinto:** probado el dibujo de puntos en el minimapa con un contexto 2D falso; no se ha visto el pulso de anillos en el mundo con el talento comprado de verdad.
+- **Dispositivos:** solo Pixel 7 (apaisado y vertical) y escritorio; no se han probado iPhone ni tableta, ni toques reales sobre el lector con inercia.
+- **Operaciones:** un nodo por mapa generado; probadas la operación de búnker del Yermo y la mazmorra de alcantarilla de la Ciudad; las otras 7 combinaciones región/tema solo pasan la validación estática de `loreValidate` (no se han recorrido).
+- **Problemas ajenos encontrados** (no tocados): `tools/scenarios/talents-ui.mjs` no compila en el commit base (un comentario `//` se comió el final de una línea de la comprobación 1; se probó una copia con ese espacio arreglado);
+  `gadgets-demo` falla «la explosión no daña al jugador» también con la build base (`enemies: 3` tras 70 pasos: spawn del mundo, no daño).
 
 ## Contratos (API pública para otros frentes)
 
