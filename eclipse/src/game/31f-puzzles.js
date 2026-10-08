@@ -132,6 +132,13 @@ function pzDist8(w, h, blocked, from) {
   }
   return D;
 }
+// Listas derivadas del spec que se piden en cada fotograma (celdas de los objetos, etiquetas…): se calculan una vez por spec
+var PZ_MEMO = new WeakMap();
+function pzMemo(spec, key, build) {
+  let m = PZ_MEMO.get(spec);
+  if (!m) PZ_MEMO.set(spec, (m = {}));
+  return m[key] || (m[key] = build());
+}
 // Objeto más cercano (celdas [cx, cz]) dentro del alcance; a igualdad de distancia gana el que tienes delante (fx, fz = hacia dónde miras).
 // La mirada es solo un desempate suave (con ratón es el puntero; en táctil, tu último movimiento o el enemigo al que apunta el arma).
 function pzNearest(cells, px, pz, fx, fz) {
@@ -396,7 +403,7 @@ PZ_GENS.mirrors = {
     return st.ix.ct[cz * spec.w + cx] !== 0;
   },
   pick(spec, st, px, pz, fx, fz) {
-    return pzNearest(spec.mir.map((m) => [m.x, m.z]), px, pz, fx, fz);
+    return pzNearest(pzMemo(spec, "mc", () => spec.mir.map((m) => [m.x, m.z])), px, pz, fx, fz);
   },
   label() {
     return "Girar espejo";
@@ -445,21 +452,24 @@ PZ_GENS.mirrors = {
       h = spec.h;
     for (let z = 0; z < h; z++) for (let xx = 0; xx < w; xx++) g.box(xx + 0.5, z + 0.5, 0.025, 0.94, 0.05, 0.94, (xx + z) & 1 ? 0x1b2a33 : 0x16222a);
     for (const q of spec.walls) g.box((q % w) + 0.5, ((q / w) | 0) + 0.5, 0.45, 0.8, 0.9, 0.8, 0x3b4650);
-    spec.em.forEach((e, i) => {
+    for (let i = 0; i < spec.em.length; i++) {
+      const e = spec.em[i];
       g.box(e.x + 0.5, e.z + 0.5, 0.25, 0.7, 0.5, 0.7, 0x2c3944);
       g.sph(e.x + 0.5 + PZ_DX[e.d] * 0.18, e.z + 0.5 + PZ_DZ[e.d] * 0.18, 0.55, 0.2, PZ_BEAM_COL[i], 1.6);
-    });
-    spec.tg.forEach((q, i) => {
-      const c = PZ_BEAM_COL[q.c],
+    }
+    for (let i = 0; i < spec.tg.length; i++) {
+      const q = spec.tg[i],
+        c = PZ_BEAM_COL[q.c],
         on = st.lit[i];
       g.box(q.x + 0.5, q.z + 0.5, 0.12, 0.8, 0.24, 0.8, 0x2c3944);
       g.ring(q.x + 0.5, q.z + 0.5, 0.3, 0.34, c, on ? 1.6 : 0.45);
       g.sph(q.x + 0.5, q.z + 0.5, 0.42, on ? 0.2 + Math.sin(t * 6) * 0.03 : 0.12, c, on ? 2 : 0.4);
-    });
-    spec.mir.forEach((m, i) => {
+    }
+    for (let i = 0; i < spec.mir.length; i++) {
+      const m = spec.mir[i];
       g.cyl(m.x + 0.5, m.z + 0.5, 0.18, 0.2, 0.36, 0x3b4650);
       g.box(m.x + 0.5, m.z + 0.5, 0.62, 0.86, 0.6, 0.07, 0xbfeaff, 0, st.ori[i] === 0 ? Math.PI / 4 : -Math.PI / 4);
-    });
+    }
     const s = st.segs;
     for (let i = 0; i < s.length; i += 5) {
       const dx = s[i + 2] - s[i],
@@ -1181,7 +1191,7 @@ PZ_GENS.runes = {
     return st.cellSet.has(c) || c === spec.stele;
   },
   pick(spec, st, px, pz, fx, fz) {
-    return pzNearest(spec.cells.map((c) => [c % spec.w, (c / spec.w) | 0]), px, pz, fx, fz);
+    return pzNearest(pzMemo(spec, "rc", () => spec.cells.map((c) => [c % spec.w, (c / spec.w) | 0])), px, pz, fx, fz);
   },
   focus(spec, st, id) {
     const c = spec.cells[id];
@@ -1285,7 +1295,10 @@ PZ_GENS.runes = {
     }
   },
   glyphs(spec) {
-    // etiquetas flotantes (la ejecución las pinta como texto del DOM, sin mallas)
+    // etiquetas flotantes (la ejecución las pinta como texto del DOM, sin mallas); se calculan una vez por spec
+    return pzMemo(spec, "gl", () => this._glyphs(spec));
+  },
+  _glyphs(spec) {
     return spec.cells.map((c, i) => ({ cx: (c % spec.w) + 0.5, cz: ((c / spec.w) | 0) + 0.5, y: 1.55, t: PZ_RUNES[spec.ids[i]].g, n: PZ_RUNES[spec.ids[i]].n, col: PZ_RUNES[spec.ids[i]].col }));
   },
 };
@@ -2153,7 +2166,7 @@ PZ_GENS.valves = {
     return st.cellSet.has(cz * spec.w + cx);
   },
   pick(spec, st, px, pz, fx, fz) {
-    return pzNearest(spec.valves.map((v) => [v.x, v.i]), px, pz, fx, fz);
+    return pzNearest(pzMemo(spec, "vc", () => spec.valves.map((v) => [v.x, v.i])), px, pz, fx, fz);
   },
   label() {
     return "Girar válvula";
@@ -2949,7 +2962,8 @@ function pzDrawAll(t) {
 // ═══ 8. EJECUCIÓN ═══════════════════════════════════════════════════════════════════════════════════════
 // Estado de ejecución: puzles montados (los que están a < 42 m: lo decide el director del mundo al crear/quitar «mallas» de sus entidades),
 // el activo (el que tienes encima o al lado), el objeto que apuntarías con USAR y el HUD.
-var PZ = { mounted: new Set(), active: null, pickId: -1, pickRt: null, pickText: "", focus: null, hud: null, hudKey: "", lab: null, stats: { mounts: 0, unmounts: 0, solved: 0 } };
+var PZ = { mounted: new Set(), active: null, pickId: -1, pickRt: null, pickText: "", focus: null, hud: null, lab: null, stats: { mounts: 0, unmounts: 0, solved: 0 } };
+var PZ_FOCUS = { rt: null, cx: 0, cz: 0 };
 var PZ_TOKEN = { userData: {}, isPuzzle: true }; // «malla» de mentira: el director solo necesita que exista y tenga userData
 var PZ_CTX = {
   rt: null,
@@ -3046,6 +3060,7 @@ function pzUnmount(rt) {
   }
   PZ.mounted.delete(rt);
   PZ.stats.unmounts++;
+  PZ.mounted.size || pzDrawAll(x.time); // el último puzle se va: las mallas compartidas se ocultan ya, no al siguiente fotograma
   if (PZ.active === rt) {
     PZ.active = null;
     PZ.pickId = -1;
@@ -3137,7 +3152,6 @@ function pzTick(dt) {
   }
   if (PZ.active !== best) {
     PZ.active = best;
-    PZ.hudKey = "";
     best && !best.pzIntro && pzIntro(best);
   }
   // objeto al que apuntaría USAR
@@ -3155,12 +3169,25 @@ function pzTick(dt) {
     PZ_CTX.fz = T.m01 * sx + T.m11 * sz;
     const id = z.gen.pick ? z.gen.pick(z.spec, z.st, z.lx, z.lz, PZ_CTX.fx, PZ_CTX.fz) : -1;
     if (id >= 0) {
+      // texto y foco solo se recalculan si cambia el objeto o el estado del puzle (nada de cadenas ni arrays nuevos por fotograma)
+      if (z.pid !== id || z.prev !== z.st.rev) {
+        z.pid = id;
+        z.prev = z.st.rev;
+        z.ptext = z.gen.label(z.spec, z.st, id);
+        const f = z.gen.focus ? z.gen.focus(z.spec, z.st, id) : null;
+        z.pfx = f ? f[0] + 0.5 : -1;
+        z.pfz = f ? f[1] + 0.5 : -1;
+      }
       PZ.pickId = id;
       PZ.pickRt = rt;
-      PZ.pickText = z.gen.label(z.spec, z.st, id);
-      const f = z.gen.focus ? z.gen.focus(z.spec, z.st, id) : null;
-      if (f) PZ.focus = { rt, cx: f[0] + 0.5, cz: f[1] + 0.5 };
-    }
+      PZ.pickText = z.ptext;
+      if (z.pfx >= 0) {
+        PZ_FOCUS.rt = rt;
+        PZ_FOCUS.cx = z.pfx;
+        PZ_FOCUS.cz = z.pfz;
+        PZ.focus = PZ_FOCUS;
+      }
+    } else z.pid = -2;
     // atajos de teclado (en táctil están los botones del panel)
     if (Tt.hit("pzUndo")) pzAction(rt, "undo");
     if (Tt.hit("pzReset")) pzAction(rt, "reset");
@@ -3216,7 +3243,6 @@ function pzAction(rt, what) {
   } else if (what === "hack") pzHack(rt);
   else return;
   if (st.rev !== z.rev) pzApplyBlk(rt);
-  PZ.hudKey = "";
 }
 // Atajo electrónico: un hackeo de una capa abre el panel (arriesgado: la traza puede dar la alarma). Sin premio de «perfecto».
 function pzHack(rt) {
@@ -3250,7 +3276,6 @@ function pzInteract(rt) {
   }
   if (z.st.rev !== z.rev) pzApplyBlk(rt);
   if (!rt.pzDone && z.gen.solved(z.spec, z.st)) pzSolve(rt, "play");
-  PZ.hudKey = "";
 }
 // ── Premio ──
 function pzTierStars(t) {
@@ -3325,7 +3350,6 @@ function pzSolve(rt, how) {
   }
   ee("puzzleSolved", p);
   ee("save");
-  PZ.hudKey = "";
   return p;
 }
 // La cámara sellada clásica (switch / sequence, 22-quests) también cuenta como acertijo resuelto
@@ -3437,9 +3461,12 @@ function pzHud(rt) {
     st = z.st,
     touch = Tt.touchMode;
   // La estructura (botones) solo se rebuelve cuando cambia de verdad: reconstruir el DOM entre el toque y el soltar perdería el clic.
-  const skey = z.d.kind + "|" + rt.pzDone + "|" + touch + "|" + !!x.hackApi + "|" + (rt.e.id || "");
-  if (skey !== el._skey) {
-    el._skey = skey;
+  const hk = !!x.hackApi;
+  if (el._rt !== rt || el._done !== !!rt.pzDone || el._touch !== touch || el._hk !== hk) {
+    el._rt = rt;
+    el._done = !!rt.pzDone;
+    el._touch = touch;
+    el._hk = hk;
     let h = "";
     if (rt.pzDone) {
       h = `<div class="pzcard"><div class="pzh"><i>${g.icon || "◈"}</i><b>${pzEsc(g.n)}</b><em>✔ Resuelto</em></div></div>`;
@@ -3457,13 +3484,20 @@ function pzHud(rt) {
       el.className = "";
     }
     el.innerHTML = h;
-    el._ckey = "";
+    el._cr = -1;
   }
   if (!rt.pzDone) {
     // el contenido (estado e inscripción) se actualiza en su sitio, solo si cambia
-    const ckey = st.rev + "|" + st.errors + "|" + st.hints + "|" + (g.animated ? Math.floor(x.time * 4) : 0) + "|" + (z.msg ? z.msg.text : "") + "|" + (z.introT > 0 ? 1 : 0);
-    if (ckey !== el._ckey) {
-      el._ckey = ckey;
+    const tick = g.animated ? Math.floor(x.time * 4) : 0,
+      msg = z.msg ? z.msg.text : "",
+      intro = z.introT > 0;
+    if (el._cr !== st.rev || el._ce !== st.errors || el._ch !== st.hints || el._ct !== tick || el._cm !== msg || el._ci !== intro) {
+      el._cr = st.rev;
+      el._ce = st.errors;
+      el._ch = st.hints;
+      el._ct = tick;
+      el._cm = msg;
+      el._ci = intro;
       const lines = g.status ? g.status(z.spec, st) : [],
         clues = g.clueLines ? g.clueLines(z.spec, st) : null,
         sEl = el.querySelector(".pzs"),
@@ -3522,10 +3556,12 @@ function pzLabels(rt) {
     const q = list[i],
       b = lab.children[i];
     x.R.project(T.tx + T.m00 * q.cx + T.m01 * q.cz, q.y, T.tz + T.m10 * q.cx + T.m11 * q.cz, pzScr);
-    const tr = pzScr.vis ? `translate(${Math.round(pzScr.x)}px,${Math.round(pzScr.y)}px) translate(-50%,-100%)` : "translate(-999px,-999px)";
-    if (b._tr !== tr) {
-      b._tr = tr;
-      b.style.transform = tr;
+    const sx = pzScr.vis ? Math.round(pzScr.x) : -999,
+      sy = pzScr.vis ? Math.round(pzScr.y) : -999;
+    if (b._x !== sx || b._y !== sy) {
+      b._x = sx;
+      b._y = sy;
+      b.style.transform = `translate(${sx}px,${sy}px) translate(-50%,-100%)`;
     }
   }
 }
@@ -3932,7 +3968,9 @@ window.__puzzles = {
   verify: pzVerifyPlacement,
   mem() {
     const i = x.R.r.info;
-    return { geometries: i.memory.geometries, textures: i.memory.textures, children: x.R.scene.children.length };
+    let pm = 0;
+    for (const c of x.R.scene.children) /^puzzle-/.test(c.name) && pm++;
+    return { geometries: i.memory.geometries, textures: i.memory.textures, children: x.R.scene.children.length, puzzleMeshes: pm };
   },
 };
 
