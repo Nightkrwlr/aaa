@@ -259,11 +259,11 @@ function ecoSrcOf(n) {
 // ════════════════════════════════════════════════════════════════════════
 // 3. APARICIÓN EN EL MUNDO
 // ════════════════════════════════════════════════════════════════════════
-// Orbes de XP fundidas: una por ráfaga (0,4 s y 4 m); el suelo no se llena de bolitas.
+// Orbes de XP fundidas: una por ráfaga (0,6 s y 12 m; la XP se atrae desde 22 m, así que dónde cae importa poco); el suelo no se llena de bolitas.
 var ecoOrb = { p: null, t: -9 };
 function ecoXpOrb(n, xpVal, boss) {
   let o = ecoOrb;
-  if (!boss && o.p && x.time - o.t < 0.4 && x.pickups.includes(o.p) && !o.p.mag && Le(o.p.x, o.p.z, n.x, n.z) < 4) {
+  if (!boss && o.p && x.time - o.t < 0.6 && x.pickups.includes(o.p) && !o.p.mag && Le(o.p.x, o.p.z, n.x, n.z) < 12) {
     o.p.val += xpVal;
     return;
   }
@@ -864,20 +864,44 @@ function ecoHitosHtml() {
 // ════════════════════════════════════════════════════════════════════════
 // 6. XP — curva derivada de tiempos objetivo, y XP que no viene de matar
 // ════════════════════════════════════════════════════════════════════════
-// Tiempo acumulado objetivo (min) para ALCANZAR el nivel L: interpolación log-lineal entre los puntos de cfg.xp.minutesTo.
+// Tiempo acumulado objetivo (min) para ALCANZAR el nivel L: interpolación cúbica monótona (Fritsch-Carlson) del logaritmo
+// del tiempo entre los puntos de cfg.xp.minutesTo. Así el tiempo por nivel crece sin escalones en los puntos de anclaje.
+var ecoTpts = null;
 function ecoMinutesTo(L) {
   if (L <= 1) return 0;
-  let pts = Object.entries(ecoCfg.xp.minutesTo)
-    .map(([k, v]) => [+k, Math.log(v)])
-    .sort((a, b) => a[0] - b[0]);
-  if (L <= pts[0][0]) return Math.exp(pts[0][1]) * ((L - 1) / (pts[0][0] - 1));
-  for (let i = 1; i < pts.length; i++)
-    if (L <= pts[i][0]) {
-      let [l0, a] = pts[i - 1],
-        [l1, b] = pts[i];
-      return Math.exp(a + (b - a) * ((L - l0) / (l1 - l0)));
+  if (!ecoTpts) {
+    let P = Object.entries(ecoCfg.xp.minutesTo)
+        .map(([k, v]) => [+k, Math.log(v)])
+        .sort((a, b) => a[0] - b[0]),
+      n = P.length,
+      d = [],
+      m = [];
+    for (let i = 0; i < n - 1; i++) d[i] = (P[i + 1][1] - P[i][1]) / (P[i + 1][0] - P[i][0]);
+    m[0] = d[0];
+    m[n - 1] = d[n - 2];
+    for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+    for (let i = 0; i < n - 1; i++) {
+      if (d[i] === 0) m[i] = m[i + 1] = 0;
+      else {
+        let a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+        if (h > 9) { let t = 3 / Math.sqrt(h); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]; }
+      }
     }
-  return Math.exp(pts[pts.length - 1][1]);
+    ecoTpts = { P, m };
+  }
+  let { P, m } = ecoTpts,
+    n = P.length;
+  if (L <= P[0][0]) return Math.exp(P[0][1]) * ((L - 1) / (P[0][0] - 1));
+  if (L >= P[n - 1][0]) return Math.exp(P[n - 1][1] + m[n - 1] * (L - P[n - 1][0]));
+  let i = 0;
+  while (L > P[i + 1][0]) i++;
+  let h = P[i + 1][0] - P[i][0],
+    t = (L - P[i][0]) / h,
+    t2 = t * t,
+    t3 = t2 * t;
+  return Math.exp(
+    (2 * t3 - 3 * t2 + 1) * P[i][1] + (t3 - 2 * t2 + t) * h * m[i] + (-2 * t3 + 3 * t2) * P[i + 1][1] + (t3 - t2) * h * m[i + 1],
+  );
 }
 // Región donde se combate a nivel L (la última cuya puerta ya está abierta: lvl ≥ lvl[0]-1) y nivel de sus enemigos
 function ecoFarmRegion(L) {
@@ -887,12 +911,19 @@ function ecoFarmRegion(L) {
 }
 // XP medio por muerte a nivel L en su región de combate: media de xp de definición ponderada por la tabla de aparición,
 // por el XP de enemigo del nivel, con las élites (×5) según su frecuencia, y por el multiplicador de dificultad (Soldado = 1)
-function ecoAvgKillXp(L) {
+function ecoAvgKillXpRaw(L) {
   let { r, eLvl } = ecoFarmRegion(L),
     pool = De[r].enemies.filter((q) => (q[2] || 0) <= eLvl),
     w = pool.reduce((s, q) => s + q[1], 0),
     avg = pool.reduce((s, q) => s + (q[1] / w) * gn[q[0]].xp, 0);
   return avg * mt.enemyXp(eLvl) * (1 + ecoCfg.xp.eliteShare * 4);
+}
+// Suavizado (media geométrica en ±3 niveles): al cambiar de región el XP por muerte salta, pero la barra no debe dar saltos
+function ecoAvgKillXp(L) {
+  let s = 0,
+    w = Math.min(3, L - 1, 60 - L); // la ventana se estrecha en los extremos (el primer nivel usa su valor exacto)
+  for (let k = -w; k <= w; k++) s += Math.log(ecoAvgKillXpRaw(L + k));
+  return Math.exp(s / (2 * w + 1));
 }
 var ecoXpTab = null;
 function ecoXpTable() {
@@ -901,9 +932,10 @@ function ecoXpTable() {
     t = [0];
   for (let L = 1; L < 60; L++) {
     let min = ecoMinutesTo(L + 1) - ecoMinutesTo(L),
-      raw = min * c.killsPerMin * ecoAvgKillXp(L) * c.killShare,
+      raw = (min * c.killsPerMin * ecoAvgKillXp(L)) / c.killShare, // las muertes aportan killShare de la barra
       mag = Math.pow(10, Math.max(0, Math.floor(Math.log10(raw)) - 2)); // 3 cifras significativas
-    t[L] = Math.max(10, Math.round(raw / mag) * mag);
+    // la barra nunca baja de un nivel al siguiente (+2 % como mínimo)
+    t[L] = Math.max(10, Math.round(raw / mag) * mag, Math.round((t[L - 1] || 0) * 1.02));
   }
   t[60] = t[59];
   return (ecoXpTab = t);
@@ -1167,8 +1199,8 @@ function ecoShopSellHtml() {
   return `<div class="eco-sum"><span><b>Botín de trofeos</b> · ${tot.n} piezas · <span style="color:#ffd447">${yt(tot.v)} ¤</span></span><button class="btn pri" id="eSellAll" ${tot.n ? "" : "disabled"}>Vender todo el botín</button></div>
   <div class="sec">Equipo sin usar</div>
   <div class="row" style="margin-bottom:6px"><span class="muted" style="font-size:13px">Marcar:</span>${chips}<button class="rchip" data-sr="none">Ninguno</button></div>
-  <div class="inv">${list.map(({ p, i }) => Vp(p, false, i, st.rows.has(p))).join("") || '<span class="muted">No llevas equipo de sobra.</span>'}</div>
-  <div class="row" style="margin-top:10px"><button class="btn pri" id="eSellSel" ${sel.length ? "" : "disabled"}>${st.confirm && risky ? "Confirmar: hay piezas Épicas o mejores" : "Vender selección"} · ${sel.length} · ${yt(total)} ¤</button><span class="muted" style="font-size:13px">Las piezas bloqueadas ★ no se pueden marcar. Lo que no vendas, puedes desguazarlo en el inventario.</span></div>`;
+  ${list.length ? `<div class="inv">${list.map(({ p, i }) => Vp(p, false, i, st.rows.has(p))).join("")}</div>` : '<div class="card muted">No llevas equipo de sobra. Lo que recojas en el campo aparecerá aquí para venderlo.</div>'}
+  <div class="row" style="margin-top:10px"><button class="btn pri" id="eSellSel" ${sel.length ? "" : "disabled"}>${st.confirm && risky ? "Confirmar: hay piezas Épicas o mejores" : "Vender selección"} (${sel.length}) · ${yt(total)} ¤</button><span class="muted" style="font-size:13px">Las piezas bloqueadas ★ no se pueden marcar. Lo que no vendas, puedes desguazarlo en el inventario.</span></div>`;
 }
 function ecoShopSellBind(root, n) {
   let e = x.S,
@@ -1356,7 +1388,8 @@ x.tick.push((dt) => ecoUpdateTrophies(dt));
     },
   });
   // utilidades para las simulaciones (tools/sim/*.mjs): sin efectos en el juego
-  window.__eco = { cfg: ecoCfg, rollLoot, ecoRoll, ecoSrcOf, ecoXpTable, ecoMinutesTo, ecoAvgKillXp, ecoFarmRegion, ecoTroTable, ecoTrophyChance, ecoRnd, mt, Ct, De, gn, En, ecoCount };
+  window.__eco = { cfg: ecoCfg, rollLoot, ecoRoll, ecoSrcOf, ecoXpTable, ecoMinutesTo, ecoAvgKillXp, ecoFarmRegion, ecoTroTable, ecoTrophyChance, ecoRnd, mt, Ct, De, gn, En, ecoCount, gi, na, ecoEarlyDmg, Di, qd, cp, Ss, us, ecoShopStock, ecoSellAllJunk, ecoTroValue, ecoJunkTotals, ecoCanSell, ecoVendorNear, ecoSigCount,
+    get ground() { return ecoGround; } };
 })();
 
 // Campo `trophy` en las definiciones de enemigos y jefes ({id, n, v}): se asigna al arrancar a partir de la tabla de
