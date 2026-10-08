@@ -107,7 +107,7 @@ void main() {
   // rachas: uDrift integra la velocidad del viento (que sube con la ráfaga), así el polvo acelera de verdad
   float blob = step( 1.0 - uBlob, fract( s.w * 37.1 ) ); // uBlob: fracción de bloques difusos (pocos al aire libre, ninguno en interiores)
   drift = uWindDir * uDrift * ( 0.55 + s.z * 0.9 ) + vec2( sin( uTime * 0.7 + s.x * 30.0 ), cos( uTime * 0.6 + s.y * 25.0 ) ) * 0.9;
-  y = 0.1 + pow( s.z, 1.7 ) * uBox.z + sin( uTime * 0.9 + s.x * 40.0 ) * 0.25;
+  y = 0.1 + pow( max( s.z, 0.0 ), 1.7 ) * uBox.z + sin( uTime * 0.9 + s.x * 40.0 ) * 0.25;
   size = mix( 0.06 + 0.07 * s.x, 1.3 + 2.4 * s.y, blob );
   alpha = mix( 0.5, 0.11, blob ) * ( 0.35 + 0.9 * uGust );
   col *= 0.8 + 0.4 * s.x;
@@ -187,7 +187,7 @@ float h3( vec3 p ) { p = fract( p * 0.3183099 + 0.1 ); p *= 17.0; return fract( 
 void main() {
   float f = pow( abs( dot( normalize( vN ), normalize( vV ) ) ), 1.6 );    // borde difuso: más denso por el eje
   float z = vL.z;                                                          // 0 en la lente … 1 al final del haz
-  float along = smoothstep( 0.0, 0.07, z ) * pow( 1.0 - z, 1.15 );
+  float along = smoothstep( 0.0, 0.07, z ) * pow( max( 1.0 - z, 0.0 ), 1.15 );
   float dust = 0.78 + 0.22 * sin( z * 17.0 - uTime * 1.4 + h3( floor( vL * 6.0 ) ) * 6.28 );
   gl_FragColor = vec4( uColor * f * along * dust * uAmt, 1.0 );
 }`;

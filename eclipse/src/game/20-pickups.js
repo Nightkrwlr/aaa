@@ -31,7 +31,7 @@ function ckLootBeam(color, height, radius) {
       uniforms: { uCol: { value: new Ee(color).multiplyScalar(2.1) }, uT: CkFxTime },
       vertexShader: `varying vec2 vUv; varying float vE; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.0); vE = abs(dot(normalize(normalMatrix * normal), normalize(-mv.xyz))); gl_Position = projectionMatrix * mv; }`,
       fragmentShader: `uniform vec3 uCol; uniform float uT; varying vec2 vUv; varying float vE;
-        void main(){ float y = vUv.y; float a = pow(1.0 - y, 1.7) * smoothstep(0.0, 0.06, y) * pow(vE, 1.4);
+        void main(){ float y = vUv.y; float a = pow(max(1.0 - y, 0.0), 1.7) * smoothstep(0.0, 0.06, y) * pow(max(vE, 0.0), 1.4);
           a *= 0.8 + 0.2 * sin(y * 16.0 - uT * 2.6); gl_FragColor = vec4(uCol * (0.6 + 0.8 * (1.0 - y)), a * 0.62); }`,
       transparent: !0,
       blending: en,
@@ -356,4 +356,4 @@ function Ax() {
 
 
 // Gancho de depuración (capturas de botín): generar objetos y chips con rareza elegida.
-window.__loot = { Nt, us, xi };
+window.__loot = { Nt, us, xi, Rg, pf, mf, Oi };

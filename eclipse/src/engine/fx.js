@@ -32,7 +32,7 @@ const STREAK_FS = /* glsl */`
 varying vec2 vUv; varying vec4 vC;
 void main(){
   float t = vUv.y, across = abs(vUv.x * 2.0 - 1.0);
-  float body = pow(t, 1.5) * smoothstep(1.0, 0.1, across);
+  float body = pow(max(t, 0.0), 1.5) * smoothstep(1.0, 0.1, across);
   float head = smoothstep(0.78, 1.0, t) * (1.0 - across * 0.8);
   // cabeza casi blanca y muy brillante (HDR), cola con el color del proyectil que se desvanece
   vec3 col = mix(vC.rgb, vec3(1.0, 0.96, 0.88) * (1.0 + length(vC.rgb) * 0.6), head);
@@ -102,18 +102,18 @@ void main(){
     col = mix(col, vec3(1.0, 0.92, 0.8), clamp(p * p * 0.55 + pulse * 0.35, 0.0, 0.8)) * (1.35 + rim * 1.2 + lead * 0.9);
   } else if (vK.x < 1.5) {
     // onda de choque: anillo que se afina al expandirse, estela interior y calor al nacer
-    float e = 1.0 - pow(1.0 - p, 2.3), rr = 0.1 + 0.9 * e;
+    float e = 1.0 - pow(max(1.0 - p, 0.0), 2.3), rr = 0.1 + 0.9 * e;
     float th = mix(0.22, 0.045, p) * vK.w;
     float d = r - rr;
     float ring = smoothstep(th, 0.0, abs(d));
     float tail = smoothstep(-th * 4.0, 0.0, d) * step(d, 0.0);
-    float core = smoothstep(rr, 0.0, r) * pow(1.0 - p, 3.0);
-    float fade = pow(1.0 - p, 1.3);
+    float core = smoothstep(rr, 0.0, r) * pow(max(1.0 - p, 0.0), 3.0);
+    float fade = pow(max(1.0 - p, 0.0), 1.3);
     a = (ring * 0.95 + tail * 0.4 + core * 0.5) * fade;
     col = col * (1.5 + ring * 1.6 + core * 1.5) + vec3(ring * 0.45);
   } else {
     // charco de luz: resplandor suave sobre el suelo (destello de explosión, brasas)
-    float g = smoothstep(1.0, 0.0, r); a = g * g * pow(1.0 - p, 1.5); col *= 1.6;
+    float g = smoothstep(1.0, 0.0, r); a = g * g * pow(max(1.0 - p, 0.0), 1.5); col *= 1.6;
   }
   a *= vB.a;
   if (a < 0.003) discard;
