@@ -87,7 +87,7 @@ function Nt(n, e, t, i = {}) {
     }
     let c = n === "item" ? r.item.r : n === "chip" ? r.chip.t || 1 : 0,
       d = n === "item" || n === "chip" ? 1.5 + c * 1.2 : 1.6,
-      h = ckLootBeam(l, d, 0.16 + c * 0.025);
+      h = DBG.has("nobeam") ? new Ve() : ckLootBeam(l, d, 0.16 + c * 0.025);
     let f = new Ve();
     ((r.rar = n === "item" || n === "chip" ? c : n === "qi" ? 3 : 2),
       f.add(o),
@@ -248,8 +248,8 @@ function gp(n) {
       (r.mesh.position.set(r.x, 0, r.z), (r.model.position.y = r.y + 0.32 + f), (r.model.rotation.y += n * 1.3));
       let u = r.rar || 0,
         p = 0.82 + 0.18 * Math.sin(r.t * 3 + a);
-      (i.halo(r.x, r.z, 0.55 + u * 0.1, r.col, (0.42 + u * 0.09) * p, 2),
-        u >= 2 && r.t > 0.4 && i.pulse(r.x, r.z, 0.7 + u * 0.12, r.col, 0.55, (r.t * 0.6 + a * 0.37) % 1),
+      (!DBG.has("nohalo") && i.halo(r.x, r.z, 0.55 + u * 0.1, r.col, (0.42 + u * 0.09) * p, 2),
+        !DBG.has("nohalo") && u >= 2 && r.t > 0.4 && i.pulse(r.x, r.z, 0.7 + u * 0.12, r.col, 0.55, (r.t * 0.6 + a * 0.37) % 1),
         u >= 3 && Q() < n * 4 && i.burst(r.x + (Q() - 0.5) * 0.5, r.y + 0.1, r.z + (Q() - 0.5) * 0.5, 1, { color: r.col, speed: 0.3, life: 1, size: 0.12, size1: 0.02, up: 1, upMin: 0.6, drag: 1.2, jit: 0.05 }));
     } else if (r.k === "xp") {
       let u = r.val > 30;

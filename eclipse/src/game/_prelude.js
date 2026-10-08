@@ -15,7 +15,7 @@ import { MeshoptDecoder as nx } from 'three/examples/jsm/libs/meshopt_decoder.mo
 import { clone as ix } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // ── motor gráfico (src/engine): post-proceso HDR y atmósfera ──────────────────────────────
-import { PostFx } from '@engine/post.js';
+import { PostFx, DBG } from '@engine/post.js';
 import { WorldFog, installWorldFog, lookFor } from '@engine/atmosphere.js';
 
 // constantes numéricas/cadena de Three usadas por el juego (se copian por valor)

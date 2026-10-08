@@ -22,6 +22,8 @@ import {
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
+/** banderas de diagnóstico por URL (para aislar fallos gráficos en máquinas que no puedo probar): ?nopost ?nobloom ?nofxaa */
+export const DBG = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams('');
 const VERT = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 
 const FRAG = /* glsl */ `
@@ -203,12 +205,13 @@ export class PostFx {
 
   render() {
     const r = this.r;
+    if (DBG.has('nopost')) { r.setRenderTarget(null); r.render(this.scene, this.camera); return; }
     r.setRenderTarget(this.rt);
     r.clear();
     r.render(this.scene, this.camera);
-    if (this.bloom.enabled && this.bloom.strength > 0.001) this.bloom.render(r, null, this.rt, 0, false);
+    if (this.bloom.enabled && this.bloom.strength > 0.001 && !DBG.has('nobloom')) this.bloom.render(r, null, this.rt, 0, false);
     this.uniforms.tScene.value = this.rt.texture;
-    this.uniforms.uFxaa.value = (this.fxaa === 'auto' ? this.msaa === 0 && this.bloomOn : !!this.fxaa) ? 1 : 0;
+    this.uniforms.uFxaa.value = !DBG.has('nofxaa') && (this.fxaa === 'auto' ? this.msaa === 0 && this.bloomOn : !!this.fxaa) ? 1 : 0;
     r.setRenderTarget(null);
     this.quad.render(r);
   }
