@@ -188,6 +188,9 @@ export default async function (api) {
     await tap('#hkGo');
     const ok = await ev(() => window.__hack.autoplay(900));
     const lines = await ev(() => document.querySelector('.hk-res')?.textContent || '');
+    // con el resultado abierto, la entrada concedida por la terminal (a veces una grabación) no debe sonar ni poner subtítulos que tapen «Continuar»
+    const enRes = await ev(() => { const b = document.querySelector('#hkOk'); const r = b.getBoundingClientRect(); const e = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return { voz: !!window.__lore.voiceAt(), sub: document.getElementById('loreSub')?.style.display || 'none', top: e && (e.id || e.className || e.tagName) }; });
+    check('con el resultado del hackeo abierto no suena la grabación ni hay subtítulos, y «Continuar» recibe el toque', !enRes.voz && enRes.sub !== 'block' && enRes.top === 'hkOk', JSON.stringify(enRes));
     await tap('#hkOk'); await wait(3);
     const got = await ev((T) => ({ has: window.__G.loreApi.has(T.lid), ui: window.__G.uiOpen, toast: document.getElementById('toasts')?.textContent.slice(-200) }), T);
     check('hackear bien una terminal con archivo concede la entrada y el aviso no abre paneles encima del resultado', ok && ok.ok && got.has && got.ui === null, JSON.stringify({ ok: ok && ok.ok, got, lines: lines.slice(0, 120) }));

@@ -2536,7 +2536,7 @@ function hkShowResult(s, res, lines) {
     R = HK_CFG.risk[s.risk];
   const xpPct = Math.min(100, Math.round((H.xp / hkXpToNext(H.lvl)) * 100));
   s.body.className = "wbody";
-  s.body.innerHTML = `<div class="hk-res"><h2 style="color:${res.ok ? "var(--good)" : "var(--bad)"}">${res.ok ? "Acceso concedido" : s.trace >= 100 ? "Traza completa · alarma" : "Conexión perdida"}</h2>
+  s.body.innerHTML = `<div class="hk-res"><h2 style="color:${res.ok ? "var(--good)" : "var(--bad)"}">${res.ok ? "Acceso concedido" : s.trace >= 100 ? (s.spec.target === "chip" ? "Traza completa · conexión cortada" : "Traza completa · alarma") : "Conexión perdida"}</h2>
     <div class="hk-kv" style="justify-content:center"><span>Capas <b>${res.capasOk}/${res.capas}</b></span><span>Traza <b>${res.traza} %</b></span><span>Tiempo <b>${Math.round(res.tiempo)} s</b></span><span>Riesgo <b>${R.n}</b></span></div>
     <ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>
     <div class="hk-kv" style="justify-content:center"><span>Hackeo <b>nv ${H.lvl}</b>${res.nivelNuevo ? ' <b style="color:var(--good)">¡sube!</b>' : ""} · +${res.xp} XP</span></div>
@@ -3011,6 +3011,15 @@ It("gadgetPlaced", (g) => {
 });
 
 // ── 7.5 Bucle por fotograma ──────────────────────────────────────────────────────────────────────────
+// El bucle de abajo no corre con un panel abierto ni en el menú principal: si el marcador «HACKEAR» estaba a la vista al pausar y salir al
+// menú, su display en línea (que el CSS solo tapa mientras haya panel) reaparecería flotando sobre el menú. Se oculta al volver a él.
+It("toMenu", () => {
+  HK.cand = null;
+  if (HK.mark && HK.mark.shown) {
+    HK.mark.el.style.display = "none";
+    HK.mark.shown = false;
+  }
+});
 x.tick.push((dt) => {
   if (!x.S || !x.started || !x.player) return;
   // tecla V (escritorio): hackea el objetivo marcado

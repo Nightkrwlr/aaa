@@ -1148,7 +1148,8 @@ function loreSubHide() {
 }
 function loreSubUpdate() {
   const V = LR.voice, L = loreS();
-  if (!V || !L || !L.o.subs || (x.uiOpen === "archive" && V.panel)) return loreSubHide();
+  // con cualquier panel abierto (Archivo, resultado de un hackeo, inventario…) los subtítulos flotantes taparían sus botones, sobre todo en vertical
+  if (!V || !L || !L.o.subs || x.uiOpen) return loreSubHide();
   const a = loreVoiceAt(V);
   if (a.li < 0) return loreSubHide();
   const ln = V.lay.lines[a.li], el = loreSubBox(), ws = ln.words;
@@ -1454,7 +1455,8 @@ function loreAnnounce(n) {
   if (Object.keys(L.f).length === 1 && !n.quiet) la(`Tus hallazgos quedan en el Archivo (${Tt.touchMode ? "botón ARCH." : "tecla L"}): libros, chips cifrados y grabaciones.`, "");
   if (e.boss) la(`Expediente recuperado: quién fue ${En[e.boss] ? En[e.boss].n : "el jefe"}. Descífralo en el Archivo (${Tt.touchMode ? "ARCH." : "L"}).`, "quest");
   if (n.quiet || x.mode === "menu") return;
-  if (e.k === "grab" && L.o.auto) loreVoicePlay(e.id);
+  if (e.k === "grab" && x.uiOpen) la(`Escúchala cuando quieras en el Archivo (${Tt.touchMode ? "botón ARCH." : "tecla L"})`, "");
+  else if (e.k === "grab" && L.o.auto) loreVoicePlay(e.id);
   else if (e.k === "libro" && L.o.auto && loreSafe() && !x.uiOpen) loreOpenArchive("libros", e.id);
   else if (e.k === "chip" && !e.boss) la(`Chip cifrado: descífralo en el Archivo (${Tt.touchMode ? "ARCH." : "L"})`, "warn");
 }
