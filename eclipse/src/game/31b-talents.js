@@ -4,7 +4,7 @@
 //
 // Sustituye los 41 perks aleatorios (Al / pb / Wa / S.pendingPerks) por un árbol de seis ramas.
 //  · Estado en el guardado: S.perks[id] = rango (mismo mapa que Pl.recalc ya suma vía fx[id].st / .pow),
-//    S.talentPts = puntos libres, S.talentEarned = puntos totales ganados, S.talentGrants = concesiones únicas
+//    S.talentPts = puntos libres, S.talentEarned = puntos totales ganados, S.talentGrants = concesiones únicas; S.talentLb = instante (S.playTime) en que Último aliento vuelve a estar listo
 //    (jefes, colecciones), S.talentFx = efectos ya sumados para otros frentes (ver abajo), S.talentsV = 1.
 //  · API pública: grantTalentPoint(motivo, clave), openTalents(), window.__talents.
 //  · S.talentFx (recalculado en Pl.recalc; los frentes GADGETS, HACKEO y ECONOMÍA lo LEEN, nunca lo escriben):
@@ -622,7 +622,8 @@ function tlApply(S, t, add, powers) {
 }
 
 // Estado auxiliar de los poderes (no se guarda).
-const tlRt = { lbCd: 0, spare: 1, prevDash: 0, sense: 0, pyroDepth: 0, repT: 0 };
+// (el enfriamiento de Último aliento sí se guarda: S.talentLb = instante de S.playTime en que vuelve a estar listo)
+const tlRt = { spare: 1, prevDash: 0, sense: 0, pyroDepth: 0, repT: 0 };
 const tlTmp = [];
 
 // Último aliento y Fantasma/Doble esprint viven en x.tick; los envoltorios cubren los puntos sin enganche propio.
@@ -630,8 +631,8 @@ const tlTmp = [];
   const P = TL_PARAMS;
   const _die = Pl.prototype.die;
   Pl.prototype.die = function () {
-    if (this.powers.has("lastBreath") && tlRt.lbCd <= 0) {
-      tlRt.lbCd = P.lastBreathCd;
+    if (this.powers.has("lastBreath") && x.S.playTime >= (x.S.talentLb || 0)) {
+      x.S.talentLb = x.S.playTime + P.lastBreathCd;
       this.hp = Math.max(1, this.maxHp * P.lastBreathHp);
       this.inv = Math.max(this.inv, P.lastBreathInv);
       x.fx.explosion(this.x, this.z, 3, 6160282);
@@ -639,7 +640,9 @@ const tlTmp = [];
       ae.play("levelup");
       return;
     }
-    return _die.call(this);
+    const r = _die.call(this);
+    if (this.dead && x.uiOpen === "talents") Ze.close(); // la muerte no puede dejar el árbol abierto
+    return r;
   };
 
   const _dyn = Pl.prototype.dyn;
@@ -731,7 +734,6 @@ x.tick.push((dt) => {
   const p = x.player;
   if (!p || p.dead || !x.S) return;
   const P = TL_PARAMS, pw = p.powers;
-  tlRt.lbCd = Math.max(0, tlRt.lbCd - dt);
   if (tlRt.welcome && (tlRt.welcome.t -= dt) <= 0) {
     // El texto se compone ahora (no al migrar): solo entonces se sabe si el jugador usa táctil o teclado.
     const msg = `Árbol de talentos: tus ${tlRt.welcome.pts} puntos (mejoras antiguas y jefes derrotados) están listos para repartir. ${Tt.touchMode ? "Toca TALENTO" : "Pulsa T"}.`;

@@ -115,8 +115,8 @@ export default async function (api) {
     'sin talentos': [],
     'tanque (Bastión)': B('bas', ['root', 3], ['b1', 5], ['b2', 4], ['b3', 4], ['b4', 1], ['b5', 1], ['b6', 1], ['kb', 1], ['b4', 5], ['b6', 3], ['c1', 5]),
     'cañón de cristal (Artillería)': B('art', ['root', 3], ['b1', 5], ['b2', 4], ['b3', 1], ['b4', 3], ['b5', 3], ['b6', 1], ['kb', 1], ['b3', 4], ['b6', 3], ['c1', 5], ['c2', 5]),
-    // Fantasma (ka): el esprint concede invulnerabilidad; 'Esprint ágil' y 'Resorte' acortan la recarga
-    'velocista (Espectro)': B('esp', ['root', 3], ['a1', 4], ['b1', 5], ['b2', 4], ['ka', 1], ['a2', 3], ['b3', 4], ['a3', 1], ['a4', 2]),
+    // Fantasma (ka) cuelga del final del carril A (a6) y pide 15 puntos gastados en la rama: se recorre A entero (esprint más frecuente) y el resto va a esquiva (carril B)
+    'velocista (Espectro)': B('esp', ['root', 3], ['a1', 4], ['a2', 3], ['a3', 1], ['a4', 4], ['a5', 1], ['a6', 3], ['ka', 1], ['b1', 5], ['b2', 4], ['b3', 1]),
     'elemental (Elemental)': B('ele', ['root', 3], ['a1', 5], ['a2', 4], ['a3', 4], ['a4', 3], ['a5', 1], ['a6', 1], ['ka', 1], ['a6', 3], ['b1', 5], ['b2', 5]),
     'disperso (5 por rama)': [].concat(...['bas', 'art', 'esp', 'ing', 'ele', 'caz'].map((br) => B(br, ['root', 3], ['b1', 2]))),
     'disperso (15 en 3 ramas)': [].concat(...['bas', 'art', 'esp'].map((br) => B(br, ['root', 3], ['b1', 5], ['b2', 2]))),
@@ -147,8 +147,10 @@ export default async function (api) {
       const out = { left, keys, stat, trials: [] };
       const cycle = ['rastrero', 'rastrero', 'escupidor', 'rastrero', 'bruto', 'rastrero', 'escupidor', 'acorazado'];
       const key = (c, on) => window.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { code: c }));
+      const rndOrig = Math.random;
       for (let t = 0; t < TRIALS; t++) {
-        // reinicio de la prueba
+        // reinicio de la prueba; semilla propia por prueba (RNG del juego y Math.random) para que todos los builds vean la misma horda
+        { let q = (0x9e3779b1 * (t + 1)) >>> 0; window.__seedRng(q); Math.random = () => { q = (Math.imul(q, 1664525) + 1013904223) >>> 0; return q / 4294967296; }; }
         for (const e of G.enemies) e.remove(); G.enemies.length = 0;
         for (const k of ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space']) key(k, false);
         G.uiOpen = null; G.paused = false; { const pn = document.querySelector('#panel'); pn && (pn.hidden = true, pn.innerHTML = ''); }
@@ -193,6 +195,7 @@ export default async function (api) {
         p.dead = false;
         for (const k of held) key(k, false);
       }
+      Math.random = rndOrig;
       for (const e of G.enemies) e.remove(); G.enemies.length = 0;
       return out;
     }, [prio, PTS, LVL, ELVL, HORDE, SECS, TRIALS]);

@@ -142,7 +142,6 @@ function Qp(n, e, t, i) {
       : (oa("Basti\xF3n", "Habla con el Comandante Reyes", "#ffb340"),
         setTimeout(() => la(`Pulsa ${Tt.touchMode ? "USAR" : "E"} junto a los personajes marcados con \xAB!\xBB para hablar.`, "quest"), 2500),
         setTimeout(() => la(Tt.touchMode ? "Tu arma dispara sola. Mu\xE9vete arrastrando el dedo y esquiva con ESPRINT." : "Tu arma dispara sola. Mu\xE9vete con WASD y esquiva con Espacio.", ""), 6500)),
-    s.pendingPerks > 0 && setTimeout(Wa, 800),
     Ui(!0));
 }
 
@@ -438,6 +437,10 @@ window.__Spawner = xn;
 
 // ════════ [750] ExpressionStatement ExpressionStatement (46 bytes) ════════
 window.__spawn = (n, e, t, i, s) => In(n, e, t, i, s || {});
+// prueba: reinicia el RNG del juego (simulaciones deterministas)
+window.__seedRng = (n) => {
+  Lt = pi(n >>> 0);
+};
 
 
 // ════════ [751] ExpressionStatement ExpressionStatement (215 bytes) ════════
