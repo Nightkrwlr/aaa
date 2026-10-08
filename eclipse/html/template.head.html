@@ -244,7 +244,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 @media (max-width: 760px) and (orientation: portrait) {
   .tlmain { flex-direction: column; }
   .tlinfo { width: auto; border-left: 0; border-top: 1px solid var(--line2); max-height: 38%; flex: none; padding: 10px calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left)); }
-  .tlbar { justify-content: flex-start; } .tlsel { flex: 1; max-width: none; } .tlbar .btn { flex: none; min-height: 34px; padding: 5px 10px; font-size: 13px; }
+  .tlbar { justify-content: flex-start; } .tlsel { flex: 1 1 100%; max-width: none; order: 3; } #tlRespec { flex: 1; } .tlbar .btn { flex: none; min-height: 34px; padding: 5px 10px; font-size: 13px; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
   .tlinfo { width: min(250px, 38vw); padding: 8px 10px; gap: 5px; }

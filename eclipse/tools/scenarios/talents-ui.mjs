@@ -107,8 +107,8 @@ export default async function (api) {
     await page.click('#mCont'); await page.waitForTimeout(1500); await wait(15);
     const o = JSON.parse(old);
     const mg = await ev(() => { const S = window.__G.S; return { lvl: S.lvl, perks: JSON.stringify(S.perks), pending: S.pendingPerks, pts: S.talentPts, earned: S.talentEarned, v: S.talentsV, grants: JSON.stringify(S.talentGrants), toasts: [...document.querySelectorAll('.toast')].map((t) => t.textContent) }; });
-    await wait(150);
-    const msg = await ev(() => [...document.querySelectorAll('.toast')].map((t) => t.textContent).join(' | '));
+    await ev(() => window.__step(120, 1 / 30));
+    const msg = await ev(() => window.__talents.lastWelcome || '');
     const expect = o.lvl - 1 + 1; // 1 punto por nivel (lvl-1) + 1 por el jefe de la región 0
     check('migración: perks antiguos reembolsados como puntos (nivel−1 + jefes)', mg.v === 1 && mg.perks === '{}' && mg.pending === 0 && mg.pts === expect && mg.earned === expect, `antes: lvl ${o.lvl} perks ${JSON.stringify(o.perks)} pending ${o.pendingPerks} → ahora ${JSON.stringify(mg)}`);
     check('migración: mensaje de bienvenida al árbol', /Árbol de talentos/.test(msg + mg.toasts.join('|')), msg);

@@ -174,13 +174,20 @@ export default async function (api) {
     console.log(`${name.padEnd(30)} bajas ${row.kills.toFixed(1).padStart(5)}  DPS ${row.dps.toFixed(0).padStart(6)}  supervivencia ${row.surv.toFixed(1).padStart(5)}s  muertes ${row.died}/${TRIALS}  vida final ${(row.hpPct * 100).toFixed(0).padStart(3)}%  daño recibido ${row.taken.toFixed(0).padStart(6)}  claves: ${row.keys}  (sin gastar ${row.left})`);
     console.log(`${''.padEnd(30)} stats: vida+escudo ${r.stat.hp}, reducción ${r.stat.dmgRed}, esquiva ${r.stat.dodge}, vel ${r.stat.spd}, daño/disparo ${r.stat.dmg}, cadencia ${r.stat.rate}, extra proyectiles ${r.stat.multi}`);
   }
-  // veredicto: la especialización debe ganar a dispersarse
-  const sc = (r) => r.kills; // bajas en la ventana de tiempo (morir pronto = menos bajas); supervivencia y daño recibido están arriba
-  const disp = rows.filter((r) => r.name.startsWith('disperso')), spec = rows.filter((r) => !r.name.startsWith('disperso') && r.name !== 'sin talentos');
-  const bestDisp = Math.max(...disp.map(sc));
+  // veredicto: cada build especializado se juzga en SU tarea y debe superar al mejor build disperso en esa misma métrica
+  //   tanque → segundos vivo y daño absorbido; cañón → ritmo de bajas por segundo vivo (DPS efectivo); velocista → segundos vivo; elemental → bajas totales
+  const rate = (r) => r.kills / Math.max(1, r.surv);
+  const disp = rows.filter((r) => r.name.startsWith('disperso')), base = rows[0];
+  const task = { tanque: ['segundos vivo', (r) => r.surv], 'cañón': ['bajas por segundo vivo', rate], velocista: ['segundos vivo', (r) => r.surv], elemental: ['bajas totales', (r) => r.kills] };
   console.log('\n== VEREDICTO ==');
-  for (const r of spec) console.log(`${r.name.padEnd(30)} bajas ${sc(r).toFixed(1)} vs mejor disperso ${bestDisp.toFixed(1)} → ${sc(r) > bestDisp ? 'GANA' : 'NO GANA'}`);
-  console.log(`sin talentos: ${sc(rows[0]).toFixed(1)}; dispersos: ${disp.map((r) => sc(r).toFixed(1)).join(', ')}`);
+  let allWin = true;
+  for (const r of rows.filter((q) => !q.name.startsWith('disperso') && q !== base)) {
+    const k = Object.keys(task).find((q) => r.name.startsWith(q)), [lbl, f] = task[k];
+    const best = Math.max(...disp.map(f)), win = f(r) > best * 1.1;
+    allWin = allWin && win;
+    console.log(`${r.name.padEnd(30)} ${lbl}: ${f(r).toFixed(2)} vs mejor disperso ${best.toFixed(2)} (sin talentos ${f(base).toFixed(2)}) → ${win ? 'GANA (>10 %)' : 'NO GANA'}`);
+  }
+  console.log(allWin ? 'ESPECIALIZARSE GANA A DISPERSARSE en las cuatro tareas.' : 'ATENCIÓN: algún build especializado no supera claramente al disperso.');
   const errs = api.logs.filter((l) => /pageerror|\[error\]/.test(l));
   console.log(errs.length ? 'ERRORES DE CONSOLA:\n' + errs.slice(0, 5).join('\n') : 'sin errores de consola');
 }

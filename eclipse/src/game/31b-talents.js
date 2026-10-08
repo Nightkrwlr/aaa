@@ -85,7 +85,7 @@ var TL_PARAMS = {
   kineticStill: -0.15, kineticGain: 0.45, kineticCap: 1.5, // daño ×(0,85 quieto … ×1,30 corriendo … ×1,52 a toda velocidad)
   doubleDashGap: 0.35, // retardo entre el primer y el segundo esprint
   conductN: 3, conductR: 7, conductDmg: 0.6, // descarga que salta entre ralentizados/congelados
-  pyroR: 2.6, pyroDmg: 1.6, plagueR: 6, plagueMul: 1.25,
+  pyroR: 2.6, pyroDmg: 1.2, plagueR: 6, plagueMul: 1.25,
   senseEvery: 2.2, // segundos entre pulsos de «Instinto»
 };
 
@@ -337,7 +337,7 @@ var TL_SPEC = [
     K: [
       ["Pirómano", { maxHpPct: -0.1 }, 1, {
         pow: "pyro", ic: "♨",
-        d: "Los enemigos que mueren ardiendo explotan (160 % del daño de tu arma en 2,6 m) y prenden a los que los rodean.",
+        d: "Los enemigos que mueren ardiendo explotan (120 % del daño de tu arma en 2,6 m) y prenden a los que los rodean.",
         con: "Juegas con fuego: −10 % de vida máxima.",
       }],
       ["Conductor", { dmg: -0.12 }, 1, {
@@ -725,6 +725,11 @@ x.tick.push((dt) => {
   if (!p || p.dead || !x.S) return;
   const P = TL_PARAMS, pw = p.powers;
   tlRt.lbCd = Math.max(0, tlRt.lbCd - dt);
+  if (tlRt.welcome && (tlRt.welcome.t -= dt) <= 0) {
+    ee("toast", tlRt.welcome.text, "quest");
+    window.__talents.lastWelcome = tlRt.welcome.text;
+    tlRt.welcome = null;
+  }
   // Detección del inicio de un esprint: la recarga salta de ≤0 a ~2 s en el mismo fotograma.
   const dc = p.dashCd;
   if (dc > tlRt.prevDash + 0.5) {
@@ -793,11 +798,9 @@ x.migrations.push((S) => {
   S.talentEarned += bossPts;
   S.talentPts = S.talentEarned;
   S.talentsV = 1;
+  // El aviso se emite desde x.tick una vez empieza la partida (un setTimeout se perdería si el jugador está en el menú).
   if (hadOld || S.lvl > 1)
-    setTimeout(
-      () => ee("toast", `Árbol de talentos: tus ${S.talentEarned} puntos (mejoras antiguas y jefes derrotados) están listos para repartir. Pulsa ${Tt.touchMode ? "TALENTO" : "T"}.`, "quest"),
-      4500,
-    );
+    tlRt.welcome = { t: 2.5, text: `Árbol de talentos: tus ${S.talentEarned} puntos (mejoras antiguas y jefes derrotados) están listos para repartir. Pulsa ${Tt.touchMode ? "TALENTO" : "T"}.` };
 });
 
 It("bossKilled", (b) => {
