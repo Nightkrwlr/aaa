@@ -14,22 +14,22 @@ export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
   const ids = await ev(() => Object.keys(window.__gadgets.cfg.types));
   const runs = [['ninguno', null, 'auto'], ...ids.filter((i) => !only || only.includes(i)).flatMap((i) => (['proximity', 'cluster', 'incendiary', 'cryo', 'emp', 'gravity'].includes(i) ? [[i, i, 'auto'], [i + '*', i, 'remote']] : [[i, i, 'auto']]))];
   for (const [label, id, mode] of runs) {
-    const acc = { dmg: 0, kills: 0, seen: 0, trig: 0, hurt: 0, hp0: 0, firstHit: 0, n: 0, G: 0 };
+    const acc = { dmg: 0, kills: 0, seen: 0, trig: 0, hurt: 0, hp0: 0, firstHit: 0, n: 0, G: 0, blocked: 0, provoked: 0 };
     for (let tr = 0; tr < TRIALS; tr++) {
-      const r = await ev(({ id, mode, tr, SECS }) => {
+      const r = await ev(({ id, mode, tr, SECS, MECH }) => {
         const G = window.__G, gd = window.__gadgets, p = G.player, S = G.S;
         // escenario limpio: nada en el suelo, jugador quieto, arma muda (así solo cuenta el gadget)
         for (const e of G.enemies) e.remove?.(); G.enemies.length = 0; G.projs.length = 0; gd.clear();
         p.hp = p.maxHp; p.x = p.x; p.vx = 0; p.vz = 0; p.face = Math.PI / 2;
         p.reloadT[S.activeW] = 1e9; p.ammo[S.activeW] = 0; p.powers && p.powers.clear && p.powers.clear(); p.droneT = 1e9;
-        gd.state.stats.triggered = 0; gd.seed(0x1234 + tr * 7919);
+        gd.state.stats.triggered = 0; gd.state.stats.blocked = 0; gd.state.stats.provoked = 0; gd.seed(0x1234 + tr * 7919);
         S.gadgets.inv.proximity = 12; // solo para que el HUD no proteste
         const px = p.x, pz = p.z;
         // manada de 16: enjambre, infectados, mantis (evitan), corredores (evitan) y un mecánico (desarma)
-        const kinds = [['rastrero', 8], ['infectado', 3], ['mantis', 2], ['corredor', 2], ['escudero', 1]];
-        const pack = []; let k = 0;
+        const kinds = MECH ? [['escudero', 3], ['mech', 2], ['centinela', 1]] : [['rastrero', 6], ['infectado', 3], ['escupidor', 2], ['mantis', 2], ['corredor', 2], ['escudero', 1]];
+        const pack = []; let k = 0; const pk = kinds.reduce((a, [, n]) => a + n, 0);
         for (const [kind, n] of kinds) for (let i = 0; i < n; i++, k++) {
-          const a = (k / 16) * 6.283, rr = 1 + (k % 4) * 0.9;
+          const a = (k / pk) * 6.283, rr = 1 + (k % 4) * 0.9;
           const e = window.__spawn(kind, 4, px + 17 + Math.cos(a) * rr, pz + Math.sin(a) * rr * 1.3, { alerted: true });
           if (e) pack.push(e);
         }
@@ -54,19 +54,19 @@ export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
         }
         let dmg = 0, kills = 0, tot = 0, seen = 0;
         pack.forEach((e, i) => { const h = Math.max(0, e.dead ? 0 : e.hp); dmg += hp0[i] - h; tot += hp0[i]; if (e.dead) kills++; if (e._gSeen !== undefined && e._gOk) seen++; });
-        const out = { dmg, tot, kills, seen, trig: gd.state.stats.triggered, hurt: hurt0 - p.hp, firstHit, G: gd.G(), n: pack.length };
+        const out = { dmg, tot, kills, seen, trig: gd.state.stats.triggered, blocked: gd.state.stats.blocked, provoked: gd.state.stats.provoked, hurt: hurt0 - p.hp, firstHit, G: gd.G(), n: pack.length };
         for (const e of G.enemies) e.remove?.(); G.enemies.length = 0; G.projs.length = 0; gd.clear();
         return out;
-      }, { id, mode, tr, SECS });
-      acc.dmg += r.dmg; acc.hp0 += r.tot; acc.kills += r.kills; acc.seen += r.seen; acc.trig += r.trig; acc.firstHit += Math.max(0, r.firstHit); acc.G = r.G; acc.n = r.n; acc.hurt += r.hurt;
+      }, { id, mode, tr, SECS, MECH: process.env.PACK === 'mech' });
+      acc.dmg += r.dmg; acc.hp0 += r.tot; acc.kills += r.kills; acc.seen += r.seen; acc.trig += r.trig; acc.firstHit += Math.max(0, r.firstHit); acc.G = r.G; acc.n = r.n; acc.hurt += r.hurt; acc.blocked = (acc.blocked || 0) + r.blocked; acc.provoked = (acc.provoked || 0) + r.provoked;
     }
-    rows.push({ label, dmg: acc.dmg / TRIALS, pct: acc.dmg / acc.hp0, kills: acc.kills / TRIALS, seen: acc.seen / TRIALS, trig: acc.trig / TRIALS, G: acc.G, n: acc.n });
+    rows.push({ label, dmg: acc.dmg / TRIALS, pct: acc.dmg / acc.hp0, kills: acc.kills / TRIALS, seen: acc.seen / TRIALS, trig: acc.trig / TRIALS, G: acc.G, n: acc.n, blocked: acc.blocked / TRIALS, provoked: acc.provoked / TRIALS });
   }
   const f1 = (v) => (Math.round(v * 10) / 10).toString().replace('.', ',');
-  console.log(`\n=== 1. Cada gadget contra una manada de 16 (nivel 4; ${SECS} s; media de ${TRIALS} pruebas; * = detonación remota con ≥3 cerca) ===`);
-  console.log('gadget        daño medio  % vida manada  bajas/16  esquivan  activaciones');
-  for (const r of rows) console.log(`${r.label.padEnd(13)} ${f1(r.dmg).padStart(9)}  ${(f1(r.pct * 100) + ' %').padStart(13)}  ${f1(r.kills).padStart(8)}  ${f1(r.seen).padStart(8)}  ${f1(r.trig).padStart(11)}`);
-  console.log(`(daño de referencia G = ${f1(rows[0].G)} = granada de fragmentación del jugador; vida media de la manada ≈ ${f1(rows[0].dmg === 0 ? 0 : 0)}${''})`);
+  console.log(`\n=== 1. Cada gadget contra una manada (nivel 4; ${SECS} s; media de ${TRIALS} pruebas; * = detonación remota con ≥3 cerca) ===`);
+  console.log('gadget        daño medio  % vida manada  bajas  esquivan  activaciones  proyectiles frenados / enemigos provocados');
+  for (const r of rows) console.log(`${r.label.padEnd(13)} ${f1(r.dmg).padStart(9)}  ${(f1(r.pct * 100) + ' %').padStart(13)}  ${f1(r.kills).padStart(5)}  ${f1(r.seen).padStart(8)}  ${f1(r.trig).padStart(12)}  ${r.blocked || r.provoked ? f1(r.blocked) + ' / ' + f1(r.provoked) : ''}`);
+  console.log(`(daño de referencia G = ${f1(rows[0].G)} = granada de fragmentación del jugador; manada ${process.env.PACK === 'mech' ? 'mecánica de 6' : 'mixta de 16'})`);
 
   // ─── 2. coste en minutos de farmeo ────────────────────────────────────────────────────────────────
   const costs = await ev(() => {
@@ -91,7 +91,8 @@ export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
   if (!process.env.SKIP_PERF) {
     await ev(() => { const G = window.__G, gd = window.__gadgets; for (const e of G.enemies) e.remove?.(); G.enemies.length = 0; gd.clear(); G.player.reloadT[G.S.activeW] = 1e9; });
     const stepMs = (n) => ev((n) => { const t0 = performance.now(); window.__step(n, 1 / 30); return (performance.now() - t0) / n; }, n);
-    const sceneObjs = () => ev(() => { let n = 0; window.__G.R.scene.traverse(() => n++); return n; });
+    const sceneObjs = () => ev(() => { let n = 0; window.__G.R.scene.traverse((o) => { if (/^gadget-/.test(o.name)) n++; }); return n; });
+    const mem = () => ev(() => { const m = window.__G.R.r.info.memory; return m.geometries + '/' + m.textures; });
     await stepMs(30);
     const base = await stepMs(120), baseCalls = await perf(), baseObjs = await sceneObjs();
     await ev(() => {
@@ -109,7 +110,8 @@ export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
     // ciclo despliegue-retirada repetido: el recuento de objetos de la escena debe volver al de antes
     const cyc = await ev(() => {
       const G = window.__G, gd = window.__gadgets, p = G.player, ids = Object.keys(gd.cfg.types);
-      let o0 = 0; G.R.scene.traverse(() => o0++);
+      const cnt = () => { let n = 0; G.R.scene.traverse((o) => { if (/^gadget-/.test(o.name)) n++; }); const m = G.R.r.info.memory; return n + ' mallas · ' + m.geometries + ' geometrías/' + m.textures + ' texturas'; };
+      const o0 = cnt();
       for (let c = 0; c < 6; c++) {
         gd.clear();
         for (let i = 0; i < 60; i++) { const g = gd.deploy(ids[i % ids.length], { force: true, x: p.x + 3 + (i % 8), z: p.z - 5 + Math.floor(i / 8) * 1.4 }); if (g) g.arm = 0; }
@@ -117,7 +119,7 @@ export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
         gd.detonate(); window.__step(60, 1 / 30);
       }
       gd.clear(); window.__step(200, 1 / 30);
-      let o1 = 0; G.R.scene.traverse(() => o1++);
+      const o1 = cnt();
       const st = gd.state;
       return { o0, o1, list: st.list.length, zones: st.zones.length, blasts: st.blasts.length, bars: st.bars.length };
     });
@@ -125,7 +127,7 @@ export default async function ({ boot, newGame, ev, perf, wait, god, region }) {
     console.log(`desplegados: 0 → ${n100}`);
     console.log(`simulación por fotograma: ${f1(base)} ms → ${f1(busy)} ms  (+${f1(busy - base)} ms)`);
     console.log(`llamadas de dibujo: ${baseCalls.calls} → ${busyCalls.calls}  (+${busyCalls.calls - baseCalls.calls})   triángulos: ${baseCalls.triangles} → ${busyCalls.triangles}`);
-    console.log(`objetos en la escena: ${baseObjs} → ${busyObjs}  (+${busyObjs - baseObjs}: mallas instanciadas, no una por gadget)`);
-    console.log(`fugas tras 6 ciclos de 60 desplegar+detonar+limpiar: escena ${cyc.o0} → ${cyc.o1}; restos list=${cyc.list} zonas=${cyc.zones} diferidas=${cyc.blasts} barreras=${cyc.bars}`);
+    console.log(`mallas de gadget en la escena: ${baseObjs} → ${busyObjs} (instanciadas: una por forma, no una por gadget)`);
+    console.log(`fugas tras 6 ciclos de 60 desplegar+detonar+limpiar: ${cyc.o0} → ${cyc.o1}; restos list=${cyc.list} zonas=${cyc.zones} diferidas=${cyc.blasts} barreras=${cyc.bars}`);
   }
 }

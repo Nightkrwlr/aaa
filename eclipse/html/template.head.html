@@ -269,7 +269,7 @@ textarea { width: 100%; min-height: 70px; background: #0d1316; color: var(--text
 #tbMed { right: calc(178px + env(safe-area-inset-right)); bottom: calc(22px + env(safe-area-inset-bottom)); }
 #tbStim { right: calc(186px + env(safe-area-inset-right)); bottom: calc(98px + env(safe-area-inset-bottom)); }
 /* gadgets (D3): botón táctil sobre el esprint, casilla de escritorio junto a los consumibles */
-.tb.gd { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; right: calc(16px + env(safe-area-inset-right)); bottom: calc(182px + env(safe-area-inset-bottom)); }
+.tb.gd { touch-action: none; -webkit-user-select: none; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; right: calc(16px + env(safe-area-inset-right)); bottom: calc(182px + env(safe-area-inset-bottom)); }
 .tb.gd .gi { display: block; line-height: 0; }
 .tb.gd .gl { font: 700 8.5px var(--f-disp); letter-spacing: .04em; color: var(--muted); margin-top: 1px; }
 .tb.gd.empty { opacity: .55; }
@@ -353,6 +353,11 @@ body.touch #banner { top: 18%; } body.touch #banner .b1 { font-size: clamp(22px,
 .gdi { display: grid; place-items: center; width: 34px; height: 34px; background: rgba(0,0,0,.35); border: 1px solid var(--line2); flex: none; }
 .gdn { font: 700 18px var(--f-disp); color: var(--amber); } .gdn small { font-size: 11px; color: var(--muted); } .gdn.zero { color: var(--bad, #ff6a6a); }
 .gdst { font: 600 11.5px var(--f-disp); color: var(--cyan, #40e0ff); letter-spacing: .02em; margin-bottom: 4px; }
+/* costes como fichas en línea (sin barras): la tarjeta mide ~1/3 y caben más en una pantalla de móvil apaisado */
+.gdcard .cost { display: flex; flex-wrap: wrap; gap: 4px; }
+.gdcard .need { display: contents; }
+.gdcard .need .ln { grid-template-columns: auto auto auto; column-gap: 5px; padding: 3px 7px; font-size: 12px; }
+.gdcard .need .ln .bar, .gdcard .need .ln .miss { display: none; }
 
 /* ---------- Ventanas en pantallas pequeñas: a pantalla completa */
 @media (max-width: 760px), (max-height: 520px) {

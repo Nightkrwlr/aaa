@@ -70,16 +70,16 @@ x.cfg.gadgets = {
     cluster: {
       n: "Mina de racimo", s: "RACIMO", cat: "mine", kind: "mine", shape: "mine", col: 0xffb040, tier: 1, scale: 1.12,
       d: "Una carga principal y seis submuniciones que se esparcen y explotan una a una.",
-      cost: { scrap: 4, bio: 2, credits: 36 }, trof: 2,
+      cost: { scrap: 3, bio: 2, credits: 36 }, trof: 2,
       dmg: 0.7, r: 2.4, trig: 1.7, arm: 0.8, fuse: 0.3, kb: 3, remote: true,
-      bomblets: 6, bDmg: 0.55, bR: 1.7, spread: 5, bDelay: [0.12, 0.6],
+      bomblets: 6, bDmg: 0.8, bR: 1.7, spread: 5, bDelay: [0.12, 0.6],
     },
     incendiary: {
       n: "Mina incendiaria", s: "FUEGO", cat: "mine", kind: "mine", shape: "mine", col: 0xff7a1a, tier: 2,
       d: "Explosión que prende a los enemigos y deja un charco de fuego unos segundos.",
       cost: { bio: 2, scrap: 2, credits: 38 }, trof: 2,
       dmg: 0.9, r: 2.8, trig: 1.7, arm: 0.8, fuse: 0.3, kb: 2, remote: true,
-      zoneR: 3.0, zoneT: 5, zoneDps: 0.4,
+      zoneR: 3.0, zoneT: 5, zoneDps: 0.3,
     },
     cryo: {
       n: "Mina criogénica", s: "HIELO", cat: "mine", kind: "mine", shape: "crystal", col: 0x7fd8ff, tier: 2,
@@ -103,9 +103,9 @@ x.cfg.gadgets = {
     },
     blades: {
       n: "Trampa de cuchillas", s: "CUCH.", cat: "trap", kind: "trap", shape: "plate", col: 0xd5dde6, tier: 2, scale: 0.95,
-      d: "Cuchillas giratorias que causan sangrado a quien pase. Aguanta varias activaciones.",
+      d: "Cuchillas giratorias que causan sangrado a quien pase. Aguanta dos activaciones.",
       cost: { scrap: 4, credits: 34 }, trof: 3,
-      dmg: 0.3, r: 2.3, trig: 1.5, arm: 0.8, fuse: 0.1, uses: 3, cd: 3, zoneT: 4.5, zoneDps: 0.55, bleed: 0.25,
+      dmg: 0.3, r: 2.3, trig: 1.5, arm: 0.8, fuse: 0.1, uses: 2, cd: 3, zoneT: 4.5, zoneDps: 0.35, bleed: 0.2,
     },
     shock: {
       n: "Trampa de descarga", s: "RAYO", cat: "trap", kind: "trap", shape: "plate", col: 0xa8c8ff, tier: 3,
@@ -117,7 +117,7 @@ x.cfg.gadgets = {
       n: "Campo gravitatorio", s: "GRAV.", cat: "mine", kind: "field", shape: "coil", col: 0xb06bff, tier: 3, scale: 1.3,
       d: "Atrae y retiene a los enemigos en su centro y colapsa al terminar. Detonable a distancia.",
       cost: { battery: 1, scrap: 4, credits: 55 }, trof: 3,
-      dmg: 1.2, r: 3.5, trig: 4.5, arm: 0.6, fuse: 0.1, remote: true, fieldR: 6, fieldT: 5.5, pull: 14, fieldDps: 0.1, slowMul: 0.35,
+      dmg: 0.9, r: 3.5, trig: 4.5, arm: 0.6, fuse: 0.1, remote: true, fieldR: 6, fieldT: 5.5, pull: 14, fieldDps: 0.07, slowMul: 0.35,
     },
     sentinel: {
       n: "Torreta centinela", s: "TORRETA", cat: "device", kind: "turret", shape: "tower", col: 0x40e0ff, tier: 3,
@@ -178,12 +178,12 @@ var GD = {
   gfx: null,
   ui: null,
   placeCd: 0,
-  hold: { down: false, t0: 0, fired: false, src: "" },
+  hold: { down: false, t0: 0, ticks: 0, fired: false, swiped: false, src: "" },
   uiT: 0,
   planT: 0,
   tipT: 0,
   ext: false, // alguien externo (ECONOMÍA) llama a gadgetPlanDrop: entonces no soltamos planos por nuestra cuenta
-  stats: { placed: 0, triggered: 0, kills: 0 },
+  stats: { placed: 0, triggered: 0, kills: 0, blocked: 0, provoked: 0 },
 };
 var gdTmpA = [],
   gdTmpB = [],
@@ -1089,6 +1089,7 @@ function gdBlockProjectiles(dt) {
       const along = ((hx - ax) * ex + (hz - az) * ez) / (ex * ex + ez * ez);
       if (along < -0.02 || along > 1.02) continue;
       p.life = 0;
+      GD.stats.blocked++;
       x.fx.hit(hx, 1, hz, b.def.col, Math.atan2(p.vx, p.vz));
       ae.play("metal", { gap: 0.08, v: 0.3, p: 2 });
       break;
@@ -1138,7 +1139,10 @@ function gadgetEnemyTick(e, dt, dist) {
   if (GD.decoy && e.alerted && !e.boss && !e.static && (!e.siege || e.siege.deco)) {
     const t = GD.decoy.targets[0];
     if (e.siege !== GD.decoy) {
-      if (t.hp > 0 && Le(e.x, e.z, t.x, t.z) < GD_CFG.types.decoy.range) e.siege = GD.decoy;
+      if (t.hp > 0 && Le(e.x, e.z, t.x, t.z) < GD_CFG.types.decoy.range) {
+        e.siege = GD.decoy;
+        GD.stats.provoked++;
+      }
     } else if (t.hp <= 0) e.siege = null;
     else e.aggroT = Math.min(e.aggroT, 0); // seguir al señuelo aunque lo hieran (el asedio normal se apaga 5 s al recibir daño)
   }
@@ -1223,6 +1227,7 @@ function gdPressStart(src) {
   if (h.down || x.uiOpen || !x.started) return;
   h.down = true;
   h.t0 = performance.now();
+  h.ticks = 0;
   h.fired = false;
   h.swiped = false;
   h.src = src;
@@ -1246,9 +1251,11 @@ function gdInput(dt) {
   if (Tt.hit("gadgetNext") && !x.uiOpen) gadgetNext(1);
   if (!h.down) return;
   const held = (performance.now() - h.t0) / 1000;
+  h.ticks++;
   if (!h.fired && !h.swiped) {
     gdProgress(Math.min(1, held / GD_CFG.holdSec));
-    if (held >= GD_CFG.holdSec) {
+    // al menos 4 fotogramas de pulsación: un toque rápido nunca cuenta como «mantener» aunque el dispositivo se atasque
+    if (held >= GD_CFG.holdSec && h.ticks >= 4) {
       h.fired = true;
       gdProgress(0);
       gadgetDetonateAll();
