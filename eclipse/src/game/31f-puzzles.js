@@ -20,7 +20,11 @@
 x.cfg.puzzles = {
   version: 1,
   pool: 40, // semillas distintas por tipo y nivel: validateAll() las recorre TODAS (lo que se juega sale de ahí)
-  chance: 0.55, // probabilidad de sala de acertijo en una mazmorra (que no tenga ya su «cámara sellada»)
+  chance: 0.55, // probabilidad de sala de acertijo en un subterráneo de edificio o cueva (estable por escalera; no si ya tiene su «cámara sellada»)
+  chanceOp: 0.6, // ... y en una operación
+  loreChance: 0.7, // en el Desierto y la Colmena, probabilidad de que el acertijo sea el de runas dictado por el Archivo
+  nearM: 1.8, // m al borde del puzle a partir de los cuales aparece su tarjeta y se puede usar
+  parSlack: 1.75, // «perfecto» exige no pasarse de este múltiplo de los movimientos de referencia (+2)
   respawnMin: 120, // minutos hasta que un acertijo resuelto vuelve a dar premio (igual que los cofres)
   tierByLvl: [
     [0, 1],
@@ -38,7 +42,8 @@ x.cfg.puzzles = {
     alcantarilla: { mirrors: 0.8, boxes: 1, timed: 1, runes: 0.7, circuit: 1, lasers: 0.9, memory: 1, valves: 1.8 },
   },
   // premio: XP (fracción de la barra), créditos (× mt.credits(nivel)) y cofre (tier 1-3 del sistema de ECONOMÍA)
-  reward: { xp: { 1: 0.05, 2: 0.08, 3: 0.12 }, credits: { 1: 3, 2: 6, 3: 10 }, perfectXp: 0.04, perfectCredits: 0.5 },
+  // (el cofre de tier N sale del sistema de botín de ECONOMÍA, con sus tablas de rareza; aquí solo lo que añade el acertijo)
+  reward: { xp: { 1: 0.05, 2: 0.08, 3: 0.12 }, credits: { 1: 6, 2: 10, 3: 16 }, perfectXp: 0.04, perfectCredits: 0.5, hackMul: 0.6, lore: { 1: 0.1, 2: 0.2, 3: 0.35 } },
   respawnPenalty: 0.1, // fracción de vida que quita un error (descarga) cuando el puzle castiga
   hud: { hintAfterErrors: 3 },
 };
@@ -403,8 +408,16 @@ PZ_GENS.mirrors = {
     for (let i = 0; i < spec.mir.length; i++) if (spec.mir[i].p && st.ori[i] !== spec.sol[i]) return { id: i, text: "Pista: ese espejo no está bien orientado." };
     return null;
   },
+  hackable: true,
   spots(spec) {
     return spec.mir.map((m) => [m.x, m.z]);
+  },
+  focus(spec, st, id) {
+    const m = spec.mir[id];
+    return m ? [m.x, m.z] : null;
+  },
+  par(spec) {
+    return this.bot(spec, this.init(spec)).length;
   },
   solve(spec, st) {
     st.ori = spec.sol.slice();
@@ -700,6 +713,9 @@ PZ_GENS.boxes = {
     const i = id >> 2,
       d = id & 3;
     if (!this.canPush(spec, st, i, d)) return ctx.snd("err");
+    // nadie (tú incluido) puede estar en la celda de destino
+    const bb = st.boxes[i];
+    if (ctx.occupied && ctx.occupied((bb % spec.w) + PZ_DX[d], ((bb / spec.w) | 0) + PZ_DZ[d])) return ctx.snd("err");
     st.hist.push(st.boxes.slice());
     const b = st.boxes[i];
     st.boxes[i] = b + PZ_DX[d] + PZ_DZ[d] * spec.w;
@@ -727,6 +743,13 @@ PZ_GENS.boxes = {
     const [c, d] = s.sol[0];
     const dir = ["derecha", "abajo", "izquierda", "arriba"][d];
     return { id: st.boxes.indexOf(c) * 4 + d, text: `Pista: empuja la caja marcada hacia ${dir}.` };
+  },
+  focus(spec, st, id) {
+    const b = st.boxes[id >> 2];
+    return b === undefined ? null : [b % spec.w, (b / spec.w) | 0];
+  },
+  par(spec) {
+    return sokSolve(spec, 250000).pushes;
   },
   solve(spec, st) {
     st.boxes = spec.goals.slice();
@@ -936,6 +959,11 @@ PZ_GENS.timed = {
     st.lit.fill(spec.dur);
     st.rev++;
   },
+  hackable: true,
+  focus(spec, st, id) {
+    const q = spec.plates[id];
+    return q ? [q.x, q.z] : null;
+  },
   botMode: "walk",
   bot(spec) {
     const D = tmTimes(spec),
@@ -1023,6 +1051,22 @@ function rnText(c, names) {
                 ? `${A} es la ${PZ_ORD[c[2] + 1]} en despertar.`
                 : `${A} y ${B} no despiertan seguidas.`;
 }
+// Disposición en el suelo: runas en una elipse alrededor de la estela (que ocupa el centro)
+function rnLayout(w, h, n, r) {
+  const cells = [],
+    stele = Math.floor(h / 2) * w + Math.floor(w / 2),
+    used = new Set([stele]);
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + (i / n) * Math.PI * 2,
+      cx = Math.floor((w - 1) / 2 + 0.5 + Math.cos(a) * ((w - 1) / 2 - 0.2)),
+      cz = Math.floor((h - 1) / 2 + 0.5 + Math.sin(a) * ((h - 1) / 2 - 0.2));
+    let c = Math.max(0, Math.min(h - 1, cz)) * w + Math.max(0, Math.min(w - 1, cx));
+    for (let k = 0; used.has(c) && k < 60; k++) c = r.int(0, w * h - 1);
+    used.add(c);
+    cells.push(c);
+  }
+  return { cells, stele };
+}
 PZ_GENS.runes = {
   id: "runes",
   n: "Runas en orden",
@@ -1030,6 +1074,7 @@ PZ_GENS.runes = {
   icon: "ᚱ",
   dims: { 1: [6, 5], 2: [6, 6], 3: [7, 6] },
   lv: { 1: { n: 4 }, 2: { n: 5 }, 3: { n: 6 } },
+  hackable: false,
   make(seed, tier) {
     const [w, h] = this.dims[tier],
       n = this.lv[tier].n,
@@ -1069,26 +1114,41 @@ PZ_GENS.runes = {
       t.splice(i, 1);
       if (rnCount(t, n).cnt === 1) clues = t;
     }
-    // disposición en el suelo: runas en una elipse; la estela de la inscripción, en el centro
-    const cells = [],
-      used = new Set([Math.floor(h / 2) * w + Math.floor(w / 2)]);
-    for (let i = 0; i < n; i++) {
-      const a = -Math.PI / 2 + (i / n) * Math.PI * 2,
-        cx = Math.floor((w - 1) / 2 + 0.5 + Math.cos(a) * ((w - 1) / 2 - 0.2)),
-        cz = Math.floor((h - 1) / 2 + 0.5 + Math.sin(a) * ((h - 1) / 2 - 0.2));
-      let c = Math.max(0, Math.min(h - 1, cz)) * w + Math.max(0, Math.min(w - 1, cx));
-      for (let k = 0; used.has(c) && k < 40; k++) c = r.int(0, w * h - 1);
-      used.add(c);
-      cells.push(c);
-    }
+    const { cells, stele } = rnLayout(w, h, n, r);
     const names = ids.map((q) => PZ_RUNES[q].g + " " + PZ_RUNES[q].n.toUpperCase());
-    return { kind: "runes", seed, tier, w, h, n, ids, cells, order, clues, text: clues.map((c) => rnText(c, names)), stele: Math.floor(h / 2) * w + Math.floor(w / 2) };
+    return { kind: "runes", mode: "clues", seed, tier, w, h, n, len: n, ids, cells, order, clues, text: clues.map((c) => rnText(c, names)), stele };
+  },
+  // Variante dictada por el Archivo: `seq` = glifos (índices 0..7) en el orden en que hay que activarlos, más señuelos que NO hay que tocar.
+  makeLore(seed, tier, seq, key) {
+    const [w, h] = this.dims[tier],
+      len = seq.length,
+      n = Math.min(w * h - 4, len + 2),
+      r = pzRng(pzMix(seed, tier, 0x4c52));
+    const decoys = r.shuffle([0, 1, 2, 3, 4, 5, 6, 7].filter((q) => seq.indexOf(q) < 0)).slice(0, n - len);
+    const ids = seq.concat(decoys),
+      order = [...Array(len).keys()],
+      { cells, stele } = rnLayout(w, h, n, r);
+    r.shuffle(cells); // dónde está cada runa no revela el orden
+    return { kind: "runes", mode: "lore", key, seed, tier, w, h, n, len, ids, cells, order, clues: [], text: [], stele };
+  },
+  // dos variantes de Archivo por semilla (las que juega el desierto, 4 glifos, y la colmena, 5): validateAll() también las recorre
+  variants(seed, tier) {
+    if (tier < 2) return [];
+    const r = pzRng(pzMix(seed, tier, 0x5656)),
+      len = tier === 2 ? 4 : 5;
+    return [this.makeLore(seed, tier, r.shuffle([0, 1, 2, 3, 4, 5, 6, 7]).slice(0, len), "prueba." + len)];
   },
   validate(spec) {
     const n = spec.n,
-      s = rnCount(spec.clues, n);
+      len = spec.order.length;
+    const distinct = new Set(spec.cells).size === n && !spec.cells.includes(spec.stele) && new Set(spec.ids).size === n && spec.ids.every((q) => q >= 0 && q < PZ_RUNES.length);
+    if (spec.mode === "lore") {
+      const ok = distinct && len === spec.len && len >= 3 && len < n && spec.order.every((q, i) => q === i && q < n);
+      return { ok, why: ok ? "" : "variante de Archivo mal formada", decoys: n - len, perms: pzFact(n) };
+    }
+    const s = rnCount(spec.clues, n);
     const same = s.first && s.first.every((q, i) => q === spec.order[i]);
-    const ok = s.cnt === 1 && same && spec.clues.length >= 2 && new Set(spec.cells).size === n && !spec.cells.includes(spec.stele);
+    const ok = s.cnt === 1 && same && spec.clues.length >= 2 && distinct;
     return { ok, why: ok ? "" : s.cnt !== 1 ? `${s.cnt} órdenes cumplen las pistas` : "la solución guardada no cumple", clues: spec.clues.length, perms: pzFact(n) };
   },
   init(spec) {
@@ -1106,7 +1166,7 @@ PZ_GENS.runes = {
     st.rev++;
   },
   solved(spec, st) {
-    return st.k >= spec.n;
+    return st.k >= spec.order.length;
   },
   solid(spec, st, cx, cz) {
     const c = cz * spec.w + cx;
@@ -1121,6 +1181,10 @@ PZ_GENS.runes = {
       if (d < bd) ((bd = d), (b = i));
     }
     return b;
+  },
+  focus(spec, st, id) {
+    const c = spec.cells[id];
+    return c === undefined ? null : [c % spec.w, (c / spec.w) | 0];
   },
   label(spec, st, id) {
     return `Activar runa ${PZ_RUNES[spec.ids[id]].g} ${PZ_RUNES[spec.ids[id]].n}`;
@@ -1152,17 +1216,33 @@ PZ_GENS.runes = {
     }
   },
   status(spec, st) {
-    return [`Runas activadas: ${st.k}/${spec.n}`, ...(st.errors ? [`Errores: ${st.errors}`] : [])];
+    return [`Runas activadas: ${st.k}/${spec.order.length}`, ...(st.errors ? [`Errores: ${st.errors}`] : [])];
   },
+  // texto de la inscripción: pistas lógicas, o (variante del Archivo) lo que el jugador ya sabe del documento que dicta el orden
   clueLines(spec) {
-    return spec.text;
+    if (spec.mode !== "lore") return spec.text;
+    let h = null;
+    try {
+      h = x.loreApi && x.loreApi.hintFor(spec.key);
+    } catch (err) {
+      h = null;
+    }
+    if (h && h.known) return ["La inscripción coincide con lo que anotaste en el Archivo:", h.display + "."];
+    return ["La inscripción es ilegible: los glifos están erosionados.", "El orden aparece en los registros de esta región" + (h && h.what ? " (" + h.what + ")" : "") + ". Consulta el Archivo."];
+  },
+  hintLore(spec) {
+    try {
+      spec.mode === "lore" && x.loreApi && x.loreApi.reveal(spec.key);
+    } catch (err) {
+      /* sin Archivo */
+    }
   },
   spots(spec) {
     return spec.cells.map((c) => [c % spec.w, (c / spec.w) | 0]);
   },
   solve(spec, st) {
-    st.k = spec.n;
-    st.lit.fill(1);
+    st.k = spec.order.length;
+    for (const q of spec.order) st.lit[q] = 1;
     st.rev++;
   },
   hint(spec, st) {
@@ -1204,8 +1284,8 @@ PZ_GENS.runes = {
     }
   },
   glyphs(spec) {
-    // etiquetas flotantes (la ejecución las pinta con sprites compartidos)
-    return spec.cells.map((c, i) => ({ cx: (c % spec.w) + 0.5, cz: ((c / spec.w) | 0) + 0.5, y: 1.55, t: PZ_RUNES[spec.ids[i]].g, col: PZ_RUNES[spec.ids[i]].col }));
+    // etiquetas flotantes (la ejecución las pinta como texto del DOM, sin mallas)
+    return spec.cells.map((c, i) => ({ cx: (c % spec.w) + 0.5, cz: ((c / spec.w) | 0) + 0.5, y: 1.55, t: PZ_RUNES[spec.ids[i]].g, n: PZ_RUNES[spec.ids[i]].n, col: PZ_RUNES[spec.ids[i]].col }));
   },
 };
 
@@ -1448,6 +1528,13 @@ PZ_GENS.circuit = {
     // una baldosa mal puesta, vista contra la solución guardada (alguna orientación equivalente cuenta como buena)
     for (let c = 0; c < spec.w * spec.h; c++) if (st.mask[c] !== spec.sol[c]) return { id: c, text: "Pista: esa baldosa no está en su posición." };
     return null;
+  },
+  hackable: true,
+  focus(spec, st, id) {
+    return id >= 0 ? [id % spec.w, (id / spec.w) | 0] : null;
+  },
+  par(spec) {
+    return this.bot(spec, this.init(spec)).length;
   },
   solve(spec, st) {
     st.mask.set(spec.sol);
@@ -2110,6 +2197,14 @@ PZ_GENS.valves = {
     for (let v = 0; v < spec.valves.length; v++) if ((diff >> v) & 1) return { id: v, text: "Pista: esa válvula está mal puesta." };
     return null;
   },
+  hackable: true,
+  focus(spec, st, id) {
+    const v = spec.valves[id];
+    return v ? [v.x, v.i] : null;
+  },
+  par(spec) {
+    return this.bot(spec, this.init(spec)).length;
+  },
   spots(spec) {
     return spec.valves.map((v) => [v.x, v.i]);
   },
@@ -2405,13 +2500,46 @@ function pzBotRun(gen, spec) {
   return { ok, why: ok ? "" : st.errors ? "el bot cometió errores" : log.tele ? "el bot fue teletransportado" : "el bot no resolvió", acts: plan.length, frames, moves: st.moves | 0 };
 }
 
-// Recorre TODAS las semillas y tamaños que el juego puede usar (pool × niveles × tipos) y comprueba, para cada puzle:
-// que make es determinista y su spec es JSON puro · validate() · que cada objeto es alcanzable · que el bot lo resuelve jugando de verdad.
+// Comprobaciones de UN puzle: spec JSON puro · validate() · tamaño declarado · alcance de cada objeto · el bot lo resuelve jugando de verdad
+function pzCheckSpec(g, kind, tier, sp, opts, bk) {
+  const js = JSON.stringify(sp);
+  if (JSON.parse(js).kind !== kind) return "el spec no lleva su tipo";
+  const v = g.validate(JSON.parse(js));
+  if (!v || !v.ok) return "validate: " + ((v && v.why) || "falla");
+  for (const f in v) {
+    const n = v[f];
+    if (typeof n !== "number" || !isFinite(n)) continue;
+    const a = bk.stat[f] || (bk.stat[f] = { min: n, max: n, sum: 0, n: 0 });
+    a.min = Math.min(a.min, n);
+    a.max = Math.max(a.max, n);
+    a.sum += n;
+    a.n++;
+  }
+  if (pzPlayable(g)) {
+    if (g.dims && g.dims[tier] && (sp.w !== g.dims[tier][0] || sp.h !== g.dims[tier][1])) return "tamaño distinto del declarado";
+    const a = pzAccess(g, sp);
+    if (!a.ok) return a.why;
+    if (!opts.noBot) {
+      const b = pzBotRun(g, sp);
+      if (!b.ok) return "bot: " + b.why;
+      for (const f of ["acts", "frames", "moves"]) {
+        const a2 = bk.stat["bot_" + f] || (bk.stat["bot_" + f] = { min: b[f], max: b[f], sum: 0, n: 0 });
+        a2.min = Math.min(a2.min, b[f]);
+        a2.max = Math.max(a2.max, b[f]);
+        a2.sum += b[f];
+        a2.n++;
+      }
+    }
+  }
+  return "";
+}
+// Recorre TODAS las semillas y tamaños que el juego puede usar (pool × niveles × tipos, más las variantes de cada generador) y comprueba,
+// para cada puzle: que make es determinista (mismo JSON dos veces) y lo anterior. Devuelve {total, ok, fails, failures[], byKind, ms, sum}.
 function pzValidateAll(opts) {
   opts = opts || {};
   const t0 = Date.now(),
     pool = opts.pool || PZ_CFG.pool,
-    out = { total: 0, ok: 0, fails: 0, failures: [], byKind: {}, ms: 0, sum: 0 };
+    out = { total: 0, ok: 0, fails: 0, failures: [], byKind: {}, ms: 0, sum: "" };
   let sum = 0x811c9dc5;
   for (const kind of opts.kinds || Object.keys(PZ_GENS)) {
     const g = PZ_GENS[kind];
@@ -2420,63 +2548,38 @@ function pzValidateAll(opts) {
       tk = Date.now();
     for (const tier of opts.tiers || g.tiers || [1, 2, 3]) {
       for (let idx = 0; idx < pool; idx++) {
-        out.total++;
-        bk.total++;
-        let why = "";
+        let sp = null,
+          list = [];
         try {
-          const sp = pzSpec(kind, idx, tier);
-          if (!sp || typeof sp !== "object") why = "make no devuelve un puzle";
-          else {
-            const js = JSON.stringify(sp);
-            if (!opts.fast) {
-              const sp2 = g.make(idx, tier);
-              if (JSON.stringify(sp2) !== js) why = "make no es determinista";
-            }
-            if (!why && JSON.parse(js).kind !== kind) why = "el spec no lleva su tipo";
-            if (!why) {
-              const v = g.validate(JSON.parse(js));
-              if (!v || !v.ok) why = "validate: " + ((v && v.why) || "falla");
-              else
-                for (const f in v) {
-                  const n = v[f];
-                  if (typeof n !== "number" || !isFinite(n)) continue;
-                  const a = bk.stat[f] || (bk.stat[f] = { min: n, max: n, sum: 0, n: 0 });
-                  a.min = Math.min(a.min, n);
-                  a.max = Math.max(a.max, n);
-                  a.sum += n;
-                  a.n++;
-                }
-            }
-            if (!why && pzPlayable(g)) {
-              if (g.dims && g.dims[tier] && (sp.w !== g.dims[tier][0] || sp.h !== g.dims[tier][1])) why = "tamaño distinto del declarado";
-              if (!why) {
-                const a = pzAccess(g, sp);
-                if (!a.ok) why = a.why;
-              }
-              if (!why && !opts.noBot) {
-                const b = pzBotRun(g, sp);
-                if (!b.ok) why = "bot: " + b.why;
-                else for (const f of ["acts", "frames", "moves"]) {
-                  const a = bk.stat["bot_" + f] || (bk.stat["bot_" + f] = { min: b[f], max: b[f], sum: 0, n: 0 });
-                  a.min = Math.min(a.min, b[f]);
-                  a.max = Math.max(a.max, b[f]);
-                  a.sum += b[f];
-                  a.n++;
-                }
-              }
-            }
-            for (let i = 0; i < js.length; i++) sum = Math.imul(sum ^ js.charCodeAt(i), 16777619);
-          }
+          sp = pzSpec(kind, idx, tier);
+          list.push(["", sp]);
+          if (sp && g.variants) for (const v of g.variants(idx, tier)) list.push(["variante: ", v]);
         } catch (err) {
-          why = "excepción: " + (err && err.message ? err.message : err);
+          list = [["", null]];
         }
-        if (why) {
-          out.fails++;
-          bk.fails++;
-          out.failures.length < 60 && out.failures.push({ kind, tier, seed: idx, why });
-        } else {
-          out.ok++;
-          bk.ok++;
+        for (const [tag, s] of list) {
+          out.total++;
+          bk.total++;
+          let why = "";
+          try {
+            if (!s || typeof s !== "object") why = "make no devuelve un puzle";
+            else {
+              const js = JSON.stringify(s);
+              if (!opts.fast && !tag && JSON.stringify(g.make(idx, tier)) !== js) why = "make no es determinista";
+              if (!why) why = pzCheckSpec(g, kind, tier, s, opts, bk);
+              for (let i = 0; i < js.length; i++) sum = Math.imul(sum ^ js.charCodeAt(i), 16777619);
+            }
+          } catch (err) {
+            why = "excepción: " + (err && err.message ? err.message : err);
+          }
+          if (why) {
+            out.fails++;
+            bk.fails++;
+            out.failures.length < 60 && out.failures.push({ kind, tier, seed: idx, why: tag + why });
+          } else {
+            out.ok++;
+            bk.ok++;
+          }
         }
       }
     }
