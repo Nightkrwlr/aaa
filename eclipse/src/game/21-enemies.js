@@ -1080,19 +1080,7 @@ var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
     updateBoss(e, t) {
       let i = x.player;
       if (!this.alerted) return 0;
-      if (this.phase === 1 && this.hp < this.maxHp * 0.5) {
-        ((this.phase = 2),
-          (this.spd *= 1.25),
-          ae.play("roar"),
-          x.R.addShake(0.6),
-          x.fx.ring(this.x, this.z, 8, this.def.m.e, 0.8),
-          (this.moveT = 0.5));
-        let a = this.def.moves.find((r) => r.startsWith("summon"));
-        if (a) {
-          let [, r, o] = a.split(":");
-          this.summon(r, Math.ceil(+o * 1.5));
-        }
-      }
+      // las fases del jefe (3 en jefes de región y secretos, 1 en los «Vástago») las gestiona 31g-bosses.js desde un envoltorio de updateBoss
       if (this.act) {
         let a = this.act;
         return (
@@ -1117,7 +1105,7 @@ var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
         return (
           this.moveI++,
           this.moveI % this.moves.length === 0 && bd(this.moves),
-          (this.moveT = (this.phase === 2 ? 1.5 : 2.3) + Q() * 0.8),
+          (this.moveT = bossMoveGap(this) + Q() * 0.8),
           this.startMove(a),
           0
         );
@@ -1135,7 +1123,7 @@ var RE = { insect: 11587648, mutant: 9048080, mech: 16752704, xeno: 12607743 },
         i = this,
         [s, a, r] = e.split(":"),
         o = +(r ?? a) || 6,
-        l = this.phase === 2,
+        l = this.phase >= 2,
         c = () => {
           i.face = Math.atan2(t.x - i.x, t.z - i.z);
         },

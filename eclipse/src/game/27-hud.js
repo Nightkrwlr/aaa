@@ -305,7 +305,7 @@ function ab(n) {
       let g = x.bossActive;
       ((f.style.display = "block"),
         Bi("#bName", g.name || g.def.n),
-        Bi("#bTitle", `${g.title || ""} \xB7 Nivel ${g.lvl}${g.phase === 2 ? " \xB7 FURIA" : ""}`),
+        Bi("#bTitle", `${g.title || ""} \xB7 Nivel ${g.lvl}${bossHudTag(g)}`),
         Fl("#bHp", qe(g.hp / g.maxHp, 0, 1) * 100 + "%"),
         Bi("#bHpT", `${yt(g.hp)} / ${yt(g.maxHp)}`));
     } else f.style.display = "none";
