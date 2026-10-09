@@ -338,7 +338,7 @@ export default async function (api) {
     e.hp = 0; e.kill({}); T.step(3);
     const items = G.pickups.filter((p) => p.k === 'item'), mats = G.pickups.filter((p) => p.k === 'mat');
     out.items = items.map((p) => p.item.r); out.mats = mats.map((p) => p.mat + ':' + p.val); out.trophy = eco.ground.slice(g0).map((p) => p.id);
-    out.kills = S.stats.kills - kills0; out.byArch = S.stats.byArch.estampida; out.st = slot.st; out.cd = +(slot.cd - t0).toFixed(0); out.live = R.live().length;
+    out.kills = S.stats.kills - kills0; out.byArch = S.stats.byArch.estampida; out.st = slot.st; out.cd = +(slot.cd - t0).toFixed(0); R.sweep(); out.live = R.live().length;   // el barrido que retira los cuerpos muertos corre a su ritmo: se fuerza para no depender de él
     out.log = R.RQ.log.map((l) => l[0]).join(',');
     // distribución de la pieza garantizada
     const N = 20000, c = [0, 0, 0, 0, 0, 0]; for (let i = 0; i < N; i++) c[eco.ecoRoll('rareGear', 1)]++;
