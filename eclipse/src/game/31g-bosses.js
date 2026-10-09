@@ -597,3 +597,176 @@ x.tick.push(() => {
 body.touch #bossbar .bt{font-size:9.5px}`;
   document.head.appendChild(st);
 }
+
+// ── D8c · RELIQUIAS DE JEFE ──────────────────────────────────────────────────────────────────────────────────────────────────
+// Cada jefe de región y cada jefe secreto guarda 2 «reliquias»: planos Legendarios (o Míticos) con NOMBRE propio, base fija y un poder
+// fijo (los de `Gn`). Son lo más raro del juego a propósito (ECONOMÍA fija el primer Legendario en ~20-30 h): no hay reliquia asegurada
+// la primera vez; cada muerte tiene una probabilidad pequeña y una garantía anti-mala-suerte (`pity`: tras N muertes sin reliquia de ese
+// jefe, la siguiente cae). En la guarida del jefe la probabilidad es el triple. Nunca se repite una reliquia ya conseguida, y como son planos, si ya tienes esa base el plano se convierte
+// en la reliquia (nombre, poder y rango) y además suelta módulos y materiales como cualquier plano repetido.
+// Los jefes «Vástago» y los de operaciones normales no sueltan reliquias; las guaridas de jefe (D8a) sí.
+x.cfg.bossLoot = {
+  chance: { boss: 0.02, secret: 0.04, final: 0.06 }, // probabilidad por muerte (≈ 28 / 16 / 10 muertes de media; la tabla normal del jefe aporta aparte su 3 % de Legendario)
+  pity: { boss: 40, secret: 25, final: 15 }, // muertes sin reliquia tras las que la siguiente está garantizada
+  lair: 3, // en la guarida del jefe (D8a) la probabilidad se multiplica por esto y la garantía llega antes (÷ esto)
+  life: 1800, // s que el plano espera en el suelo (con pilar de luz)
+  relics: {
+    reina: [
+      { id: "reina_a", type: "weapon", base: "acid", r: 4, pow: "split", n: "Aguijón de la Matriarca", lore: "Todavía gotea. Dicen que cada gota fue una hija suya." },
+      { id: "reina_b", type: "gear", base: "h_assault", r: 4, pow: "shieldBurst", n: "Corona de Quitina", lore: "Hecha de la coraza que la protegió doscientas noches. No protegió la última." },
+    ],
+    demoledor: [
+      { id: "demoledor_a", type: "weapon", base: "rocket", r: 4, pow: "bigBullets", n: "Martillo del Demoledor", lore: "Pesa más que el soldado que la lleva. Aun así, nadie la suelta." },
+      { id: "demoledor_b", type: "gear", base: "s_exo", r: 4, pow: "dashNova", n: "Coraza de Escombros", lore: "Hormigón, acero y un nombre que ya nadie recuerda." },
+    ],
+    kharsa: [
+      { id: "kharsa_a", type: "weapon", base: "sniper", r: 4, pow: "lastShot", n: "Aguijón de Kharsa", lore: "Una sola picadura bastaba. Aquí caben tres." },
+      { id: "kharsa_b", type: "gear", base: "b_asl", r: 4, pow: "adrenaline", n: "Botas de las Dunas", lore: "La arena las limpia sola. La sangre, no." },
+    ],
+    madre: [
+      { id: "madre_a", type: "weapon", base: "swarm", r: 4, pow: "homing", n: "Aliento de la Madre", lore: "Cada espora conoce el camino de vuelta a su madre. Ahora, también al enemigo." },
+      { id: "madre_b", type: "gear", base: "i_detox", r: 4, pow: "magnetLord", n: "Simbionte", lore: "No sabes cuándo empezó a latir contigo. Tampoco quieres saberlo." },
+    ],
+    wendigo: [
+      { id: "wendigo_a", type: "weapon", base: "cryo", r: 4, pow: "frostNova", n: "Colmillo de Escarcha", lore: "El frío no mata despacio: elige." },
+      { id: "wendigo_b", type: "gear", base: "s_arctic", r: 4, pow: "berserker", n: "Piel del Wendigo", lore: "Los registros dicen que fue un guardabosques. La piel no lo recuerda." },
+    ],
+    omega: [
+      { id: "omega_a", type: "weapon", base: "rail", r: 4, pow: "chainCrit", n: "Directiva OMEGA", lore: "Prioridad uno: eliminar. Prioridad dos: no preguntar por qué." },
+      { id: "omega_b", type: "gear", base: "m_battery", r: 4, pow: "orbitals", n: "Núcleo de Prometeo", lore: "Aún guarda carga. Aún guarda órdenes." },
+    ],
+    ifrit: [
+      { id: "ifrit_a", type: "weapon", base: "flamer", r: 4, pow: "overheat", n: "Aliento de Ifrit", lore: "Nunca se apaga del todo. Nunca ha querido." },
+      { id: "ifrit_b", type: "gear", base: "s_fire", r: 4, pow: "burnAura", n: "Corazón de Magma", lore: "Late despacio, como el volcán. Como el volcán, termina por despertar." },
+    ],
+    horror: [
+      { id: "horror_a", type: "weapon", base: "void", r: 4, pow: "blackhole", n: "Masa Crítica", lore: "La Zona decidió qué era un arma. Esto es lo que quedó." },
+      { id: "horror_b", type: "gear", base: "s_lead", r: 4, pow: "phoenix", n: "Último Turno", lore: "El dosímetro lleva meses en rojo. Su dueño nunca se quitó el traje." },
+    ],
+    mente: [
+      { id: "mente_a", type: "weapon", base: "plasma", r: 4, pow: "drone", n: "Voluntad Colectiva", lore: "Pensada por muchos. Disparada por uno." },
+      { id: "mente_b", type: "gear", base: "h_neural", r: 4, pow: "nightStalker", n: "Casco de la Mente", lore: "Si escuchas con atención, aún susurra una orden." },
+      { id: "mente_c", type: "weapon", base: "rifle", r: 5, pow: "vampire", pow2: "lastShot", n: "Eclipse", lore: "Una pieza de antes del Eclipse. Antes de todo. Alguien la dejó aquí para ti." },
+    ],
+    carnicero: [
+      { id: "carnicero_a", type: "weapon", base: "shotgun", r: 4, pow: "vampire", n: "Cuchilla del Carnicero", lore: "El matadero tenía un lema. Nadie recuerda cuál." },
+      { id: "carnicero_b", type: "gear", base: "s_vest", r: 4, pow: "luckyStar", n: "Delantal del Carnicero", lore: "Manchado de más de una vida. Aun así, da suerte." },
+    ],
+    antiguo: [
+      { id: "antiguo_a", type: "weapon", base: "laser", r: 4, pow: "homing", n: "Lente del Centinela", lore: "Vigiló un templo diez mil años. Ahora te apunta a ti." },
+      { id: "antiguo_b", type: "gear", base: "m_shield", r: 4, pow: "shieldBurst", n: "Égida Cristalina", lore: "El cristal recuerda cada golpe. Y los devuelve." },
+    ],
+    leviatan: [
+      { id: "leviatan_a", type: "weapon", base: "crossbow", r: 4, pow: "ricochetAll", n: "Arpón del Leviatán", lore: "Lo que se hunde en la marisma siempre vuelve a salir." },
+      { id: "leviatan_b", type: "gear", base: "h_nbq", r: 4, pow: "magnetLord", n: "Branquias del Abismo", lore: "Respirar bajo el agua cuesta caro. Esto lo cobra en silencio." },
+    ],
+    titan: [
+      { id: "titan_a", type: "weapon", base: "minigun", r: 4, pow: "bigBullets", n: "Puño del Titán", lore: "El fabricante garantizaba cien mil disparos. No contó con uno que no se detuviera." },
+      { id: "titan_b", type: "gear", base: "g_gaunt", r: 4, pow: "berserker", n: "Servos de Hierro", lore: "Cada articulación recuerda el último golpe." },
+    ],
+    avatar: [
+      { id: "avatar_a", type: "weapon", base: "glauncher", r: 4, pow: "explodeKill", n: "Estrella Muerta", lore: "La luz que ves llegó hace mucho. Lo que explota, no." },
+      { id: "avatar_b", type: "gear", base: "s_stealth", r: 4, pow: "shieldBurst", n: "Velo del Vacío", lore: "Entre un parpadeo y otro, el mundo no está." },
+      { id: "avatar_c", type: "weapon", base: "disc", r: 5, pow: "ricochetAll", pow2: "split", n: "Fin de la Luz", lore: "Cuando se apague la última luz, esto seguirá girando." },
+    ],
+  },
+};
+var BL = x.cfg.bossLoot;
+const BL_BY_ID = {};
+for (const k in BL.relics) for (const r of BL.relics[k]) ((r.boss = k), (BL_BY_ID[r.id] = r));
+ecoSrcLabel.bossRelic = "Reliquia de jefe";
+
+function blState() {
+  const S = x.S;
+  return S.relics && S.relics.v === 1 ? S.relics : (S.relics = { v: 1, own: {}, pity: {} });
+}
+function blTier(b) {
+  return b.id === "mente" || b.id === "avatar" ? "final" : b.def && b.def.secret ? "secret" : "boss";
+}
+// la reliquia como plano: se genera como un Legendario normal de esa base y se le fijan nombre, poder y marca
+function blItem(rel, lvl) {
+  const it = rel.type === "weapon" ? Ca(lvl, rel.r, rel.base) : Js(lvl, rel.r, rel.base);
+  it.pow = rel.pow;
+  if (rel.pow2) it.pow2 = rel.pow2;
+  else delete it.pow2;
+  it.uname = rel.n;
+  it.lore = rel.lore;
+  it.relic = rel.id;
+  it.name = Ol(it);
+  return it;
+}
+// ¿cae una reliquia de este jefe? (`force` = id para pruebas)
+function blRoll(b, force) {
+  const st = blState(),
+    cand = (BL.relics[b.id] || []).filter((r) => !st.own[r.id]);
+  if (!cand.length) return null;
+  if (force) return cand.find((r) => r.id === force) || null;
+  const tier = blTier(b),
+    k = b.lair ? BL.lair : 1;
+  st.pity[b.id] = (st.pity[b.id] | 0) + 1;
+  if (st.pity[b.id] >= Math.ceil(BL.pity[tier] / k) || Q() < BL.chance[tier] * k) {
+    st.pity[b.id] = 0;
+    return ecoPick(cand);
+  }
+  return null;
+}
+function blDrop(b, force) {
+  if (!b || (b.mini && !force) || (b.arena && b.arena.op && !b.lair && !force)) return null;
+  const rel = blRoll(b, force);
+  if (!rel) return null;
+  const it = blItem(rel, b.lvl),
+    p = Nt("item", b.x, b.z, { item: it, life: BL.life, spd: 5 });
+  ecoDropped(p, it, "bossRelic");
+  ee("save");
+  return it;
+}
+It("bossKilled", (b) => blDrop(b));
+
+// al recoger el plano: queda anotada y, si ya tenías esa base, ese plano pasa a ser la reliquia
+{
+  const _Ss = Ss;
+  Ss = function (n, e = {}) {
+    const r = _Ss(n, e);
+    if (n && n.relic && BL_BY_ID[n.relic]) {
+      blState().own[n.relic] = Math.round(x.S.playTime || 0);
+      if (r && r.kind === "dup" && r.piece) {
+        const i = r.piece;
+        i.uname = n.uname;
+        i.lore = n.lore;
+        i.relic = n.relic;
+        i.pow = n.pow;
+        if (n.pow2) i.pow2 = n.pow2;
+        i.r = Math.max(i.r, n.r);
+        i.name = Ol(i);
+        e.silent || ee("toast", `Tu plano pasa a ser la reliquia «${n.uname}»`, "good");
+        x.player && x.player.recalc();
+        ee("inv");
+      }
+      ee("relic", n.relic);
+    }
+    return r;
+  };
+}
+
+// registro de reliquias en la pestaña de hitos
+{
+  const _hh = ecoHitosHtml;
+  ecoHitosHtml = function () {
+    const st = blState(),
+      names = (id) => (BL_BY_ID[id] || {}).n,
+      total = Object.keys(BL_BY_ID).length,
+      got = Object.keys(st.own).filter((id) => BL_BY_ID[id]).length;
+    let h = `<div class="eco-sum"><span><b style="color:${Ct[4].css}">${got}</b> / ${total} reliquias de jefe</span><span class="muted">Muy raras: cada jefe tiene una pequeña probabilidad por muerte y una garantía tras varias</span></div>`;
+    for (const k in BL.relics) {
+      const def = En[k];
+      h += `<div class="eco-hit" style="--c:${Ct[4].css}"><b>${ke(def ? def.n : k)}</b><small>${BL.relics[k]
+        .map((r) => (st.own[r.id] ? `<span style="color:${Ct[r.r].css}">◆ ${ke(r.n)}</span>` : `<span class="muted">◇ ??? (${r.type === "weapon" ? "arma" : "equipo"})</span>`))
+        .join(" · ")}</small></div>`;
+    }
+    return h + _hh();
+  };
+}
+x.migrations.push((S) => {
+  if (!S.relics || S.relics.v !== 1) S.relics = { v: 1, own: S.relics && S.relics.own ? S.relics.own : {}, pity: {} };
+});
+window.__bossLoot = { cfg: BL, byId: BL_BY_ID, state: blState, roll: blRoll, drop: blDrop, item: blItem };
