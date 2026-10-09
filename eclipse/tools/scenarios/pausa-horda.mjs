@@ -63,13 +63,19 @@ export default async function (api) {
   console.log('pausa', JSON.stringify({ C0, mid, C1 }));
   check('la pausa (7 s reales) se descuenta del reloj del mundo (≥ 6 s «perdidos»)', mid.paused && mid.lost - C0.lost0 >= 6000, JSON.stringify({ lost0: C0.lost0, lostMid: mid.lost, dt: Date.now() - t0 }));
   check('tras la pausa NO se ha repoblado nada (el enfriamiento de 4 s no ha corrido): ningún enemigo nuevo', C1.n <= mid.n + 1, JSON.stringify({ mid: mid.n, after: C1.n }));
-  // con el juego corriendo, al cumplirse el enfriamiento (4 s de JUEGO, no de reloj: el motor por software va lento) vuelven las manadas, una vez cada una
+  // con el juego corriendo, al cumplirse el enfriamiento (4 s de JUEGO, no de reloj: el motor por software va lento) vuelven las manadas, UNA vez cada una
+  // (se cuentan las sueltas por manada; el momento exacto depende de la velocidad del motor, así que no se miden ventanas de tiempo)
+  await ev(() => {
+    const W = window.__G.world, orig = W.spawnPack; window.__spc = {};
+    W.spawnPack = function (o) { const was = o.spawned; const r = orig.apply(this, arguments); if (!was && o.spawned && o.pack && o.pack.length) window.__spc[o.e.id] = (window.__spc[o.e.id] || 0) + 1; return r; };
+  });
   let first = -1, seen = [];
   for (let k = 0; k < 40 && first < 0; k++) { await page.waitForTimeout(1000); const n = await ev(() => { window.__step(2, 1 / 30); return window.__G.enemies.filter((e) => !e.dead && !e.static).length; }); seen.push(n); if (n > C1.n) first = k; }
-  await page.waitForTimeout(5000);
-  const C3 = await ev(() => { const G = window.__G; window.__step(10, 1 / 30); return G.enemies.filter((e) => !e.dead && !e.static).length; });
+  for (let k = 0; k < 10; k++) { await page.waitForTimeout(1000); await ev(() => window.__step(2, 1 / 30)); }   // 10 s más: cualquier segunda suelta saldría aquí
+  const C3 = await ev(() => { const G = window.__G; window.__step(10, 1 / 30); return { n: G.enemies.filter((e) => !e.dead && !e.static).length, spc: { ...window.__spc } }; });
+  const spcMax = Math.max(0, ...Object.values(C3.spc)), spcN = Object.keys(C3.spc).length;
   console.log('tras correr', JSON.stringify({ first, seen, C3 }));
-  check('con el juego corriendo, al cumplirse el enfriamiento (4 s de juego) vuelven las manadas y 5 s después la cuenta no ha seguido subiendo', first >= 0 && C3 - Math.max(...seen) <= 3 && C3 <= 35, JSON.stringify({ antes: C1.n, first, max: Math.max(...seen), c3: C3 }));
+  check('con el juego corriendo, al cumplirse el enfriamiento (4 s de juego) vuelven las manadas (≥ 1) y cada una se suelta UNA sola vez en los 10+ s siguientes', first >= 0 && spcN >= 1 && spcMax === 1 && C3.n <= 35, JSON.stringify({ antes: C1.n, first, manadas: spcN, maxVeces: spcMax, c3: C3.n }));
   await ev(() => { window.__Fi.pack = 15 * 6e4; });
 
   // ── 3) pestaña oculta: el juego se pausa solo y ese tiempo tampoco cuenta ──

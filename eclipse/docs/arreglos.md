@@ -22,5 +22,12 @@ Cada entrada: qué veía el jugador, la causa real, el arreglo y cómo se compru
   (`26-spawner.js`, marcas de zonas en `22-quests.js`, jefes y guaridas en `31g-bosses.js`, manadas guardadas en `31e2-zonas.js`).
 * `31e2-zonas.js`: **tope de seguridad** (`x.cfg.zonas.exit.cap`, 40): con tantos enemigos vivos no se suelta ninguna manada del mundo más; esperan a que baje la cuenta.
 
-**Comprobación:** `tools/scenarios/pausa-horda.mjs` (8 comprobaciones): con el enfriamiento cumplido la cuenta se queda plana (de 3 → 197 a 17 → 14); 7 s de pausa real se descuentan del reloj
+**Comprobación:** `tools/scenarios/pausa-horda.mjs` (8 comprobaciones): con el enfriamiento cumplido la cuenta se queda plana (de 3 → 197 a 17 → 16 en 10 s); 7 s de pausa real se descuentan del reloj
 («perdidos» ≥ 6 s) y no repueblan nada; pasado el enfriamiento de juego vuelven las manadas una vez; la pestaña oculta pausa y se descuenta; el tope frena la suelta de manadas.
+
+**Publicado:** build `202610091658-09dc2bb` en `operacion-eclipse-remaster` (la copia en vivo es idéntica a la compilada, mismo sha256). Puerta de regresión sobre esa compilación: pausa-horda 8/8, humo 13/13,
+zonas-salida 11/11, jefes-guarida 17/17, misiones-principales 7/7, jefes-sello 26/26, jefes-botin 18/18, sorpresas-eclipse 25/25, sorpresas-asedio 26/26 y maquinas-core 18/19 (el fallo no toca
+este arreglo: un dron aliado no hirió a un blanco quieto a 6 m en una pasada; se investiga y corrige en el lote 2).
+
+**Nota para las pruebas:** `gnow()` va por detrás de la hora real tanto como tiempo haya pasado en pausa o con cuadros largos (el motor por software va a trompicones), así que un escenario que falsee
+marcas con `Date.now()` debe tener en cuenta `window.__GN.lost`.
