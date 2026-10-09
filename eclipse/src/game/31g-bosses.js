@@ -704,7 +704,7 @@ function blRoll(b, force) {
   const tier = blTier(b),
     k = b.lair ? BL.lair : 1;
   st.pity[b.id] = (st.pity[b.id] | 0) + 1;
-  if (st.pity[b.id] >= Math.ceil(BL.pity[tier] / k) || Q() < BL.chance[tier] * k) {
+  if (st.pity[b.id] >= Math.ceil(BL.pity[tier] / k) || Q() < BL.chance[tier] * k * sxBossMul()) {
     st.pity[b.id] = 0;
     return ecoPick(cand);
   }
