@@ -73,6 +73,8 @@ export default async function (api) {
     for (const e of stairs.slice(0, 12)) {
       G.player.x = e.x + 1.5; G.player.z = e.z; G.world.enterSub(e);
       window.__step(30, 1 / 30);
+      // las manadas del subterráneo (distintas en cada entrada) empujarían al bot en mitad de un movimiento: se barren
+      for (const q of G.enemies) if (!q.dead) { q.dead = true; q.deadT = 0; }
       const ent = G.map.ents.find((q) => q.k === 'puzzle');
       if (!ent) { G.world.leaveSub(); window.__step(10, 1 / 30); continue; }
       const sid = 'sub:' + e.id;
@@ -80,6 +82,7 @@ export default async function (api) {
       const d = ent.pz;
       G.player.x = ent.x; G.player.z = ent.z + d.H / 2 + 1.5; G.player.inv = 9999;
       window.__step(20, 1 / 30);
+      for (const q of G.enemies) if (!q.dead) { q.dead = true; q.deadT = 0; }
       const rt = G.world.rt.get(ent.id);
       const mounted = !!(rt && rt.pz);
       const kind = d.kind;

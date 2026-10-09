@@ -3723,6 +3723,9 @@ function pzBotLive(rt, o) {
     aim0 = S.settings.aim;
   const stepN = (n) => window.__step(n, DT);
   S.settings.aim = "auto"; // con el ratón, la mirada la manda el puntero y el bot no la controla
+  // sin arma no hay objetivo automático: un enemigo cercano (del mundo o del subterráneo) no le giraría la mirada a mitad de un movimiento
+  const ws0 = p.ws;
+  p.ws = [null, null];
   const put = (lx, lz) => {
     const [wx, wz] = pzLocalToWorld(z, lx, lz);
     p.x = wx;
@@ -3742,6 +3745,7 @@ function pzBotLive(rt, o) {
   const plan = g.bot(z.spec, z.st, undefined, undefined);
   if (!plan) {
     S.settings.aim = aim0;
+    p.ws = ws0;
     return { ok: false, why: "sin plan" };
   }
   if (g.botMode === "phase") {
@@ -3795,6 +3799,7 @@ function pzBotLive(rt, o) {
     }
   }
   S.settings.aim = aim0;
+    p.ws = ws0;
   return { ok: rt.pzDone === true && !fail, why: fail || (rt.pzDone ? "" : "no resuelto"), acted, errors: z.st.errors, moves: z.st.moves };
 }
 
