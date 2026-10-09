@@ -471,16 +471,16 @@ export default async function (api) {
   const Hd = await ev(() => {
     const G = window.__G, R = window.__rare, T = window.__t, S = R.state(), out = {};
     T.clear(); const s0 = T.arena(0, 0, 0); T.calm();
-    const e = R.spawn('coraza', 5, s0.x + 8, s0.z, { name: 'Casco Duro' }); T.calm(); G.player.x = s0.x; G.player.z = s0.z; T.step(15);
+    const e = R.spawn('coraza', 5, s0.x + 8, s0.z, { name: 'Casco Duro' }); T.calm(); G.player.x = s0.x; G.player.z = s0.z; T.step(15); R.hud.tick(1); // la barra se refresca cada 0,1 s de reloj: se fuerza para no depender del ritmo del cuadro
     const bar = document.getElementById('rqBar'); out.focus = R.hud.focus() && R.hud.focus().rq.name; out.live = R.live().map((q) => q.rq.name + ':' + q.alerted + ':' + !q.dead); out.on = !!bar && bar.classList.contains('on'); out.name = bar && bar.querySelector('.nm').textContent; out.pct0 = bar && bar.querySelector('.hp i').style.width; out.stt = bar && bar.querySelector('.stt').textContent; out.inv = bar && bar.querySelector('.hp').classList.contains('inv');
-    e.hp = e.maxHp * 0.5; T.step(8); out.pct1 = bar.querySelector('.hp i').style.width;
+    e.hp = e.maxHp * 0.5; T.step(8); R.hud.tick(1); out.pct1 = bar.querySelector('.hp i').style.width;
     out.inParent = bar && bar.parentNode && bar.parentNode.id;
     // minimapa: dibuja marcas sin errores
     const calls = { arc: 0, fill: 0, stroke: 0 }; const ctx = new Proxy({}, { get: (t, k) => (k in calls ? () => { calls[k]++; } : typeof k === 'string' ? (typeof t[k] === 'undefined' ? () => {} : t[k]) : undefined), set: (t, k, v) => { t[k] = v; return true; } });
     let err = null; try { R.pings(ctx, 160, 1.6); } catch (e2) { err = String(e2); } out.pingErr = err; out.arcs = calls.arc; out.fills = calls.fill;
     const slot = S.slots[e.rq.slot]; slot.seen = 1; calls.arc = 0; calls.fill = 0; R.pings(ctx, 160, 1.6); out.arcsSeen = calls.arc; out.fillsSeen = calls.fill;
     // diario: contadores
-    out.hitos = R.hitos(); T.clear(); T.step(15); out.off = !bar.classList.contains('on');
+    out.hitos = R.hitos(); T.clear(); T.step(15); R.hud.tick(1); out.off = !bar.classList.contains('on');
     return out;
   });
   console.log('hud', JSON.stringify(Hd));
