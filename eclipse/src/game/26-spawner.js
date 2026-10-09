@@ -437,18 +437,18 @@ var VE = 42,
         ? !!this.rt.get(e.id)?.done
         : i
           ? e.eff === "relay"
-            ? Date.now() - i < Fi.relay
+            ? gnow() - i < Fi.relay
             : e.eff === "boss"
-              ? Date.now() - i < 30 * 6e4
+              ? gnow() - i < 30 * 6e4
               : e.eff === "cache"
-                ? Date.now() - i < Fi.lock
+                ? gnow() - i < Fi.lock
                 : !0
           : !1;
     }
     nestDead(e) {
       if (x.mode === "op") return !!this.rt.get(e.id)?.dead;
       let t = x.S.world.nests[e.id];
-      return t && Date.now() - t < Fi.nest;
+      return t && gnow() - t < Fi.nest;
     }
     npcEnt(e) {
       return this.map.ents.find((t) => t.k === "npc" && t.npc === e) || (x.mode === "op" && Po, null);
@@ -687,8 +687,8 @@ var VE = 42,
             a.k === "nest"
               ? x.mode === "op"
                 ? ((o.dead = !0), x.op.nestsLeft--)
-                : (i.world.nests[a.id] = Date.now())
-              : ((o.killedAt = Date.now()), a.k === "spawnpt" && (o.enemy = null))),
+                : (i.world.nests[a.id] = gnow())
+              : ((o.killedAt = gnow()), a.k === "spawnpt" && (o.enemy = null))),
           o.enemy && !o.enemy.dead && r > 60 && ((o.enemy.dead = !0), (o.enemy.deadT = 0), (o.enemy = null)),
           o.enemy &&
             o.enemy.dead &&
@@ -699,30 +699,31 @@ var VE = 42,
           a.k === "spawnpt" &&
             r < 28 &&
             !o.enemy &&
-            (!o.killedAt || Date.now() - o.killedAt > 10 * 6e4) &&
+            (!o.killedAt || gnow() - o.killedAt > 10 * 6e4) &&
             ((o.enemy = In(a.e, this.lvlAt(a.x, a.z), a.x, a.z, { persist: !0 })), (o.deadMarked = !1)),
           a.k === "spawnpack" &&
             r < (a.op ? 20 : 24) &&
             !o.spawned &&
-            (!o.clearedAt || Date.now() - o.clearedAt > Fi.pack) &&
+            (!o.clearedAt || gnow() - o.clearedAt > Fi.pack) &&
             this.spawnPack(o),
           a.k === "spawnpack" &&
             o.spawned &&
             o.pack &&
             o.pack.every((l) => l.dead) &&
             !o.clearedAt &&
-            (o.clearedAt = Date.now()),
+            (o.clearedAt = gnow()),
           a.k === "spawnpack" && !a.op && o.spawned && o.pack && !o.clearedAt && r > 60)
         ) {
           for (let l of o.pack) l.dead || ((l.dead = !0), (l.deadT = 0));
           ((o.spawned = !1), (o.pack = null));
         }
+        // terminado el enfriamiento la manada vuelve UNA vez: hay que borrar también la marca de «despejada» (si no, cada pasada del barrido la volvía a soltar: una horda sin fin)
         (a.k === "spawnpack" &&
           o.spawned &&
           o.clearedAt &&
           !a.op &&
-          Date.now() - o.clearedAt > Fi.pack &&
-          ((o.spawned = !1), (o.pack = null)),
+          gnow() - o.clearedAt > Fi.pack &&
+          ((o.spawned = !1), (o.pack = null), (o.clearedAt = null)),
           a.k === "bossarena" && this.arenaCheck(o, r),
           a.k === "beacon" &&
             r < 6 &&
@@ -761,7 +762,7 @@ var VE = 42,
         e.enemy &&
           e.enemy.dead &&
           !e.done &&
-          ((e.done = !0), (s.world.bosses["secret_" + i.reg] = Date.now()), ee("save"));
+          ((e.done = !0), (s.world.bosses["secret_" + i.reg] = gnow()), ee("save"));
         return;
       }
       let r = i.op ? null : "reg" + i.reg;
@@ -771,8 +772,8 @@ var VE = 42,
         ((e.done = !0),
         (e.enemy = null),
         r &&
-          ((s.world.bosses[r] = s.world.bosses[r] || Date.now()),
-          (s.world.bosses[r + "_t"] = Date.now()),
+          ((s.world.bosses[r] = s.world.bosses[r] || gnow()),
+          (s.world.bosses[r + "_t"] = gnow()),
           this.checkGatesUnlock(),
           ee("save", !0)),
         i.op && x.op && x.op.obj === "boss" && this.opComplete());
@@ -781,7 +782,7 @@ var VE = 42,
       (!l &&
         !e.pending &&
         t < i.rad + 1.5 &&
-        (i.op ? !e.done : !o || Date.now() - o > Fi.boss) &&
+        (i.op ? !e.done : !o || gnow() - o > Fi.boss) &&
         bossGateArena(i, t) && // 31g-bosses.js: la guarida sigue sellada hasta cumplir misión, nivel y sellos
         ((e.pending = 1.2),
         (e.done = !1),
@@ -1033,7 +1034,7 @@ var VE = 42,
     }
     isConsumed(e) {
       let t = x.S.world,
-        i = Date.now();
+        i = gnow();
       return x.mode === "op" || e.temp
         ? !!this.rt.get(e.id)?.used
         : e.k === "chest"
@@ -1053,7 +1054,7 @@ var VE = 42,
     }
     shrineReady(e) {
       let t = x.mode === "op" ? this.rt.get(e.id)?.usedAt : x.S.world.shrines[e.id];
-      return !t || Date.now() - t > Fi.shrine;
+      return !t || gnow() - t > Fi.shrine;
     }
     revealFog() {
       if (x.mode !== "world") return;
@@ -1194,7 +1195,7 @@ var VE = 42,
             }[e.kind] || "Entrar";
           return this.subReady(e)
             ? `${s} \xB7 ${Ha[e.enc].n}`
-            : `Zona despejada \xB7 se repuebla en ${Math.ceil((Fi.sub - (Date.now() - x.S.world.subs[e.id])) / 6e4)} min`;
+            : `Zona despejada \xB7 se repuebla en ${Math.ceil((Fi.sub - (gnow() - x.S.world.subs[e.id])) / 6e4)} min`;
         }
         case "exit":
           return "Volver a la superficie";
@@ -1307,7 +1308,7 @@ var VE = 42,
     }
     consume(e, t) {
       let i = x.S.world,
-        s = Date.now();
+        s = gnow();
       return this.isConsumed(e)
         ? !1
         : x.mode === "op" || e.temp
@@ -1335,7 +1336,7 @@ var VE = 42,
     }
     useShrine(e, t) {
       if (!this.shrineReady(e)) return;
-      x.mode === "op" ? (t.usedAt = Date.now()) : (x.S.world.shrines[e.id] = Date.now());
+      x.mode === "op" ? (t.usedAt = gnow()) : (x.S.world.shrines[e.id] = gnow());
       let i = Yt(wo);
       (x.player.addBuff(i, 45),
         x.fx.ring(e.x, e.z, 4, 16766023, 0.7),
@@ -1374,7 +1375,7 @@ var VE = 42,
       }
       switch (
         (s.stats.terminals++,
-        x.mode === "op" ? (t.done = !0) : (s.world.term[e.id] = Date.now()),
+        x.mode === "op" ? (t.done = !0) : (s.world.term[e.id] = gnow()),
         ae.play("success"),
         ht.onHack(e),
         e.eff)
@@ -1463,7 +1464,7 @@ var VE = 42,
     }
     subReady(e) {
       let t = x.S.world.subs?.[e.id];
-      return !t || Date.now() - t > Fi.sub;
+      return !t || gnow() - t > Fi.sub;
     }
     enterSub(e) {
       let t = De[e.reg] || De[0],

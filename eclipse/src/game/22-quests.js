@@ -837,12 +837,12 @@ var IE = [
       if ((e.enc !== "puzzle" && this.seal(!1), !n)) {
         ((e.failed = !0),
           (e.state = "over"),
-          (t.world.subs[e.op.ent.id] = Date.now() - OE + 5 * 6e4),
+          (t.world.subs[e.op.ent.id] = gnow() - OE + 5 * 6e4),
           ee("banner", "MISI\xD3N FALLIDA", "Vuelve a intentarlo m\xE1s tarde", "#ff4f5e"),
           ee("save", !0));
         return;
       }
-      ((e.done = !0), (e.state = "over"), (t.world.subs[e.op.ent.id] = Date.now()), ae.play("success"));
+      ((e.done = !0), (e.state = "over"), (t.world.subs[e.op.ent.id] = gnow()), ae.play("success"));
       let r = e.targets.filter((d) => d.hp > 0).length,
         o =
           {

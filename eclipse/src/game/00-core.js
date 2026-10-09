@@ -94,3 +94,12 @@ var Kl = class {
   }
 };
 
+
+// ════════ Reloj del mundo ════════
+// Los enfriamientos del mundo (manadas, nidos, cofres, santuarios, jefes, zonas, guaridas…) comparan marcas de tiempo REAL guardadas en la partida. Con el juego en pausa, en el menú
+// o con la pestaña oculta ese reloj seguía corriendo y, al volver, todo se había «repoblado» de golpe (y las manadas despejadas hacía ≥ 15 min reaparecían sin parar). `gnow()` es la
+// hora real MENOS el tiempo en que el juego no ha corrido (lo suma el bucle principal): conserva la escala de Date.now(), así que las marcas de partidas antiguas siguen valiendo.
+var GN = { lost: 0 };
+function gnow() {
+  return Date.now() - GN.lost;
+}

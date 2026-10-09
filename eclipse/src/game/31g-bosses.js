@@ -795,7 +795,7 @@ x.migrations.push((S) => {
 });
 
 const LA = x.cfg.lair;
-const laReady = (reg) => !x.S.world.lair || !x.S.world.lair[reg] || Date.now() - x.S.world.lair[reg] > LA.cooldownMin * 6e4;
+const laReady = (reg) => !x.S.world.lair || !x.S.world.lair[reg] || gnow() - x.S.world.lair[reg] > LA.cooldownMin * 6e4;
 function laStatus(arena) {
   // 'sealed' → faltan requisitos · 'open' → se puede descender · 'calm' → conquistada hace poco (cooldown)
   if (!arena || arena.op || arena.secret || !(arena.reg >= 0) || !De[arena.reg] || !x.S.bossGate) return "none";
@@ -804,7 +804,7 @@ function laStatus(arena) {
   return laReady(arena.reg) ? "open" : "calm";
 }
 function laMinutes(reg) {
-  return Math.max(1, Math.ceil((LA.cooldownMin * 6e4 - (Date.now() - x.S.world.lair[reg])) / 6e4));
+  return Math.max(1, Math.ceil((LA.cooldownMin * 6e4 - (gnow() - x.S.world.lair[reg])) / 6e4));
 }
 
 // el mapa: el diseño de «minijefe» (sala grande con pilares) y la sala del encuentro marcada como guarida
@@ -979,9 +979,9 @@ function laEnter(arena) {
     const e = N.st,
       reg = e.op.reg,
       W = x.S.world;
-    W.bosses["reg" + reg] = W.bosses["reg" + reg] || Date.now();
-    W.bosses["reg" + reg + "_t"] = Date.now();
-    (W.lair || (W.lair = {}))[reg] = Date.now();
+    W.bosses["reg" + reg] = W.bosses["reg" + reg] || gnow();
+    W.bosses["reg" + reg + "_t"] = gnow();
+    (W.lair || (W.lair = {}))[reg] = gnow();
     x.world.checkGatesUnlock();
     // recompensas como un minijefe (cofre de nivel 3, más XP y núcleos) y aviso propio
     e.enc = "miniboss";

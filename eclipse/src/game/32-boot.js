@@ -364,7 +364,10 @@ function mS() {
 function Ub(n) {
   requestAnimationFrame(Ub);
   let e = (n - Db) / 1e3;
+  const raw = e;
   if (((Db = n), e > 0.05 && (e = 0.05), e <= 0)) return;
+  // tiempo en que el juego NO corre (pausa, menú principal, pestaña oculta o un cuadro larguísimo): no cuenta para los enfriamientos del mundo (ver gnow en 00-core.js)
+  GN.lost += (Fo || x.paused || !x.started ? raw : raw - e) * 1e3;
   ((x.dt = e), (zo.uTime.value = (zo.uTime.value + e) % 3600));
   let t = x.R,
     i = x.player;
@@ -502,6 +505,9 @@ window.__dbg = {
 
 // ════════ ganchos añadidos por el proyecto (no estaban en el original) ════════
 window.__De = De;
+// pruebas del reloj del mundo (pausa y enfriamientos): GN = tiempo perdido acumulado, Fi = enfriamientos del mundo en ms
+window.__GN = GN;
+window.__Fi = Fi;
 window.__regionCenter = (key) => {
   const r = De.find((q) => q.key === key);
   return r ? { x: (r.gx + 0.5) * qt, z: (r.gz + 0.5) * qt, id: r.id } : null;
