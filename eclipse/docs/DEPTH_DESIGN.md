@@ -249,10 +249,10 @@ Una mina de 1,8 min de farmeo ahorra ≈ 15 s de combate contra una manada de 16
 
 ## 5. Frentes de la ola siguiente (resumen; se detallan al empezarlos)
 
-**Estado de las olas (oct 2026):** D1 (ECONOMÍA, TALENTOS, GADGETS) y D2 (LORE, HACKEO, PUZLES) están hechas y publicadas; cada una tiene su
-documento `docs/frente-<nombre>.md` con Estado, números medidos, pendiente y contratos (`frente-lore.md`, `frente-hackeo.md`, `frente-puzles.md`).
-De D8 (JEFES Y GUARIDAS) está hecha la primera pieza, el **sello de la guarida** (`frente-jefes.md`): los jefes de región ya no aparecen al pisar
-la arena. Quedan D8 (guaridas propias y combates de 3 fases), D9 (MUNDO ORGÁNICO) y D10 (SORPRESAS). Lo que sigue es el texto de diseño original.
+**Estado de las olas (oct 2026):** D1 (ECONOMÍA, TALENTOS, GADGETS), D2 (LORE, HACKEO, PUZLES) y D8 (JEFES Y GUARIDAS: sello de requisitos,
+guaridas por región, combates en tres fases y reliquias de jefe) están hechas; cada frente tiene su documento `docs/frente-<nombre>.md` con Estado,
+números medidos, pendiente y contratos (`frente-lore.md`, `frente-hackeo.md`, `frente-puzles.md`, `frente-jefes.md`). Quedan D9 (MUNDO ORGÁNICO) y
+D10 (SORPRESAS). Lo que sigue es el texto de diseño original.
 
 - **LORE (D5):** libros, chips y grabaciones (≈ 70 entradas nuevas en español, tono ciencia-ficción militar sobrio) repartidos por estanterías, cadáveres, terminales y guaridas; **chips** cifrados que se descifran con hackeo; **grabaciones** con subtítulos y voz sintetizada (`07-audio.js`); colecciones por región con recompensa (talento, plano, revelar mapa). Archivo (`L`) con pestañas Libros/Chips/Grabaciones/Hitos. *Biblia:* ARGOS sabía lo del **Proyecto ECLIPSE** (el laboratorio del Complejo emitía una señal para despertar a la Mente latente bajo la caldera); los Señores del Enjambre fueron personas con nombre (cada jefe tiene un registro de «quién fue»); «eclipse» es también el alineamiento en el que la señal es más fuerte (§9). Las pistas de lore alimentan códigos de puzles.
 - **HACKEO (D6):** nivel de hackeo (`S.hack`), programas/herramientas consumibles, **traza** (alarma + contraataque), objetivos nuevos (cámaras acorazadas multi-capa, torretas y drones enemigos controlables unos segundos, mecánicos desactivables, chips), 4-5 minijuegos nuevos (cortafuegos tipo breakout, cifrado por sustitución con pista del lore, enrutado en grafo, sintonía de frecuencia, fuerza bruta a ritmo) apilables en 2-3 capas; recompensas por riesgo.

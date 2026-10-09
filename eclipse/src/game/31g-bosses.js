@@ -770,3 +770,275 @@ x.migrations.push((S) => {
   if (!S.relics || S.relics.v !== 1) S.relics = { v: 1, own: S.relics && S.relics.own ? S.relics.own : {}, pity: {} };
 });
 window.__bossLoot = { cfg: BL, byId: BL_BY_ID, state: blState, roll: blRoll, drop: blDrop, item: blItem };
+
+// ── D8a · GUARIDAS DE JEFE ───────────────────────────────────────────────────────────────────────────────────────────────────
+// La primera vez, el jefe de una región ya no espera en un claro: vive en una GUARIDA bajo su arena. Cuando la guarida está abierta (misión +
+// nivel + sellos, ver arriba) el centro de la arena es un altar: «USAR» baja a una mazmorra propia con el tema de la región (nido, metro,
+// templo, cueva de esporas, caverna de hielo, núcleo del laboratorio, tubo de lava, necrópolis, cámara de la Mente):
+//   1. antesala  los guardianes de siempre (manadas) y, a veces, un acertijo (D7)
+//   2. sala media  un GUARDIÁN (versión reducida del jefe) tiene cerrada la puerta de la arena: al caer, se abre
+//   3. arena  el jefe de verdad, con sus tres fases; la puerta se cierra a la espalda
+// Al vencerlo cuenta como primera muerte (abre el paso a la zona siguiente, Sigilo, expediente de lore) y el cofre es de nivel 3. La guarida se
+// puede repetir a los `cooldownMin` minutos (el triple de probabilidad de reliquia, D8c). El claro de la superficie ya no invoca al jefe: la
+// guarida es la única vía (también para quien ya lo había abatido antes de esta versión: el altar se activa igual, sin pedir sellos).
+// Se apoya en el generador de mazmorras (_x, diseño «minijefe») y en el gestor de encuentros (Ni); no se cambia ninguno de los dos.
+x.cfg.lair = {
+  cooldownMin: 45, // minutos hasta poder repetir la guarida
+  guardianHp: 0.3, // vida del guardián frente a la del jefe
+  kinds: ["cave", "sewer", "cave", "cave", "cave", "hatch", "cave", "hatch", "hive"], // generador de mazmorra por región
+  names: ["Nido de la Matriarca", "Metro derrumbado", "Templo enterrado", "Cueva de esporas", "Caverna de hielo", "Núcleo del laboratorio", "Tubo de lava", "Necrópolis del cráter", "Cámara de la Mente"],
+  alt: { col: 0x5fe0ff, locked: 0xff5a5a }, // colores del altar de la superficie
+};
+Ha.lair = { n: "Guarida", d: "El jefe espera al final", c: "#ff5a5a" };
+x.migrations.push((S) => {
+  S.world && !S.world.lair && (S.world.lair = {});
+});
+
+const LA = x.cfg.lair;
+const laReady = (reg) => !x.S.world.lair || !x.S.world.lair[reg] || Date.now() - x.S.world.lair[reg] > LA.cooldownMin * 6e4;
+function laStatus(arena) {
+  // 'sealed' → faltan requisitos · 'open' → se puede descender · 'calm' → conquistada hace poco (cooldown)
+  if (!arena || arena.op || arena.secret || !(arena.reg >= 0) || !De[arena.reg] || !x.S.bossGate) return "none";
+  const st = bossGateStatus(arena.reg);
+  if (!st.ok) return "sealed";
+  return laReady(arena.reg) ? "open" : "calm";
+}
+function laMinutes(reg) {
+  return Math.max(1, Math.ceil((LA.cooldownMin * 6e4 - (Date.now() - x.S.world.lair[reg])) / 6e4));
+}
+
+// el mapa: el diseño de «minijefe» (sala grande con pilares) y la sala del encuentro marcada como guarida
+{
+  const _x0 = _x;
+  _x = function (n) {
+    if (n.enc !== "lair") return _x0(n);
+    const m = _x0({ ...n, enc: "miniboss" });
+    m.op = n;
+    const enc = m.ents.find((q) => q.k === "encounter");
+    enc && (enc.enc = "lair");
+    return m;
+  };
+}
+function laOp(arena) {
+  const reg = arena.reg,
+    d = De[reg];
+  let h = 0;
+  for (const c of "lair" + reg) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return {
+    sub: true,
+    ent: { id: "lair_" + reg, kind: LA.kinds[reg], x: arena.x, z: arena.z, reg, enc: "lair" },
+    enc: "lair",
+    reg,
+    lvl: d.bossLvl,
+    mods: [],
+    theme: null,
+    obj: "sub",
+    pool: d,
+    seed: (h ^ Math.floor(Math.random() * 4294967296)) >>> 0,
+    lair: true,
+    boss: d.boss,
+  };
+}
+function laEnter(arena) {
+  const op = laOp(arena);
+  ae.play("door");
+  x.fx.clear();
+  x.world.loadOp(op);
+  x.world.returnPos = x.world.returnSpot(arena);
+  x.player.inv = Math.max(x.player.inv, 1.5);
+  ee("banner", LA.names[arena.reg].toUpperCase(), `Guarida de ${En[op.boss].n} · Nivel ${op.lvl}`, "#ff6a6a");
+}
+
+// altar en el centro de la arena de la superficie (solo la primera vez, y mientras la guarida no esté en cooldown)
+{
+  const P = ih.prototype,
+    _create = P.createMesh,
+    _prompt = P.promptFor,
+    _interact = P.interact;
+  P.createMesh = function (r) {
+    const e = r.e;
+    if (e.k !== "bossarena" || x.mode !== "world" || laStatus(e) === "none" || r.mesh) return _create.apply(this, arguments);
+    const grp = new Ve(),
+      base = new Ge(je(1.7, 2, 0.3, 16), Me(0x2b3034)),
+      ringM = new Ge(new Yi(1.45, 0.08, 6, 28), Me(LA.alt.locked, 1)),
+      beam = new Ge(je(0.16, 0.16, 5, 10), Me(LA.alt.locked, 0.25, true));
+    ringM.rotation.x = Math.PI / 2;
+    ringM.position.y = 0.35;
+    beam.position.y = 2.9;
+    grp.add(base, ringM, beam);
+    grp.position.set(e.x, 0, e.z);
+    let cur = null,
+      chk = 0;
+    grp.userData = {
+      k: "lairAltar",
+      anim: [
+        (t) => {
+          if (x.time - chk > 1) {
+            chk = x.time;
+            const open = laStatus(e) === "open",
+              col = open ? LA.alt.col : LA.alt.locked;
+            if (cur !== col) {
+              cur = col;
+              ringM.material = Me(col, 1);
+              beam.material = Me(col, open ? 0.32 : 0.14, true);
+            }
+            beam.visible = true;
+          }
+          const s = 0.85 + 0.3 * Math.sin(t * 2.4);
+          beam.scale.set(s, 1, s);
+          ringM.rotation.z = t * 0.5;
+        },
+      ],
+    };
+    r.mesh = grp;
+    x.R.scene.add(grp);
+  };
+  P.promptFor = function (e, t) {
+    if (e.k === "bossarena") {
+      const s = x.mode === "world" ? laStatus(e) : "none";
+      return s === "open" ? `Descender a la guarida · ${LA.names[e.reg]}` : s === "calm" ? `La guarida está en calma · vuelve en ${laMinutes(e.reg)} min` : null;
+    }
+    return _prompt.apply(this, arguments);
+  };
+  P.interact = function () {
+    const p = x.prompt;
+    if (p && p.r && p.r.e && p.r.e.k === "bossarena") {
+      if (laStatus(p.r.e) === "open" && !x.uiOpen) laEnter(p.r.e);
+      else if (laStatus(p.r.e) === "calm") (ae.play("err"), ee("toast", `La guarida está en calma. Vuelve en ${laMinutes(p.r.e.reg)} min`, "warn"));
+      return;
+    }
+    return _interact.apply(this, arguments);
+  };
+}
+
+// el encuentro: guardián → puerta → jefe
+{
+  const _init = Ni.init,
+    _start = Ni.start,
+    _upd = Ni.update,
+    _fin = Ni.finish,
+    _stat = Ni.status,
+    _tgt = Ni.target;
+  Ni.init = function (op, m) {
+    _init.apply(this, arguments);
+    const e = this.st;
+    if (!e || e.enc !== "lair") return;
+    // sala media: la anterior a la arena en el orden de salas del generador (o la primera lateral si no hay antesalas)
+    const rooms = m.rooms || [],
+      ei = rooms.indexOf(m.encRoom),
+      mid = ei > 1 ? rooms[ei - 1] : rooms[ei + 1] || rooms[0],
+      [gx, gz] = m.findFree(mid.cx, mid.cz, 5, 1.2),
+      b = In(op.boss, Math.max(1, op.lvl - 2), gx, gz, { boss: true, mini: true, hpMul: LA.guardianHp, alerted: false, name: "Guardián de " + En[op.boss].n });
+    b.title = "Guardián de la guarida";
+    b.lair = true;
+    e.guardian = b;
+    e.guardianDown = false;
+    e.lair = op.boss;
+    this.seal(true);
+  };
+  Ni.start = function () {
+    const e = this.st;
+    if (!e || e.enc !== "lair") return _start.apply(this, arguments);
+    e.state = "active";
+    e.t = 0;
+    e.bossT = 1.4;
+    e.boss = null;
+    this.seal(true);
+    ee("bossIntro", { ...En[e.lair], id: e.lair });
+    ae.play("roar");
+  };
+  Ni.update = function (dt) {
+    const e = this.st;
+    if (!e || e.enc !== "lair") return _upd.apply(this, arguments);
+    if (e.guardian && !e.guardianDown && e.guardian.dead) {
+      e.guardianDown = true;
+      this.seal(false);
+      ae.play("door");
+      x.R.addShake(0.3);
+      ee("banner", "LA PUERTA SE ABRE", "La sala del jefe está despejada", "#ffb340");
+    }
+    if (e.state !== "active") return _upd.apply(this, arguments);
+    e.t += dt;
+    if (!e.boss) {
+      if ((e.bossT -= dt) > 0) return;
+      const b = In(e.lair, e.lvl, e.e.x, e.e.z, { boss: true, alerted: true });
+      b.lair = true;
+      e.boss = b;
+      x.fx.explosion(e.e.x, e.e.z, 3, 0xff6a6a);
+      x.R.addShake(0.5);
+      return;
+    }
+    if (e.boss.dead) return laFinish(this);
+    if (!this.roomHas(e.boss.x, e.boss.z)) {
+      const [sx, sz] = e.m.findFree(e.e.x, e.e.z, 4, e.boss.rad);
+      e.boss.x = sx;
+      e.boss.z = sz;
+    }
+  };
+  function laFinish(N) {
+    const e = N.st,
+      reg = e.op.reg,
+      W = x.S.world;
+    W.bosses["reg" + reg] = W.bosses["reg" + reg] || Date.now();
+    W.bosses["reg" + reg + "_t"] = Date.now();
+    (W.lair || (W.lair = {}))[reg] = Date.now();
+    x.world.checkGatesUnlock();
+    // recompensas como un minijefe (cofre de nivel 3, más XP y núcleos) y aviso propio
+    e.enc = "miniboss";
+    _fin.call(N, true);
+    e.enc = "lair";
+    ee("banner", "GUARIDA CONQUISTADA", `${En[e.lair].n} ha caído`, "#5fd35a");
+  }
+  Ni.finish = function (ok) {
+    return this.st && this.st.enc === "lair" && !this.st.done ? (ok ? laFinish(this) : _fin.apply(this, arguments)) : _fin.apply(this, arguments);
+  };
+  Ni.status = function () {
+    const e = this.st;
+    if (!e || e.enc !== "lair") return _stat.apply(this, arguments);
+    const lines = [];
+    if (e.done) lines.push({ t: "Guarida conquistada · vuelve a la superficie", ok: true });
+    else if (e.failed) lines.push({ t: "Fallido", bad: true });
+    else if (!e.guardianDown) lines.push({ t: e.guardian && !e.guardian.alerted ? "Encuentra y abate al guardián: tiene la llave de la arena" : "Abate al guardián de la guarida" });
+    else if (e.state === "idle") lines.push({ t: "La arena está abierta: entra y vence al jefe" });
+    else lines.push({ t: e.boss ? `Derrota a ${e.boss.name || e.boss.def.n}` : "Algo despierta…" });
+    return { title: `${LA.names[e.op.reg]} · Guarida`, c: Ha.lair.c, lines };
+  };
+  Ni.target = function () {
+    const e = this.st;
+    if (!e || e.enc !== "lair" || e.done || e.failed) return _tgt.apply(this, arguments);
+    if (!e.guardianDown && e.guardian && !e.guardian.dead) return { x: e.guardian.x, z: e.guardian.z, n: "Guardián", c: Ha.lair.c };
+    return e.state === "idle" ? { x: e.e.x, z: e.e.z, n: "Arena del jefe", c: Ha.lair.c } : null;
+  };
+}
+
+// la superficie: el jefe de región ya no sale en el claro NUNCA (ni la primera vez ni al repetir): vive en su guarida
+{
+  const _gate = bossGateArena;
+  bossGateArena = function (arena, dist) {
+    const reg = arena.reg;
+    if (arena.op || arena.secret || !(reg >= 0) || !De[reg] || !x.S || !x.S.bossGate) return true;
+    const st = bossGateStatus(reg);
+    if (st.ok) {
+      const C = x.cfg.bossGate;
+      if (dist < arena.rad + C.hintRadius && x.time - bgHintT > C.hintEvery) {
+        bgHintT = x.time;
+        const calm = !laReady(reg);
+        ee("toast", calm ? `La guarida de ${En[De[reg].boss].n} está en calma · vuelve en ${laMinutes(reg)} min` : `La guarida de ${En[De[reg].boss].n} está abierta: usa el altar del centro para descender`, calm ? "warn" : "good");
+      }
+      return false;
+    }
+    return _gate.apply(this, arguments);
+  };
+}
+
+// ganchos de prueba
+window.__lair = {
+  cfg: LA,
+  status: laStatus,
+  enter: laEnter,
+  op: laOp,
+  ready: laReady,
+  gateKind: F.GATE,
+  map: (reg, seed) => _x({ ...laOp({ reg, x: 0, z: 0 }), seed }),
+  bfs: (m, from, ok) => Ud(m, from[0], from[1], ok),
+};

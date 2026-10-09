@@ -72,8 +72,9 @@ export default async function (api) {
   check('misión + nivel + sellos: la guarida se abre', s.ok, JSON.stringify({ have: s.have, need: s.need }));
   await teleport(arena.x + 20, arena.z); await ev(() => window.__step(30, 1 / 30)); await wait(4);
   await teleport(arena.x, arena.z); await ev(() => window.__step(60, 1 / 30)); await wait(6); await real(1800); await ev(() => window.__step(30, 1 / 30));
-  b = await B(); check('con los requisitos cumplidos el jefe aparece al pisar la arena', b.boss === 1, `jefes vivos ${b.boss}`);
-  await shot('jefe-aparece');
+  b = await B(); const lairSt = await ev(() => window.__lair.status(window.__G.map.ents.find((e) => e.id === 'arena_0')));
+  check('con los requisitos cumplidos NO sale el jefe en el claro: lo sustituye la guarida con su altar (ver jefes-guarida.mjs)', b.boss === 0 && lairSt === 'open', `jefes vivos ${b.boss} · guarida ${lairSt}`);
+  await shot('altar-activo');
 
   // 5) tras la primera muerte la arena vuelve a ser libre
   await ev(() => { const S = window.__G.S; S.world.bosses.reg0 = Date.now(); S.bossGate = { v: 1, r: {} }; });
