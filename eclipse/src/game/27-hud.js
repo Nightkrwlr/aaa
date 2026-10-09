@@ -473,12 +473,16 @@ function XE(n) {
       let l = o.e;
       if (l.k === "npc" && o.mesh) {
         if (Le(l.x, l.z, t.x, t.z) > 30) continue;
+        // «?» verde: hay algo que entregar · «!» dorado: misión (de historia o secundaria) · «↻» azul: solo un encargo repetible (vuelve cada 12 min)
         let c = ht.readyAt(l.npc).length > 0,
-          d = ht.available(l.npc).some((h) => !h.locked) || !!ht.repeatOffer(l.npc)?.def;
+          q = ht.available(l.npc).some((h) => !h.locked),
+          rp = !q && !!ht.repeatOffer(l.npc)?.def,
+          d = q || rp;
         if ((e.project(l.x, 2.25, l.z, Xe), (xe.font = '700 22px "Chakra Petch", sans-serif'), c || d)) {
-          ((xe.fillStyle = c ? "#5fd35a" : "#ffd447"), (xe.strokeStyle = "#000"), (xe.lineWidth = 4));
-          let h = c ? "?" : "!",
-            f = Xe.y + Math.sin(x.time * 4) * 3;
+          ((xe.fillStyle = c ? "#5fd35a" : q ? "#ffd447" : "#7fd8ff"), (xe.strokeStyle = "#000"), (xe.lineWidth = 4));
+          let h = c ? "?" : q ? "!" : "\u21BB",
+            f = Xe.y + Math.sin(x.time * 4) * (c || q ? 3 : 1.5);
+          !c && !q && (xe.font = '700 17px "Chakra Petch", sans-serif');
           (xe.strokeText(h, Xe.x, f), xe.fillText(h, Xe.x, f));
         }
         if (Le(l.x, l.z, t.x, t.z) < 8) {

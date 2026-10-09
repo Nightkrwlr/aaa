@@ -19,9 +19,10 @@ Todo el código nuevo vive en `src/game/31e-hacking.js` (≈ 3 300 líneas, 9 se
   `gen(semilla, dificultad)` determinista, `validate()` que prueba que se puede ganar y un bot de pruebas:
   1. **Cortafuegos** (breakout): arrastra para mover la pala; la bola acelera; bloques de doble vida en dificultad ≥ 4.
   2. **Cifrado por sustitución**: mensaje cifrado con un alfabeto sin letras fijas, teclado en pantalla, letras reveladas según dificultad y **pista del
-     archivo** (la palabra clave; con la clave de ARGOS leída en el Archivo el mensaje termina con ella y sus letras vienen puestas).
+     archivo** (la palabra clave; con la clave de ARGOS leída en el Archivo el mensaje termina con ella y sus letras vienen puestas). **Desde D11 el mensaje
+     se compone con una gramática y nunca repite (ver «Hackeo v2»).**
   3. **Enrutado de nodos** (grafo): llega de S a T pasando por todos los ◆ sin tocar el ✕ y sin pasarte de la latencia; el óptimo se calcula con DFS y garantiza
-     una solución dentro del presupuesto.
+     una solución dentro del presupuesto. **Rehecho en D11 (versión 2): enlaces de un sentido y patrullas de ICE por turnos, ver «Hackeo v2» más abajo.**
   4. **Sintonía de frecuencia**: un panel táctil (frecuencia ↔, amplitud ↕) y un deslizador de fase hasta superponer la onda y mantenerla; la señal deriva.
   5. **Fuerza bruta a ritmo**: cuatro carriles, toca el carril cuando el carácter cruza la línea; fallos y toques en falso suman traza y «clave mala».
   Los cinco minijuegos antiguos de `28-hack.js` siguen como capas (sin tocarlos; `hkOldGame`) con peso la mitad al sortear.
@@ -31,7 +32,8 @@ Todo el código nuevo vive en `src/game/31e-hacking.js` (≈ 3 300 líneas, 9 se
 - **Objetivos**
   - **Terminales** (`jp` de 29-panels llama a `hackOpenTerminal`): relés 1 capa, cámaras acorazadas (cofre y oculta) 2 capas, balizas de desafío 3; +1 capa en
     dificultad alta; el efecto del juego (`hackResult`) no cambia.
-  - **Torretas y drones enemigos** (`torreta, pilon, dron, fisionador`): se **toman** 14 s (+0,8 s por nivel, tope 32 s, × `turretTime`): invulnerables, fuera de
+  - **(Ya no se hace a mano desde D11: `x.cfg.hack.enemy.manual = false`; ver `docs/frente-maquinas.md`. Lo que sigue describe el motor, que usan las máquinas aliadas y el
+    módulo Hacker.) Torretas y drones enemigos** (`torreta, pilon, dron, fisionador`): se **toman** 14 s (+0,8 s por nivel, tope 32 s, × `turretTime`): invulnerables, fuera de
     la mira, disparan a los demás con un múltiplo del DPS de **tu arma activa** (así escala con nivel y equipo). Riesgo Agresivo: sobrecarga (+60 % de daño y
     explosión al terminar).
   - **Mecánicos** (`mech, centinela, mortero, tanquemec, minador, escudero, aranamec, reparador`): se **apagan** 9 s (+0,8 s/nivel). Jefes y minijefes no.
@@ -49,6 +51,25 @@ Todo el código nuevo vive en `src/game/31e-hacking.js` (≈ 3 300 líneas, 9 se
 **Cirugía en ficheros antiguos** (todas mínimas): `29-panels.js` (1 línea en `jp`: `if (hackOpenTerminal(n, e)) return;`; en el panel Personaje el resumen
 `hackSummaryText()`; una frase de la ayuda), `31c-gadgets.js` (1 línea en `gdStatLine`: texto propio del módulo). `32-boot.js`, `_order.json`, `_prelude.js` y `28-hack.js`
 no se tocan. La tecla V se añade al mapa `yw` desde 31e. Hay un envoltorio de `gadgetEnemyTick` (31c) para saltarse la IA de las unidades hackeadas.
+
+## Hackeo v2 (D11): enemigos fuera, enrutado más duro y cifrado que no repite
+
+Feedback del jugador: «se supone que hay enemigos que puedo hackear… no funciona bien y además los suelo matar primero» y «el de buscar la ruta a través de los nodos es
+demasiado fácil… el de descubrir la frase está bien pero no debería repetirse ninguna frase nunca».
+
+* **Los enemigos ya no se hackean a mano** (`x.cfg.hack.enemy.manual = false`; el marcador HACKEAR, la tecla V y el talento «Intruso» actúan sobre **máquinas dormidas**; el
+  módulo Hacker de los gadgets conserva su pulso sobre enemigos). Las máquinas aliadas, reutilizables y únicas, están en `docs/frente-maquinas.md`.
+* **Enrutado de nodos v2** (`HK_ROUTE`, `hkRouteGen/hkRouteSolve`): cada dificultad añade una regla. Enlaces **de un sentido** (flechas, 1-5) e ICE fijo; a partir de la 2,
+  **patrullas de ICE** que avanzan **un paso por tu salto** (juego por turnos): ves dónde están (✕ rojo), dónde estarán (anillo) y su ronda (línea de puntos); entrar donde
+  acaba una patrulla o cruzarte con ella en un enlace activa el ICE. Dificultades 1 · 2 · 3 · 4 · 5: patrullas 0 · 1 · 1 · 2 · 3, flechas 1 · 2 · 3 · 4 · 5, nodos de control 1-3,
+  margen de latencia 2 · 2 · 2 · 1 · 1, tiempo 75 · 85 · 95 · 105 · 115 s. Los generadores exigen que la **ruta más corta «ingenua» deje de valer** y `validate()` resuelve el
+  grafo por turnos (DFS con presupuesto, cuenta soluciones). Medido en Node (300 semillas por dificultad): resoluble 300/300 en las cinco; la ruta ingenua falla en el 89 / 99 / 100 /
+  100 / 100 %; soluciones por puzle 1,2 · 1,0 · 1,1 · 1,2 · 1,1 (única en el 82 / 97 / 92 / 85 / 90 %); generar y validar cuesta 1-5 ms (peor caso 41 ms).
+* **Cifrado con frases nuevas** (`HK_PHR`, `hkPhraseMake/Pick/Note`): antes salía una de 22 frases fijas; ahora cada mensaje se compone con una gramática (sujetos, verbos,
+  objetos y circunstancias, órdenes, avisos, condicionales, cifras… todo en A-Z y espacios) y la partida **recuerda los 2000 últimos** (`S.hack.phr`, hashes de 32 bits,
+  migración que los sanea) para no repetirlos; las 22 frases de ARGOS salen de vez en cuando, una vez cada una. La palabra clave de la pista es la más larga y rara del mensaje.
+  Medido: con la memoria de 2000, 0 repetidos en 2000 mensajes seguidos (151 en 5000: pasada la memoria vuelven a salir las plantillas pequeñas); el generador crudo da 75 145
+  mensajes distintos en 100 000 sorteos (≈ 165 000 distintos efectivos: las plantillas cortas, como «CUANDO… YA SERÁ TARDE PARA…», solo tienen unos cientos).
 
 ## Números medidos
 

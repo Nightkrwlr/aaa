@@ -7,6 +7,8 @@ export default async function (api) {
   const results = [];
   const check = (name, ok, info = '') => { results.push({ name, ok: !!ok, info }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`); };
   await boot(); await newGame();
+  // D11: los enemigos ya no se hackean a mano por defecto (x.cfg.hack.enemy.manual = false; ahora se hackean máquinas, ver maquinas-core). Aquí se reactiva para seguir probando el motor de la sesión con enemigos.
+  await ev(() => { window.__hack.cfg.enemy.manual = true; });
   await api.region('desierto');
   await ev(() => { const G = window.__G; G.world.packCd = 1e9; G.world.evT = 1e9; G.uiBlockDamage = false; });
 

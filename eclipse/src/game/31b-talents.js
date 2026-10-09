@@ -19,7 +19,7 @@
 //      turretDmg     (frac)  +% daño de torretas aliadas
 //      turretTime    (frac)  +% duración de torretas temporales
 //      chainDet      (0/1)   «Detonación en cadena»: al detonar un gadget detonan los vecinos en su radio
-//      intruder      (0/1)   «Intruso»: permite hackear torretas enemigas a distancia
+//      intruder      (0/1)   «Intruso»: permite hackear máquinas dormidas a distancia (14 m en lugar de 6)
 //      trophyChance  (frac)  +% (aditivo sobre la base) a la probabilidad de soltar trofeo
 //      trophyValue   (frac)  +% al valor de venta de los trofeos
 //      chestSense    (m)     radio de detección de cofres/lore (lo dibuja este mismo fragmento)
@@ -42,7 +42,7 @@ var TL_FXL = {
   turretDmg: { n: "Daño de torretas", fmt: "pct" },
   turretTime: { n: "Duración de torretas", fmt: "pct" },
   chainDet: { n: "Los gadgets detonan en cadena", fmt: "flag" },
-  intruder: { n: "Hackeo remoto de torretas enemigas", fmt: "flag" },
+  intruder: { n: "Hackeo remoto de máquinas dormidas", fmt: "flag" },
   trophyChance: { n: "Probabilidad de trofeo", fmt: "pct" },
   trophyValue: { n: "Valor de los trofeos", fmt: "pct" },
   chestSense: { n: "m de detección de cofres y lore", fmt: "flat" },
@@ -296,7 +296,7 @@ var TL_SPEC = [
       }],
       ["Intruso", {}, 1, {
         fx: { intruder: 1, hackTraceCut: -0.2 }, ic: "⌘",
-        d: "Hackea torretas enemigas a distancia y vuélvelas en su contra durante unos segundos.",
+        d: "Hackea máquinas dormidas (torretas, drones y robots) desde 14 m en lugar de 6: reactívalas sin acercarte.",
         con: "Entradas ruidosas: +20 % de traza al hackear.",
       }],
     ],

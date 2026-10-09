@@ -68,7 +68,7 @@ x.cfg.hack = {
   games: {
     fw: { n: "Cortafuegos", ic: "▦", nw: 1, time: [60, 65, 70, 75, 85], w: 2 },
     cipher: { n: "Cifrado por sustitución", ic: "⌗", nw: 1, time: [100, 110, 120, 130, 140], w: 2 },
-    route: { n: "Enrutado de nodos", ic: "⬡", nw: 1, time: [60, 70, 80, 85, 90], w: 2 },
+    route: { n: "Enrutado de nodos", ic: "⬡", nw: 1, time: [75, 85, 95, 105, 115], w: 2 },
     tune: { n: "Sintonía de frecuencia", ic: "∿", nw: 1, time: [30, 32, 34, 36, 40], w: 2 },
     brute: { n: "Fuerza bruta a ritmo", ic: "♪", nw: 1, time: [0, 0, 0, 0, 0], w: 2 },
     seq: { n: "Secuencia de memoria", ic: "▤", nw: 0, time: [0, 0, 0, 0, 0], w: 1 },
@@ -88,7 +88,8 @@ x.cfg.hack = {
   layerXp: [0, 1, 1.7, 2.6], // multiplicador de XP según capas
   // Hackeo de enemigos mecánicos. control = lo tomas (dispara a los demás); off = lo apagas unos segundos
   enemy: {
-    range: 6, // m para ver el marcador
+    manual: false, // D11: los enemigos ya NO se hackean a mano (se hackean máquinas dormidas, 31j-machines.js); el módulo Hacker de los gadgets sigue usando control/off
+    range: 6, // m para ver el marcador (máquinas dormidas)
     rangeIntruder: 14, // con el talento «Intruso» (torretas y drones) y línea de visión
     scan: 0.2, // s entre barridos
     // dpsMul = daño por segundo del arma activa del jugador que añade la unidad controlada (así escala con el nivel y el equipo);
@@ -206,6 +207,7 @@ function hkMigrate(S) {
   const st = H.stats && typeof H.stats === "object" && !Array.isArray(H.stats) ? H.stats : (H.stats = {});
   for (const k of ["runs", "ok", "fail", "layers", "ctl", "off", "chips", "maxRisk"]) st[k] = Math.max(0, Number(st[k]) || 0);
   if (!st.byKind || typeof st.byKind !== "object") st.byKind = {};
+  H.phr = Array.isArray(H.phr) ? H.phr.map((v) => Number(v)).filter((v) => Number.isFinite(v)).map((v) => v >>> 0).slice(-2000) : []; // mensajes de cifrado ya usados
   if (first) {
     // guardado anterior a esta ampliación: las terminales ya hackeadas dan nivel retroactivo (una sola vez)
     const done = Math.max(0, (S.stats && S.stats.terminals) | 0);
@@ -859,9 +861,97 @@ function hkLoreBonus() {
   }
   return { letters: Math.min(3, Math.floor(n / 5)), word, read: n };
 }
-function hkCipherGen(seed, diff) {
+// ── 5.2.0 Generador de frases (D11): el cifrado nunca repite mensaje ───────────────────────────────────────────────
+// Antes salía una de 22 frases fijas y se repetían (y, sabiendo la frase, el cifrado era trivial). Ahora cada mensaje se compone con una gramática
+// de ~1,5 millones de combinaciones (todo en A-Z y espacios, sin tildes ni eñes) y la partida recuerda las que ya ha usado (S.hack.phr, 2000 últimas):
+// ni dentro de una sesión (si fallas una capa y se vuelve a montar, sale otro mensaje) ni entre sesiones se repite (se recuerdan los 2000 últimos). Las 22 frases de ARGOS siguen
+// saliendo de vez en cuando (una sola vez cada una). La palabra clave de la pista es la palabra más larga y rara del mensaje.
+const HK_PHR = {
+  sujS: ["LA COLMENA", "EL ENJAMBRE", "LA MENTE", "EL OPERADOR", "ARGOS", "LA REINA", "EL CENTINELA", "EL PROYECTO", "LA ESTACION", "EL REACTOR", "LA SENAL", "EL SILENCIO", "LA TORMENTA", "EL ECLIPSE", "EL LABORATORIO", "LA ANTENA", "EL BUNKER", "EL CAZADOR", "LA SOMBRA", "EL MENSAJERO", "LA PATRULLA", "EL GENERAL", "LA DOCTORA", "EL CAPITAN", "EL SOLDADO", "LA PUERTA NORTE", "EL EXPERIMENTO", "EL CONVOY", "LA BALIZA", "EL FARO", "EL TECNICO", "LA RADIO", "EL SATELITE", "EL CIRUJANO", "EL CORONEL", "EL ARCHIVO", "EL ECO", "LA CAMARA", "EL CAMPAMENTO", "LA REFINERIA", "EL ASCENSOR", "EL TUNEL", "EL PUENTE", "LA PRESA", "EL HOSPITAL", "LA ESCUELA", "LA IGLESIA", "EL SILO", "LA GASOLINERA", "EL SUPERVIVIENTE"],
+  sujP: ["LOS CENTINELAS", "LAS SOMBRAS", "LOS SUPERVIVIENTES", "LOS HERIDOS", "LOS DRONES", "LAS MAQUINAS", "LOS TECNICOS", "LOS EXPLORADORES", "LAS ANTENAS", "LOS GUARDIANES", "LOS ECOS", "LOS CAZADORES", "LAS PATRULLAS", "LOS MENSAJEROS", "LOS SOLDADOS", "LOS CIVILES", "LAS CAMARAS", "LOS SATELITES", "LOS INFECTADOS", "LAS BALIZAS", "LOS ARCHIVOS", "LOS PRISIONEROS", "LOS CONVOYES", "LOS ROBOTS", "LOS CIRUJANOS"],
+  vS: ["VIGILA", "OCULTA", "ESCUCHA", "GUARDA", "BLOQUEA", "ABRE", "OBSERVA", "PROTEGE", "TRANSMITE", "CONTROLA", "RECUERDA", "ENVIA", "BUSCA", "CUSTODIA", "RASTREA", "CONOCE", "ESPERA"],
+  vP: ["VIGILAN", "OCULTAN", "ESCUCHAN", "GUARDAN", "BLOQUEAN", "ABREN", "OBSERVAN", "PROTEGEN", "TRANSMITEN", "CONTROLAN", "RECUERDAN", "ENVIAN", "BUSCAN", "CUSTODIAN", "RASTREAN", "CONOCEN", "ESPERAN"],
+  obj: ["EL CAMINO", "LA SALIDA", "LA VERDAD", "TU POSICION", "EL ULTIMO MENSAJE", "CADA PASO", "LA PUERTA", "EL CODIGO", "LOS ARCHIVOS", "LA LLAVE", "LA FRECUENCIA", "EL NUCLEO", "LA RUTA SEGURA", "EL ORIGEN DE LA SENAL", "LA MUESTRA CERO", "LA LISTA DE NOMBRES", "EL MAPA COMPLETO", "LA CLAVE DE ACCESO", "TODAS LAS ENTRADAS", "EL SECRETO", "LA ULTIMA BALIZA", "LOS PLANOS", "LA CAJA NEGRA", "EL DIARIO DEL CAPITAN", "LA ORDEN FINAL", "EL PROTOCOLO", "LA CURA", "EL DETONADOR", "LA MEMORIA DEL SISTEMA"],
+  circ: ["AL AMANECER", "DESDE HACE TRES DIAS", "BAJO LA CALDERA", "EN EL SOTANO", "DETRAS DEL MURO", "EN SILENCIO", "SIN DESCANSO", "ANTES DEL ECLIPSE", "ESTA NOCHE", "AL OTRO LADO DEL RIO", "EN LA ZONA CERO", "DESDE EL PRINCIPIO", "DESPUES DEL ECLIPSE", "A TODAS HORAS", "EN LA OSCURIDAD", "CADA NOCHE", "BAJO TIERRA", "EN LA CIUDAD CAIDA", "AL FINAL DEL PASILLO", "EN EL PEOR MOMENTO"],
+  imp: ["ABRE", "CIERRA", "DESTRUYE", "BUSCA", "APAGA", "ENCIENDE", "ESCONDE", "VIGILA", "LLEVA", "ENTREGA", "CORTA", "REPARA", "PROTEGE", "RECUPERA", "ENVIA", "BORRA", "CAMBIA", "SIGUE", "OLVIDA", "SELLA", "ACTIVA", "DESCIFRA", "TRAE", "REVISA", "VACIA"],
+  impObj: ["LA PUERTA", "EL CANDADO", "EL GENERADOR", "LA ANTENA", "LA LUZ", "EL ARCHIVO", "LA RADIO", "EL PUENTE", "EL TUNEL", "LAS ALARMAS", "EL REGISTRO", "LA CLAVE", "EL MENSAJE", "LA RED", "EL FUEGO", "LA BODEGA", "LA ESCOTILLA", "EL PANEL", "LAS BATERIAS", "LA FRECUENCIA"],
+  impCirc: ["ANTES DEL AMANECER", "SIN HACER RUIDO", "CUANTO ANTES", "SI QUIERES VIVIR", "ANTES DE QUE LLEGUEN", "SIN MIRAR ATRAS", "POR EL SOTANO", "EN EL ULTIMO PISO", "CON CUIDADO", "A LA MEDIANOCHE", "ANTES DEL ECLIPSE", "DESDE DENTRO"],
+  no: ["NO TOQUES", "NO ABRAS", "NO CONFIES EN", "NO ESPERES A", "NO SIGAS A", "NO HABLES CON", "NO ENCIENDAS", "NO BORRES", "NO CRUCES", "NO LLAMES A"],
+  noObj: ["LA PUERTA ROJA", "LOS CENTINELAS", "EL ASCENSOR", "LA RADIO", "LAS LUCES", "EL AGUA", "LOS DRONES", "LA SEGUNDA CLAVE", "EL OPERADOR", "LA PATRULLA", "EL CAPITAN", "NINGUN SUPERVIVIENTE"],
+  evt: ["SUENE LA CAMPANA", "CAIGA LA NOCHE", "LLEGUE EL ECLIPSE", "SE APAGUEN LAS LUCES", "CALLE LA RADIO", "SALGA EL SOL ROJO", "SE ABRA LA COMPUERTA", "TERMINE LA CUENTA ATRAS", "DESPIERTE LA COLMENA", "SE CORTE LA SENAL"],
+  snd: ["LA SIRENA", "UN DISPARO", "EL ECO DE LA COLMENA", "TU NOMBRE EN LA RADIO", "UN TIMBRE LEJANO", "LOS MOTORES", "UN LATIDO BAJO EL SUELO", "TRES GOLPES EN LA PUERTA"],
+  lug: ["EL BUNKER", "LA SALIDA SUR", "LA ESTACION", "EL TUNEL", "LA AZOTEA", "EL SOTANO", "EL FARO", "LA PRESA", "EL HOSPITAL", "LA CALDERA"],
+  num: ["DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "DIEZ", "DOCE"],
+  plu: ["CENTINELAS", "DRONES", "SOMBRAS", "SOLDADOS", "SUPERVIVIENTES", "TECNICOS", "CAZADORES", "HERIDOS", "ROBOTS", "PRISIONEROS"],
+  sal: ["SALE DE", "ENTRA EN", "CRUZA", "DUERME EN", "REGRESA DE", "ESCAPA DE"],
+  adj: ["MENTIRA", "FALSO", "UNA TRAMPA", "PELIGROSO", "UN ENGANO", "CULPA DE ARGOS", "UN SECRETO", "RUIDO"],
+  cond: ["LA TARJETA NEGRA", "UNA ESCOLTA", "LA CLAVE", "PERMISO DEL CAPITAN", "LUZ PROPIA", "EL CODIGO AZUL", "UNA SENAL VALIDA"],
+};
+const HK_PHR_STOP = new Set(["LA", "EL", "LOS", "LAS", "DE", "DEL", "AL", "EN", "A", "CON", "SIN", "POR", "UN", "UNA", "ES", "NO", "SU", "TU", "LO", "QUE", "Y", "SE", "TODO", "TODA", "TODAS", "CADA", "ANTES", "DESPUES", "DESDE", "BAJO", "YA", "SI", "NI", "NADIE", "NINGUN", "CUANDO", "HACIA", "TARDE", "PARA", "SABE", "SERA", "CORRE", "OYES", "SEGUNDA", "ULTIMO", "ULTIMA"]);
+// elige una palabra clave: la más larga (≥ 5) que no sea de relleno y aparezca una sola vez
+function hkPhraseKey(plain) {
+  const ws = plain.split(" "),
+    cnt = {};
+  for (const w of ws) cnt[w] = (cnt[w] || 0) + 1;
+  let best = null;
+  for (const w of ws) if (w.length >= 5 && cnt[w] === 1 && !HK_PHR_STOP.has(w) && (!best || w.length > best.length)) best = w;
+  return best;
+}
+// compone un mensaje con la gramática; devuelve {t, k} (texto en claro y palabra clave)
+function hkPhraseMake(r) {
+  const P = HK_PHR,
+    pick = (a) => a[Math.floor(r() * a.length)];
+  for (let tries = 0; tries < 30; tries++) {
+    const q = r();
+    let t;
+    if (q < 0.32) t = `${pick(P.sujS)} ${pick(P.vS)} ${pick(P.obj)} ${pick(P.circ)}`;
+    else if (q < 0.52) t = `${pick(P.sujP)} ${pick(P.vP)} ${pick(P.obj)} ${pick(P.circ)}`;
+    else if (q < 0.6) t = `${pick(P.imp)} ${pick(P.impObj)} ${pick(P.impCirc)}`;
+    else if (q < 0.65) t = `${pick(P.no)} ${pick(P.noObj)} ${pick(P.impCirc)}`;
+    else if (q < 0.69) t = `CUANDO ${pick(P.evt)} YA SERA TARDE PARA ${pick(P.lug)}`;
+    else if (q < 0.73) t = `SI OYES ${pick(P.snd)} CORRE HACIA ${pick(P.lug)}`;
+    else if (q < 0.78) t = `NADIE ${pick(P.sal)} ${pick(P.lug)} SIN ${pick(P.cond)}`;
+    else if (q < 0.84) t = `${pick(P.num)} ${pick(P.plu)} ESPERAN EN ${pick(P.lug)} ${pick(P.circ)}`;
+    else if (q < 0.97) t = `${pick(P.sujS)} SABE QUE ${pick(P.sujP)} ${pick(P.vP)} ${pick(P.obj)}`;
+    else t = `TODO LO QUE ${pick(["OYES", "VES", "LEES", "RECUERDAS", "TE DICEN"])} ES ${pick(P.adj)} ${pick(P.circ)}`;
+    t = t.replace(/\s+/g, " ").trim();
+    const k = hkPhraseKey(t);
+    const letters = new Set(t.replace(/ /g, "")).size;
+    // palabras repetidas (p. ej. dos veces «EL BUNKER») y mensajes con pocas letras distintas se descartan
+    const ws = t.split(" "),
+      dup = new Set(ws.filter((w) => w.length > 3)).size !== ws.filter((w) => w.length > 3).length;
+    if (k && !dup && letters >= 10 && ws.length >= 4 && ws.length <= 11) return { t, k };
+  }
+  return { t: "LA COLMENA ESCUCHA CADA PALABRA", k: "COLMENA" };
+}
+// memoria de mensajes ya usados (S.hack.phr: hashes de 32 bits, los 2000 últimos)
+function hkPhraseSeen() {
+  const H = hkState();
+  return H && Array.isArray(H.phr) ? new Set(H.phr) : new Set();
+}
+function hkPhraseNote(t) {
+  const H = hkState();
+  if (!H) return;
+  const h = hkHash("phr:" + t);
+  if (!Array.isArray(H.phr)) H.phr = [];
+  if (!H.phr.includes(h)) {
+    H.phr.push(h);
+    if (H.phr.length > 2000) H.phr.shift();
+  }
+}
+// opts.fresh: sin memoria (validaciones y simulaciones); opts.seen: conjunto propio
+function hkPhrasePick(r, opts) {
+  const seen = opts && opts.fresh ? null : (opts && opts.seen) || hkPhraseSeen();
+  const fixed = HK_CFG.phrases;
+  for (let k = 0; k < 60; k++) {
+    const c = r() < 0.1 ? fixed[Math.floor(r() * fixed.length)] : hkPhraseMake(r);
+    if (!seen || !seen.has(hkHash("phr:" + c.t))) return c;
+  }
+  return hkPhraseMake(r);
+}
+function hkCipherGen(seed, diff, opts) {
   const r = hkRng(seed ^ 0xc1f3),
-    P = HK_CFG.phrases[Math.floor(r() * HK_CFG.phrases.length)];
+    P = hkPhrasePick(r, opts);
   const lb = hkLoreBonus();
   // con la clave de ARGOS en el Archivo, el mensaje termina con ella (y sus letras vienen puestas)
   const plain = lb.word ? P.t + " CLAVE " + lb.word : P.t,
@@ -901,12 +991,12 @@ function hkCipherGen(seed, diff) {
     ? `Pista del archivo: el mensaje contiene la palabra «${P.k}».`
     : `Pista del archivo: hay una palabra de ${P.k.length} letras que empieza por «${P.k[0]}».`;
   if (lb.word) hint += ` Termina con la clave de supervisión de ARGOS que anotaste: «${lb.word}».`;
-  return { plain, cipher, map, inv, used, crib: P.k, reveal, hint, word: lb.word, seed };
+  return { plain, cipher, map, inv, used, crib: P.k, reveal, hint, word: lb.word, seed, base: P.t };
 }
 HK_GAMES.cipher = {
   gen: hkCipherGen,
   validate(seed, diff) {
-    const G = hkCipherGen(seed, diff);
+    const G = hkCipherGen(seed, diff, { fresh: true });
     const bij = new Set(Object.values(G.map)).size === 26;
     const rt = G.cipher
       .split("")
@@ -919,6 +1009,7 @@ HK_GAMES.cipher = {
   },
   mount(root, ctx) {
     const G = hkCipherGen(ctx.seed, ctx.diff);
+    hkPhraseNote(G.base); // a partir de ahora este mensaje no vuelve a salir en esta partida
     root.classList.add("dom");
     const guess = {},
       fixed = {};
@@ -1074,8 +1165,46 @@ HK_GAMES.cipher = {
 
 // ── 5.3 Enrutado de nodos (grafo) ───────────────────────────────────────────────────────────────────
 // Lleva el paquete de S a T pasando por todos los nodos de control (◆), sin tocar el ICE (✕) y sin pasarte de la latencia.
-// Toca los nodos vecinos en orden; tocar un nodo anterior del camino lo recorta.
+// Toca los nodos vecinos en orden; tocar un nodo anterior del camino lo recorta (y rebobina el reloj de las patrullas).
+// Versión 2 (D11, a petición de los jugadores: era demasiado fácil). Cada dificultad añade una regla:
+//   1 · ICE fijo, un enlace de un sentido (flecha) y margen justo     3 · + más flechas y una patrulla en medio del camino
+//   2 · + una PATRULLA de ICE que cruza la ruta normal                4 · dos patrullas, cuatro flechas y menos margen        5 · tres patrullas, tres nodos de control y casi sin margen
+// Las patrullas avanzan UN PASO por su ronda cada vez que das un salto (el juego es por turnos): ves dónde están (✕ rojo), dónde estarán
+// a continuación (anillo) y toda su ronda (línea de puntos). Entrar en el nodo al que llega una patrulla, o cruzarte con ella en un
+// enlace, activa el ICE. Los generadores se aseguran de que la ruta más corta «normal» deje de valer: hay que rodear flechas y esperar el turno.
+const HK_ROUTE = { slack: [2, 2, 2, 1, 1], one: [1, 2, 3, 4, 5], agents: [0, 1, 1, 2, 3], ice: [2, 2, 1, 1, 1], tries: 60 };
+function hkEdgeKey(a, b) {
+  return a < b ? a + "-" + b : b + "-" + a;
+}
+// posición de una patrulla en el turno t (ronda de ida y vuelta)
+function hkAgentAt(a, t) {
+  return a.cyc[(t + a.off) % a.cyc.length];
+}
+// ¿se puede dar el salto u→v durante el turno t→t+1? devuelve null o el motivo («ice», «sentido», «patrulla»)
+function hkRouteBlocked(G, u, v, t) {
+  if (G.ice[v]) return "ice";
+  const f = G.one[hkEdgeKey(u, v)];
+  if (f !== undefined && f !== u) return "sentido";
+  for (const a of G.agents) {
+    const pa = hkAgentAt(a, t),
+      pb = hkAgentAt(a, t + 1);
+    if (pb === v || (pa === v && pb === u)) return "patrulla";
+  }
+  return null;
+}
+// el generador intenta hasta 8 semillas derivadas hasta que cumple lo que la dificultad promete (patrullas, flechas y que la ruta normal ya no valga)
 function hkRouteGen(seed, diff) {
+  let G = null;
+  for (let k = 0; k < 8; k++) {
+    G = hkRouteGen1((seed + k * 0x9e3779b1) >>> 0, diff);
+    G.seed = seed;
+    const want = HK_ROUTE.agents[diff - 1],
+      oneWant = HK_ROUTE.one[diff - 1];
+    if (G.agents.length >= want && Object.keys(G.one).length >= oneWant && (diff < 1 || G.hard)) break;
+  }
+  return G;
+}
+function hkRouteGen1(seed, diff) {
   const r = hkRng(seed ^ 0x707e),
     N = 7 + diff;
   const pts = [];
@@ -1111,7 +1240,7 @@ function hkRouteGen(seed, diff) {
   const S = 0,
     T = N - 1,
     K0 = diff >= 5 ? 3 : diff >= 3 ? 2 : 1;
-  const G = { N, pts, adj, S, T, mids: [], ice: {}, budget: 0, best: null, seed };
+  const G = { N, pts, adj, S, T, mids: [], ice: {}, one: {}, agents: [], budget: 0, best: null, base: null, seed, diff, hard: false };
   const costOf = (p) => p.reduce((a, v, i) => a + (i ? adj[p[i - 1]][v] : 0), 0);
   // elige los nodos de control hasta que exista una ruta simple que pase por todos; si el grafo no lo permite, uno menos
   for (let K = K0; K >= 1 && !G.best; K--)
@@ -1129,15 +1258,71 @@ function hkRouteGen(seed, diff) {
   const free = [];
   for (let i = 0; i < N; i++) if (!onPath.has(i) && !G.mids.includes(i)) free.push(i);
   hkShuffle(free, r)
-    .slice(0, Math.min(diff, free.length))
+    .slice(0, Math.min(HK_ROUTE.ice[diff - 1], free.length))
     .forEach((i) => (G.ice[i] = 1));
-  // con el ICE puesto la ruta óptima puede cambiar: se recalcula (la planteada sigue siendo válida porque evita el ICE)
+  // con el ICE fijo puesto la ruta óptima puede cambiar: se recalcula (la planteada sigue siendo válida porque evita el ICE)
   G.best = hkRouteSolve(G, [S], Infinity) || G.best;
-  G.slack = [5, 4, 3, 2, 1][diff - 1];
+  G.base = G.best; // la ruta «normal» (sin flechas ni patrullas): la que tiene que dejar de valer
+  const baseP = G.base ? G.base.path : [S, T];
+  // enlaces de un sentido: se vuelven en contra de la ruta normal siempre que el puzle siga teniendo solución
+  const nOne = HK_ROUTE.one[diff - 1];
+  for (let k = 0, guard = 0; k < nOne && guard < 80; guard++) {
+    let a, b;
+    if (r() < 0.7 && baseP.length > 1) {
+      const i = Math.floor(r() * (baseP.length - 1));
+      a = baseP[i + 1]; // el único sentido permitido va CONTRA la ruta normal
+      b = baseP[i];
+    } else {
+      a = Math.floor(r() * N);
+      const ks = Object.keys(adj[a]);
+      if (!ks.length) continue;
+      b = +ks[Math.floor(r() * ks.length)];
+    }
+    const key = hkEdgeKey(a, b);
+    if (G.one[key] !== undefined) continue;
+    G.one[key] = a; // solo se puede ir desde a
+    if (hkRouteSolve(G, [S], Infinity)) k++;
+    else delete G.one[key];
+  }
+  // patrullas: rondas de ida y vuelta que se cruzan con la ruta normal en el turno en que pasarías por ahí
+  const nAg = HK_ROUTE.agents[diff - 1];
+  for (let k = 0, guard = 0; k < nAg && guard < HK_ROUTE.tries * 2; guard++) {
+    const pk = 1 + Math.floor(r() * Math.max(1, baseP.length - 2)),
+      v = baseP[Math.min(baseP.length - 1, pk)];
+    if (v === S) continue;
+    const len = 2 + Math.floor(r() * 3); // saltos de ida
+    const cyc = [v];
+    let cur = v,
+      ok = true;
+    for (let q = 0; q < len; q++) {
+      const ks = Object.keys(adj[cur])
+        .map(Number)
+        .filter((n) => n !== cyc[cyc.length - 2]);
+      if (!ks.length) {
+        ok = q > 0;
+        break;
+      }
+      cur = ks[Math.floor(r() * ks.length)];
+      cyc.push(cur);
+    }
+    if (!ok || cyc.length < 2) continue;
+    const ring = cyc.concat(cyc.slice(1, -1).reverse()); // ida y vuelta
+    const ag = { cyc: ring, off: (ring.length - (pk % ring.length)) % ring.length };
+    // la patrulla nunca empieza (turno 0) encima de S
+    if (hkAgentAt(ag, 0) === S || hkAgentAt(ag, 1) === S) continue;
+    G.agents.push(ag);
+    if (hkRouteSolve(G, [S], Infinity)) k++;
+    else G.agents.pop();
+  }
+  G.best = hkRouteSolve(G, [S], Infinity) || G.best;
+  // ¿vale todavía la ruta normal? (el diseño quiere que no)
+  G.hard = !!(G.base && G.best && (G.best.path.join() !== G.base.path.join() || G.best.cost > G.base.cost));
+  G.slack = HK_ROUTE.slack[diff - 1];
   G.budget = (G.best ? G.best.cost : costOf([S, T])) + G.slack;
   return G;
 }
-// Mejor ruta completa (coste mínimo) que respete: simple, sin ICE, con todos los nodos de control, coste ≤ budget.
+// Mejor ruta completa (coste mínimo) que respete: simple, sin ICE, enlaces de un sentido, patrullas por turnos, con todos los nodos
+// de control y coste ≤ budget. prefix = camino ya recorrido (su longitud − 1 es el turno actual).
 function hkRouteSolve(G, prefix, budget) {
   const vis = new Set(prefix);
   let cost0 = 0;
@@ -1153,9 +1338,10 @@ function hkRouteSolve(G, prefix, budget) {
       }
       return;
     }
+    const t = p.length - 1;
     for (const k in G.adj[u]) {
       const v = +k;
-      if (vis.has(v) || G.ice[v]) continue;
+      if (vis.has(v) || hkRouteBlocked(G, u, v, t)) continue;
       vis.add(v);
       p.push(v);
       dfs(v, cost + G.adj[u][v], p);
@@ -1173,7 +1359,20 @@ HK_GAMES.route = {
     const sol = hkRouteSolve(G, [G.S], G.budget);
     const iceOk = sol && sol.path.every((v) => !G.ice[v]);
     const ends = G.S !== G.T && G.mids.length >= 1 && !G.mids.includes(G.S) && !G.mids.includes(G.T);
-    return { ok: !!(sol && iceOk && ends && sol.cost <= G.budget), nodes: G.N, ice: Object.keys(G.ice).length, mids: G.mids.length, best: G.best && G.best.cost, budget: G.budget };
+    // ninguna patrulla cae sobre el inicio en el turno 0
+    const agOk = G.agents.every((a) => hkAgentAt(a, 0) !== G.S);
+    return {
+      ok: !!(sol && iceOk && ends && agOk && sol.cost <= G.budget),
+      nodes: G.N,
+      ice: Object.keys(G.ice).length,
+      one: Object.keys(G.one).length,
+      agents: G.agents.length,
+      mids: G.mids.length,
+      best: G.best && G.best.cost,
+      base: G.base && G.base.cost,
+      hard: G.hard,
+      budget: G.budget,
+    };
   },
   mount(root, ctx) {
     const G = hkRouteGen(ctx.seed, ctx.diff),
@@ -1188,9 +1387,24 @@ HK_GAMES.route = {
     const wrap = document.createElement("div");
     wrap.className = "rt";
     root.appendChild(wrap);
+    const turn = () => path.length - 1;
     const render = () => {
-      const on = new Set(path);
+      const on = new Set(path),
+        t = turn();
       let s = `<svg viewBox="0 0 300 300" role="img" aria-label="Red de nodos">`;
+      // rondas de las patrullas (línea de puntos) debajo de todo
+      for (const a of G.agents) {
+        const seen = new Set();
+        for (let q = 0; q < a.cyc.length; q++) {
+          const A = G.pts[a.cyc[q]],
+            B = G.pts[a.cyc[(q + 1) % a.cyc.length]];
+          if (a.cyc[q] === a.cyc[(q + 1) % a.cyc.length]) continue;
+          const k = hkEdgeKey(a.cyc[q], a.cyc[(q + 1) % a.cyc.length]);
+          if (seen.has(k)) continue;
+          seen.add(k);
+          s += `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="rgba(255,79,94,.55)" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/>`;
+        }
+      }
       for (let i = 0; i < G.N; i++)
         for (const k in G.adj[i]) {
           const j = +k;
@@ -1199,8 +1413,37 @@ HK_GAMES.route = {
             B = G.pts[j];
           const used = path.some((v, q) => q && ((path[q - 1] === i && v === j) || (path[q - 1] === j && v === i)));
           s += `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="${used ? "#46e4ff" : "rgba(160,190,200,.28)"}" stroke-width="${used ? 4 : 1.6}" stroke-linecap="round"/>`;
-          s += `<text x="${(A[0] + B[0]) / 2}" y="${(A[1] + B[1]) / 2 + 3}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${used ? "#bff7ff" : "#a3b2b9"}" stroke="#04090c" stroke-width="3" paint-order="stroke" font-family="Chakra Petch,sans-serif">${G.adj[i][j]}</text>`;
+          const one = G.one[hkEdgeKey(i, j)];
+          let mx = (A[0] + B[0]) / 2,
+            my = (A[1] + B[1]) / 2;
+          if (one !== undefined) {
+            // flecha del único sentido permitido, desplazada hacia el destino; el coste va al otro lado
+            const f = one === i ? A : B,
+              g = one === i ? B : A,
+              dx = g[0] - f[0],
+              dy = g[1] - f[1],
+              L = Math.hypot(dx, dy) || 1,
+              ux = dx / L,
+              uy = dy / L,
+              cx = f[0] + dx * 0.66,
+              cy = f[1] + dy * 0.66;
+            s += `<path d="M${cx + ux * 8} ${cy + uy * 8} L${cx - ux * 5 - uy * 6} ${cy - uy * 5 + ux * 6} L${cx - ux * 5 + uy * 6} ${cy - uy * 5 - ux * 6} Z" fill="${used ? "#bff7ff" : "#ffd447"}" stroke="#04090c" stroke-width="1.5"/>`;
+            mx = f[0] + dx * 0.36;
+            my = f[1] + dy * 0.36;
+          }
+          s += `<text x="${mx}" y="${my + 3}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${used ? "#bff7ff" : "#a3b2b9"}" stroke="#04090c" stroke-width="3" paint-order="stroke" font-family="Chakra Petch,sans-serif">${G.adj[i][j]}</text>`;
         }
+      // dónde estarán las patrullas a continuación (anillos): ahora, +1 y +2
+      for (const a of G.agents) {
+        const p1 = hkAgentAt(a, t + 1),
+          p2 = hkAgentAt(a, t + 2),
+          p0 = hkAgentAt(a, t);
+        const B2 = G.pts[p2],
+          B1 = G.pts[p1];
+        s += `<circle cx="${B2[0]}" cy="${B2[1]}" r="21" fill="none" stroke="rgba(255,79,94,.35)" stroke-width="2" stroke-dasharray="3 4"/>`;
+        s += `<circle cx="${B1[0]}" cy="${B1[1]}" r="19" fill="rgba(255,79,94,.14)" stroke="#ff4f5e" stroke-width="2.4" stroke-dasharray="6 3"/>`;
+        void p0;
+      }
       for (let i = 0; i < G.N; i++) {
         const [px, py] = G.pts[i],
           vis = on.has(i),
@@ -1215,13 +1458,20 @@ HK_GAMES.route = {
         else if (G.ice[i]) ((stroke = "#ff4f5e"), (label = "✕"), (lc = "#ff8d97"));
         if (vis && !G.mids.includes(i)) fill = "rgba(70,228,255,.22)";
         const hl = i === hintNode && hintT > 0;
+        const ag = G.agents.some((a) => hkAgentAt(a, t) === i);
         s += `<g class="rt-node" data-n="${i}"><circle cx="${px}" cy="${py}" r="23" fill="transparent"/>`;
         if (end) s += `<circle cx="${px}" cy="${py}" r="19" fill="none" stroke="#46e4ff" stroke-width="2" opacity=".7"/>`;
         if (hl) s += `<circle cx="${px}" cy="${py}" r="21" fill="none" stroke="#ffd447" stroke-width="3"><animate attributeName="r" values="17;24;17" dur=".7s" repeatCount="indefinite"/></circle>`;
         if (flash === i && flashT > 0) s += `<circle cx="${px}" cy="${py}" r="20" fill="rgba(255,60,80,.45)"/>`;
+        if (ag) {
+          fill = "rgba(255,79,94,.5)";
+          stroke = "#ff4f5e";
+          label = "⚠";
+          lc = "#ffd6da";
+        }
         s += `<circle cx="${px}" cy="${py}" r="14" fill="${fill}" stroke="${stroke}" stroke-width="2.4"/><text x="${px}" y="${py + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="${lc}" font-family="Chakra Petch,sans-serif" pointer-events="none">${label}</text></g>`;
       }
-      s += `</svg><div class="rt-bar"><span>LATENCIA <b class="${cost > budget ? "over" : ""}">${cost}</b> / ${budget}</span><span>CONTROL <b>${G.mids.filter((m) => on.has(m)).length}/${G.mids.length}</b></span><button class="btn" data-undo>↶ Deshacer</button></div>`;
+      s += `</svg><div class="rt-bar"><span>LATENCIA <b class="${cost > budget ? "over" : ""}">${cost}</b> / ${budget}</span><span>CONTROL <b>${G.mids.filter((m) => on.has(m)).length}/${G.mids.length}</b></span>${G.agents.length ? `<span>TURNO <b>${t}</b></span>` : ""}<button class="btn" data-undo>↶ Deshacer</button></div>`;
       wrap.innerHTML = s;
       sizeSvg();
     };
@@ -1233,6 +1483,10 @@ HK_GAMES.route = {
       sv.style.width = sv.style.height = side + "px";
     };
     window.addEventListener("resize", sizeSvg);
+    const recost = () => {
+      cost = 0;
+      for (let i = 1; i < path.length; i++) cost += G.adj[path[i - 1]][path[i]];
+    };
     const tap = (id) => {
       if (dead) return;
       const k = path.indexOf(id),
@@ -1246,20 +1500,25 @@ HK_GAMES.route = {
           ctx.info("ESE NODO NO ESTÁ CONECTADO AL EXTREMO DE TU RUTA");
           return;
         }
-        if (G.ice[id]) {
+        const why = hkRouteBlocked(G, end, id, turn());
+        if (why) {
           flash = id;
           flashT = 0.5;
-          ctx.sfx("hkIce");
-          ctx.err(6, "ICE");
-          ctx.info("¡ICE! LA TRAZA SUBE · ELIGE OTRO NODO");
+          if (why === "sentido") {
+            ctx.sfx("err", { v: 0.5 });
+            ctx.info("ENLACE DE UN SENTIDO ➤ · POR AHÍ NO SE PUEDE IR");
+          } else {
+            ctx.sfx("hkIce");
+            ctx.err(6, "ICE");
+            ctx.info(why === "ice" ? "¡ICE! LA TRAZA SUBE · ELIGE OTRO NODO" : "¡PATRULLA DE ICE! LA TRAZA SUBE · ESPERA A QUE PASE O CAMBIA DE RUTA");
+          }
           render();
           return;
         }
         path.push(id);
         ctx.sfx("hkTick", { p: 1 + path.length * 0.06, gap: 0.01 });
       }
-      cost = 0;
-      for (let i = 1; i < path.length; i++) cost += G.adj[path[i - 1]][path[i]];
+      recost();
       hintNode = -1;
       const on = new Set(path);
       if (path[path.length - 1] === G.T) {
@@ -1271,7 +1530,7 @@ HK_GAMES.route = {
           ctx.win();
           return;
         }
-      } else ctx.info("LLEGA A T PASANDO POR TODOS LOS ◆ · EVITA EL ✕");
+      } else ctx.info(G.agents.length ? "LLEGA A T PASANDO POR TODOS LOS ◆ · LAS PATRULLAS ⚠ AVANZAN CON CADA SALTO" : "LLEGA A T PASANDO POR TODOS LOS ◆ · EVITA EL ✕");
       render();
     };
     wrap.addEventListener("pointerdown", (e) => {
@@ -1280,8 +1539,7 @@ HK_GAMES.route = {
         e.preventDefault();
         if (path.length > 1 && !dead) {
           path.pop();
-          cost = 0;
-          for (let i = 1; i < path.length; i++) cost += G.adj[path[i - 1]][path[i]];
+          recost();
           ctx.sfx("hkTick", { p: 0.7, gap: 0.01 });
           render();
         }
@@ -1294,7 +1552,13 @@ HK_GAMES.route = {
       }
     });
     render();
-    ctx.info("LLEGA A T PASANDO POR TODOS LOS ◆ · EVITA EL ✕ · LOS NÚMEROS SON LATENCIA");
+    ctx.info(
+      G.agents.length
+        ? "LLEGA A T PASANDO POR TODOS LOS ◆ · EVITA LAS PATRULLAS ⚠ (AVANZAN UN PASO CON CADA SALTO) Y LOS ✕ · SIGUE LAS FLECHAS ➤"
+        : Object.keys(G.one).length
+          ? "LLEGA A T PASANDO POR TODOS LOS ◆ · EVITA EL ✕ · LAS FLECHAS ➤ SON DE UN SOLO SENTIDO"
+          : "LLEGA A T PASANDO POR TODOS LOS ◆ · EVITA EL ✕ · LOS NÚMEROS SON LATENCIA",
+    );
     return {
       step(dt) {
         if (dead) return;
@@ -2007,7 +2271,7 @@ function hkOpen(spec, cb) {
     cb,
     mods,
     // el riesgo elegido se recuerda para terminales; en combate (enemigos) se parte siempre del estándar
-    risk: Math.max(0, Math.min(HK_CFG.risk.length - 1, spec.risk != null ? spec.risk : spec.target === "enemy" ? 1 : H.risk)),
+    risk: Math.max(0, Math.min(HK_CFG.risk.length - 1, spec.risk != null ? spec.risk : spec.target === "enemy" || spec.target === "machine" ? 1 : H.risk)),
     loadout: H.loadout.filter((id) => HK_CFG.programs[id] && H.lvl >= HK_CFG.programs[id].min).slice(0, mods.slots),
     state: "pre",
     ended: false,
@@ -2102,7 +2366,7 @@ function hkRenderPre(s) {
   s.body.querySelectorAll("[data-risk]").forEach((b) =>
     b.addEventListener("click", () => {
       s.risk = +b.dataset.risk;
-      if (sp.target !== "enemy") H.risk = s.risk;
+      if (sp.target !== "enemy" && sp.target !== "machine") H.risk = s.risk;
       ae.play("ui");
       hkRenderPre(s);
     }),
@@ -2625,8 +2889,15 @@ function hackOpenTerminal(ent, rt) {
 
 // ── 7.2 Torretas y drones controlables, mecánicos desactivables ──────────────────────────────────────
 var HK_FAST = ["fw", "tune", "brute", "sync", "route"]; // capas ágiles para el combate
+// qué se puede hackear a mano: las máquinas dormidas (31j-machines.js) y, solo si x.cfg.hack.enemy.manual, los enemigos mecánicos de siempre
 function hkEnemyKind(e) {
-  if (!e || e.dead || e.boss || e.mini || e.burrowed) return null;
+  if (e && e.mx) return typeof mxHackable === "function" && mxHackable(e) ? "machine" : null;
+  if (!HK_CFG.enemy.manual) return null;
+  return hkGadgetKind(e);
+}
+// tipo de unidad enemiga controlable/apagable por el módulo Hacker (gadget)
+function hkGadgetKind(e) {
+  if (!e || e.dead || e.boss || e.mini || e.burrowed || e.mx) return null;
   const E = HK_CFG.enemy;
   if (E.control[e.id]) return "control";
   if (E.off[e.id]) return "off";
@@ -2689,7 +2960,7 @@ function hkStartEnemy(e) {
   if (!e || e.dead || x.uiOpen || x.paused || !x.started || (x.player && x.player.dead)) return false;
   if (!hkEnemyKind(e)) return false;
   if (HK.s && (HK.s.ended || x.uiOpen !== "hack")) hkCleanup(HK.s);
-  return !!hkOpen(hkEnemySpec(e), null);
+  return !!hkOpen(e.mx ? mxSpec(e) : hkEnemySpec(e), null);
 }
 // DPS del arma activa del jugador (lo que añade una unidad controlada es un múltiplo de esto, no un número fijo)
 function hkPlayerDps() {
@@ -2887,7 +3158,15 @@ function hkScan() {
     intr = hkFx("intruder") > 0;
   let best = null,
     bd = 1e9;
-  const list = rn(p.x, p.z, intr ? E.rangeIntruder : E.range, HK.tmp);
+  // máquinas dormidas a tu alrededor (con el talento «Intruso», desde más lejos)
+  if (typeof mxScan === "function") {
+    const m = mxScan(p, intr ? E.rangeIntruder : E.range);
+    if (m) {
+      best = m.b;
+      bd = m.d;
+    }
+  }
+  const list = E.manual ? rn(p.x, p.z, intr ? E.rangeIntruder : E.range, HK.tmp) : [];
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     if (e.hk) continue;
@@ -2926,10 +3205,18 @@ function hkMarkUpdate() {
   if (m.id !== e.uid) {
     m.id = e.uid;
     const k = hkEnemyKind(e),
-      E = HK_CFG.enemy,
-      info = k === "control" ? E.control[e.id] : E.off[e.id];
-    const need = (k === "control" ? E.needControl : E.needOff) + 2 * (Math.max(1, Math.min(4, 1 + Math.floor((e.lvl || 1) / 14) + (e.elite ? 1 : 0))) - 1);
-    m.sub.textContent = `${info.n} · ${k === "control" ? "controlar" : "apagar"}`;
+      E = HK_CFG.enemy;
+    let label, need;
+    if (k === "machine") {
+      const mi = mxMarkInfo(e);
+      label = `${mi.n} · ${mi.act}`;
+      need = mi.need;
+    } else {
+      const info = k === "control" ? E.control[e.id] : E.off[e.id];
+      need = (k === "control" ? E.needControl : E.needOff) + 2 * (Math.max(1, Math.min(4, 1 + Math.floor((e.lvl || 1) / 14) + (e.elite ? 1 : 0))) - 1);
+      label = `${info.n} · ${k === "control" ? "controlar" : "apagar"}`;
+    }
+    m.sub.textContent = label;
     m.el.classList.toggle("low", (hkState() ? hkState().lvl : 1) < need);
     m.kbd.style.display = hkTouch() ? "none" : "";
   }
@@ -2981,7 +3268,7 @@ function hkGadgetPulse(g) {
   let n = 0;
   for (let i = 0; i < list.length; i++) {
     const e = list[i],
-      k = hkEnemyKind(e);
+      k = hkGadgetKind(e);
     if (!k) continue;
     if (k === "off") {
       if (!e.hk || e.hk.mode === "off") {
@@ -3033,9 +3320,9 @@ x.tick.push((dt) => {
       if (HK.cand) {
         const S = x.S;
         if (!S.seenTips) S.seenTips = {};
-        if (!S.seenTips.hackEnemy) {
-          S.seenTips.hackEnemy = 1;
-          ee("toast", Tt.touchMode ? "Hay una unidad hackeable: toca el marcador HACKEAR." : "Hay una unidad hackeable: pulsa V para hackearla.", "quest");
+        if (!S.seenTips.hackMachine) {
+          S.seenTips.hackMachine = 1;
+          ee("toast", Tt.touchMode ? "Hay una máquina inactiva a tu alcance: toca el marcador HACKEAR." : "Hay una máquina inactiva a tu alcance: pulsa V para hackearla.", "quest");
         }
       }
     } else HK.cand = null;
@@ -3276,6 +3563,7 @@ window.__hack = {
   enemySpec: hkEnemySpec,
   startEnemy: hkStartEnemy,
   enemyKind: hkEnemyKind,
+  gadgetKind: hkGadgetKind,
   applyControl: hkApplyControl,
   applyOff: hkApplyOff,
   scan: hkScan,

@@ -710,7 +710,7 @@ function Sr(n) {
   for (let f of a)
     l += `<button class="opt q" data-quest="${f.id}" ${f.locked ? 'disabled style="opacity:.5"' : ""}><span class="ic">${f.def.main ? "\u25C6" : "!"}</span>${ke(f.def.n)}${f.locked ? ` \xB7 requiere nivel ${f.def.lvl - (f.def.main ? 3 : 2)}` : ""}</button>`;
   r && r.def
-    ? (l += `<button class="opt q" data-rep="1"><span class="ic">\u21BB</span>Encargo: ${ke(r.def.n)}</button>`)
+    ? (l += `<button class="opt q" data-rep="1"><span class="ic">\u21BB</span>Encargo repetible: ${ke(r.def.n)}</button>`)
     : r &&
       r.cooldown &&
       (l += `<div class="muted" style="font-size:13px;padding:4px 2px">Nuevo encargo disponible en ${Xs(r.cooldown / 1e3)}.</div>`);

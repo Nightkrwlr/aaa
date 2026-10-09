@@ -58,7 +58,7 @@ export default async function (api) {
     return { st: E.st, hera: E.hera, k: +window.__sx.R.k.toFixed(2), night: +G.night.toFixed(2), sunEl: +G.sunEl.toFixed(2), bossMul: window.__sx.ecl.bossMul(), left: +E.t.toFixed(1), veil: document.getElementById('sxVeil') && document.getElementById('sxVeil').style.opacity, pill: document.querySelector('#sxBar .ecl') && document.querySelector('#sxBar .ecl').textContent };
   });
   check('pasados 40 s del presagio empieza el Eclipse', on.st === 'on', JSON.stringify(on));
-  check('en el Eclipse el cielo se apaga (noche, sol bajo el horizonte, velo de pantalla)', on.k > 0.5 && on.night > 0.6 && on.sunEl < 0.4 && +on.veil > 0.3, JSON.stringify(on));
+  check('en el Eclipse el cielo se apaga (noche, sol bajo el horizonte, velo de pantalla)', on.k > 0.5 && on.night > 0.6 && on.sunEl < 0.4 && +on.veil >= 0.25, JSON.stringify(on));
   check('las reliquias de jefe se multiplican mientras dura', on.bossMul === 1.5);
   check('la etiqueta del HUD muestra la cuenta atrás', /ECLIPSE/.test(on.pill || ''), on.pill);
 

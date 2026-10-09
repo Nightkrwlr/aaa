@@ -12,6 +12,8 @@ export default async function (api) {
   const tag = `${device}${portrait ? '-v' : ''}`;
   const snap = async (n) => { if (SHOTS) await shot(`${tag}-${n}`); };
   await boot(); await newGame();
+  // D11: los enemigos ya no se hackean a mano por defecto (x.cfg.hack.enemy.manual = false; ahora se hackean máquinas, ver maquinas-core). Aquí se reactiva para seguir probando el motor de la sesión con enemigos.
+  await ev(() => { window.__hack.cfg.enemy.manual = true; });
   const vp = await ev(() => ({ w: innerWidth, h: innerHeight, touch: !!navigator.maxTouchPoints }));
   console.log('viewport', JSON.stringify(vp), 'dispositivo', device, portrait ? 'vertical' : '');
   const rect = (sel, nth = 0) => ev(([sel, nth]) => { const e = document.querySelectorAll(sel)[nth]; if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, cx: r.x + r.width / 2, cy: r.y + r.height / 2 }; }, [sel, nth]);

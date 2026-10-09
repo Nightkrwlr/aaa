@@ -173,6 +173,8 @@ var ht = {
     let t = x.S;
     if (t.quests.active[n]) return;
     let i = e || gi[n];
+    // una misión que no es repetible y ya está entregada no se puede volver a aceptar (ni por un diálogo viejo ni por un guardado raro)
+    if (i && !i.repeat && t.quests.done[n]) return !1;
     if (!i.main && this.sideCount() >= kx)
       return (ee("toast", `Ya llevas ${kx} encargos secundarios. Completa o abandona alguno.`, "warn"), !1);
     let s = { prog: i.obj.map(() => 0), t: Date.now(), tracked: !0 };
