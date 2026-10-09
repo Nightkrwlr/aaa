@@ -70,7 +70,7 @@ export default async function (api) {
   });
   console.log('reparto', JSON.stringify({ n: A.n, regs: A.regs, kinds: A.kinds, ready: A.ready, wait: A.wait, minD: A.minD, near0: A.near0 }));
   check('al empezar hay 2 casillas de raro por región (18) sin errores de colocación; el estado es JSON puro', A.init && A.n === 18 && Object.values(A.regs).every((n) => n === 2) && A.bad.length === 0 && A.json, JSON.stringify({ n: A.n, bad: A.bad.slice(0, 4) }));
-  check('separación ≥ 60 casillas dentro de la región, la primera de la región 0 a 62-104 del Bastión y ≥ 10 ocupadas al empezar', A.minD >= 59.9 && A.near0 >= 62 && A.near0 <= 104 && A.ready >= 10, `minD ${A.minD} · primera ${A.near0} · ocupadas ${A.ready}/${A.n}`);
+  check('separación ≥ 60 casillas dentro de la región, la primera de la región 0 a 62-104 del Bastión y ≥ 8 ocupadas al empezar (cada casilla se ocupa con probabilidad 0,75; la primera siempre: la semilla cambia en cada partida y con 10 fallaba una de cada cien)', A.minD >= 59.9 && A.near0 >= 62 && A.near0 <= 104 && A.ready >= 8, `minD ${A.minD} · primera ${A.near0} · ocupadas ${A.ready}/${A.n}`);
   check('el reparto es determinista con la semilla de la partida', A.same, JSON.stringify({ same: A.same }));
 
   await ev(() => { window.__t.keep = new Set(Object.keys(window.__rare.state().slots)); });
