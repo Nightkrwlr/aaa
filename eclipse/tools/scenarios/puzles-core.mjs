@@ -15,11 +15,11 @@ export default async function (api) {
   const pool = process.env.FAST ? 6 : Number(process.env.POOL || 40);
   const va = await ev((pool) => { const a = window.__puzzles.api.validateAll({ pool }); return { total: a.total, ok: a.ok, fails: a.fails, ms: a.ms, sum: a.sum, f: a.failures.slice(0, 4), kinds: Object.keys(a.byKind) }; }, pool);
   check(`validateAll(pool ${pool}): ${va.total} puzles, 0 fallos`, va.fails === 0 && va.total > 0, `${va.ok}/${va.total} · ${va.ms} ms · huella ${va.sum} · ${JSON.stringify(va.f)}`);
-  check('hay 10 tipos registrados (8 nuevos + switch y sequence)', va.kinds.length >= 10, va.kinds.join(','));
+  check('hay 13 tipos registrados (11 jugables + switch y sequence)', va.kinds.length >= 13, va.kinds.join(','));
 
   // ── 2. cada generador se resuelve jugando (bucle real del juego) ──
   await api.region('desierto');
-  const kinds = ['mirrors', 'boxes', 'timed', 'runes', 'circuit', 'lasers', 'memory', 'valves'];
+  const kinds = ['mirrors', 'boxes', 'timed', 'runes', 'circuit', 'lasers', 'memory', 'valves', 'sink', 'ice', 'lock'];
   const live = {};
   for (const k of kinds) {
     for (const tier of [1, 2, 3]) {
@@ -46,7 +46,7 @@ export default async function (api) {
 
   // ── 3. botín, XP y estadísticas ──
   const st = await ev(() => ({ s: window.__G.S.puzzleStats, v: window.__G.S.puzzleV }));
-  check('S.puzzleStats cuenta los 24 resueltos y S.puzzleV = 1', st.s.n === 24 && st.v === 1 && Object.keys(st.s.byKind).length === 8, JSON.stringify(st));
+  check('S.puzzleStats cuenta los 33 resueltos y S.puzzleV = 1', st.s.n === 33 && st.v === 1 && Object.keys(st.s.byKind).length === 11, JSON.stringify(st));
   check('cada acertijo soltó botín del sistema de ECONOMÍA y créditos', Object.values(live).every((r) => r.pickups > 0 && r.credits > 0), kinds.map((k) => `${k}:${live[k + '3'] && live[k + '3'].pickups}`).join(' '));
 
   // ── 4. celdas sólidas ↔ map.blk, y limpieza al desmontar ──

@@ -34,12 +34,12 @@ x.cfg.puzzles = {
   reach: 1.75, // alcance de interacción (celdas)
   // reparto de tipos (peso) por tema de mazmorra: los tipos «de movimiento» van a las naves y túneles, la lógica a los búnkeres
   weights: {
-    default: { mirrors: 1, boxes: 1, timed: 1, runes: 1, circuit: 1, lasers: 1, memory: 1, valves: 1 },
-    sotano: { mirrors: 1, boxes: 1.2, timed: 1, runes: 0.8, circuit: 1.3, lasers: 1.2, memory: 0.8, valves: 1 },
-    planta: { mirrors: 1.3, boxes: 0.8, timed: 1, runes: 1, circuit: 1.2, lasers: 1.3, memory: 1, valves: 0.8 },
-    gruta: { mirrors: 0.9, boxes: 1.3, timed: 1.2, runes: 1.3, circuit: 0.6, lasers: 0.6, memory: 1.2, valves: 1.1 },
-    colmena: { mirrors: 0.8, boxes: 1, timed: 1.2, runes: 1.2, circuit: 0.7, lasers: 0.6, memory: 1.4, valves: 1.4 },
-    alcantarilla: { mirrors: 0.8, boxes: 1, timed: 1, runes: 0.7, circuit: 1, lasers: 0.9, memory: 1, valves: 1.8 },
+    default: { mirrors: 1, boxes: 1, timed: 1, runes: 1, circuit: 1, lasers: 1, memory: 1, valves: 1, sink: 1, ice: 1, lock: 1 },
+    sotano: { mirrors: 1, boxes: 1.2, timed: 1, runes: 0.8, circuit: 1.3, lasers: 1.2, memory: 0.8, valves: 1, sink: 1.2, ice: 0.6, lock: 1.2 },
+    planta: { mirrors: 1.3, boxes: 0.8, timed: 1, runes: 1, circuit: 1.2, lasers: 1.3, memory: 1, valves: 0.8, sink: 1, ice: 0.7, lock: 1.4 },
+    gruta: { mirrors: 0.9, boxes: 1.3, timed: 1.2, runes: 1.3, circuit: 0.6, lasers: 0.6, memory: 1.2, valves: 1.1, sink: 1.3, ice: 1.5, lock: 0.8 },
+    colmena: { mirrors: 0.8, boxes: 1, timed: 1.2, runes: 1.2, circuit: 0.7, lasers: 0.6, memory: 1.4, valves: 1.4, sink: 1.3, ice: 0.9, lock: 0.9 },
+    alcantarilla: { mirrors: 0.8, boxes: 1, timed: 1, runes: 0.7, circuit: 1, lasers: 0.9, memory: 1, valves: 1.8, sink: 1.1, ice: 1.2, lock: 0.7 },
   },
   // premio: XP (fracción de la barra), créditos (× mt.credits(nivel)) y cofre (tier 1-3 del sistema de ECONOMÍA)
   // (el cofre de tier N sale del sistema de botín de ECONOMÍA, con sus tablas de rareza; aquí solo lo que añade el acertijo)
@@ -811,11 +811,16 @@ PZ_GENS.boxes = {
   },
 };
 
-// ───────── 3.3 PLACAS CON CRONÓMETRO ─────────
-// Pisar una placa la enciende unos segundos; hay que tener TODAS encendidas a la vez. Se trata de planear el recorrido más corto
-// entre las placas esquivando los pilares. validate() prueba, con todos los órdenes posibles, que existe un recorrido que llega a tiempo.
+// ───────── 3.3 PLACAS DE PRESIÓN ─────────
+// Una cámara cerrada con una sola entrada. Cada placa se enciende al pisarla y se apaga a los segundos que lleva marcados (cada una dura lo suyo).
+// Hay que tenerlas TODAS encendidas a la vez. Las baldosas rojas descargan y lo apagan todo; las rejas de color solo se abren mientras esté
+// encendida la placa de su mismo color. Se trata de decidir el orden y el camino: las de poca duración van tarde, la que abre una reja va antes
+// de usarla y las rojas obligan a rodear. validate() calcula los tiempos de viaje reales (Dijkstra sobre la cámara, con las rejas abiertas según lo
+// ya pisado), prueba con todos los órdenes posibles que existe alguno que llega a tiempo y cuenta cuántos hay. make() descarta las cámaras que se
+// resuelven con una regla tonta (la de más duración primero, el vecino más cercano, el recorrido más corto…).
 var PZ_SPEED = 4.2; // m/s de referencia (el jugador corre a 5,2: queda margen para las esquinas)
 var PZ_STEP_OVERHEAD = 0.18; // s por placa (reacción y giro)
+var PZ_TM_COLS = [0x4fe0ff, 0xff6bd5]; // un color por reja: la placa que la abre lo lleva también
 function pzPerms(n, cb) {
   const a = [];
   for (let i = 0; i < n; i++) a.push(i);
@@ -833,104 +838,412 @@ function pzPerms(n, cb) {
   };
   rec(0);
 }
-function tmTimes(spec) {
-  // matriz de tiempos de viaje entre placas (s)
-  const { w, h } = spec,
-    wall = new Uint8Array(w * h);
-  for (const q of spec.walls) wall[q] = 1;
-  const n = spec.plates.length,
-    D = [];
-  for (let i = 0; i < n; i++) {
-    const di = pzDist8(w, h, wall, spec.plates[i].z * w + spec.plates[i].x);
-    D.push(spec.plates.map((q, j) => (i === j ? 0 : di[q.z * w + q.x] / PZ_SPEED + PZ_STEP_OVERHEAD)));
+// Rejillas derivadas del spec (una vez por spec): muros, baldosas rojas y celda de cada reja
+function tmGrid(spec) {
+  return pzMemo(spec, "grid", () => {
+    const N = spec.w * spec.h,
+      wall = new Uint8Array(N),
+      hot = new Uint8Array(N),
+      gate = new Int8Array(N).fill(-1);
+    for (const q of spec.walls) wall[q] = 1;
+    for (const q of spec.hot) hot[q] = 1;
+    spec.gates.forEach((g, i) => (gate[g.c] = i));
+    return { wall, hot, gate };
+  });
+}
+// Tiempos de viaje (s) entre placas y desde la entrada, para cada conjunto de rejas abiertas (máscara de bits sobre spec.gates).
+// Las baldosas rojas cuentan como muro: nadie las pisa a propósito.
+function tmMats(spec) {
+  return pzMemo(spec, "mats", () => {
+    const { w, h } = spec,
+      G = tmGrid(spec),
+      nG = spec.gates.length,
+      n = spec.plates.length,
+      out = [];
+    for (let mask = 0; mask < 1 << nG; mask++) {
+      const blk = new Uint8Array(w * h);
+      for (let c = 0; c < w * h; c++) blk[c] = G.wall[c] || G.hot[c] ? 1 : 0;
+      for (let g = 0; g < nG; g++) blk[spec.gates[g].c] = (mask >> g) & 1 ? 0 : 1;
+      const de = pzDist8(w, h, blk, spec.gap),
+        E = spec.plates.map((q) => de[q.z * w + q.x] / PZ_SPEED),
+        D = [];
+      for (let i = 0; i < n; i++) {
+        const di = pzDist8(w, h, blk, spec.plates[i].z * w + spec.plates[i].x);
+        D.push(spec.plates.map((q, j) => (i === j ? 0 : di[q.z * w + q.x] / PZ_SPEED + PZ_STEP_OVERHEAD)));
+      }
+      out.push({ D, E });
+    }
+    return out;
+  });
+}
+// Instantes (s, desde la primera pulsación) en que se pisa cada placa siguiendo el orden `o`; null si algún tramo es imposible.
+// Una reja está abierta mientras esté encendida su placa; en un orden válido todas las ya pisadas siguen encendidas hasta el final.
+function tmTimesOf(spec, M, o) {
+  const n = o.length,
+    nG = spec.gates.length;
+  if (!isFinite(M[0].E[o[0]])) return null;
+  const ts = [0];
+  let t = 0,
+    pressed = 1 << o[0];
+  for (let k = 1; k < n; k++) {
+    let mask = 0;
+    for (let g = 0; g < nG; g++) if ((pressed >> spec.gates[g].by) & 1) mask |= 1 << g;
+    const leg = M[mask].D[o[k - 1]][o[k]];
+    if (!isFinite(leg)) return null;
+    t += leg;
+    ts.push(t);
+    pressed |= 1 << o[k];
   }
-  return D;
+  return ts;
+}
+// Holgura (s) del orden: lo que le sobra a la placa que más justa llega al instante final (< 0: alguna se apaga antes)
+function tmMargin(spec, o, ts) {
+  const tF = ts[ts.length - 1];
+  let m = Infinity;
+  for (let k = 0; k < o.length - 1; k++) m = Math.min(m, spec.plates[o[k]].d - (tF - ts[k]));
+  return m;
+}
+// Todos los órdenes: cuántos llegan a tiempo, el de más holgura y el recorrido más corto
+function tmEnum(spec) {
+  const M = tmMats(spec),
+    n = spec.plates.length;
+  let nvalid = 0,
+    feasible = 0,
+    best = null,
+    bestSpan = Infinity;
+  pzPerms(n, (o) => {
+    const ts = tmTimesOf(spec, M, o);
+    if (!ts) return;
+    feasible++;
+    bestSpan = Math.min(bestSpan, ts[n - 1]);
+    const m = tmMargin(spec, o, ts);
+    if (m >= 0) {
+      nvalid++;
+      if (!best || m > best.margin) best = { o: o.slice(), margin: m, span: ts[n - 1], ts };
+    }
+  });
+  return { nvalid, feasible, best, bestSpan };
+}
+// Cámara cerrada: perímetro de muros con un hueco (la entrada), tabiques con un paso cada uno, pilares sueltos y, de esos pasos, unos cuantos son rejas
+function tmLayout(r, w, h, P) {
+  const N = w * h,
+    wall = new Uint8Array(N);
+  for (let x = 0; x < w; x++) wall[x] = wall[(h - 1) * w + x] = 1;
+  for (let z = 0; z < h; z++) wall[z * w] = wall[z * w + w - 1] = 1;
+  const side = r.int(0, 3),
+    gx = side === 3 ? 0 : side === 1 ? w - 1 : r.int(1, w - 2),
+    gz = side === 0 ? 0 : side === 2 ? h - 1 : r.int(1, h - 2),
+    gap = gz * w + gx;
+  wall[gap] = 0;
+  const inner = gap + (side === 3 ? 1 : side === 1 ? -1 : side === 0 ? w : -w); // la celda de dentro, junto a la entrada
+  const rooms = [[1, 1, w - 2, h - 2]],
+    openings = [];
+  for (let k = 0; k < P.parts; k++) {
+    let bi = -1,
+      ba = 0;
+    rooms.forEach((q, i) => {
+      const cw = q[2] - q[0] + 1,
+        ch = q[3] - q[1] + 1;
+      if (Math.max(cw, ch) >= 4 && cw * ch > ba) ((ba = cw * ch), (bi = i));
+    });
+    if (bi < 0) break;
+    const [x0, z0, x1, z1] = rooms[bi],
+      cw = x1 - x0 + 1,
+      ch = z1 - z0 + 1,
+      vert = cw > ch ? true : cw < ch ? false : r() < 0.5;
+    if (vert) {
+      const mid = Math.round((x0 + x1) / 2),
+        lx = Math.max(x0 + 1, Math.min(x1 - 1, mid + r.int(-1, 1))),
+        g = r.int(z0, z1);
+      for (let z = z0; z <= z1; z++) if (z !== g) wall[z * w + lx] = 1;
+      openings.push(g * w + lx);
+      rooms.splice(bi, 1, [x0, z0, lx - 1, z1], [lx + 1, z0, x1, z1]);
+    } else {
+      const mid = Math.round((z0 + z1) / 2),
+        lz = Math.max(z0 + 1, Math.min(z1 - 1, mid + r.int(-1, 1))),
+        g = r.int(x0, x1);
+      for (let xx = x0; xx <= x1; xx++) if (xx !== g) wall[lz * w + xx] = 1;
+      openings.push(lz * w + g);
+      rooms.splice(bi, 1, [x0, z0, x1, lz - 1], [x0, lz + 1, x1, z1]);
+    }
+  }
+  if (wall[inner]) return null;
+  // pilares: lejos de los pasos y de la entrada
+  const near = new Uint8Array(N);
+  for (const c of openings.concat([inner]))
+    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) (dx === 0 || dz === 0) && ((near[c + dz * w + dx] = 1), (near[c] = 1));
+  const cand = [];
+  for (let z = 1; z < h - 1; z++) for (let xx = 1; xx < w - 1; xx++) if (!wall[z * w + xx] && !near[z * w + xx]) cand.push(z * w + xx);
+  r.shuffle(cand);
+  for (let i = 0; i < P.pillars && i < cand.length; i++) wall[cand[i]] = 1;
+  return { wall, gap, inner, openings, rooms };
+}
+// Celdas alcanzables (4 vecinos) desde `from` sin cruzar los marcados en `blk`; devuelve el nº de alcanzadas y rellena `seen`
+function tmFlood(w, h, blk, from, seen) {
+  seen.fill(0);
+  const q = [from];
+  seen[from] = 1;
+  for (let i = 0; i < q.length; i++) {
+    const c = q[i],
+      cx = c % w;
+    if (cx + 1 < w && !blk[c + 1] && !seen[c + 1]) ((seen[c + 1] = 1), q.push(c + 1));
+    if (cx > 0 && !blk[c - 1] && !seen[c - 1]) ((seen[c - 1] = 1), q.push(c - 1));
+    if (c + w < w * h && !blk[c + w] && !seen[c + w]) ((seen[c + w] = 1), q.push(c + w));
+    if (c >= w && !blk[c - w] && !seen[c - w]) ((seen[c - w] = 1), q.push(c - w));
+  }
+  return q.length;
 }
 PZ_GENS.timed = {
   id: "timed",
-  n: "Placas con cronómetro",
-  d: "Pisa cada placa: se apaga a los pocos segundos. Enciende todas a la vez.",
+  n: "Placas de presión",
+  d: "Cada placa se apaga a los segundos que marca. Enciéndelas todas a la vez: planea el orden y el camino.",
   icon: "◷",
-  dims: { 1: [6, 5], 2: [7, 5], 3: [7, 6] },
+  dims: { 1: [7, 6], 2: [8, 6], 3: [8, 7] },
   lv: {
-    1: { n: 3, walls: 3, slack: 1.2, add: 0.35, sep: 3, maxValid: 4 },
-    2: { n: 4, walls: 4, slack: 1.1, add: 0.3, sep: 3, maxValid: 4 },
-    3: { n: 5, walls: 5, slack: 1.06, add: 0.25, sep: 3, maxValid: 4 },
+    1: { n: 4, parts: 1, pillars: 1, hot: 1, gates: 0, slack: 1.1, add: 0.3, minSpan: 3.2, maxValid: 3, naive: 1, minMargin: 0.35 },
+    2: { n: 4, parts: 2, pillars: 1, hot: 2, gates: 1, slack: 1.1, add: 0.3, minSpan: 5, maxValid: 2, naive: 2, minMargin: 0.35 },
+    3: { n: 5, parts: 2, pillars: 2, hot: 3, gates: 2, slack: 1.08, add: 0.25, minSpan: 7, maxValid: 2, naive: 3, minMargin: 0.3 },
   },
   animated: true,
   make(seed, tier) {
     const [w, h] = this.dims[tier],
       P = this.lv[tier],
       N = w * h,
-      reach = new Uint8Array(N),
-      qa = new Int32Array(N);
-    let best = null;
-    for (let att = 0; att < 200; att++) {
+      seen = new Uint8Array(N),
+      n = P.n;
+    let best = null,
+      bestScore = -1e9,
+      bestFooled = 9;
+    for (let att = 0; att < 320; att++) {
+      // pasado un buen rato, se da por bueno el mejor candidato que no caiga en más reglas tontas de las permitidas
+      if (att === 120 && best && bestFooled === 0) return best;
       const r = pzRng(pzMix(seed, tier, 0x544d, att)),
-        wall = new Uint8Array(N),
-        walls = [];
-      for (let i = 0; i < P.walls; i++) {
-        const c = r.int(0, N - 1);
-        if (!wall[c]) ((wall[c] = 1), walls.push(c));
-      }
-      const free = [];
-      for (let i = 0; i < N; i++) if (!wall[i]) free.push(i);
-      sokFlood(w, h, wall, free[0], reach, qa);
-      if (free.some((c) => !reach[c])) continue;
+        L = tmLayout(r, w, h, P);
+      if (!L) continue;
+      const wall = L.wall,
+        opening = new Uint8Array(N);
+      for (const c of L.openings) opening[c] = 1;
+      // todo lo libre se alcanza desde la entrada (con las rejas abiertas)
+      let freeN = 0;
+      for (let c = 0; c < N; c++) if (!wall[c]) freeN++;
+      if (tmFlood(w, h, wall, L.gap, seen) !== freeN) continue;
+      // rejas: algunos pasos
+      const gateCells = L.openings.slice();
+      r.shuffle(gateCells);
+      const gates = gateCells.slice(0, P.gates).map((c) => ({ c, by: -1 }));
+      if (gates.length < P.gates) continue;
+      // baldosas rojas y placas en celdas libres, sin tapar pasos ni la entrada
+      const hotSet = new Uint8Array(N),
+        free = [];
+      for (let z = 1; z < h - 1; z++)
+        for (let xx = 1; xx < w - 1; xx++) {
+          const c = z * w + xx;
+          if (!wall[c] && !opening[c] && c !== L.inner && Math.abs(xx - ((L.inner % w) | 0)) + Math.abs(z - ((L.inner / w) | 0)) > 1) free.push(c);
+        }
       r.shuffle(free);
-      const pl = [];
+      const hot = [];
       for (const c of free) {
-        if (pl.length >= P.n) break;
-        if (pl.every((q) => Math.max(Math.abs((q % w) - (c % w)), Math.abs(((q / w) | 0) - ((c / w) | 0))) >= (att < 120 ? P.sep : 2))) pl.push(c);
+        if (hot.length >= P.hot) break;
+        hotSet[c] = 1;
+        const blk = new Uint8Array(wall);
+        for (const q of hot) blk[q] = 1;
+        blk[c] = 1;
+        // las rojas no parten la cámara
+        if (tmFlood(w, h, blk, L.gap, seen) === freeN - hot.length - 1) hot.push(c);
+        else hotSet[c] = 0;
       }
-      if (pl.length < P.n) continue;
-      const plates = pl.map((c) => ({ x: c % w, z: (c / w) | 0 })),
-        spec = { kind: "timed", seed, tier, w, h, walls, plates, dur: 0, sol: [] };
-      const D = tmTimes(spec);
-      if (D.some((row) => row.some((v) => !isFinite(v)))) continue;
-      let bestSpan = Infinity,
-        bestOrd = null;
-      const spans = [];
-      pzPerms(P.n, (o) => {
-        let s = 0;
-        for (let i = 0; i + 1 < o.length; i++) s += D[o[i]][o[i + 1]];
-        spans.push(s);
-        if (s < bestSpan) ((bestSpan = s), (bestOrd = o.slice()));
+      if (hot.length < P.hot) continue;
+      const rest = free.filter((c) => !hotSet[c]),
+        pl = [],
+        chamberOf = (c) => L.rooms.findIndex((q) => (c % w) >= q[0] && (c % w) <= q[2] && ((c / w) | 0) >= q[1] && ((c / w) | 0) <= q[3]);
+      for (const c of rest) {
+        if (pl.length >= n) break;
+        if (pl.every((q) => Math.max(Math.abs((q % w) - (c % w)), Math.abs(((q / w) | 0) - ((c / w) | 0))) >= 2)) pl.push(c);
+      }
+      if (pl.length < n) continue;
+      const used = new Set(pl.map(chamberOf));
+      if (used.size < Math.min(L.rooms.length, tier === 3 ? 3 : 2)) continue;
+      const plates = pl.map((c) => ({ x: c % w, z: (c / w) | 0, d: 0 }));
+      // quién abre cada reja: una placa de la parte a la que se llega con esa reja cerrada y las demás abiertas
+      let okG = true;
+      gates.forEach((g, gi) => {
+        const blk = new Uint8Array(wall);
+        blk[g.c] = 1;
+        tmFlood(w, h, blk, L.gap, seen);
+        const cands = [];
+        plates.forEach((q, i) => seen[q.z * w + q.x] && !gates.some((o) => o.by === i) && cands.push(i));
+        if (!cands.length) okG = false;
+        else g.by = r.pick(cands);
       });
-      spec.dur = Math.ceil((bestSpan * P.slack + P.add) * 4) / 4;
-      spec.sol = bestOrd;
-      const nvalid = spans.filter((s) => s <= spec.dur).length;
-      spec.nvalid = nvalid;
-      if (!best || nvalid < best.nvalid) best = spec;
-      if (nvalid <= P.maxValid) return spec;
+      if (!okG) continue;
+      const spec = { kind: "timed", seed, tier, w, h, walls: [], gap: L.gap, plates, hot, gates, sol: [], span: 0, nvalid: 0, margin: 0 };
+      for (let c = 0; c < N; c++) if (wall[c]) spec.walls.push(c);
+      const M = tmMats(spec);
+      // todas las placas se alcanzan con todo abierto y alguna desde la entrada con todo cerrado
+      const full = M[(1 << gates.length) - 1];
+      if (full.D.some((row) => row.some((v) => !isFinite(v)))) continue;
+      const orders = [];
+      pzPerms(n, (o) => {
+        const ts = tmTimesOf(spec, M, o);
+        if (ts && ts[n - 1] >= P.minSpan) orders.push({ o: o.slice(), ts });
+      });
+      if (orders.length < 2) continue;
+      // varios intentos de duraciones sobre la misma cámara
+      for (let k = 0; k < 7; k++) {
+        const pick = r.pick(orders),
+          o = pick.o,
+          ts = pick.ts,
+          tF = ts[n - 1];
+        for (let j = 0; j < n; j++) {
+          const q = plates[o[j]];
+          let d = j === n - 1 ? r.pick([2.5, 3, 3.5, 4, 5]) : (tF - ts[j]) * P.slack + P.add;
+          if (j < n - 1 && r() < 0.4) d += r.pick([0.75, 1.5, 2.25, 3]); // alguna sobra: la duración sola no delata el orden
+          q.d = Math.min(14, Math.max(2.5, Math.ceil(d * 4) / 4));
+        }
+        spec.span = tF;
+        const E = tmEnum(spec);
+        if (!E.best || E.nvalid > P.maxValid || E.best.margin < P.minMargin) continue;
+        let spread = 0;
+        {
+          let lo = 99,
+            hi = 0;
+          for (const q of plates) ((lo = Math.min(lo, q.d)), (hi = Math.max(hi, q.d)));
+          spread = hi - lo;
+        }
+        if (spread < 2) continue;
+        // reglas tontas: ninguna debe resolverla
+        const idx = plates.map((_, i) => i),
+          naive = [],
+          valid = (o2) => {
+            const t2 = tmTimesOf(spec, M, o2);
+            return !!t2 && tmMargin(spec, o2, t2) >= 0;
+          };
+        naive.push(idx.slice().sort((a, b) => plates[b].d - plates[a].d || a - b)); // la que más dura, primero
+        {
+          // vecino más cercano desde la entrada
+          const left = new Set(idx),
+            o2 = [];
+          let pressed = 0;
+          while (left.size) {
+            let bj = -1,
+              bt = Infinity;
+            for (const j of left) {
+              let t2;
+              if (!o2.length) t2 = M[0].E[j];
+              else {
+                let mask = 0;
+                for (let g = 0; g < gates.length; g++) if ((pressed >> gates[g].by) & 1) mask |= 1 << g;
+                t2 = M[mask].D[o2[o2.length - 1]][j];
+              }
+              if (t2 < bt) ((bt = t2), (bj = j));
+            }
+            if (bj < 0) break;
+            o2.push(bj);
+            left.delete(bj);
+            pressed |= 1 << bj;
+          }
+          naive.push(o2);
+        }
+        naive.push(idx.slice().sort((a, b) => M[0].E[a] - M[0].E[b] || a - b)); // la más cercana a la entrada, primero
+        {
+          // el recorrido más corto (si no es la solución)
+          let bs = Infinity,
+            bo = null;
+          pzPerms(n, (o2) => {
+            const t2 = tmTimesOf(spec, M, o2);
+            if (t2 && t2[n - 1] < bs) ((bs = t2[n - 1]), (bo = o2.slice()));
+          });
+          bo && naive.push(bo);
+        }
+        let fooled = 0;
+        for (const q of naive.slice(0, P.naive)) if (q.length === n && valid(q)) fooled++;
+        // las rojas y las rejas pintan algo: las rojas alargan algún tramo de la solución y cada reja se usa de verdad
+        const sol = E.best.o,
+          tsS = E.best.ts;
+        let hotImpact = 0,
+          gatesUsed = 0;
+        if (P.hot) {
+          const noHot = Object.assign({}, spec, { hot: [] });
+          const Mh = tmMats(noHot);
+          let pressedH = 1 << sol[0];
+          for (let kk = 1; kk < n; kk++) {
+            let mask = 0;
+            for (let g = 0; g < gates.length; g++) if ((pressedH >> gates[g].by) & 1) mask |= 1 << g;
+            hotImpact += M[mask].D[sol[kk - 1]][sol[kk]] - Mh[mask].D[sol[kk - 1]][sol[kk]];
+            pressedH |= 1 << sol[kk];
+          }
+        }
+        if (gates.length) {
+          let pressedG = 1 << sol[0];
+          const used = new Set();
+          for (let kk = 1; kk < n; kk++) {
+            let mask = 0;
+            for (let g = 0; g < gates.length; g++) if ((pressedG >> gates[g].by) & 1) mask |= 1 << g;
+            // ¿ese tramo es más corto gracias a una reja abierta?
+            for (let g = 0; g < gates.length; g++) if ((mask >> g) & 1 && M[mask & ~(1 << g)].D[sol[kk - 1]][sol[kk]] > M[mask].D[sol[kk - 1]][sol[kk]] + 0.2) used.add(g);
+            pressedG |= 1 << sol[kk];
+          }
+          gatesUsed = used.size;
+        }
+        const score = -fooled * 10 + (P.hot && hotImpact < 0.25 ? -3 : 0) + (gatesUsed < gates.length ? -4 : 0) - E.nvalid + Math.min(spread, 6) * 0.1;
+        if (score > bestScore) {
+          bestScore = score;
+          bestFooled = fooled;
+          best = JSON.parse(JSON.stringify(spec));
+          best.sol = sol.slice();
+          best.span = Math.round(tsS[n - 1] * 100) / 100;
+          best.nvalid = E.nvalid;
+          best.margin = Math.round(E.best.margin * 100) / 100;
+        }
+        if (fooled === 0 && (!P.hot || hotImpact >= 0.25) && gatesUsed >= gates.length) return best;
+      }
     }
     return best;
   },
   validate(spec) {
-    const D = tmTimes(spec),
-      n = spec.plates.length;
-    if (D.some((row) => row.some((v) => !isFinite(v)))) return { ok: false, why: "placa inalcanzable" };
-    let nvalid = 0,
-      bestSpan = Infinity;
-    pzPerms(n, (o) => {
-      let s = 0;
-      for (let i = 0; i + 1 < o.length; i++) s += D[o[i]][o[i + 1]];
-      bestSpan = Math.min(bestSpan, s);
-      if (s <= spec.dur) nvalid++;
-    });
-    const ok = nvalid > 0 && spec.dur >= 2.5;
-    return { ok, why: ok ? "" : "ningún recorrido llega a tiempo", nvalid, orders: pzFact(n), best: +bestSpan.toFixed(2), dur: spec.dur, margin: +(spec.dur - bestSpan).toFixed(2) };
+    const n = spec.plates.length,
+      nG = spec.gates.length;
+    const G = tmGrid(spec);
+    for (const q of spec.plates) {
+      const c = q.z * spec.w + q.x;
+      if (G.wall[c] || G.hot[c] || G.gate[c] >= 0 || !(q.d >= 2.5)) return { ok: false, why: "placa mal colocada" };
+    }
+    for (const g of spec.gates) if (g.by < 0 || g.by >= n) return { ok: false, why: "reja sin placa" };
+    const M = tmMats(spec),
+      full = M[(1 << nG) - 1];
+    if (full.D.some((row) => row.some((v) => !isFinite(v)))) return { ok: false, why: "placa inalcanzable" };
+    const E = tmEnum(spec);
+    const ok = E.nvalid > 0 && E.best.margin >= 0.2;
+    let lo = 99,
+      hi = 0;
+    for (const q of spec.plates) ((lo = Math.min(lo, q.d)), (hi = Math.max(hi, q.d)));
+    return {
+      ok,
+      why: ok ? "" : "ningún recorrido llega a tiempo",
+      nvalid: E.nvalid,
+      orders: pzFact(n),
+      feasible: E.feasible,
+      best: +E.bestSpan.toFixed(2),
+      span: E.best ? +E.best.span.toFixed(2) : 0,
+      margin: E.best ? +E.best.margin.toFixed(2) : 0,
+      dmin: lo,
+      dmax: hi,
+      hot: spec.hot.length,
+      gates: nG,
+    };
   },
   init(spec) {
     const st = pzBaseState(spec);
     st.lit = spec.plates.map(() => 0);
-    st.wall = new Uint8Array(spec.w * spec.h);
-    for (const q of spec.walls) st.wall[q] = 1;
+    st.gopen = spec.gates.map(() => false);
+    st.inv = 0;
     st.live = false;
     return st;
   },
   reset(spec, st) {
     st.lit.fill(0);
+    st.gopen.fill(false);
+    st.inv = 0;
     st.live = false;
     st.rev++;
   },
@@ -939,42 +1252,81 @@ PZ_GENS.timed = {
     return true;
   },
   solid(spec, st, cx, cz) {
-    return st.wall[cz * spec.w + cx] === 1;
+    const G = tmGrid(spec),
+      c = cz * spec.w + cx;
+    return G.wall[c] === 1 || (G.gate[c] >= 0 && !st.gopen[G.gate[c]]);
   },
   pick() {
     return -1;
   },
   step(spec, st, dt, ctx) {
-    const cx = Math.floor(ctx.px),
+    const G = tmGrid(spec),
+      w = spec.w,
+      cx = Math.floor(ctx.px),
       cz = Math.floor(ctx.pz);
+    if (st.inv > 0) st.inv -= dt;
+    const here = ctx.inside && cx >= 0 && cz >= 0 && cx < w && cz < spec.h ? cz * w + cx : -1;
+    // baldosa roja: descarga y apaga todo (un roce con el borde de la celda se perdona)
+    if (here >= 0 && G.hot[here] && st.inv <= 0) {
+      const fx = ctx.px - cx,
+        fz = ctx.pz - cz;
+      if (fx > 0.14 && fx < 0.86 && fz > 0.14 && fz < 0.86) {
+        let any = false;
+        for (let i = 0; i < st.lit.length; i++) if (st.lit[i] > 0) ((st.lit[i] = 0), (any = true));
+        st.errors++;
+        st.inv = 1.1;
+        st.rev++;
+        ctx.snd("zap");
+        ctx.hurt(PZ_CFG.respawnPenalty * 0.5);
+        ctx.toast(any ? "¡Descarga! Se han apagado todas las placas." : "¡Descarga! Esa baldosa no se pisa.", "warn");
+      }
+    }
     let live = false;
     for (let i = 0; i < spec.plates.length; i++) {
       const p = spec.plates[i];
-      if (ctx.inside && cx === p.x && cz === p.z) {
+      if (here >= 0 && cx === p.x && cz === p.z) {
         if (st.lit[i] <= 0) {
           ctx.snd("beep", { p: 0.75 + i * 0.14 });
           st.rev++;
         }
-        st.lit[i] = spec.dur;
+        st.lit[i] = p.d;
       } else if (st.lit[i] > 0) {
         st.lit[i] -= dt;
         if (st.lit[i] <= 0) ((st.lit[i] = 0), st.rev++);
       }
       if (st.lit[i] > 0) live = true;
     }
+    // reja abierta mientras su placa esté encendida (y mientras alguien la cruza: no se cierra sobre el jugador)
+    for (let g = 0; g < spec.gates.length; g++) {
+      const gt = spec.gates[g],
+        open = st.lit[gt.by] > 0 || here === gt.c;
+      if (open !== st.gopen[g]) {
+        st.gopen[g] = open;
+        st.rev++;
+        ctx.snd(open ? "open" : "close", { v: 0.5 });
+      }
+    }
     st.live = live;
   },
   status(spec, st) {
-    let n = 0;
+    let n = 0,
+      go = 0;
     for (const v of st.lit) v > 0 && n++;
-    return [`Placas encendidas: ${n}/${spec.plates.length}`, `Cada placa dura ${spec.dur} s`];
+    for (const o of st.gopen) o && go++;
+    const out = [`Placas encendidas: ${n}/${spec.plates.length}`];
+    if (spec.hot.length) out.push("Las baldosas rojas apagan todas las placas");
+    if (spec.gates.length) out.push(`Rejas abiertas: ${go}/${spec.gates.length} (cada una con la placa de su color)`);
+    if (st.errors) out.push(`Descargas: ${st.errors}`);
+    return out;
   },
   hint(spec, st) {
-    const o = spec.sol;
-    return { id: o[0], text: `Pista: empieza por la placa marcada y sigue el camino más corto.` };
+    // la primera placa del orden de la solución que no esté encendida
+    for (const i of spec.sol) if (st.lit[i] <= 0) return { id: i, text: st.lit.some((v) => v > 0) ? "Pista: sigue por la placa marcada." : "Pista: empieza por la placa marcada." };
+    return null;
   },
   solve(spec, st) {
-    st.lit.fill(spec.dur);
+    for (let i = 0; i < st.lit.length; i++) st.lit[i] = spec.plates[i].d;
+    st.gopen.fill(true);
     st.rev++;
   },
   hackable: true,
@@ -982,31 +1334,74 @@ PZ_GENS.timed = {
     const q = spec.plates[id];
     return q ? [q.x, q.z] : null;
   },
+  glyphs(spec) {
+    return pzMemo(spec, "glyphs", () => {
+      const out = spec.plates.map((q, i) => {
+        const g = spec.gates.findIndex((o) => o.by === i);
+        return { t: q.d + " s", n: "", col: g >= 0 ? PZ_TM_COLS[g] : 0xe8eef5, cx: q.x + 0.5, cz: q.z + 0.5, y: 0.95 };
+      });
+      return out;
+    });
+  },
   botMode: "walk",
   bot(spec) {
-    const D = tmTimes(spec),
+    const M = tmMats(spec),
       o = spec.sol,
+      ts = tmTimesOf(spec, M, o),
       acts = [];
-    let t = 0;
-    for (let i = 0; i < o.length; i++) {
-      if (i) t += D[o[i - 1]][o[i]];
-      acts.push({ at: [spec.plates[o[i]].x + 0.5, spec.plates[o[i]].z + 0.5], t });
-    }
+    if (!ts) return null;
+    for (let i = 0; i < o.length; i++) acts.push({ at: [spec.plates[o[i]].x + 0.5, spec.plates[o[i]].z + 0.5], t: ts[i] });
     return acts;
   },
   draw(spec, st, g, t) {
     const w = spec.w,
-      h = spec.h;
-    for (let z = 0; z < h; z++) for (let xx = 0; xx < w; xx++) g.box(xx + 0.5, z + 0.5, 0.025, 0.94, 0.05, 0.94, (xx + z) & 1 ? 0x232a33 : 0x1d242c);
-    for (const q of spec.walls) g.box((q % w) + 0.5, ((q / w) | 0) + 0.5, 0.55, 0.9, 1.1, 0.9, 0x474f58);
+      h = spec.h,
+      G = tmGrid(spec),
+      done = st.done;
+    for (let z = 0; z < h; z++)
+      for (let xx = 0; xx < w; xx++) {
+        const c = z * w + xx;
+        if (G.wall[c]) {
+          const edge = xx === 0 || z === 0 || xx === w - 1 || z === h - 1;
+          g.box(xx + 0.5, z + 0.5, edge ? 0.5 : 0.55, 0.96, edge ? 1 : 1.1, 0.96, edge ? 0x2f363e : 0x474f58);
+        } else g.box(xx + 0.5, z + 0.5, 0.025, 0.94, 0.05, 0.94, (xx + z) & 1 ? 0x232a33 : 0x1d242c);
+      }
+    // la entrada, marcada en el suelo
+    g.box((spec.gap % w) + 0.5, ((spec.gap / w) | 0) + 0.5, 0.05, 0.86, 0.04, 0.86, 0x2f6a7a, 0.7);
+    for (const c of spec.hot) {
+      const hx = (c % w) + 0.5,
+        hz = ((c / w) | 0) + 0.5,
+        f = 1 + Math.sin(t * 5 + c) * 0.25;
+      g.box(hx, hz, 0.05, 0.9, 0.06, 0.9, 0xc2281c, 1.1 * f);
+      g.box(hx, hz, 0.1, 0.96, 0.03, 0.12, 0x2a0806, 0, Math.PI / 4);
+      g.box(hx, hz, 0.1, 0.96, 0.03, 0.12, 0x2a0806, 0, -Math.PI / 4);
+    }
+    for (let gi = 0; gi < spec.gates.length; gi++) {
+      const q = spec.gates[gi],
+        gx = (q.c % w) + 0.5,
+        gz = ((q.c / w) | 0) + 0.5,
+        col = PZ_TM_COLS[gi],
+        open = st.gopen[gi];
+      if (open) g.box(gx, gz, 0.05, 0.9, 0.06, 0.9, col, 0.5);
+      else {
+        g.box(gx, gz, 0.55, 0.9, 1.1, 0.9, col, 0.9);
+        g.box(gx, gz, 0.55, 0.96, 1.16, 0.2, 0x1a1f26, 0);
+      }
+    }
     for (let i = 0; i < spec.plates.length; i++) {
       const p = spec.plates[i],
-        f = Math.max(0, st.lit[i] / spec.dur),
+        f = Math.max(0, st.lit[i] / p.d),
         on = f > 0,
-        col = f > 0.5 ? 0x4cff8f : f > 0.22 ? 0xffd04a : 0xff5a3c;
+        col = done ? 0x4cff8f : f > 0.5 ? 0x4cff8f : f > 0.22 ? 0xffd04a : 0xff5a3c,
+        gi = spec.gates.findIndex((o) => o.by === i);
       g.box(p.x + 0.5, p.z + 0.5, 0.06, 0.8, 0.08, 0.8, on ? col : 0x3a4350, on ? 1.2 : 0);
       g.ring(p.x + 0.5, p.z + 0.5, 0.11, 0.36, on ? col : 0x6a7684, on ? 1.8 : 0.5);
       if (on) g.cyl(p.x + 0.5, p.z + 0.5, 0.15 + f * 0.55, 0.1, f * 1.1, col, 1.8);
+      if (gi >= 0) {
+        // el mástil del color de la reja que abre
+        g.cyl(p.x + 0.5 + 0.33, p.z + 0.5 - 0.33, 0.28, 0.06, 0.56, 0x2c3944);
+        g.sph(p.x + 0.5 + 0.33, p.z + 0.5 - 0.33, 0.62, 0.11, PZ_TM_COLS[gi], 1.8);
+      }
     }
   },
 };
@@ -2351,6 +2746,1099 @@ PZ_GENS.sequence = {
     return { ok, why: ok ? "" : "secuencia inválida", len: spec.seq.length };
   },
 };
+// ───────── 3.10 LOSAS DE UN SOLO PASO ─────────
+// Una cámara cerrada de losas: cada losa solo se pisa una vez, porque al dejarla se cierra tras de ti (se alza como un bloque). Las losas con
+// diamante hay que pisarlas todas; con la última, la salida se abre. Hay que llegar a ella sin cerrarte el paso ni dejarte una losa clave atrás.
+// validate() hace una búsqueda exhaustiva de caminos que pisan cada losa a lo sumo una vez, cuenta las soluciones y mide lo ramificado que es.
+function skGrid(spec) {
+  return pzMemo(spec, "grid", () => {
+    const w = spec.w,
+      h = spec.h,
+      N = w * h,
+      wall = new Uint8Array(N),
+      key = new Uint8Array(N),
+      frag = new Uint8Array(N);
+    for (const q of spec.walls) wall[q] = 1;
+    for (const q of spec.keys) key[q] = 1;
+    for (let z = 1; z < h - 1; z++) for (let xx = 1; xx < w - 1; xx++) if (!wall[z * w + xx]) frag[z * w + xx] = 1;
+    const inner = (gap) => (gap % w === 0 ? gap + 1 : gap % w === w - 1 ? gap - 1 : gap < w ? gap + w : gap - w);
+    return { wall, key, frag, s0: inner(spec.entry), sx: inner(spec.exit) };
+  });
+}
+// Búsqueda exhaustiva. from = losa donde estás (ya pisada); sunk = losas cerradas (o null); lit = diamantes ya pisados (o null).
+// Cuenta caminos (hasta cap) que pisan todos los diamantes pendientes y acaban en la losa de la salida; nodeCap acota el trabajo.
+function skSolve(spec, cap, nodeCap, from, sunk, lit) {
+  const G = skGrid(spec),
+    w = spec.w,
+    h = spec.h,
+    N = w * h,
+    sx = G.sx,
+    vis = new Uint8Array(N),
+    need = new Uint8Array(N),
+    seen = new Uint8Array(N),
+    q = new Int32Array(N),
+    path = [from],
+    OFF = [1, w, -1, -w];
+  let rem = 0;
+  for (let c = 0; c < N; c++) {
+    vis[c] = G.frag[c] && !(sunk && sunk[c]) ? 0 : 1;
+    if (G.key[c] && !(lit && lit[c])) need[c] = 1;
+  }
+  vis[from] = 1;
+  need[from] = 0;
+  for (let c = 0; c < N; c++) if (need[c]) rem++;
+  let count = 0,
+    nodes = 0,
+    capped = false,
+    first = null;
+  // ¿se llega a todos los diamantes pendientes y a la losa de la salida sin pasar por ella?
+  const feasible = (cur, rm) => {
+    seen.fill(0);
+    let qh = 0,
+      qt = 0,
+      got = 0,
+      ex = cur === sx;
+    q[qt++] = cur;
+    seen[cur] = 1;
+    while (qh < qt) {
+      const c = q[qh++];
+      if (c === sx && c !== cur) continue; // la salida solo se pisa al final
+      const cx = c % w;
+      for (let d = 0; d < 4; d++) {
+        if ((d === 0 && cx + 1 >= w) || (d === 2 && cx === 0)) continue;
+        const nb = c + OFF[d];
+        if (nb < 0 || nb >= N || vis[nb] || seen[nb]) continue;
+        seen[nb] = 1;
+        if (nb === sx) ex = true;
+        if (need[nb]) got++;
+        q[qt++] = nb;
+      }
+    }
+    return ex && got >= rm;
+  };
+  const rec = (cur, rm) => {
+    if (capped) return;
+    if (++nodes > nodeCap) {
+      capped = true;
+      return;
+    }
+    if (cur === sx) {
+      if (rm === 0) {
+        count++;
+        if (!first) first = path.slice();
+        if (count >= cap) capped = true;
+      }
+      return;
+    }
+    if (!feasible(cur, rm)) return;
+    const cx = cur % w;
+    for (let d = 0; d < 4; d++) {
+      if ((d === 0 && cx + 1 >= w) || (d === 2 && cx === 0)) continue;
+      const nb = cur + OFF[d];
+      if (nb < 0 || nb >= N || vis[nb]) continue;
+      vis[nb] = 1;
+      path.push(nb);
+      const nk = need[nb];
+      if (nk) need[nb] = 0;
+      rec(nb, rm - nk);
+      if (nk) need[nb] = 1;
+      path.pop();
+      vis[nb] = 0;
+      if (capped) return;
+    }
+  };
+  if (from === sx) return { count: rem === 0 ? 1 : 0, first: [from], nodes: 1, capped: false };
+  rec(from, rem);
+  return { count, first, nodes, capped };
+}
+// Un camino aleatorio sin repetir losas de `s0` a `sx` con una longitud (en losas) entre lo y hi
+function skPath(r, w, h, wall, s0, sx, lo, hi) {
+  const N = w * h,
+    vis = new Uint8Array(N),
+    OFF = [1, w, -1, -w],
+    path = [s0];
+  let nodes = 0;
+  vis[s0] = 1;
+  const free = (c) => c >= 0 && c < N && !wall[c] && !vis[c];
+  const rec = (cur) => {
+    if (++nodes > 6000) return false;
+    if (cur === sx) return path.length >= lo;
+    if (path.length >= hi) return false;
+    const cx = cur % w,
+      nbs = [];
+    for (let d = 0; d < 4; d++) {
+      if ((d === 0 && cx + 1 >= w) || (d === 2 && cx === 0)) continue;
+      const nb = cur + OFF[d];
+      if (!free(nb) || (nb === sx && path.length + 1 < lo)) continue;
+      // las que dejan menos salidas, antes (caminos sinuosos que llenan la cámara)
+      let deg = 0;
+      for (let e = 0; e < 4; e++) {
+        const n2 = nb + OFF[e];
+        if (free(n2) && !(e === 0 && nb % w + 1 >= w) && !(e === 2 && nb % w === 0)) deg++;
+      }
+      nbs.push([deg + r() * 1.6, nb]);
+    }
+    nbs.sort((a, b) => a[0] - b[0]);
+    for (const [, nb] of nbs) {
+      vis[nb] = 1;
+      path.push(nb);
+      if (rec(nb)) return true;
+      path.pop();
+      vis[nb] = 0;
+    }
+    return false;
+  };
+  return rec(s0) ? path.slice() : null;
+}
+PZ_GENS.sink = {
+  id: "sink",
+  n: "Losas de un solo paso",
+  d: "Cada losa solo se pisa una vez: al dejarla se cierra tras de ti. Pisa todas las losas con diamante y la salida se abrirá.",
+  icon: "▤",
+  dims: { 1: [6, 5], 2: [7, 6], 3: [8, 7] },
+  lv: {
+    1: { walls: 1, keys: 3, len: [7, 9], maxSol: 3, minDecoy: 2, minNodes: 14 },
+    2: { walls: 2, keys: 5, len: [11, 14], maxSol: 2, minDecoy: 3, minNodes: 60 },
+    3: { walls: 3, keys: 8, len: [17, 21], maxSol: 2, minDecoy: 4, minNodes: 260 },
+  },
+  make(seed, tier) {
+    const [w, h] = this.dims[tier],
+      P = this.lv[tier],
+      N = w * h;
+    let best = null;
+    for (let att = 0; att < 400; att++) {
+      const r = pzRng(pzMix(seed, tier, 0x534b, att)),
+        wall = new Uint8Array(N);
+      for (let x = 0; x < w; x++) wall[x] = wall[(h - 1) * w + x] = 1;
+      for (let z = 0; z < h; z++) wall[z * w] = wall[z * w + w - 1] = 1;
+      // entrada y salida en lados distintos (casi siempre opuestos), lejos de las esquinas
+      const sideE = r.int(0, 3),
+        sideX = r() < 0.75 ? (sideE + 2) & 3 : (sideE + (r() < 0.5 ? 1 : 3)) & 3,
+        gapOf = (side) => {
+          const gx = side === 3 ? 0 : side === 1 ? w - 1 : r.int(1, w - 2),
+            gz = side === 0 ? 0 : side === 2 ? h - 1 : r.int(1, h - 2);
+          return gz * w + gx;
+        },
+        entry = gapOf(sideE),
+        exit = gapOf(sideX);
+      wall[entry] = wall[exit] = 0;
+      const inner = (gap) => (gap % w === 0 ? gap + 1 : gap % w === w - 1 ? gap - 1 : gap < w ? gap + w : gap - w),
+        s0 = inner(entry),
+        sx = inner(exit);
+      if (s0 === sx) continue;
+      // pilares
+      const cand = [];
+      for (let z = 1; z < h - 1; z++) for (let xx = 1; xx < w - 1; xx++) if (z * w + xx !== s0 && z * w + xx !== sx) cand.push(z * w + xx);
+      r.shuffle(cand);
+      for (let i = 0; i < P.walls; i++) wall[cand[i]] = 1;
+      const path = skPath(r, w, h, wall, s0, sx, P.len[0], P.len[1]);
+      if (!path) continue;
+      // diamantes a lo largo del camino (separados), nunca en la losa de entrada ni en la de salida
+      const idx = [];
+      for (let i = 1; i < path.length - 1; i++) idx.push(i);
+      r.shuffle(idx);
+      const keys = [];
+      for (const i of idx) {
+        if (keys.length >= P.keys) break;
+        if (keys.every((k) => Math.abs(k - i) >= 2)) keys.push(i);
+      }
+      if (keys.length < Math.min(P.keys, 3)) continue;
+      const keyCells = keys.map((i) => path[i]).sort((a, b) => a - b);
+      // se cierran losas que no son del camino hasta que queden pocas soluciones, dejando señuelos
+      const onPath = new Set(path),
+        off = [];
+      for (let z = 1; z < h - 1; z++) for (let xx = 1; xx < w - 1; xx++) if (!wall[z * w + xx] && !onPath.has(z * w + xx)) off.push(z * w + xx);
+      r.shuffle(off);
+      const spec = { kind: "sink", seed, tier, w, h, walls: [], entry, exit, keys: keyCells, sol: path.slice(), sols: 0, nodes: 0 };
+      let decoys = off.length,
+        res = null;
+      for (let step = 0; step <= off.length; step++) {
+        spec.walls = [];
+        for (let c = 0; c < N; c++) if (wall[c]) spec.walls.push(c);
+        pzMemoDrop(spec);
+        res = skSolve(spec, P.maxSol + 1, 400000, s0, null, null);
+        if (res.count >= 1 && res.count <= P.maxSol && !res.capped) break;
+        if (decoys <= P.minDecoy) {
+          res = null;
+          break;
+        }
+        // cierra el señuelo que más ramas corte: el primero de la lista basta (ya está barajada)
+        wall[off.pop()] = 1;
+        decoys--;
+      }
+      if (!res || res.count < 1 || res.count > P.maxSol || res.capped || res.nodes < P.minNodes) {
+        if (res && res.count >= 1 && res.count <= P.maxSol && !res.capped && (!best || res.nodes > best.nodes)) {
+          spec.sols = res.count;
+          spec.nodes = res.nodes;
+          spec.sol = res.first;
+          best = JSON.parse(JSON.stringify(spec));
+        }
+        continue;
+      }
+      spec.sols = res.count;
+      spec.nodes = res.nodes;
+      spec.sol = res.first;
+      return JSON.parse(JSON.stringify(spec));
+    }
+    return best;
+  },
+  validate(spec) {
+    const G = skGrid(spec);
+    if (!G.frag[G.s0] || !G.frag[G.sx] || G.s0 === G.sx) return { ok: false, why: "entrada o salida bloqueadas" };
+    for (const k of spec.keys) if (!G.frag[k] || k === G.s0 || k === G.sx) return { ok: false, why: "diamante mal colocado" };
+    const res = skSolve(spec, 8, 600000, G.s0, null, null);
+    // la solución guardada es un camino válido y sin repetir losas
+    const sol = spec.sol,
+      seen = new Set();
+    let okSol = sol.length > 1 && sol[0] === G.s0 && sol[sol.length - 1] === G.sx;
+    for (let i = 0; i < sol.length && okSol; i++) {
+      if (!G.frag[sol[i]] || seen.has(sol[i])) okSol = false;
+      seen.add(sol[i]);
+      if (i && Math.abs(sol[i] - sol[i - 1]) !== 1 && Math.abs(sol[i] - sol[i - 1]) !== spec.w) okSol = false;
+      if (i && Math.abs(sol[i] - sol[i - 1]) === 1 && Math.floor(sol[i] / spec.w) !== Math.floor(sol[i - 1] / spec.w)) okSol = false;
+    }
+    for (const k of spec.keys) if (!seen.has(k)) okSol = false;
+    const ok = okSol && res.count >= 1 && !res.capped;
+    let free = 0;
+    for (let c = 0; c < G.frag.length; c++) free += G.frag[c];
+    return { ok, why: ok ? "" : !okSol ? "la solución guardada no vale" : res.capped ? "demasiadas soluciones" : "sin solución", sols: res.count, nodes: res.nodes, len: sol.length, keys: spec.keys.length, free };
+  },
+  init(spec) {
+    const st = pzBaseState(spec);
+    st.state = new Uint8Array(spec.w * spec.h); // 0 intacta · 1 pisada (aún no cerrada) · 2 cerrada
+    st.lit = new Uint8Array(spec.w * spec.h);
+    st.nlit = 0;
+    st.cur = -1;
+    st.pend = [];
+    st.open = false;
+    st.reached = false;
+    st.stuck = false;
+    st.dirty = true; // al montarlo (o volver a él) se comprueba si queda camino
+    return st;
+  },
+  reset(spec, st, ctx) {
+    st.state.fill(0);
+    st.lit.fill(0);
+    st.nlit = 0;
+    st.cur = -1;
+    st.pend.length = 0;
+    st.open = false;
+    st.stuck = false;
+    st.dirty = false;
+    st.rev++;
+    // vuelta a la entrada (si estás dentro)
+    if (ctx && ctx.teleport) {
+      const e = spec.entry;
+      ctx.teleport((e % spec.w) + 0.5, Math.floor(e / spec.w) + 0.5);
+    }
+  },
+  solved(spec, st) {
+    return st.reached === true;
+  },
+  solid(spec, st, cx, cz) {
+    const G = skGrid(spec),
+      c = cz * spec.w + cx;
+    return G.wall[c] === 1 || st.state[c] === 2 || (c === spec.exit && !st.open);
+  },
+  pick() {
+    return -1;
+  },
+  step(spec, st, dt, ctx) {
+    const G = skGrid(spec),
+      w = spec.w,
+      h = spec.h,
+      cx = Math.floor(ctx.px),
+      cz = Math.floor(ctx.pz),
+      fx = ctx.px - cx,
+      fz = ctx.pz - cz;
+    // dónde estás: -1 fuera de la cámara · -2 en la franja entre dos losas (no cuenta: se conserva la anterior) · si no, la celda
+    let here = -1;
+    if (ctx.inside && cx >= 0 && cz >= 0 && cx < w && cz < h) {
+      const c0 = cz * w + cx;
+      here = fx >= 0.12 && fx <= 0.88 && fz >= 0.12 && fz <= 0.88 ? c0 : c0 === st.cur ? c0 : -2;
+    }
+    st.t += dt;
+    const closeTile = (c) => {
+      st.state[c] = 2;
+      st.rev++;
+      st.dirty = true;
+      ctx.snd("metal", { p: 0.4, v: 0.5 });
+    };
+    const stepOn = (c) => {
+      if (!G.frag[c] || st.state[c] !== 0) return;
+      st.state[c] = 1;
+      st.pend.indexOf(c) < 0 && c !== here && st.pend.push(c);
+      if (G.key[c] && !st.lit[c]) {
+        st.lit[c] = 1;
+        st.nlit++;
+        ctx.snd("beep", { p: 0.8 + st.nlit * 0.12 });
+      }
+      st.rev++;
+      st.dirty = true;
+    };
+    if (here !== -2 && here !== st.cur) {
+      const prev = st.cur;
+      if (here >= 0 && G.frag[here] && st.state[here] !== 2) {
+        // pasar en diagonal por una esquina también pisa las dos losas de los lados
+        if (prev >= 0) {
+          const dx = (here % w) - (prev % w),
+            dz = Math.floor(here / w) - Math.floor(prev / w);
+          if (Math.abs(dx) === 1 && Math.abs(dz) === 1) {
+            stepOn(prev + dx);
+            stepOn(prev + dz * w);
+          }
+        }
+        const k = st.pend.indexOf(here);
+        k >= 0 && st.pend.splice(k, 1);
+        if (prev >= 0 && st.state[prev] === 1 && st.pend.indexOf(prev) < 0) st.pend.push(prev);
+        stepOn(here);
+        st.cur = here;
+      } else {
+        if (prev >= 0 && st.state[prev] === 1 && st.pend.indexOf(prev) < 0) st.pend.push(prev);
+        st.cur = -1;
+      }
+    }
+    // las losas dejadas se cierran cuando ya no hay nadie sobre ellas (a 0,3 m del borde)
+    for (let i = st.pend.length - 1; i >= 0; i--) {
+      const c = st.pend[i],
+        qx = (c % w) + 0.5,
+        qz = Math.floor(c / w) + 0.5,
+        dd = Math.hypot(Math.max(0, Math.abs(ctx.px - qx) - 0.5), Math.max(0, Math.abs(ctx.pz - qz) - 0.5));
+      if (c === st.cur) st.pend.splice(i, 1);
+      else if (!ctx.inside || dd >= 0.3) {
+        st.pend.splice(i, 1);
+        closeTile(c);
+      }
+    }
+    if (!st.open && st.nlit >= spec.keys.length) {
+      st.open = true;
+      st.rev++;
+      ctx.snd("door");
+      ctx.toast("¡La salida se ha abierto!", "quest");
+    }
+    if (st.open && here === spec.exit) st.reached = true;
+    // ¿sigue habiendo camino? (solo cuando algo ha cambiado)
+    if (st.dirty) {
+      st.dirty = false;
+      const stuck = !st.reached && skStuck(spec, st);
+      if (stuck !== st.stuck) {
+        st.stuck = stuck;
+        st.rev++;
+        stuck && ctx.toast("Ya no hay camino: pulsa Reiniciar.", "warn");
+      }
+    }
+  },
+  status(spec, st) {
+    const out = [`Diamantes pisados: ${st.nlit}/${spec.keys.length}`, st.open ? "Salida abierta: ve a ella" : "Salida cerrada"];
+    if (st.stuck) out.push("Sin camino desde aquí: reinicia");
+    return out;
+  },
+  hint(spec, st) {
+    const G = skGrid(spec),
+      sunk = new Uint8Array(st.state.length);
+    for (let c = 0; c < sunk.length; c++) sunk[c] = st.state[c] === 2 ? 1 : 0;
+    const from = st.cur >= 0 ? st.cur : G.s0;
+    if (st.cur < 0 && st.state[G.s0] === 0) return { id: G.s0, text: "Pista: entra por la losa marcada." };
+    const res = skSolve(spec, 1, 200000, from, sunk, st.lit);
+    if (!res.first || res.first.length < 2) return { text: "Pista: ya no hay camino desde aquí; pulsa Reiniciar." };
+    return { id: res.first[1], text: "Pista: la siguiente losa es la marcada." };
+  },
+  focus(spec, st, id) {
+    return id >= 0 ? [id % spec.w, Math.floor(id / spec.w)] : null;
+  },
+  solve(spec, st) {
+    for (const k of spec.keys) st.lit[k] = 1;
+    st.nlit = spec.keys.length;
+    st.open = true;
+    st.reached = true;
+    st.rev++;
+  },
+  hackable: true,
+  botMode: "walk",
+  bot(spec) {
+    const c = (q) => ({ at: [(q % spec.w) + 0.5, Math.floor(q / spec.w) + 0.5] });
+    return [c(spec.entry), ...spec.sol.map(c), c(spec.exit)];
+  },
+  draw(spec, st, g, t) {
+    const w = spec.w,
+      h = spec.h,
+      G = skGrid(spec),
+      done = st.done;
+    for (let z = 0; z < h; z++)
+      for (let xx = 0; xx < w; xx++) {
+        const c = z * w + xx,
+          px = xx + 0.5,
+          pz = z + 0.5;
+        if (G.wall[c]) {
+          const edge = xx === 0 || z === 0 || xx === w - 1 || z === h - 1;
+          g.box(px, pz, edge ? 0.5 : 0.55, 0.96, edge ? 1 : 1.1, 0.96, edge ? 0x2f363e : 0x474f58);
+        } else if (c === spec.entry) g.box(px, pz, 0.04, 0.9, 0.05, 0.9, 0x2f6a7a, 0.7);
+        else if (c === spec.exit) {
+          if (st.open || done) g.box(px, pz, 0.05, 0.9, 0.06, 0.9, 0x4cff8f, 1.4 + Math.sin(t * 5) * 0.3);
+          else {
+            g.box(px, pz, 0.55, 0.9, 1.1, 0.9, 0xff8a3c, 0.9);
+            g.box(px, pz, 0.55, 0.96, 1.16, 0.2, 0x1a1f26, 0);
+          }
+        } else if (G.frag[c]) {
+          const s = st.state[c];
+          if (s === 2) {
+            g.box(px, pz, 0.2, 0.96, 0.4, 0.96, 0x4a2c22);
+            g.box(px, pz, 0.41, 0.82, 0.03, 0.82, G.key[c] ? 0x4cff8f : 0xff6a3c, G.key[c] ? 1.1 : 0.8);
+          } else if (s === 1) g.box(px, pz, 0.05, 0.9, 0.08, 0.9, 0xffc24a, 1.1);
+          else g.box(px, pz, 0.04, 0.9, 0.07, 0.9, (xx + z) & 1 ? 0x2a4a63 : 0x244058, 0.25);
+          if (G.key[c] && s !== 2) {
+            g.oct(px, pz, 0.46 + Math.sin(t * 3 + c) * 0.05, 0.22, s === 1 ? 0x4cff8f : 0x7fe4ff, s === 1 ? 2 : 1.6);
+            g.ring(px, pz, 0.1, 0.34, s === 1 ? 0x4cff8f : 0x7fe4ff, 1.2);
+          }
+        }
+      }
+  },
+};
+// ¿Quedan sin alcanzar diamantes o la salida desde donde estás? (necesario, no suficiente: aviso rápido de que te has encerrado)
+function skStuck(spec, st) {
+  const G = skGrid(spec),
+    w = spec.w,
+    N = w * spec.h,
+    from = st.cur >= 0 ? st.cur : st.state[G.s0] === 0 ? G.s0 : -1;
+  if (from < 0) return true; // la losa de entrada ya está cerrada y no estás sobre ninguna: no hay forma de entrar
+  const seen = new Uint8Array(N),
+    q = [from],
+    OFF = [1, w, -1, -w];
+  seen[from] = 1;
+  for (let i = 0; i < q.length; i++) {
+    const c = q[i],
+      cx = c % w;
+    if (c === G.sx && c !== from) continue;
+    for (let d = 0; d < 4; d++) {
+      if ((d === 0 && cx + 1 >= w) || (d === 2 && cx === 0)) continue;
+      const nb = c + OFF[d];
+      if (nb < 0 || nb >= N || seen[nb] || !G.frag[nb] || st.state[nb] !== 0) continue;
+      seen[nb] = 1;
+      q.push(nb);
+    }
+  }
+  for (const k of spec.keys) if (!st.lit[k] && !seen[k]) return true;
+  return !(seen[G.sx] || from === G.sx);
+}
+function pzMemoDrop(spec) {
+  PZ_MEMO.delete(spec);
+}
+
+// ───────── 3.11 BLOQUES SOBRE HIELO ─────────
+// Como las cajas sobre placas, pero el suelo es hielo: al empujar un bloque, resbala hasta chocar con un muro, otro bloque o el borde de la cámara.
+// Hay que dejar un bloque parado en cada placa, así que hay que buscar con qué frenarlos. Mismo BFS de estados que sokSolve (bloques + zona del jugador).
+function iceSolve(spec, cap, boxes0, p0) {
+  const w0 = spec.w,
+    h0 = spec.h,
+    w = w0 + 2,
+    h = h0 + 2,
+    n = w * h,
+    nb = spec.goals.length,
+    wall = new Uint8Array(n),
+    goal = new Uint8Array(n),
+    reach = new Uint8Array(n),
+    blk = new Uint8Array(n),
+    qa = new Int32Array(n);
+  const E = (c) => (((c / w0) | 0) + 1) * w + (c % w0) + 1,
+    U = (c) => ((c / w) | 0) * w0 - w0 + (c % w) - 1;
+  for (const q of spec.walls) wall[E(q)] = 1;
+  for (const q of spec.goals) goal[E(q)] = 1;
+  const flood = (boxes, p) => {
+    blk.set(wall);
+    for (const b of boxes) blk[b] = 1;
+    return sokFlood(w, h, blk, p, reach, qa);
+  };
+  const keyOf = (boxes, rep) => {
+    let k = 0;
+    for (const b of boxes) k = k * 128 + b;
+    return k * 128 + rep;
+  };
+  const isGoal = (boxes) => {
+    for (const b of boxes) if (!goal[b]) return false;
+    return true;
+  };
+  const start = (boxes0 || spec.boxes).map(E).sort((a, b) => a - b);
+  if (isGoal(start)) return { ok: true, pushes: 0, sol: [], states: 1 };
+  const rep0 = flood(start, p0 === undefined || p0 < 0 ? 0 : E(p0));
+  const seen = new Map(),
+    nodes = [{ boxes: start, rep: rep0, par: -1, act: null }];
+  seen.set(keyOf(start, rep0), 0);
+  for (let qi = 0; qi < nodes.length; qi++) {
+    if (nodes.length > cap) return { ok: false, why: "demasiados estados", states: nodes.length };
+    const nd = nodes[qi];
+    flood(nd.boxes, nd.rep);
+    const regionCopy = reach.slice();
+    for (let bi = 0; bi < nb; bi++) {
+      const c = nd.boxes[bi],
+        cx = c % w,
+        cz = (c / w) | 0;
+      for (let d = 0; d < 4; d++) {
+        const px = cx - PZ_DX[d],
+          pz = cz - PZ_DZ[d];
+        if (px < 0 || pz < 0 || px >= w || pz >= h || !regionCopy[pz * w + px]) continue;
+        // resbala hasta chocar
+        let tx = cx,
+          tz = cz;
+        for (;;) {
+          const nx = tx + PZ_DX[d],
+            nz = tz + PZ_DZ[d];
+          if (nx < 1 || nz < 1 || nx > w0 || nz > h0) break;
+          const t = nz * w + nx;
+          if (wall[t] || nd.boxes.indexOf(t) >= 0) break;
+          tx = nx;
+          tz = nz;
+        }
+        if (tx === cx && tz === cz) continue;
+        const nbx = nd.boxes.slice();
+        nbx[bi] = tz * w + tx;
+        nbx.sort((a, b) => a - b);
+        const rep = flood(nbx, c),
+          k = keyOf(nbx, rep);
+        if (seen.has(k)) continue;
+        seen.set(k, nodes.length);
+        nodes.push({ boxes: nbx, rep, par: qi, act: [U(c), d] });
+        if (isGoal(nbx)) {
+          const sol = [];
+          for (let j = nodes.length - 1; j > 0; j = nodes[j].par) sol.push(nodes[j].act);
+          sol.reverse();
+          return { ok: true, pushes: sol.length, sol, states: nodes.length };
+        }
+      }
+    }
+  }
+  return { ok: false, why: "sin solución", states: nodes.length };
+}
+// Dónde acaba un bloque empujado desde la celda c en la dirección d (celdas del puzle)
+function iceSlide(spec, boxes, wall, c, d) {
+  const w = spec.w,
+    h = spec.h;
+  let tx = c % w,
+    tz = (c / w) | 0;
+  for (;;) {
+    const nx = tx + PZ_DX[d],
+      nz = tz + PZ_DZ[d];
+    if (nx < 0 || nz < 0 || nx >= w || nz >= h) break;
+    const t = nz * w + nx;
+    if (wall[t] || boxes.indexOf(t) >= 0) break;
+    tx = nx;
+    tz = nz;
+  }
+  return tz * w + tx;
+}
+PZ_GENS.ice = {
+  id: "ice",
+  n: "Bloques sobre hielo",
+  d: "El suelo es hielo: los bloques resbalan hasta chocar. Deja uno parado en cada placa. Si te atascas, reinicia o deshaz.",
+  icon: "❄",
+  dims: { 1: [5, 5], 2: [6, 5], 3: [7, 6] },
+  lv: {
+    1: { boxes: 1, walls: [2, 4], minPush: 3, maxPush: 8, tries: 400, cap: 4000 },
+    2: { boxes: 2, walls: [3, 5], minPush: 6, maxPush: 16, tries: 400, cap: 30000 },
+    3: { boxes: 2, walls: [5, 8], minPush: 9, maxPush: 22, tries: 500, cap: 20000 },
+  },
+  make(seed, tier) {
+    const [w, h] = this.dims[tier],
+      P = this.lv[tier],
+      n = w * h;
+    let best = null;
+    for (let att = 0; att < P.tries; att++) {
+      const r = pzRng(pzMix(seed, tier, 0x4943, att)),
+        wall = new Uint8Array(n),
+        walls = [],
+        nW = r.int(P.walls[0], P.walls[1]);
+      for (let i = 0; i < nW; i++) {
+        const c = r.int(0, n - 1);
+        if (!wall[c]) ((wall[c] = 1), walls.push(c));
+      }
+      const free = [];
+      for (let i = 0; i < n; i++) if (!wall[i]) free.push(i);
+      r.shuffle(free);
+      const goals = free.slice(0, P.boxes).sort((a, b) => a - b),
+        boxes = free.slice(P.boxes, P.boxes * 2).sort((a, b) => a - b);
+      // los bloques no empiezan ya en una placa ni pegados al muro de forma que no se puedan empujar de ninguna manera
+      if (boxes.some((b) => goals.indexOf(b) >= 0)) continue;
+      const spec = { kind: "ice", seed, tier, w, h, walls: walls.slice().sort((a, b) => a - b), goals, boxes };
+      const sv = iceSolve(spec, P.cap);
+      if (!sv.ok || sv.pushes < P.minPush) {
+        if (sv.ok && sv.pushes >= 1 && (!best || sv.pushes > best.sol.length)) {
+          spec.sol = sv.sol;
+          best = spec;
+        }
+        continue;
+      }
+      if (sv.pushes > P.maxPush) continue;
+      spec.sol = sv.sol;
+      return spec;
+    }
+    return best;
+  },
+  validate(spec) {
+    const s = iceSolve(spec, 250000),
+      ok = s.ok && s.pushes >= 1 && spec.boxes.length === spec.goals.length;
+    return { ok, why: ok ? "" : s.why || "sin solución", pushes: s.pushes || 0, states: s.states || 0 };
+  },
+  init(spec) {
+    const st = pzBaseState(spec);
+    st.boxes = spec.boxes.slice();
+    st.hist = [];
+    st.wall = new Uint8Array(spec.w * spec.h);
+    for (const q of spec.walls) st.wall[q] = 1;
+    st.goal = new Uint8Array(spec.w * spec.h);
+    for (const q of spec.goals) st.goal[q] = 1;
+    st.tw = { i: -1, from: 0, t: 1 };
+    st.tweenMax = 0.16;
+    return st;
+  },
+  reset(spec, st) {
+    st.boxes = spec.boxes.slice();
+    st.hist.length = 0;
+    st.tw.i = -1;
+    st.tween = 0;
+    st.rev++;
+  },
+  undo(spec, st) {
+    if (!st.hist.length || st.done) return false;
+    st.boxes = st.hist.pop();
+    st.tw.i = -1;
+    st.tween = 0;
+    st.moves++;
+    st.rev++;
+    return true;
+  },
+  solved(spec, st) {
+    for (const b of st.boxes) if (!st.goal[b]) return false;
+    return true;
+  },
+  solid(spec, st, cx, cz) {
+    const c = cz * spec.w + cx;
+    return st.wall[c] === 1 || st.boxes.indexOf(c) >= 0;
+  },
+  pick(spec, st, px, pz, fx, fz) {
+    return PZ_GENS.boxes.pick(spec, st, px, pz, fx, fz);
+  },
+  label(spec, st, id) {
+    return this.canPush(spec, st, id >> 2, id & 3) ? "Empujar bloque (resbala)" : "Bloque bloqueado";
+  },
+  canPush(spec, st, i, d) {
+    return iceSlide(spec, st.boxes, st.wall, st.boxes[i], d) !== st.boxes[i];
+  },
+  act(spec, st, id, ctx) {
+    const i = id >> 2,
+      d = id & 3,
+      b = st.boxes[i];
+    if (!this.canPush(spec, st, i, d)) return ctx.snd("err");
+    // si el jugador (u otro) está en el camino, el bloque se para antes
+    let t = iceSlide(spec, st.boxes, st.wall, b, d);
+    if (ctx.occupied) {
+      let c = b;
+      for (;;) {
+        const nx = (c % spec.w) + PZ_DX[d],
+          nz = ((c / spec.w) | 0) + PZ_DZ[d];
+        if (nx < 0 || nz < 0 || nx >= spec.w || nz >= spec.h) break;
+        if (ctx.occupied(nx, nz)) {
+          t = c;
+          break;
+        }
+        c = nz * spec.w + nx;
+        if (c === t) break;
+      }
+    }
+    if (t === b) return ctx.snd("err");
+    st.hist.push(st.boxes.slice());
+    st.boxes[i] = t;
+    const cells = Math.max(Math.abs((t % spec.w) - (b % spec.w)), Math.abs(((t / spec.w) | 0) - ((b / spec.w) | 0)));
+    st.tw.i = i;
+    st.tw.from = b;
+    st.tweenMax = Math.min(0.55, 0.07 * cells + 0.05);
+    st.tween = st.tweenMax;
+    st.moves++;
+    st.rev++;
+    ctx.snd("metal", { p: 0.5 });
+  },
+  step(spec, st, dt) {
+    if (st.tween > 0) {
+      st.tween -= dt;
+      st.tween <= 0 && ((st.tween = 0), (st.tw.i = -1), st.rev++);
+    }
+  },
+  status(spec, st) {
+    let on = 0;
+    for (const b of st.boxes) st.goal[b] && on++;
+    return [`Bloques en su placa: ${on}/${st.boxes.length}`, `Empujes: ${st.moves}`];
+  },
+  hint(spec, st, ctx) {
+    const s = iceSolve(spec, 120000, st.boxes, ctx && ctx.cell !== undefined ? ctx.cell : -1);
+    if (!s.ok || !s.sol.length) return { text: "Pista: esta posición no tiene salida; usa «Deshacer» o «Reiniciar»." };
+    const [c, d] = s.sol[0];
+    const dir = ["derecha", "abajo", "izquierda", "arriba"][d];
+    return { id: st.boxes.indexOf(c) * 4 + d, text: `Pista: empuja el bloque marcado hacia ${dir}.` };
+  },
+  focus(spec, st, id) {
+    const b = st.boxes[id >> 2];
+    return b === undefined ? null : [b % spec.w, (b / spec.w) | 0];
+  },
+  par(spec) {
+    return iceSolve(spec, 250000).pushes;
+  },
+  solve(spec, st) {
+    st.boxes = spec.goals.slice();
+    st.hist.length = 0;
+    st.tw.i = -1;
+    st.tween = 0;
+    st.rev++;
+  },
+  hackable: true,
+  bot(spec, st, px, pz) {
+    const cell = px === undefined ? -1 : Math.max(0, Math.min(spec.h - 1, Math.floor(pz))) * spec.w + Math.max(0, Math.min(spec.w - 1, Math.floor(px)));
+    const s = iceSolve(spec, 250000, st.boxes, cell);
+    if (!s.ok) return null;
+    return s.sol.map(([c, d]) => ({ dyn: (st2) => st2.boxes.indexOf(c) * 4 + d, at: [(c % spec.w) + 0.5 - PZ_DX[d], ((c / spec.w) | 0) + 0.5 - PZ_DZ[d]], face: [PZ_DX[d], PZ_DZ[d]] }));
+  },
+  draw(spec, st, g, t) {
+    const w = spec.w,
+      h = spec.h;
+    for (let z = 0; z < h; z++) for (let xx = 0; xx < w; xx++) g.box(xx + 0.5, z + 0.5, 0.025, 0.94, 0.05, 0.94, (xx + z) & 1 ? 0x2b5266 : 0x244a5e, 0.15);
+    // el borde de la cámara: un bordillo bajo (los bloques se paran en él)
+    for (let xx = 0; xx < w; xx++) {
+      g.box(xx + 0.5, -0.06, 0.1, 1, 0.2, 0.12, 0x6f8fa3);
+      g.box(xx + 0.5, h + 0.06, 0.1, 1, 0.2, 0.12, 0x6f8fa3);
+    }
+    for (let z = 0; z < h; z++) {
+      g.box(-0.06, z + 0.5, 0.1, 0.12, 0.2, 1, 0x6f8fa3);
+      g.box(w + 0.06, z + 0.5, 0.1, 0.12, 0.2, 1, 0x6f8fa3);
+    }
+    for (const q of spec.walls) g.box((q % w) + 0.5, ((q / w) | 0) + 0.5, 0.55, 0.92, 1.1, 0.92, 0x55687a);
+    for (const q of spec.goals) {
+      const on = st.boxes.indexOf(q) >= 0;
+      g.box((q % w) + 0.5, ((q / w) | 0) + 0.5, 0.06, 0.78, 0.04, 0.78, on ? 0x3cff8a : 0xffc24a, on ? 1.5 : 0.7);
+    }
+    for (let i = 0; i < st.boxes.length; i++) {
+      let b = st.boxes[i],
+        cx = (b % w) + 0.5,
+        cz = ((b / w) | 0) + 0.5;
+      if (st.tw.i === i && st.tween > 0) {
+        const f = st.tween / (st.tweenMax || 0.16),
+          fx = (st.tw.from % w) + 0.5,
+          fz = ((st.tw.from / w) | 0) + 0.5;
+        cx += (fx - cx) * f;
+        cz += (fz - cz) * f;
+      }
+      const on = st.goal[b];
+      g.box(cx, cz, 0.4, 0.82, 0.8, 0.82, on ? 0x7fffc0 : 0x9fd8f0, on ? 0.6 : 0.2);
+      g.box(cx, cz, 0.82, 0.74, 0.06, 0.74, on ? 0xd8fff0 : 0xe6f8ff, 0.3);
+    }
+  },
+};
+
+// ───────── 3.12 CERRADURA DE SÍMBOLOS ─────────
+// Una cerradura con L ranuras que giran entre K símbolos (los del Archivo). El código es una combinación de símbolos distintos. «Probar» compara tu
+// combinación con la buena: cuántos símbolos están en su sitio (✔) y cuántos están pero en otra ranura (◐). Los intentos son limitados; si se agotan,
+// la cerradura cambia de código. validate() simula a un jugador metódico (prueba siempre una combinación coherente con todo lo visto) sobre los
+// códigos de las primeras rondas y exige que le sobren intentos.
+var LK_CANDS = new Map();
+function lkCands(L, K) {
+  const key = L * 16 + K;
+  let out = LK_CANDS.get(key);
+  if (out) return out;
+  out = [];
+  const used = new Array(K).fill(false),
+    cur = [];
+  (function rec() {
+    if (cur.length === L) return out.push(cur.slice());
+    for (let s = 0; s < K; s++) {
+      if (used[s]) continue;
+      used[s] = true;
+      cur.push(s);
+      rec();
+      cur.pop();
+      used[s] = false;
+    }
+  })();
+  LK_CANDS.set(key, out);
+  return out;
+}
+var LK_CS = new Int8Array(16),
+  LK_CG = new Int8Array(16);
+// 10·(en su sitio) + (en otra ranura); el código es de símbolos distintos, la combinación puede repetir
+function lkScore(sec, g, L, K) {
+  LK_CS.fill(0);
+  LK_CG.fill(0);
+  let ex = 0;
+  for (let i = 0; i < L; i++) {
+    if (sec[i] === g[i]) ex++;
+    else {
+      LK_CS[sec[i]]++;
+      LK_CG[g[i]]++;
+    }
+  }
+  let ne = 0;
+  for (let k = 0; k < K; k++) ne += LK_CS[k] < LK_CG[k] ? LK_CS[k] : LK_CG[k];
+  return ex * 10 + ne;
+}
+function lkSecret(spec, round) {
+  // el código de cada ronda sale de la semilla; se descartan los que ya empiezan puestos y los que se abren a la primera o a la segunda
+  return pzMemo(spec, "sec" + (round | 0), () => {
+    let sec = null;
+    for (let salt = 0; salt < 40; salt++) {
+      const r = pzRng(pzMix(spec.seed, spec.tier, 0x4c4b, round | 0, salt)),
+        a = [];
+      for (let k = 0; k < spec.K; k++) a.push(k);
+      r.shuffle(a);
+      sec = a.slice(0, spec.L);
+      if (sec.every((v, i) => v === i)) continue;
+      const gs = lkSolve(spec, sec);
+      if (gs && gs.length >= 3) break;
+    }
+    return sec;
+  });
+}
+// Las combinaciones que probaría un jugador metódico contra un código (siempre la primera coherente con lo visto)
+function lkSolve(spec, secret) {
+  const { L, K } = spec,
+    guesses = [];
+  let c = lkCands(L, K),
+    g = [];
+  for (let i = 0; i < L; i++) g.push(i);
+  for (let n = 0; n < 40; n++) {
+    guesses.push(g.slice());
+    const f = lkScore(secret, g, L, K);
+    if (f === L * 10) return guesses;
+    const gg = g;
+    c = c.filter((x) => lkScore(x, gg, L, K) === f);
+    if (!c.length) return null;
+    g = c[0];
+  }
+  return null;
+}
+// forma de cada símbolo, con las mismas primitivas que las runas
+function lkShape(g, R, cx, cz, y, col, gl, t, sc) {
+  switch (R.sh) {
+    case "sph": g.sph(cx, cz, y, 0.22 * sc, col, gl); break;
+    case "ring": g.ring(cx, cz, y, 0.2 * sc, col, gl, true); break;
+    case "oct": g.oct(cx, cz, y, 0.26 * sc, col, gl); break;
+    case "cone": g.cone(cx, cz, y, 0.24 * sc, 0.4 * sc, col, gl); break;
+    case "cone2": g.cone(cx, cz, y, 0.24 * sc, 0.4 * sc, col, gl, true); break;
+    case "box": g.box(cx, cz, y, 0.3 * sc, 0.3 * sc, 0.3 * sc, col, gl, t * 0.6); break;
+    case "cross": g.box(cx, cz, y, 0.42 * sc, 0.12 * sc, 0.12 * sc, col, gl); g.box(cx, cz, y, 0.12 * sc, 0.42 * sc, 0.12 * sc, col, gl); break;
+    default: g.cyl(cx, cz, y, 0.16 * sc, 0.34 * sc, col, gl);
+  }
+}
+PZ_GENS.lock = {
+  id: "lock",
+  n: "Cerradura de símbolos",
+  d: "Gira las ranuras hasta formar el código. Al probar, ✔ cuenta los símbolos en su sitio y ◐ los que están en otra ranura. Los intentos son limitados.",
+  icon: "⌘",
+  dims: { 1: [5, 4], 2: [6, 4], 3: [7, 4] },
+  lv: {
+    1: { L: 3, K: 5, tries: 8 },
+    2: { L: 4, K: 6, tries: 9 },
+    3: { L: 5, K: 6, tries: 9 },
+  },
+  make(seed, tier) {
+    const [w, h] = this.dims[tier],
+      P = this.lv[tier],
+      r = pzRng(pzMix(seed, tier, 0x4c4f)),
+      ids = r.shuffle([0, 1, 2, 3, 4, 5, 6, 7]).slice(0, P.K);
+    return { kind: "lock", seed, tier, w, h, L: P.L, K: P.K, tries: P.tries, ids };
+  },
+  validate(spec) {
+    const { L, K, tries } = spec;
+    if (!spec.ids || spec.ids.length !== K || new Set(spec.ids).size !== K || spec.ids.some((v) => v < 0 || v >= PZ_RUNES.length)) return { ok: false, why: "símbolos mal elegidos" };
+    if (spec.w < L + 2 || spec.h < 4) return { ok: false, why: "la cerradura no cabe" };
+    let worst = 0,
+      first = 0;
+    for (let round = 0; round < 3; round++) {
+      const sec = lkSecret(spec, round),
+        gs = lkSolve(spec, sec);
+      if (!gs) return { ok: false, why: "el jugador metódico no la abre" };
+      worst = Math.max(worst, gs.length);
+      if (!round) first = gs.length;
+    }
+    const ok = worst <= tries - 2;
+    return { ok, why: ok ? "" : "no sobran intentos", guesses: first, worst, tries, codes: lkCands(L, K).length, L, K };
+  },
+  init(spec) {
+    const st = pzBaseState(spec);
+    st.cur = [];
+    for (let i = 0; i < spec.L; i++) st.cur.push(i);
+    st.hist = [];
+    st.round = 0;
+    st.fails = 0;
+    st.open = false;
+    st.flash = 0;
+    return st;
+  },
+  reset(spec, st) {
+    for (let i = 0; i < spec.L; i++) st.cur[i] = i;
+    st.hist.length = 0;
+    st.rev++;
+  },
+  solved(spec, st) {
+    return st.open === true;
+  },
+  // pedestales de las ranuras (fila de atrás) y consola de «Probar» (fila de delante)
+  cells(spec) {
+    return pzMemo(spec, "cells", () => {
+      const x0 = Math.floor((spec.w - spec.L) / 2),
+        out = [];
+      for (let i = 0; i < spec.L; i++) out.push([x0 + i, 0]);
+      out.push([Math.floor(spec.w / 2), spec.h - 1]);
+      return out;
+    });
+  },
+  solid(spec, st, cx, cz) {
+    const cs = this.cells(spec);
+    for (let i = 0; i < cs.length; i++) if (cs[i][0] === cx && cs[i][1] === cz) return true;
+    return false;
+  },
+  spots(spec) {
+    return this.cells(spec);
+  },
+  pick(spec, st, px, pz, fx, fz) {
+    return pzNearest(this.cells(spec), px, pz, fx, fz);
+  },
+  label(spec, st, id) {
+    if (id < spec.L) return `Girar ranura ${id + 1} · ${PZ_RUNES[spec.ids[st.cur[id]]].g} ${PZ_RUNES[spec.ids[st.cur[id]]].n}`;
+    return `Probar la combinación (intento ${st.hist.length + 1} de ${spec.tries})`;
+  },
+  focus(spec, st, id) {
+    return this.cells(spec)[id] || null;
+  },
+  act(spec, st, id, ctx) {
+    if (st.open) return;
+    const { L, K } = spec;
+    if (id < L) {
+      st.cur[id] = (st.cur[id] + 1) % K;
+      st.rev++;
+      ctx.snd("beep", { p: 0.7 + st.cur[id] * 0.09 });
+      return;
+    }
+    const sec = lkSecret(spec, st.round),
+      f = lkScore(sec, st.cur, L, K),
+      ex = (f / 10) | 0,
+      ne = f % 10;
+    st.hist.push({ g: st.cur.slice(), ex, ne });
+    st.moves++;
+    st.rev++;
+    if (ex === L) {
+      st.open = true;
+      ctx.snd("success");
+      return;
+    }
+    if (st.hist.length >= spec.tries) {
+      st.errors++;
+      st.fails++;
+      st.round++;
+      st.hist.length = 0;
+      ctx.snd("zap");
+      ctx.hurt(PZ_CFG.respawnPenalty * 0.4);
+      ctx.toast("Intentos agotados: la cerradura cambia de código.", "warn");
+      return;
+    }
+    ctx.snd(ex || ne ? "beep" : "err", { p: 0.9 + ex * 0.2 });
+  },
+  step() {},
+  status(spec, st) {
+    const out = [`Intentos: ${st.hist.length}/${spec.tries}`];
+    if (st.fails) out.push(`Códigos cambiados: ${st.fails}`);
+    return out;
+  },
+  clueLines(spec, st) {
+    const n = st.hist.length,
+      from = Math.max(0, n - 6),
+      out = [];
+    for (let i = from; i < n; i++) {
+      const q = st.hist[i];
+      out.push(`${i + 1}) ${q.g.map((k) => PZ_RUNES[spec.ids[k]].g).join(" ")}   ✔${q.ex}  ◐${q.ne}`);
+    }
+    return out;
+  },
+  hint(spec, st) {
+    const { L, K } = spec;
+    let c = lkCands(L, K);
+    for (const q of st.hist) c = c.filter((x) => lkScore(x, q.g, L, K) === q.ex * 10 + q.ne);
+    // con el historial actual solo valen los códigos coherentes; se propone la primera ranura que difiere
+    const sec = lkSecret(spec, st.round),
+      want = c.length && c.some((x) => x.every((v, i) => v === sec[i])) ? sec : c[0];
+    if (!want) return null;
+    for (let i = 0; i < L; i++) if (st.cur[i] !== want[i]) return { id: i, text: `Pista: en la ranura ${i + 1} va ${PZ_RUNES[spec.ids[want[i]]].g} ${PZ_RUNES[spec.ids[want[i]]].n}.` };
+    return { id: L, text: "Pista: esa combinación es coherente con todo lo visto; pruébala." };
+  },
+  par(spec) {
+    return lkSolve(spec, lkSecret(spec, 0)).length;
+  },
+  solve(spec, st) {
+    const sec = lkSecret(spec, st.round);
+    for (let i = 0; i < spec.L; i++) st.cur[i] = sec[i];
+    st.open = true;
+    st.rev++;
+  },
+  hackable: true,
+  glyphs(spec, st) {
+    // una etiqueta por ranura, con el símbolo que tiene ahora (se actualizan en su sitio cuando cambian)
+    const list = pzMemo(spec, "gl", () => this.cells(spec).slice(0, spec.L).map((c) => ({ cx: c[0] + 0.5, cz: c[1] + 0.5, y: 1.55, t: "", n: "", col: 0xffffff, k: -1 })));
+    for (let i = 0; i < spec.L; i++) {
+      const q = list[i],
+        v = st && st.cur ? st.cur[i] : 0;
+      if (q.k !== v) {
+        const R = PZ_RUNES[spec.ids[v]];
+        q.k = v;
+        q.t = R.g;
+        q.n = "";
+        q.col = R.col;
+      }
+    }
+    return list;
+  },
+  bot(spec) {
+    const { L, K } = spec,
+      cs = this.cells(spec),
+      gs = lkSolve(spec, lkSecret(spec, 0)),
+      acts = [],
+      cur = [];
+    for (let i = 0; i < L; i++) cur.push(i);
+    if (!gs) return null;
+    for (const g of gs) {
+      for (let i = 0; i < L; i++) {
+        const n = (g[i] - cur[i] + K) % K;
+        for (let k = 0; k < n; k++) acts.push({ id: i, at: [cs[i][0] + 0.5, 1.5] });
+        cur[i] = g[i];
+      }
+      acts.push({ id: L, at: [cs[L][0] + 0.5, spec.h - 1.5] });
+    }
+    return acts;
+  },
+  draw(spec, st, g, t) {
+    const w = spec.w,
+      h = spec.h,
+      cs = this.cells(spec),
+      open = st.open;
+    for (let z = 0; z < h; z++) for (let xx = 0; xx < w; xx++) g.box(xx + 0.5, z + 0.5, 0.025, 0.94, 0.05, 0.94, (xx + z) & 1 ? 0x2a2733 : 0x24212d);
+    for (let i = 0; i < spec.L; i++) {
+      const R = PZ_RUNES[spec.ids[st.cur[i]]],
+        cx = cs[i][0] + 0.5,
+        cz = cs[i][1] + 0.5,
+        col = open ? 0x4cff8f : R.col;
+      g.cyl(cx, cz, 0.3, 0.3, 0.6, 0x3d4350);
+      g.box(cx, cz, 0.62, 0.62, 0.05, 0.62, 0x505868);
+      g.ring(cx, cz, 0.66, 0.3, col, 1.2);
+      lkShape(g, R, cx, cz, 1.0 + Math.sin(t * 2.4 + i) * 0.04, col, open ? 2 : 1.3, t, 1);
+    }
+    // consola de «Probar» con las luces del último intento
+    const c = cs[spec.L],
+      cx = c[0] + 0.5,
+      cz = c[1] + 0.5;
+    g.box(cx, cz, 0.3, 0.8, 0.6, 0.55, 0x3b4452);
+    g.box(cx, cz, 0.64, 0.56, 0.06, 0.36, open ? 0x4cff8f : 0xffb347, 1.2 + Math.sin(t * 4) * 0.3);
+    const last = st.hist.length ? st.hist[st.hist.length - 1] : null;
+    for (let i = 0; i < spec.L; i++) {
+      const on = last && i < last.ex + last.ne,
+        col = !last ? 0x555e6a : i < last.ex ? 0x4cff8f : i < last.ex + last.ne ? 0xffd04a : 0x555e6a;
+      g.sph(cx - (spec.L - 1) * 0.16 + i * 0.32, cz, 0.95, 0.09, open ? 0x4cff8f : col, on || open ? 1.8 : 0.2);
+    }
+  },
+};
+
 // ═══ 4. REGISTRO, API Y PRUEBAS ═════════════════════════════════════════════════════════════════════════
 // Un generador nuevo (de este u otro frente) se añade con x.puzzleApi.register(tipo, generador). Contrato mínimo: make(seed, tier) → spec
 // (JSON puro) y validate(spec) → {ok, why}. Para poder jugarlo en el mundo también necesita init/solved/pick/label/act/draw (ver arriba).
@@ -2801,11 +4289,10 @@ function pzPlace(map, n) {
   // si no hay hueco para el tipo elegido, se prueba con los demás y con tamaños menores (tipo y nivel siguen siendo deterministas)
   const tries = [[ch.kind, ch.tier, ch.idx]];
   if (!lore) {
-    const others = r.shuffle(Object.keys(PZ_GENS).filter((q) => q !== ch.kind && !PZ_GENS[q].legacy && pzPlayable(PZ_GENS[q])));
-    for (let t = ch.tier; t >= 1; t--) {
-      t < ch.tier && tries.push([ch.kind, t, ch.idx]);
-      for (const k of others) tries.push([k, t, pzMix(base, k, t) % PZ_CFG.pool]);
-    }
+    // primero se encoge el mismo tipo (el tipo de una escalera no cambia aunque cambie su mapa); luego los demás, en un orden fijo por escalera
+    for (let t = ch.tier - 1; t >= 1; t--) tries.push([ch.kind, t, ch.idx]);
+    const others = pzRng(pzMix(base, 0x46)).shuffle(Object.keys(PZ_GENS).filter((q) => q !== ch.kind && !PZ_GENS[q].legacy && pzPlayable(PZ_GENS[q])));
+    for (let t = ch.tier; t >= 1; t--) for (const k of others) tries.push([k, t, pzMix(base, k, t) % PZ_CFG.pool]);
   }
   for (const [kind, tier, idx] of tries) {
     const g = PZ_GENS[kind],
@@ -3233,7 +4720,7 @@ function pzAction(rt, what) {
   const g = z.gen,
     st = z.st;
   if (what === "reset" && g.reset) {
-    g.reset(z.spec, st);
+    g.reset(z.spec, st, PZ_CTX);
     st.resets = (st.resets | 0) + 1;
     ae.play("close");
     pzMsg(rt, "Acertijo reiniciado");
@@ -3545,7 +5032,7 @@ function pzLabels(rt) {
   if (!lab) return;
   const z = rt && rt.pz,
     g = z && z.gen,
-    list = g && g.glyphs && !rt.pzDone ? g.glyphs(z.spec) : null;
+    list = g && g.glyphs && !rt.pzDone ? g.glyphs(z.spec, z.st) : null;
   if (!list) {
     if (lab._n) {
       lab.textContent = "";
@@ -3561,6 +5048,7 @@ function pzLabels(rt) {
       const b = document.createElement("b");
       b.textContent = q.t + " " + (q.n || "");
       b.style.color = "#" + q.col.toString(16).padStart(6, "0");
+      b._k = q.k;
       lab.appendChild(b);
     }
   }
@@ -3568,6 +5056,12 @@ function pzLabels(rt) {
   for (let i = 0; i < list.length; i++) {
     const q = list[i],
       b = lab.children[i];
+    if (q.k !== b._k) {
+      // etiqueta dinámica (la cerradura): el texto cambia con su versión k
+      b._k = q.k;
+      b.textContent = q.t + " " + (q.n || "");
+      b.style.color = "#" + q.col.toString(16).padStart(6, "0");
+    }
     x.R.project(T.tx + T.m00 * q.cx + T.m01 * q.cz, q.y, T.tz + T.m10 * q.cx + T.m11 * q.cz, pzScr);
     const sx = pzScr.vis ? Math.round(pzScr.x) : -999,
       sy = pzScr.vis ? Math.round(pzScr.y) : -999;
@@ -3941,7 +5435,7 @@ Object.assign(x.puzzleApi, {
 PZ.events = [];
 It("puzzleSolved", (p) => {
   PZ.events.push(p);
-  PZ.events.length > 30 && PZ.events.shift();
+  PZ.events.length > 64 && PZ.events.shift();
 });
 window.__puzzles = {
   Ni,
@@ -3964,6 +5458,7 @@ window.__puzzles = {
   transform: pzTransform,
   pure: { rng: pzRng, mix: pzMix, spec: pzSpec, choose: pzChoose, botRun: pzBotRun, access: pzAccess },
   rt: (id) => x.world.rt.get(id),
+  toWorld: (rt, lx, lz) => pzLocalToWorld(rt.pz, lx, lz),
   gfx() {
     let inst = 0,
       meshes = 0;

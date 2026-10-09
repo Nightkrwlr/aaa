@@ -1,6 +1,6 @@
 // Puzles (D7) · presupuesto de render, fugas y CPU:
 //  1) llamadas de dibujo con cada tipo de puzle montado (api.perf: todas las pasadas) frente a la escena sin puzle
-//  2) fugas: 6 ciclos de montar/dibujar/desmontar los 8 tipos y 6 entradas/salidas de un subterráneo con acertijo (geometrías, texturas y
+//  2) fugas: 6 ciclos de montar/dibujar/desmontar los 11 tipos y 6 entradas/salidas de un subterráneo con acertijo (geometrías, texturas y
 //     objetos de la escena del renderer idénticos tras el primer ciclo)
 //  3) CPU de pzTick (con el puzle activo, dibujando) y asignaciones por fotograma (muestreo de montículo de CDP: bytes atribuibles a pz*)
 //   node tools/shot.mjs --html dist/dev.html --scenario tools/scenarios/puzles-perf.mjs --size 960x540 --quality medium --out /ruta
@@ -27,7 +27,7 @@ export default async function (api) {
   // Cada tipo se mide EN EL MISMO SITIO con y sin puzle (montado → quitado, unos pasos de simulación en medio, que es lo que oculta las mallas):
   // comparar contra una medida tomada en otro punto del mapa mezcla el coste del puzle con el de los trozos del mundo que se ven (±100 llamadas).
   await wait(6);
-  const kinds = ['mirrors', 'boxes', 'timed', 'runes', 'circuit', 'lasers', 'memory', 'valves'];
+  const kinds = ['mirrors', 'boxes', 'timed', 'runes', 'circuit', 'lasers', 'memory', 'valves', 'sink', 'ice', 'lock'];
   const visibles = () => ev(() => { let n = 0; window.__G.R.scene.traverse((o) => { if (/^puzzle-/.test(o.name) && o.visible) n++; }); return n; });
   let worst = 0, worstBase = 1, leftVisible = 0; const table = {};
   for (const k of kinds) {
@@ -48,6 +48,8 @@ export default async function (api) {
   check('al quitar el puzle no queda ninguna malla suya visible (coste de dibujo cero)', leftVisible === 0, `visibles tras quitar: ${leftVisible}`);
 
   // ── 2 · fugas ──
+  // sin manadas nuevas ni enemigos vivos mientras se miden las fugas: lo que cambia entre ciclos no debe ser del mundo
+  await ev(() => { window.__dbg.Spawner.packCd = 1e9; const G = window.__G; for (const e of G.enemies) { e.dead = true; e.deadT = 0; } G.world.rt.forEach((o) => { if (o.e.k === 'spawnpack') { o.spawned = true; o.pack = []; o.clearedAt = Date.now(); } }); window.__step(30, 1 / 30); });
   await ev(() => window.__puzzles.mem()); // calienta
   const cyc = [];
   for (let c = 0; c < 6; c++) {
@@ -56,7 +58,7 @@ export default async function (api) {
   }
   console.log('ciclos', JSON.stringify(cyc));
   const base = cyc[0];
-  check('6 ciclos de montar/dibujar/desmontar los 8 tipos no dejan geometrías, texturas ni objetos en la escena', cyc.every((m) => m.geometries === base.geometries && m.textures === base.textures && m.puzzleMeshes === 16), JSON.stringify(cyc.map((m) => [m.geometries, m.textures, m.puzzleMeshes])));
+  check('6 ciclos de montar/dibujar/desmontar los 11 tipos no dejan geometrías, texturas ni objetos en la escena', cyc.every((m) => m.geometries === base.geometries && m.textures === base.textures && m.puzzleMeshes === 16), JSON.stringify(cyc.map((m) => [m.geometries, m.textures, m.puzzleMeshes])));
   const gf = await ev(() => { const P = window.__puzzles; return { b: P.gfx(), meshes: Object.keys(P.PZR.b).length * 2, mounted: P.api.mounted().length }; });
   check('no queda nada montado y el juego de mallas sigue siendo el mismo (16)', gf.meshes === 16 && gf.mounted === 0, JSON.stringify(gf));
 
