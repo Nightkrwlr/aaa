@@ -24,27 +24,28 @@ export default async function (api) {
   }, [kind, tier, id]);
 
   // ── 1 · llamadas de dibujo ──
+  // Cada tipo se mide EN EL MISMO SITIO con y sin puzle (montado → quitado, unos pasos de simulación en medio, que es lo que oculta las mallas):
+  // comparar contra una medida tomada en otro punto del mapa mezcla el coste del puzle con el de los trozos del mundo que se ven (±100 llamadas).
   await wait(6);
-  const p0 = await perf();
-  console.log('sin puzle', JSON.stringify(p0));
   const kinds = ['mirrors', 'boxes', 'timed', 'runes', 'circuit', 'lasers', 'memory', 'valves'];
-  let worst = 0; const table = {};
+  const visibles = () => ev(() => { let n = 0; window.__G.R.scene.traverse((o) => { if (/^puzzle-/.test(o.name) && o.visible) n++; }); return n; });
+  let worst = 0, worstBase = 1, leftVisible = 0; const table = {};
   for (const k of kinds) {
     const ok = await spawnAt(k, 3, 'pz_p');
     if (!ok) { table[k] = 'sin sitio'; continue; }
     await wait(4);
-    const p = await perf(); const g = await ev(() => window.__puzzles.gfx());
-    table[k] = { calls: p.calls, delta: p.calls - p0.calls, tris: p.triangles - p0.triangles, instancias: g.instances, mallas: g.drawn };
-    worst = Math.max(worst, p.calls - p0.calls);
+    const con = await perf(); const g = await ev(() => window.__puzzles.gfx());
     await ev(() => window.__puzzles.remove('pz_p'));
+    await ev(() => window.__step(3, 1 / 30)); await wait(3);
+    const sin = await perf(); const vis = await visibles();
+    leftVisible += vis;
+    table[k] = { con: con.calls, sin: sin.calls, delta: con.calls - sin.calls, tris: con.triangles - sin.triangles, instancias: g.instances, mallas: g.drawn, visiblesTrasQuitar: vis };
+    if (con.calls - sin.calls > worst) { worst = con.calls - sin.calls; worstBase = sin.calls; }
   }
   console.log(JSON.stringify(table));
-  check('cada puzle añade ≤ 25 llamadas de dibujo (≤ 8 % de la escena; mallas instanciadas compartidas, nunca por baldosa)', worst <= 25 && worst / p0.calls <= 0.1, `peor caso +${worst} (de ${p0.calls})`);
+  check('cada puzle añade ≤ 25 llamadas de dibujo (≤ 10 % de la escena; mallas instanciadas compartidas, nunca por baldosa)', worst <= 25 && worst / worstBase <= 0.1, `peor caso +${worst} (de ${worstBase})`);
   check('las mallas del puzle son ≤ 16 en total, sea cual sea el tamaño', Object.values(table).every((t) => typeof t === 'string' || t.mallas <= 16), JSON.stringify(Object.values(table).map((t) => t.mallas)));
-  // pzTick (que oculta las mallas) corre en el paso de simulación: se avanzan unos pasos tras quitar el último puzle, como en el juego real
-  await ev(() => window.__step(3, 1 / 30)); await wait(3);
-  const p1 = await perf();
-  check('al quitar el puzle las llamadas de dibujo vuelven a las de antes', Math.abs(p1.calls - p0.calls) <= 2, `${p0.calls} → ${p1.calls}`);
+  check('al quitar el puzle no queda ninguna malla suya visible (coste de dibujo cero)', leftVisible === 0, `visibles tras quitar: ${leftVisible}`);
 
   // ── 2 · fugas ──
   await ev(() => window.__puzzles.mem()); // calienta
@@ -98,20 +99,30 @@ export default async function (api) {
   await cdp.send('HeapProfiler.enable');
   // calentamiento: los primeros miles de llamadas corren en el intérprete (V8 encaja los dobles en cajas) y no son lo que cuesta en régimen estable
   await ev(() => { const P = window.__puzzles; for (let i = 0; i < 3000; i++) P.tick(1 / 60); });
-  await cdp.send('HeapProfiler.startSampling', { samplingInterval: 64 });
-  await ev(() => { const P = window.__puzzles; for (let i = 0; i < 1500; i++) P.tick(1 / 60); });
-  const prof = (await cdp.send('HeapProfiler.stopSampling')).profile;
-  let mine = 0, total = 0; const byFn = {};
-  const walk = (n, inMine) => {
-    const fn = n.callFrame.functionName || '';
-    const here = inMine || /^(pzTick|pzDrawAll|pzHud|pzLabels)$/.test(fn);
-    total += n.selfSize;
-    if (here) { mine += n.selfSize; if (n.selfSize) byFn[fn || '(anónima)'] = (byFn[fn || '(anónima)'] || 0) + n.selfSize; }
-    for (const c of n.children || []) walk(c, here);
+  // muestreo de montículo de CDP; `soloPz`: cuenta solo lo que cuelga de pzTick/pzDrawAll/pzHud/pzLabels, si no, todo lo muestreado
+  const muestrea = async (fn, soloPz) => {
+    await cdp.send('HeapProfiler.startSampling', { samplingInterval: 64 });
+    await ev(fn);
+    const prof = (await cdp.send('HeapProfiler.stopSampling')).profile;
+    let mine = 0; const byFn = {};
+    const walk = (n, inMine) => {
+      const name = n.callFrame.functionName || '';
+      const here = !soloPz || inMine || /^(pzTick|pzDrawAll|pzHud|pzLabels)$/.test(name);
+      if (here && n.selfSize) { mine += n.selfSize; byFn[name || '(anónima)'] = (byFn[name || '(anónima)'] || 0) + n.selfSize; }
+      for (const c of n.children || []) walk(c, here);
+    };
+    walk(prof.head, false);
+    return { mine, byFn };
   };
-  walk(prof.head, false);
-  console.log('asignaciones en 1500 fotogramas bajo pzTick:', mine, 'B', JSON.stringify(byFn), '· total muestreado', total, 'B');
-  check('pzTick no asigna memoria por fotograma (< 4 KB muestreados en 1500 fotogramas)', mine < 4096, `${mine} B ${JSON.stringify(byFn)}`);
+  const inst = cpu.inst, FR = 1500;
+  // CONTROL: exactamente las mismas llamadas a Matrix4.compose que hacen 1500 fotogramas del puzle, sin puzle de por medio. Si Three/V8 ya
+  // reparten unos bytes en esas llamadas (cajas de dobles), eso no es del puzle: el puzle solo puede pasarse del control, no del cero.
+  const ctl = (n) => () => { const C = window.__G.R.camera, M4 = C.matrix.constructor, M = new M4(), q = C.quaternion.clone(), p = C.position.clone(), sc = C.scale.clone(); for (let i = 0; i < n; i++) { p.x = i * 0.001; M.compose(p, q, sc); } };
+  await ev(ctl(inst * 3000));
+  const ctrl = await muestrea(ctl(inst * FR), false);
+  const real = await muestrea(() => { const P = window.__puzzles; for (let i = 0; i < 1500; i++) P.tick(1 / 60); }, true);
+  console.log(`asignaciones en ${FR} fotogramas: pzTick ${real.mine} B ${JSON.stringify(real.byFn)} · control (${inst * FR} compose sin puzle) ${ctrl.mine} B ${JSON.stringify(ctrl.byFn)}`);
+  check('pzTick no asigna más que el mismo número de Matrix4.compose sin puzle (+ 4 KB de margen del muestreo)', real.mine <= ctrl.mine + 4096, `puzle ${real.mine} B · control ${ctrl.mine} B · ${(real.mine / FR).toFixed(1)} B/fotograma`);
   await ev(() => { window.__puzzles.remove('pz_c'); window.__puzzles.remove('pz_c2'); });
 
   const errors = logs.filter((l) => /pageerror|\[error\]/.test(l) && !/ERR_FAILED|net::/.test(l));
