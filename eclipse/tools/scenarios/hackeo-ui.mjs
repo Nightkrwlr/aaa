@@ -101,7 +101,8 @@ export default async function (api) {
   // Enrutado: tocar nodos vecinos
   await open('route', 3); await wait(2);
   await snap('route'); await reportLayout('enrutado');
-  const rt = await ev(() => { const G = window.__hack.s.game.G; const nb = Object.keys(G.adj[G.S]).map(Number).find((i) => !G.ice[i]); return { nb }; });
+  // un vecino al que se pueda saltar de verdad en el primer turno (el enrutado v2 tiene enlaces de un sentido y patrullas)
+  const rt = await ev(() => { const G = window.__hack.s.game.G, B = window.__hack.sims.hkRouteBlocked; const nb = Object.keys(G.adj[G.S]).map(Number).find((i) => !B(G, G.S, i, 0)); return { nb }; });
   const nodeRect = await ev((nb) => { const c = document.querySelector(`[data-n="${nb}"] circle`); const r = c.getBoundingClientRect(); return { cx: r.x + r.width / 2, cy: r.y + r.height / 2, w: r.width }; }, rt.nb);
   await tap(nodeRect.cx, nodeRect.cy);
   const rt1 = await ev(() => document.querySelector('.rt-bar')?.textContent || '');

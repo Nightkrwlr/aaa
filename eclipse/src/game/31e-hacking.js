@@ -1459,7 +1459,7 @@ HK_GAMES.route = {
         if (vis && !G.mids.includes(i)) fill = "rgba(70,228,255,.22)";
         const hl = i === hintNode && hintT > 0;
         const ag = G.agents.some((a) => hkAgentAt(a, t) === i);
-        s += `<g class="rt-node" data-n="${i}"><circle cx="${px}" cy="${py}" r="23" fill="transparent"/>`;
+        s += `<g class="rt-node" data-n="${i}"><circle cx="${px}" cy="${py}" r="25" fill="transparent"/>`; // zona táctil: ≥ 36 px incluso en un móvil pequeño (los nodos distan ≥ 50 unidades: no se solapan)
         if (end) s += `<circle cx="${px}" cy="${py}" r="19" fill="none" stroke="#46e4ff" stroke-width="2" opacity=".7"/>`;
         if (hl) s += `<circle cx="${px}" cy="${py}" r="21" fill="none" stroke="#ffd447" stroke-width="3"><animate attributeName="r" values="17;24;17" dur=".7s" repeatCount="indefinite"/></circle>`;
         if (flash === i && flashT > 0) s += `<circle cx="${px}" cy="${py}" r="20" fill="rgba(255,60,80,.45)"/>`;
@@ -3572,7 +3572,7 @@ window.__hack = {
   xpToNext: hkXpToNext,
   migrate: hkMigrate,
   planLayers: hkPlanLayers,
-  sims: { HkFwSim, HkBruteSim, hkFwGen, hkBruteGen, hkTuneGen, hkTuneTarget, hkTuneErr, hkRouteGen, hkRouteSolve, hkCipherGen, hkLayerLimit, hkShortfall },
+  sims: { HkFwSim, HkBruteSim, hkFwGen, hkBruteGen, hkTuneGen, hkTuneTarget, hkTuneErr, hkRouteGen, hkRouteSolve, hkRouteBlocked, hkAgentAt, hkCipherGen, hkLayerLimit, hkShortfall },
   gadgetPulse: hkGadgetPulse,
   playerDps: hkPlayerDps,
   rng: (s) => (HK.rng = hkRng(s)),

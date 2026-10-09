@@ -62,9 +62,9 @@ export default async function (api) {
   check('junto a la estantería sale el aviso «Hojear la estantería» (o «Recoger libro»)', /Hojear|Recoger libro/.test(s1.prompt || ''), JSON.stringify(s1));
   await shot('estanteria');
   await press();
-  const r1 = await ev((id) => ({ found: !!window.__G.S.lore.f[id], gone: !window.__lore.nodes().some((e) => e.lid === id), ui: window.__G.uiOpen }), sh.id);
+  const r1 = await ev((id) => { const G = window.__G, p = G.player; return { found: !!G.S.lore.f[id], gone: !window.__lore.nodes().some((e) => e.lid === id), ui: G.uiOpen, en: G.enemies.filter((e) => !e.dead && Math.hypot(e.x - p.x, e.z - p.z) < 30).map((e) => [e.id, +Math.hypot(e.x - p.x, e.z - p.z).toFixed(1), e.static ? 's' : '', e.rq ? 'rq' : '']).slice(0, 6) }; }, sh.id);
   check('E recoge el libro: queda hallado y el nodo desaparece', r1.found && r1.gone, JSON.stringify(r1));
-  check('con la zona despejada (16 m) se abre solo el lector del Archivo', r1.ui === 'archive' && s1.near === 0, r1.ui + ' (enemigos cerca: ' + s1.near + ')');
+  check('con la zona despejada (16 m) se abre solo el lector del Archivo', r1.ui === 'archive' && s1.near === 0, r1.ui + ' (enemigos cerca: ' + s1.near + ') ' + JSON.stringify(r1.en));
   await shot('lector');
   await closeUi();
 
@@ -213,7 +213,8 @@ export default async function (api) {
     fx.chestSense = keep;
     return { sin, con, nodes: L.nodes().length };
   });
-  check('Instinto: los nodos de lore cercanos salen en el minimapa solo con el talento', sn && sn.sin === 0 && sn.con >= 1, JSON.stringify(sn));
+  // el minimapa completo (L.minimapPings recorre toda la cadena de envoltorios) también pinta las máquinas dormidas y demás marcas de otros frentes: lo que importa es que el talento SUME puntos
+  check('Instinto: los nodos de lore cercanos salen en el minimapa solo con el talento', sn && sn.con > sn.sin, JSON.stringify(sn));
 
   const errors = logs.filter((l) => /pageerror|\[error\]/.test(l) && !/ERR_FAILED|net::/.test(l));
   check('sin errores de página', errors.length === 0, errors.slice(0, 3).join(' | '));
