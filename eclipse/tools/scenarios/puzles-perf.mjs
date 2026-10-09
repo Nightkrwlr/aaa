@@ -72,17 +72,19 @@ export default async function (api) {
         G.player.x = e.x + 1.5; G.player.z = e.z; G.world.enterSub(e); window.__step(30, 1 / 30);
         const ent = G.map.ents.find((q) => q.k === 'puzzle'); if (ent) { G.player.x = ent.x; G.player.z = ent.z + ent.pz.H / 2 + 1.5; window.__step(20, 1 / 30); }
         G.world.leaveSub(); window.__step(30, 1 / 30);
-        out.push(P.mem());
+        out.push({ ...P.mem(), mounted: P.api.mounted().length });
       }
       return out;
     };
     const a = run(without), b = run(withP);
-    return { sin: a.map((m) => [m.geometries, m.textures, m.children]), con: b.map((m) => [m.geometries, m.textures, m.children]), n: [without.length, withP.length] };
+    return { sin: a.map((m) => [m.geometries, m.textures, m.children]), con: b.map((m) => [m.geometries, m.textures, m.children]), conMounted: b.map((m) => m.mounted), conMeshes: b.map((m) => m.puzzleMeshes), n: [without.length, withP.length] };
   });
   console.log('subterráneos', JSON.stringify(cycles));
   const growth = (arr) => [arr[arr.length - 1][0] - arr[1][0], arr[arr.length - 1][1] - arr[1][1], arr[arr.length - 1][2] - arr[1][2]];
   const gSin = growth(cycles.sin), gCon = growth(cycles.con);
-  check('entrar y salir 5 veces de subterráneos con acertijo no crece más que sin acertijo (geometrías, texturas, objetos)', gCon[0] <= gSin[0] && gCon[1] <= gSin[1] && gCon[2] <= gSin[2], `sin ${gSin} · con ${gCon}`);
+  // los «objetos de la escena» dependen de la escalera de la que se vuelve (trozos del mapa y grupos de enemigos distintos): se imprimen, no se exigen;
+  // lo que sí delata una fuga es que crezcan las geometrías o las texturas, o que quede algo del puzle montado o sin ocultar
+  check('entrar y salir 5 veces de subterráneos con acertijo no crece más que sin acertijo (geometrías, texturas) y no deja puzles montados', gCon[0] <= gSin[0] && gCon[1] <= gSin[1] && cycles.conMounted.every((n) => n === 0) && cycles.conMeshes.every((n) => n === 16), `sin ${gSin} · con ${gCon} · montados ${cycles.conMounted} · mallas ${cycles.conMeshes} (objetos de escena: sin ${cycles.sin.map((m) => m[2])} · con ${cycles.con.map((m) => m[2])}, informativo)`);
 
   // ── 3 · CPU y asignaciones por fotograma ──
   await api.region('desierto');
@@ -100,9 +102,9 @@ export default async function (api) {
   // calentamiento: los primeros miles de llamadas corren en el intérprete (V8 encaja los dobles en cajas) y no son lo que cuesta en régimen estable
   await ev(() => { const P = window.__puzzles; for (let i = 0; i < 3000; i++) P.tick(1 / 60); });
   // muestreo de montículo de CDP; `soloPz`: cuenta solo lo que cuelga de pzTick/pzDrawAll/pzHud/pzLabels, si no, todo lo muestreado
-  const muestrea = async (fn, soloPz) => {
+  const muestrea = async (fn, soloPz, arg) => {
     await cdp.send('HeapProfiler.startSampling', { samplingInterval: 64 });
-    await ev(fn);
+    await ev(fn, arg);
     const prof = (await cdp.send('HeapProfiler.stopSampling')).profile;
     let mine = 0; const byFn = {};
     const walk = (n, inMine) => {
@@ -117,9 +119,9 @@ export default async function (api) {
   const inst = cpu.inst, FR = 1500;
   // CONTROL: exactamente las mismas llamadas a Matrix4.compose que hacen 1500 fotogramas del puzle, sin puzle de por medio. Si Three/V8 ya
   // reparten unos bytes en esas llamadas (cajas de dobles), eso no es del puzle: el puzle solo puede pasarse del control, no del cero.
-  const ctl = (n) => () => { const C = window.__G.R.camera, M4 = C.matrix.constructor, M = new M4(), q = C.quaternion.clone(), p = C.position.clone(), sc = C.scale.clone(); for (let i = 0; i < n; i++) { p.x = i * 0.001; M.compose(p, q, sc); } };
-  await ev(ctl(inst * 3000));
-  const ctrl = await muestrea(ctl(inst * FR), false);
+  const ctl = (n) => { const C = window.__G.R.camera, M4 = C.matrix.constructor, M = new M4(), q = C.quaternion.clone(), p = C.position.clone(), sc = C.scale.clone(); for (let i = 0; i < n; i++) { p.x = i * 0.001; M.compose(p, q, sc); } };
+  await ev(ctl, inst * 3000);
+  const ctrl = await muestrea(ctl, false, inst * FR);
   const real = await muestrea(() => { const P = window.__puzzles; for (let i = 0; i < 1500; i++) P.tick(1 / 60); }, true);
   console.log(`asignaciones en ${FR} fotogramas: pzTick ${real.mine} B ${JSON.stringify(real.byFn)} · control (${inst * FR} compose sin puzle) ${ctrl.mine} B ${JSON.stringify(ctrl.byFn)}`);
   check('pzTick no asigna más que el mismo número de Matrix4.compose sin puzle (+ 4 KB de margen del muestreo)', real.mine <= ctrl.mine + 4096, `puzle ${real.mine} B · control ${ctrl.mine} B · ${(real.mine / FR).toFixed(1)} B/fotograma`);

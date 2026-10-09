@@ -2859,7 +2859,20 @@ var pzM = new at(),
   pzP = new U(),
   pzSc = new U(),
   pzCol = new Ee(),
-  pzAxisY = new U(0, 1, 0);
+  pzAxisY = new U(0, 1, 0),
+  pzColCache = new Map();
+// Color.setHex hace conversión de espacio de color con Math.pow en cada llamada: con ~200 instancias por fotograma se cachea el valor lineal por hex
+function pzSetHex(c, hex) {
+  let v = pzColCache.get(hex);
+  if (!v) {
+    c.setHex(hex);
+    v = [c.r, c.g, c.b];
+    pzColCache.set(hex, v);
+  }
+  c.r = v[0];
+  c.g = v[1];
+  c.b = v[2];
+}
 function pzGfxInit() {
   if (PZR.ready) return true;
   if (!x.R || !x.R.scene) return false;
@@ -2895,7 +2908,7 @@ var PZG = {
     pzP.set(T.tx + T.m00 * cx + T.m01 * cz, y, T.tz + T.m10 * cx + T.m11 * cz);
     pzSc.set(sx, sy, sz);
     pzM.compose(pzP, pzQ, pzSc);
-    pzCol.setHex(col);
+    pzSetHex(pzCol, col);
     gl > 0 && pzCol.multiplyScalar(0.55 + gl * 0.55); // el brillo se pinta por encima de 1 (HDR): alimenta el bloom
     B.push(pzM, pzCol);
   },
