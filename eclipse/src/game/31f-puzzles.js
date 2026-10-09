@@ -4124,6 +4124,19 @@ function pzMigrate(S) {
     for (const f of ["n", "perfect", "hints", "errors", "hack"]) T[f] = Math.max(0, T[f] | 0);
     if (!T.byKind || typeof T.byKind !== "object" || Array.isArray(T.byKind)) T.byKind = {};
   }
+  // S.puzzleKind = {sid: [tipo, nivel, variante]}: lo que se colocó la primera vez en cada escalera. El mapa de una escalera cambia en cada visita y, si el
+  // tipo elegido no cabía, la cadena de reserva daba otro distinto según la sala que saliera: así el tipo de una escalera queda fijo mientras quepa
+  const K = S.puzzleKind;
+  if (!K || typeof K !== "object" || Array.isArray(K)) S.puzzleKind = {};
+  else
+    for (const id of Object.keys(K)) {
+      const v = K[id];
+      if (!Array.isArray(v) || typeof v[0] !== "string" || !PZ_GENS[v[0]]) delete K[id];
+      else {
+        v[1] = Math.max(1, Math.min(3, v[1] | 0 || 1));
+        v[2] = Math.max(0, v[2] | 0);
+      }
+    }
   S.puzzleV = 1;
 }
 x.migrations.push(pzMigrate);
@@ -4251,6 +4264,13 @@ function pzAddEnt(map, id, kind, tier, idx, site, extra) {
   map.ents.push({ k: "light", id: id + "_l", x: ent.x, z: ent.z, c: 0xbfe6ff, model: "none" });
   return ent;
 }
+// ¿lleva acertijo esta escalera? Es la misma tirada estable por escalera que hace pzPlace; el generador de interiores (31e3) la consulta para no dar
+// nunca a una escalera con acertijo una zona pequeña sin salón donde quepa (así el tipo y el nivel del acertijo no dependen de la forma del mapa de cada visita)
+function pzWants(n) {
+  if (!n || !n.sub || !n.ent || !n.ent.id || n.enc === "puzzle") return false;
+  const base = pzMix("sub:" + n.ent.id, 0x50);
+  return pzRng(pzMix(base, 0x43))() < PZ_CFG.chance;
+}
 function pzPlace(map, n) {
   if (!map || !map.ents || !map.rooms || !n) return null;
   const sub = !!n.sub,
@@ -4287,7 +4307,13 @@ function pzPlace(map, n) {
     if (n.obj === "boss") for (const rm of map.rooms) if (rm.w >= 13 && rm.h >= 13 && map.ents.some((en) => en.k === "bossarena" && Math.abs(en.x - rm.cx) < 1 && Math.abs(en.z - rm.cz) < 1)) skip.add(rm);
   }
   // si no hay hueco para el tipo elegido, se prueba con los demás y con tamaños menores (tipo y nivel siguen siendo deterministas)
-  const tries = [[ch.kind, ch.tier, ch.idx]];
+  const Sx = sid ? pzS() : null,
+    kmem = Sx && !lore ? Sx.puzzleKind : null,
+    prev = kmem ? kmem[sid] : null,
+    tries = [];
+  // lo que ya se colocó en esta escalera va primero (si cabe); si no cabe, sigue la cadena de siempre
+  if (prev && PZ_GENS[prev[0]] && PZ_GENS[prev[0]].dims[prev[1]] && !PZ_GENS[prev[0]].legacy && pzPlayable(PZ_GENS[prev[0]])) tries.push([prev[0], prev[1], prev[2] % PZ_CFG.pool]);
+  tries.push([ch.kind, ch.tier, ch.idx]);
   if (!lore) {
     // primero se encoge el mismo tipo (el tipo de una escalera no cambia aunque cambie su mapa); luego los demás, en un orden fijo por escalera
     for (let t = ch.tier - 1; t >= 1; t--) tries.push([ch.kind, t, ch.idx]);
@@ -4303,6 +4329,7 @@ function pzPlace(map, n) {
     pzClearSite(map, site, dims);
     const ent = pzAddEnt(map, "pz_" + (sub ? "s" : "o"), kind, tier, idx, site, { sid, theme, lvl, reg, lore });
     if (ent) {
+      if (kmem && !prev) kmem[sid] = [kind, tier, idx];
       x.puzzleApi.last = ent;
       return ent;
     }

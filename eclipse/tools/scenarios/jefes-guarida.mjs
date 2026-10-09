@@ -117,7 +117,7 @@ export default async function (api) {
     const G = window.__G; G.world.leaveSub(); window.__step(30, 1 / 30);
     const a = G.map.ents.find((e) => e.id === 'arena_0'), r = { mode: G.mode, st: window.__lair.status(a) };
     window.__step(90, 1 / 30); r.boss1 = G.enemies.filter((e) => e.boss && !e.dead).length;
-    G.S.world.bosses.reg0_t = Date.now() - 31 * 6e4;     // pasan 31 min (el cooldown de la superficie de antes): el claro NO debe invocar al jefe
+    G.S.world.bosses.reg0_t = Date.now() - window.__GN.lost - 31 * 6e4;     // pasan 31 min (el cooldown de la superficie de antes): el claro NO debe invocar al jefe
     G.time += 25;      // el aviso del claro se limita a uno cada 20 s de juego
     G.player.x = a.x; G.player.z = a.z + 2; window.__step(60, 1 / 30);
     return r;
@@ -127,7 +127,7 @@ export default async function (api) {
   console.log('salida', JSON.stringify(out));
   check('de vuelta en el mundo la guarida está «en calma» y no sale el jefe', out.mode === 'world' && out.st === 'calm' && out.boss1 === 0, JSON.stringify(out));
   check('la superficie ya no invoca al jefe ni pasado el cooldown de 30 min: la guarida es la única vía (y avisa de que está en calma)', out.boss2 === 0 && out.toast.some((t) => /en calma/.test(t)), JSON.stringify(out.toast));
-  const again = await ev(() => { const G = window.__G, a = G.map.ents.find((e) => e.id === 'arena_0'); G.enemies.forEach((e) => { if (e.boss && !e.dead) { e.dead = true; e.deadT = 0; } }); G.S.world.lair[0] = Date.now() - 46 * 6e4; return { ready: window.__lair.ready(0), st: window.__lair.status(a) }; });
+  const again = await ev(() => { const G = window.__G, a = G.map.ents.find((e) => e.id === 'arena_0'); G.enemies.forEach((e) => { if (e.boss && !e.dead) { e.dead = true; e.deadT = 0; } }); G.S.world.lair[0] = Date.now() - window.__GN.lost - 46 * 6e4; return { ready: window.__lair.ready(0), st: window.__lair.status(a) }; });
   check('a los 45 min la guarida se puede repetir', again.ready && again.st === 'open', JSON.stringify(again));
 
   const errors = logs.filter((l) => /pageerror|\[error\]/.test(l) && !/ERR_FAILED|net::/.test(l));

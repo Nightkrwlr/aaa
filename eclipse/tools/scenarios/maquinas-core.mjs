@@ -109,8 +109,13 @@ export default async function (api) {
     const G = window.__G, M = window.__mach, b = M.MX.act[0], p = G.player;
     const def = b.def, out = { kind: def.ai };
     const before = G.enemies.length;
-    // un enemigo quieto a 7 m del jugador y de la aliada
-    const f = G.map.findFree(b.x + 6, b.z, 4, 0.4);
+    // un enemigo quieto a ~6 m de la aliada y a la vista de ella (si hay un muro en medio no puede disparar: se prueban las 8 direcciones y se queda la primera despejada)
+    let f = null;
+    for (let k = 0; k < 8 && !f; k++) {
+      const a = k * Math.PI / 4, q = G.map.findFree(b.x + Math.cos(a) * 6, b.z + Math.sin(a) * 6, 3, 0.4);
+      if (G.map.los(b.x, b.z, q[0], q[1]) && Math.hypot(q[0] - b.x, q[1] - b.z) > 3.5) f = q;
+    }
+    if (!f) f = G.map.findFree(b.x + 6, b.z, 4, 0.4);
     const e = window.__spawn('rastrero', 3, f[0], f[1], { alerted: false }); e.hp = e.maxHp = 400; e.static = true;
     window.__step(90, 1 / 30);
     out.dmgAbs = Math.round(e.maxHp - e.hp); out.expected = Math.round(b.dps * def.dpsMul * 3); out.dead = e.dead; out.enemies = G.enemies.length - before;
